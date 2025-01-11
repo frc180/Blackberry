@@ -187,13 +187,12 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
 
     public void zeroGyroscope() {
         gyroOffset = this.getPigeon2().getRotation2d();
-        // seedFieldRelative();
-        seedFieldCentric();
+        // seedFieldRelative(); // last year
+        // seedFieldCentric(); // this year, acts weird
     }
 
     public boolean pigeonConnected() {
-        // TODO: Find how to detect Pigeon disconnection
-        return true;
+        return getPigeon2().isConnected();
     }
 
         public Double getTargetHeading() {
