@@ -5,6 +5,7 @@ import static edu.wpi.first.units.Units.*;
 import java.util.function.Supplier;
 
 import com.ctre.phoenix6.SignalLogger;
+import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
@@ -15,10 +16,16 @@ import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Notifier;
@@ -33,7 +40,19 @@ import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
  * Class that extends the Phoenix 6 SwerveDrivetrain class and implements
  * Subsystem so it can easily be used in command-based projects.
  */
-public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Subsystem {
+public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsystem {
+    public enum HeadingTarget {
+        GYRO,
+        POSE
+    }
+
+    
+    // STOLEN FROM SONIC, NOT CORRECT
+    public static final double MAX_SPEED = 4.6; // MAX_SPEED = 5.0292; // Meters per second desired top speed
+    public static final double MAX_SPEED_ACCEL = 6; // Meters per second squared max acceleration, was 6
+    public static final double MAX_ANGULAR_RATE = 1.5 * Math.PI; // 3/4 of a rotation per second max angular velocity
+    public static final double MAX_ANGULAR_ACCEL = MAX_ANGULAR_RATE * 8; // was * 4
+
     private static final double kSimLoopPeriod = 0.005; // 5 ms
     private Notifier m_simNotifier = null;
     private double m_lastSimTime;
@@ -52,6 +71,14 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private final SwerveRequest.SysIdSwerveTranslation m_translationCharacterization = new SwerveRequest.SysIdSwerveTranslation();
     private final SwerveRequest.SysIdSwerveSteerGains m_steerCharacterization = new SwerveRequest.SysIdSwerveSteerGains();
     private final SwerveRequest.SysIdSwerveRotation m_rotationCharacterization = new SwerveRequest.SysIdSwerveRotation();
+
+    private Rotation2d gyroOffset = new Rotation2d();
+    private Double m_targetHeading = null;
+    private HeadingTarget m_targetHeadingType = HeadingTarget.GYRO;
+    private double headingError = 0;
+
+    private ProfiledPIDController xPidController, yPidController, driverRotationPidController;
+
 
     /* SysId routine for characterizing translation. This is used to find PID gains for the drive motors. */
     private final SysIdRoutine m_sysIdRoutineTranslation = new SysIdRoutine(
@@ -125,7 +152,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      * @param drivetrainConstants Drivetrain-wide constants for the swerve drive
      * @param modules             Constants for each specific module
      */
-    public CommandSwerveDrivetrain(
+    public DrivetrainSubsystem(
         SwerveDrivetrainConstants drivetrainConstants,
         SwerveModuleConstants<?, ?, ?>... modules
     ) {
@@ -134,64 +161,97 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             startSimThread();
         }
         configureAutoBuilder();
+
+        xPidController = new ProfiledPIDController(2.5, 0., 0, // 3.1
+                                        new TrapezoidProfile.Constraints(MAX_SPEED, 6));
+        yPidController = new ProfiledPIDController(2.5, 0., 0,
+                                        new TrapezoidProfile.Constraints(MAX_SPEED, 6));
+
+        driverRotationPidController = new ProfiledPIDController(5, 0., 0, // was 10
+                                        new TrapezoidProfile.Constraints(MAX_ANGULAR_RATE, MAX_ANGULAR_ACCEL)); // formerly 9999
+        driverRotationPidController.enableContinuousInput(-Math.PI, Math.PI);
     }
 
-    /**
-     * Constructs a CTRE SwerveDrivetrain using the specified constants.
-     * <p>
-     * This constructs the underlying hardware devices, so users should not construct
-     * the devices themselves. If they need the devices, they can access them through
-     * getters in the classes.
-     *
-     * @param drivetrainConstants        Drivetrain-wide constants for the swerve drive
-     * @param odometryUpdateFrequency    The frequency to run the odometry loop. If
-     *                                   unspecified or set to 0 Hz, this is 250 Hz on
-     *                                   CAN FD, and 100 Hz on CAN 2.0.
-     * @param modules                    Constants for each specific module
-     */
-    public CommandSwerveDrivetrain(
-        SwerveDrivetrainConstants drivetrainConstants,
-        double odometryUpdateFrequency,
-        SwerveModuleConstants<?, ?, ?>... modules
-    ) {
-        super(drivetrainConstants, odometryUpdateFrequency, modules);
-        if (Utils.isSimulation()) {
-            startSimThread();
-        }
-        configureAutoBuilder();
+    public void drive(ChassisSpeeds speeds) {
+        // Helpers.discretizeOverwrite(speeds, Constants.LOOP_TIME);
+        setControl(m_pathApplyRobotSpeeds.withSpeeds(speeds));
     }
 
-    /**
-     * Constructs a CTRE SwerveDrivetrain using the specified constants.
-     * <p>
-     * This constructs the underlying hardware devices, so users should not construct
-     * the devices themselves. If they need the devices, they can access them through
-     * getters in the classes.
-     *
-     * @param drivetrainConstants        Drivetrain-wide constants for the swerve drive
-     * @param odometryUpdateFrequency    The frequency to run the odometry loop. If
-     *                                   unspecified or set to 0 Hz, this is 250 Hz on
-     *                                   CAN FD, and 100 Hz on CAN 2.0.
-     * @param odometryStandardDeviation  The standard deviation for odometry calculation
-     *                                  in the form [x, y, theta]ᵀ, with units in meters
-     *                                  and radians
-     * @param visionStandardDeviation   The standard deviation for vision calculation
-     *                                  in the form [x, y, theta]ᵀ, with units in meters
-     *                                  and radians
-     * @param modules                    Constants for each specific module
-     */
-    public CommandSwerveDrivetrain(
-        SwerveDrivetrainConstants drivetrainConstants,
-        double odometryUpdateFrequency,
-        Matrix<N3, N1> odometryStandardDeviation,
-        Matrix<N3, N1> visionStandardDeviation,
-        SwerveModuleConstants<?, ?, ?>... modules
-    ) {
-        super(drivetrainConstants, odometryUpdateFrequency, odometryStandardDeviation, visionStandardDeviation, modules);
-        if (Utils.isSimulation()) {
-            startSimThread();
+    public Rotation2d getGyroscopeRotation() {
+        return Rotation2d.fromDegrees(getGyroscopeDegrees());
+    }
+
+    public double getGyroscopeDegrees() {        
+        return (-this.getPigeon2().getAngle()) - gyroOffset.getDegrees();
+    }
+
+    public void zeroGyroscope() {
+        gyroOffset = this.getPigeon2().getRotation2d();
+        // seedFieldRelative();
+        seedFieldCentric();
+    }
+
+    public boolean pigeonConnected() {
+        // TODO: Find how to detect Pigeon disconnection
+        return true;
+    }
+
+        public Double getTargetHeading() {
+        return m_targetHeading;
+    }
+
+    public HeadingTarget getTargetHeadingType() {
+        return m_targetHeadingType;
+    }
+    
+    public void setTargetHeading(Double targetHeading) {
+        setTargetHeading(targetHeading, HeadingTarget.GYRO);
+    }
+
+    public void setTargetHeading(Double targetHeading, HeadingTarget type) {
+        m_targetHeading = targetHeading == null ? null : MathUtil.inputModulus(targetHeading, -180, 180);
+        m_targetHeadingType = type;
+        if (targetHeading == null) {
+            headingError = 0;
+        } else {
+            headingError = 999; // reset heading error to make sure we don't think we're at the new target immediately
         }
-        configureAutoBuilder();
+    }
+
+    public void resetPIDs(HeadingTarget type) {
+        xPidController.reset(getPose().getX());
+        yPidController.reset(getPose().getY());
+        resetHeadingPID(type);
+    }
+
+    public void resetHeadingPID(HeadingTarget type) {
+        resetHeadingPID(type == HeadingTarget.GYRO ? getGyroscopeRotation() : getPose().getRotation());
+    }
+
+    public void resetHeadingPID(Rotation2d rotation) {
+        driverRotationPidController.reset(rotation.getRadians());
+        // driverRotationPidAlt.reset();
+    }
+
+    public double calculateHeadingPID(Rotation2d heading, double targetDegrees) {
+        double headingDegrees = heading.getDegrees();
+        headingError = targetDegrees - headingDegrees;
+        return driverRotationPidController.calculate(
+            heading.getRadians(), 
+            Math.toRadians(targetDegrees)
+        );
+    }
+
+    public double calculateHeadingPID(double headingDegrees, double targetDegrees) {
+        headingError = targetDegrees - headingDegrees;    
+        return driverRotationPidController.calculate(
+            Math.toRadians(headingDegrees), 
+            Math.toRadians(targetDegrees)
+        );
+    }
+
+    public Pose2d getPose() {
+        return getState().Pose;
     }
 
     private void configureAutoBuilder() {
