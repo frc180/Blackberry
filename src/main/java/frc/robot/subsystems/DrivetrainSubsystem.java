@@ -28,6 +28,8 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.simulation.ElevatorSim;
+import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -195,7 +197,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         return getPigeon2().isConnected();
     }
 
-        public Double getTargetHeading() {
+    public Double getTargetHeading() {
         return m_targetHeading;
     }
 

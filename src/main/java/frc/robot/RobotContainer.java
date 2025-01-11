@@ -29,6 +29,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.commands.DefaultDriveCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.DrivetrainSubsystem;
+import frc.robot.subsystems.elevator.ElevatorSubsystem;
 
 public class RobotContainer {
     private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
@@ -51,6 +52,7 @@ public class RobotContainer {
     private final Telemetry logger = new Telemetry(MaxSpeed);
 
     public final DrivetrainSubsystem drivetrain = TunerConstants.createDrivetrain();
+    public final ElevatorSubsystem elevator = new ElevatorSubsystem();
 
     /* Path follower */
     private final SendableChooser<Command> autoChooser;
@@ -72,11 +74,11 @@ public class RobotContainer {
          };
 
         final Supplier<JoystickInputs> joystickInputsSupplier = () -> {
-        return inputs.of(-driverController.getLeftY(), -driverController.getLeftX())
-                        .deadband(DEADBAND)
-                        .polarDistanceTransform(JoystickInputs.SQUARE_KEEP_SIGN)
-                        .clamp(1) // Clamp the magnitude of the inputs to 1, since polar transform can make them slightly greater than 1
-                        .transform(axisToLinearSpeed);
+            return inputs.of(-driverController.getLeftY(), -driverController.getLeftX())
+                            .deadband(DEADBAND)
+                            .polarDistanceTransform(JoystickInputs.SQUARE_KEEP_SIGN)
+                            .clamp(1) // Clamp the magnitude of the inputs to 1, since polar transform can make them slightly greater than 1
+                            .transform(axisToLinearSpeed);
         };
 
         final DoubleSupplier rotationSupplier = () -> {
@@ -86,28 +88,12 @@ public class RobotContainer {
         drivetrain.setDefaultCommand(new DefaultDriveCommand(drivetrain, joystickInputsSupplier, rotationSupplier));
         driverController.back().onTrue(Commands.runOnce(drivetrain::zeroGyroscope));
 
-        // Note that X is defined as forward according to WPILib convention,
-        // and Y is defined as to the left according to WPILib convention.
-        // drivetrain.setDefaultCommand(
-        //     // Drivetrain will execute this command periodically
-        //     drivetrain.applyRequest(() ->
-        //         drive.withVelocityX(-driverController.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
-        //             .withVelocityY(-driverController.getLeftX() * MaxSpeed) // Drive left with negative X (left)
-        //             .withRotationalRate(-driverController.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
-        //     )
-        // );
 
-        // joystick.a().whileTrue(drivetrain.applyRequest(() -> brake));
-        // joystick.b().whileTrue(drivetrain.applyRequest(() ->
-        //     point.withModuleDirection(new Rotation2d(-joystick.getLeftY(), -joystick.getLeftX()))
-        // ));
+        driverController.x().whileTrue(elevator.runSpeed(0.5));
 
-        // joystick.pov(0).whileTrue(drivetrain.applyRequest(() ->
-        //     forwardStraight.withVelocityX(0.5).withVelocityY(0))
-        // );
-        // joystick.pov(180).whileTrue(drivetrain.applyRequest(() ->
-        //     forwardStraight.withVelocityX(-0.5).withVelocityY(0))
-        // );
+        driverController.a().onTrue(elevator.setPosition(ElevatorSubsystem.L2))
+                            .onFalse(elevator.setPosition(0));
+
 
         // Run SysId routines when holding back/start and X/Y.
         // Note that each routine should be run exactly once in a single log.
