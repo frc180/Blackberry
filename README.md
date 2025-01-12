@@ -1,2 +1,1 @@
-# 2025-game
-Official competition code for our 2025 FIRST Robotics Competition robot
+2025 Robot Code

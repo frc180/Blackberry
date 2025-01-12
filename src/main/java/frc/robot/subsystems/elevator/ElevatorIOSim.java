@@ -5,27 +5,41 @@ import edu.wpi.first.math.controller.PIDController;
 public class ElevatorIOSim implements ElevatorIO {
 
     PIDController pid;
+    boolean usingPID = false;
     double position = 0;
+    double speed = 0;
     double target = 0;
 
     public ElevatorIOSim() {
-        pid = new PIDController(5, 0, 0);
+        pid = new PIDController(0.01, 0, 0);
     }
 
     @Override
     public void setPower(double power) {
-        System.out.println("Elevator is running at power " + power);
+        speed = power;
+        usingPID = false;
     }
 
     @Override
     public void setPosition(double encoderPosition) {
         target = encoderPosition;
+        usingPID = true;
     }
 
     @Override
-    public void update() {
-        double speed = pid.calculate(position, target);
-        position += speed / 100;
-        System.out.println(position);
+    public void update(ElevatorIOInputs inputs) {
+        if (usingPID) {
+            speed = pid.calculate(position, target);
+            speed = Math.max(-1, Math.min(1, speed));
+        }
+
+        inputs.position = position;
+        inputs.speed = speed;
+    }
+
+    @Override
+    public void simulationPeriodic() {
+        // Simulate movement with previously set speed
+        position += speed * 8;
     }
 }
