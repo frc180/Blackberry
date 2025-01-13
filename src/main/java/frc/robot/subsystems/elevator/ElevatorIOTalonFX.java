@@ -1,12 +1,7 @@
 package frc.robot.subsystems.elevator;
 
 import java.util.List;
-
-import com.ctre.phoenix6.configs.FeedbackConfigs;
-import com.ctre.phoenix6.configs.MotionMagicConfigs;
-import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.configs.TalonFXConfigurator;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.PositionVoltage;
@@ -16,10 +11,8 @@ import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.BatterySim;
-import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj.simulation.ElevatorSim;
 import edu.wpi.first.wpilibj.simulation.RoboRioSim;
 import frc.robot.Constants;
@@ -31,7 +24,6 @@ public class ElevatorIOTalonFX implements ElevatorIO {
 
     TalonFX motorA, motorB;
     List<TalonFX> motors;
-    PositionVoltage positionControl;
     MotionMagicVoltage motionMagicControl;
     VoltageOut voltageControl;
     Follower followerControl;
@@ -63,7 +55,6 @@ public class ElevatorIOTalonFX implements ElevatorIO {
             motor.getConfigurator().apply(config);
         });
 
-        positionControl = new PositionVoltage(0);
         motionMagicControl = new MotionMagicVoltage(0);
         voltageControl = new VoltageOut(0);
         followerControl = new Follower(Constants.ELEVATOR_TALON_A, true);
@@ -96,7 +87,6 @@ public class ElevatorIOTalonFX implements ElevatorIO {
 
     @Override
     public void setPosition(double encoderPosition) {
-        // motorA.setControl(positionControl.withPosition(encoderPosition));
         motorA.setControl(motionMagicControl.withPosition(encoderPosition));
     }
 
@@ -107,6 +97,7 @@ public class ElevatorIOTalonFX implements ElevatorIO {
         inputs.target = motorA.getClosedLoopReference(true).getValueAsDouble();
     }
 
+    // Simulation-only code which runs periodically before update() is called
     @Override
     public void simulationPeriodic() {
         elevatorSim.setInput(motorASim.getMotorVoltage());
@@ -118,9 +109,7 @@ public class ElevatorIOTalonFX implements ElevatorIO {
 
         motorSims.forEach(motorSim -> {
             motorSim.setRawRotorPosition(elevatorSim.getPositionMeters() * elevatorGearing);
-            // motorSim.setRotorVelocity(elevatorSim.getVelocityMetersPerSecond() * 300); // Breaks motor voltage
             motorSim.setSupplyVoltage(RobotController.getBatteryVoltage());
-            // motorSim.setSupplyVoltage(12);
         });
     }
 }
