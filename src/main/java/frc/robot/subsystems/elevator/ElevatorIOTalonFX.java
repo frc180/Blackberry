@@ -16,6 +16,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.BatterySim;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj.simulation.ElevatorSim;
@@ -42,16 +43,17 @@ public class ElevatorIOTalonFX implements ElevatorIO {
         motors = List.of(motorA, motorB);
 
         Slot0Configs slot0Configs = new Slot0Configs();
-        slot0Configs.kP = 0.056;
+        slot0Configs.kP = 0.05;
         slot0Configs.kI = 0;
+        slot0Configs.kD = 0;
         slot0Configs.kG = 1.83;
-        slot0Configs.kV = 0.003;
-        slot0Configs.kA = 0.00075;
+        slot0Configs.kV = 0.002;
+        slot0Configs.kA = 0.0008;
         slot0Configs.GravityType = GravityTypeValue.Elevator_Static;
 
         MotionMagicConfigs motionMagicConfigs = new MotionMagicConfigs();
         motionMagicConfigs.MotionMagicCruiseVelocity = 9999;
-        motionMagicConfigs.MotionMagicAcceleration = 1000; // 70000
+        motionMagicConfigs.MotionMagicAcceleration = 1000;
         motionMagicConfigs.MotionMagicJerk = 0;
 
         motors.forEach(motor -> {
@@ -117,8 +119,8 @@ public class ElevatorIOTalonFX implements ElevatorIO {
         motorSims.forEach(motorSim -> {
             motorSim.setRawRotorPosition(elevatorSim.getPositionMeters() * 300);
             // motorSim.setRotorVelocity(elevatorSim.getVelocityMetersPerSecond() * 300); // Breaks motor voltage
-            // motorSim.setSupplyVoltage(RobotController.getBatteryVoltage());
-            motorSim.setSupplyVoltage(12);
+            motorSim.setSupplyVoltage(RobotController.getBatteryVoltage());
+            // motorSim.setSupplyVoltage(12);
         });
     }
 }
