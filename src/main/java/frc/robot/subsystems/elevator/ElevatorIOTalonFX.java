@@ -27,7 +27,7 @@ import frc.robot.Robot;
 
 public class ElevatorIOTalonFX implements ElevatorIO {
 
-    final double elevatorGearing = 12; // real is 6:1
+    final double elevatorGearing = 6;
 
     TalonFX motorA, motorB;
     List<TalonFX> motors;
@@ -52,14 +52,14 @@ public class ElevatorIOTalonFX implements ElevatorIO {
         slot0Configs.kP = 15;
         slot0Configs.kI = 0;
         slot0Configs.kD = 0;
-        slot0Configs.kG = 1.83;
-        slot0Configs.kV = 0.6;
-        slot0Configs.kA = 0.24;
+        slot0Configs.kG = 0.34;
+        slot0Configs.kV = 3.3;
+        slot0Configs.kA = 0;
         slot0Configs.GravityType = GravityTypeValue.Elevator_Static;
 
         MotionMagicConfigs motionMagicConfigs = new MotionMagicConfigs();
-        motionMagicConfigs.MotionMagicCruiseVelocity = 9999;
-        motionMagicConfigs.MotionMagicAcceleration = 3.33;
+        motionMagicConfigs.MotionMagicCruiseVelocity = 0.8;
+        motionMagicConfigs.MotionMagicAcceleration = 2;
         motionMagicConfigs.MotionMagicJerk = 0;
 
         motors.forEach(motor -> {
@@ -87,8 +87,8 @@ public class ElevatorIOTalonFX implements ElevatorIO {
         elevatorSim = new ElevatorSim(
             DCMotor.getKrakenX60Foc(2),
             elevatorGearing,
-            7,
-            0.5,
+            9,
+            0.0356,
             0,
             1.499,
             true,
