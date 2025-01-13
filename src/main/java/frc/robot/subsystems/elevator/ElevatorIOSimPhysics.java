@@ -15,9 +15,8 @@ public class ElevatorIOSimPhysics implements ElevatorIO {
     final double kG = 0;
 
     boolean usingPID = false;
-    double speed = 0;
+    double voltage = 0;
     double target = 0;
-
 
     public ElevatorIOSimPhysics() {
         pid = new PIDController(0.1, 0, 0);
@@ -35,7 +34,7 @@ public class ElevatorIOSimPhysics implements ElevatorIO {
 
     @Override
     public void setPower(double power) {
-        speed = Math.max(-1, Math.min(1, power));
+        voltage = Math.max(-1, Math.min(1, power)) * 12;
         usingPID = false;
     }
 
@@ -48,18 +47,17 @@ public class ElevatorIOSimPhysics implements ElevatorIO {
     @Override
     public void update(ElevatorIOInputs inputs) {
         if (usingPID) {
-            speed = pid.calculate(inputs.position, target);
-            speed = Math.max(-1, Math.min(1, speed));
+            voltage = pid.calculate(inputs.position, target);
+            voltage = Math.max(-1, Math.min(1, voltage));
+            voltage = (voltage * 12) + kG;
         }
         inputs.position = elevatorSim.getPositionMeters() * 300;
-        inputs.speed = speed;
+        inputs.voltage = voltage;
+        inputs.target = target;
     }
 
     @Override
-    public void simulationPeriodic() {
-        double voltage = speed * 12;//RobotController.getBatteryVoltage();
-        if (usingPID) voltage += kG;
-        
+    public void simulationPeriodic() {        
         elevatorSim.setInput(voltage);
         elevatorSim.update(0.020);
 

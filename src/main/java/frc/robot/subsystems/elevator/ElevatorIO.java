@@ -8,7 +8,8 @@ public interface ElevatorIO {
     @Logged
     public class ElevatorIOInputs {
         public double position;
-        public double speed;
+        public double voltage;
+        public double target;
     }
 
     public void update(ElevatorIOInputs inputs);

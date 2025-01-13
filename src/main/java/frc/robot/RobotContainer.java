@@ -86,10 +86,19 @@ public class RobotContainer {
         drivetrain.setDefaultCommand(new DefaultDriveCommand(drivetrain, joystickInputsSupplier, rotationSupplier));
         driverController.back().onTrue(Commands.runOnce(drivetrain::zeroGyroscope));
 
+        driverController.povUp().whileTrue(elevator.runSpeed(1));
+        driverController.povDown().whileTrue(elevator.runSpeed(-0.5));
 
-        driverController.x().whileTrue(elevator.runSpeed(0.5));
+        driverController.x().onTrue(elevator.setPosition(ElevatorSubsystem.L1))
+                            .onFalse(elevator.setPosition(0));
 
         driverController.a().onTrue(elevator.setPosition(ElevatorSubsystem.L2))
+                            .onFalse(elevator.setPosition(0));
+
+        driverController.b().onTrue(elevator.setPosition(ElevatorSubsystem.L3))
+                            .onFalse(elevator.setPosition(0));
+
+        driverController.y().onTrue(elevator.setPosition(ElevatorSubsystem.L4))
                             .onFalse(elevator.setPosition(0));
 
 

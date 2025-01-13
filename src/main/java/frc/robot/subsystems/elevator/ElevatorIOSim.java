@@ -34,7 +34,8 @@ public class ElevatorIOSim implements ElevatorIO {
         }
 
         inputs.position = position;
-        inputs.speed = speed;
+        inputs.voltage = speed * 12;
+        inputs.target = target;
     }
 
     @Override

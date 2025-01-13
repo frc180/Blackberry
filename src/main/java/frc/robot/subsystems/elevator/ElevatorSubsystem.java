@@ -7,13 +7,15 @@ package frc.robot.subsystems.elevator;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Robot;
 import frc.robot.subsystems.elevator.ElevatorIO.ElevatorIOInputs;
 
 @Logged
 public class ElevatorSubsystem extends SubsystemBase {
 
-  public static final int L2 = 400;
+  public static final int L4 = 450;
+  public static final int L3 = 350;
+  public static final int L2 = 200;
+  public static final int L1 = 100;
 
   public ElevatorIO io;
   private ElevatorIOInputs inputs;
@@ -23,11 +25,12 @@ public class ElevatorSubsystem extends SubsystemBase {
   public ElevatorSubsystem() {
     inputs = new ElevatorIOInputs();
 
-    if (Robot.isReal()) {
-      io = new ElevatorIOTalonFX();
-    } else {
-      io = new ElevatorIOSim();
-    }
+    io = new ElevatorIOTalonFX();
+    // if (Robot.isReal()) {
+    //   io = new ElevatorIOTalonFX();
+    // } else {
+    //   io = new ElevatorIOSim();
+    // }
   }
 
   @Override
