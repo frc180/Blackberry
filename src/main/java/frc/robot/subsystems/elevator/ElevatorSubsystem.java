@@ -12,10 +12,11 @@ import frc.robot.subsystems.elevator.ElevatorIO.ElevatorIOInputs;
 @Logged
 public class ElevatorSubsystem extends SubsystemBase {
 
-  public static final int L4 = 450;
-  public static final int L3 = 350;
-  public static final int L2 = 200;
-  public static final int L1 = 100;
+  // Presets in meters, with 0 being the bottom of the elevator
+  public static final double L4 = 1.4;
+  public static final double L3 = 1;
+  public static final double L2 = 0.6;
+  public static final double L1 = 0.25;
 
   public ElevatorIO io;
   private ElevatorIOInputs inputs;

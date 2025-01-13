@@ -43,17 +43,17 @@ public class ElevatorIOTalonFX implements ElevatorIO {
         motors = List.of(motorA, motorB);
 
         Slot0Configs slot0Configs = new Slot0Configs();
-        slot0Configs.kP = 0.05;
+        slot0Configs.kP = 15;
         slot0Configs.kI = 0;
         slot0Configs.kD = 0;
         slot0Configs.kG = 1.83;
-        slot0Configs.kV = 0.002;
-        slot0Configs.kA = 0.0008;
+        slot0Configs.kV = 0.6;
+        slot0Configs.kA = 0.24;
         slot0Configs.GravityType = GravityTypeValue.Elevator_Static;
 
         MotionMagicConfigs motionMagicConfigs = new MotionMagicConfigs();
         motionMagicConfigs.MotionMagicCruiseVelocity = 9999;
-        motionMagicConfigs.MotionMagicAcceleration = 1000;
+        motionMagicConfigs.MotionMagicAcceleration = 3.33;
         motionMagicConfigs.MotionMagicJerk = 0;
 
         motors.forEach(motor -> {
@@ -83,7 +83,7 @@ public class ElevatorIOTalonFX implements ElevatorIO {
             7,
             0.5,
             0,
-            2,
+            1.499,
             true,
             0
         );
@@ -117,7 +117,7 @@ public class ElevatorIOTalonFX implements ElevatorIO {
         );
 
         motorSims.forEach(motorSim -> {
-            motorSim.setRawRotorPosition(elevatorSim.getPositionMeters() * 300);
+            motorSim.setRawRotorPosition(elevatorSim.getPositionMeters());
             // motorSim.setRotorVelocity(elevatorSim.getVelocityMetersPerSecond() * 300); // Breaks motor voltage
             motorSim.setSupplyVoltage(RobotController.getBatteryVoltage());
             // motorSim.setSupplyVoltage(12);
