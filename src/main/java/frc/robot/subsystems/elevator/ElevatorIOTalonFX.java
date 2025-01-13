@@ -2,6 +2,7 @@ package frc.robot.subsystems.elevator;
 
 import java.util.List;
 
+import com.ctre.phoenix6.configs.FeedbackConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -26,6 +27,8 @@ import frc.robot.Robot;
 
 public class ElevatorIOTalonFX implements ElevatorIO {
 
+    final double elevatorGearing = 12; // real is 6:1
+
     TalonFX motorA, motorB;
     List<TalonFX> motors;
     PositionVoltage positionControl;
@@ -41,6 +44,9 @@ public class ElevatorIOTalonFX implements ElevatorIO {
         motorA = new TalonFX(Constants.ELEVATOR_TALON_A);
         motorB = new TalonFX(Constants.ELEVATOR_TALON_B);
         motors = List.of(motorA, motorB);
+
+        FeedbackConfigs feedbackConfigs = new FeedbackConfigs();
+        feedbackConfigs.SensorToMechanismRatio = elevatorGearing;
 
         Slot0Configs slot0Configs = new Slot0Configs();
         slot0Configs.kP = 15;
@@ -59,6 +65,7 @@ public class ElevatorIOTalonFX implements ElevatorIO {
         motors.forEach(motor -> {
             motor.setNeutralMode(NeutralModeValue.Brake);
             TalonFXConfigurator configurator = motor.getConfigurator();
+            configurator.apply(feedbackConfigs);
             configurator.apply(slot0Configs);
             configurator.apply(motionMagicConfigs);
         });
@@ -79,7 +86,7 @@ public class ElevatorIOTalonFX implements ElevatorIO {
 
         elevatorSim = new ElevatorSim(
             DCMotor.getKrakenX60Foc(2),
-            12,
+            elevatorGearing,
             7,
             0.5,
             0,
@@ -117,7 +124,7 @@ public class ElevatorIOTalonFX implements ElevatorIO {
         );
 
         motorSims.forEach(motorSim -> {
-            motorSim.setRawRotorPosition(elevatorSim.getPositionMeters());
+            motorSim.setRawRotorPosition(elevatorSim.getPositionMeters() * elevatorGearing);
             // motorSim.setRotorVelocity(elevatorSim.getVelocityMetersPerSecond() * 300); // Breaks motor voltage
             motorSim.setSupplyVoltage(RobotController.getBatteryVoltage());
             // motorSim.setSupplyVoltage(12);
