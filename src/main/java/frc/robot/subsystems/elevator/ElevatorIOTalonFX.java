@@ -45,29 +45,22 @@ public class ElevatorIOTalonFX implements ElevatorIO {
         motorB = new TalonFX(Constants.ELEVATOR_TALON_B);
         motors = List.of(motorA, motorB);
 
-        FeedbackConfigs feedbackConfigs = new FeedbackConfigs();
-        feedbackConfigs.SensorToMechanismRatio = elevatorGearing;
-
-        Slot0Configs slot0Configs = new Slot0Configs();
-        slot0Configs.kP = 15;
-        slot0Configs.kI = 0;
-        slot0Configs.kD = 0;
-        slot0Configs.kG = 0.34;
-        slot0Configs.kV = 3.3;
-        slot0Configs.kA = 0;
-        slot0Configs.GravityType = GravityTypeValue.Elevator_Static;
-
-        MotionMagicConfigs motionMagicConfigs = new MotionMagicConfigs();
-        motionMagicConfigs.MotionMagicCruiseVelocity = 0.8;
-        motionMagicConfigs.MotionMagicAcceleration = 2;
-        motionMagicConfigs.MotionMagicJerk = 0;
+        TalonFXConfiguration config = new TalonFXConfiguration();
+        config.Feedback.SensorToMechanismRatio = elevatorGearing;
+        config.Slot0.kP = 15;
+        config.Slot0.kI = 0;
+        config.Slot0.kD = 0;
+        config.Slot0.kG = 0.34;
+        config.Slot0.kV = 3.3;
+        config.Slot0.kA = 0;
+        config.Slot0.GravityType = GravityTypeValue.Elevator_Static;
+        config.MotionMagic.MotionMagicCruiseVelocity = 0.8;
+        config.MotionMagic.MotionMagicAcceleration = 2;
+        config.MotionMagic.MotionMagicJerk = 0;
 
         motors.forEach(motor -> {
             motor.setNeutralMode(NeutralModeValue.Brake);
-            TalonFXConfigurator configurator = motor.getConfigurator();
-            configurator.apply(feedbackConfigs);
-            configurator.apply(slot0Configs);
-            configurator.apply(motionMagicConfigs);
+            motor.getConfigurator().apply(config);
         });
 
         positionControl = new PositionVoltage(0);
