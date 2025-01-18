@@ -27,11 +27,12 @@ public class ElevatorSubsystem extends SubsystemBase {
   public ElevatorSubsystem() {
     inputs = new ElevatorIOInputs();
 
-    // io = new ElevatorIOTalonFX();
     if (Robot.isReal()) {
-      io = new ElevatorIOTalonFX();
-    } else {
+      // There is no elevator on the test robot, so we fake it
       io = new ElevatorIOSim();
+    } else {
+      // TalonFX supports realistic physics simulation
+      io = new ElevatorIOTalonFX();
     }
   }
 
