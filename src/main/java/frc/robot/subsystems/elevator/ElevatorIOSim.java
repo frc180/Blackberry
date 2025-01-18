@@ -28,6 +28,9 @@ public class ElevatorIOSim implements ElevatorIO {
 
     @Override
     public void update(ElevatorIOInputs inputs) {
+        // Simulate movement with previously set speed
+        position += speed * 8;
+
         if (usingPID) {
             speed = pid.calculate(position, target);
             speed = Math.max(-1, Math.min(1, speed));
@@ -36,11 +39,5 @@ public class ElevatorIOSim implements ElevatorIO {
         inputs.position = position;
         inputs.voltage = speed * 12;
         inputs.target = target;
-    }
-
-    @Override
-    public void simulationPeriodic() {
-        // Simulate movement with previously set speed
-        position += speed * 8;
     }
 }
