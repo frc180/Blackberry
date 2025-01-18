@@ -14,6 +14,7 @@ import frc.robot.subsystems.elevator.ElevatorIO.ElevatorIOInputs;
 public class ElevatorSubsystem extends SubsystemBase {
 
   // Presets in meters, with 0 being the bottom of the elevator
+  public static final double NET = 1.47;
   public static final double L4 = 1.4;
   public static final double L3 = 1;
   public static final double L2 = 0.6;
