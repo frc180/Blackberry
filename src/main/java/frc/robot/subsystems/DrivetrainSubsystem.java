@@ -35,7 +35,7 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-
+import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
 
 /**
@@ -50,8 +50,8 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
 
     
     // STOLEN FROM SONIC, NOT CORRECT
-    public static final double MAX_SPEED = 4.6; // MAX_SPEED = 5.0292; // Meters per second desired top speed
-    public static final double MAX_SPEED_ACCEL = 6; // Meters per second squared max acceleration, was 6
+    public static final double MAX_SPEED = TunerConstants.kSpeedAt12Volts.baseUnitMagnitude(); // Meters per second desired top speed
+    public static final double MAX_SPEED_ACCEL = 8; // Meters per second squared max acceleration, was 6
     public static final double MAX_ANGULAR_RATE = 1.5 * Math.PI; // 3/4 of a rotation per second max angular velocity
     public static final double MAX_ANGULAR_ACCEL = MAX_ANGULAR_RATE * 8; // was * 4
 
@@ -74,9 +74,10 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     private final SwerveRequest.SysIdSwerveSteerGains m_steerCharacterization = new SwerveRequest.SysIdSwerveSteerGains();
     private final SwerveRequest.SysIdSwerveRotation m_rotationCharacterization = new SwerveRequest.SysIdSwerveRotation();
 
+
     private Rotation2d gyroOffset = new Rotation2d();
-    private Double m_targetHeading = null;
-    private HeadingTarget m_targetHeadingType = HeadingTarget.GYRO;
+    private Double targetHeading = null;
+    private HeadingTarget targetHeadingType = HeadingTarget.POSE;
     private double headingError = 0;
 
     private ProfiledPIDController xPidController, yPidController, driverRotationPidController;
@@ -165,9 +166,9 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         configureAutoBuilder();
 
         xPidController = new ProfiledPIDController(2.5, 0., 0, // 3.1
-                                        new TrapezoidProfile.Constraints(MAX_SPEED, 6));
+                                        new TrapezoidProfile.Constraints(MAX_SPEED, MAX_SPEED_ACCEL));
         yPidController = new ProfiledPIDController(2.5, 0., 0,
-                                        new TrapezoidProfile.Constraints(MAX_SPEED, 6));
+                                        new TrapezoidProfile.Constraints(MAX_SPEED, MAX_SPEED_ACCEL));
 
         driverRotationPidController = new ProfiledPIDController(5, 0., 0, // was 10
                                         new TrapezoidProfile.Constraints(MAX_ANGULAR_RATE, MAX_ANGULAR_ACCEL)); // formerly 9999
@@ -198,11 +199,11 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     }
 
     public Double getTargetHeading() {
-        return m_targetHeading;
+        return targetHeading;
     }
 
     public HeadingTarget getTargetHeadingType() {
-        return m_targetHeadingType;
+        return targetHeadingType;
     }
     
     public void setTargetHeading(Double targetHeading) {
@@ -210,8 +211,8 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     }
 
     public void setTargetHeading(Double targetHeading, HeadingTarget type) {
-        m_targetHeading = targetHeading == null ? null : MathUtil.inputModulus(targetHeading, -180, 180);
-        m_targetHeadingType = type;
+        targetHeading = targetHeading == null ? null : MathUtil.inputModulus(targetHeading, -180, 180);
+        targetHeadingType = type;
         if (targetHeading == null) {
             headingError = 0;
         } else {
@@ -231,16 +232,10 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
 
     public void resetHeadingPID(Rotation2d rotation) {
         driverRotationPidController.reset(rotation.getRadians());
-        // driverRotationPidAlt.reset();
     }
 
     public double calculateHeadingPID(Rotation2d heading, double targetDegrees) {
-        double headingDegrees = heading.getDegrees();
-        headingError = targetDegrees - headingDegrees;
-        return driverRotationPidController.calculate(
-            heading.getRadians(), 
-            Math.toRadians(targetDegrees)
-        );
+        return calculateHeadingPID(heading.getDegrees(), targetDegrees);
     }
 
     public double calculateHeadingPID(double headingDegrees, double targetDegrees) {
@@ -249,6 +244,14 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
             Math.toRadians(headingDegrees), 
             Math.toRadians(targetDegrees)
         );
+    }
+    
+    public ChassisSpeeds calculateChassisSpeeds(Pose2d currentPose, Pose2d targetPose) {
+        double xFeedback = xPidController.calculate(currentPose.getX(), targetPose.getX());
+        double yFeedback = yPidController.calculate(currentPose.getY(), targetPose.getY());
+        double thetaFeedback = calculateHeadingPID(currentPose.getRotation(), targetPose.getRotation().getDegrees());
+
+        return ChassisSpeeds.fromFieldRelativeSpeeds(xFeedback, yFeedback, thetaFeedback, currentPose.getRotation());
     }
 
     public Pose2d getPose() {
