@@ -57,7 +57,7 @@ public class ElevatorIOTalonFX implements ElevatorIO {
 
         motionMagicControl = new MotionMagicVoltage(0);
         voltageControl = new VoltageOut(0);
-        followerControl = new Follower(Constants.ELEVATOR_TALON_A, true);
+        followerControl = new Follower(Constants.ELEVATOR_TALON_A, false);
 
         motorB.setControl(followerControl);
 
