@@ -29,6 +29,7 @@ import frc.robot.commands.DefaultDriveCommand;
 import frc.robot.commands.DriveToPose;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.DrivetrainSubsystem;
+import frc.robot.subsystems.VisionSubsystem;
 import frc.robot.subsystems.elevator.ElevatorSubsystem;
 
 @Logged
@@ -46,6 +47,7 @@ public class RobotContainer {
     public final DrivetrainSubsystem drivetrain = TunerConstants.createDrivetrain();
     @Logged
     public final ElevatorSubsystem elevator = new ElevatorSubsystem();
+    public final VisionSubsystem vision = new VisionSubsystem();
 
     /* Path follower */
     private final SendableChooser<Command> autoChooser;

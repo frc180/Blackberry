@@ -5,15 +5,21 @@ import java.util.List;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Robot;
 import frc.robot.RobotContainer;
 
+@Logged
 public class VisionSubsystem extends SubsystemBase {
     private static final String BACK_LIMELIGHT = "back-limelight";
     public AprilTagFieldLayout aprilTagFieldLayout;
+
+    public Pose2d test = new Pose2d(5, 5, new  Rotation2d());
     
     private List<Integer> redTags = new ArrayList<Integer>() {{
         add(1);
@@ -44,14 +50,6 @@ public class VisionSubsystem extends SubsystemBase {
     }};
     
     public VisionSubsystem() {
-        RobotContainer robotContainer = new RobotContainer();
-        if (DriverStation.getAlliance().get() == DriverStation.Alliance.Blue) {
-
-        } else if (DriverStation.getAlliance().get() == DriverStation.Alliance.Red) {
-            
-        } else {
-
-        }
 
         try {
             aprilTagFieldLayout = AprilTagFieldLayout.loadFromResource(AprilTagFields.k2025Reefscape.m_resourceFile);
