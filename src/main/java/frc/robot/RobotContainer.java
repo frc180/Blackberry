@@ -126,7 +126,7 @@ public class RobotContainer {
 
 
 
-        // Example of using the targetHeadingContinuous to make the robot drive towards the closest side of the reef
+        // Example of using the targetHeadingContinuous to make the robot point towards the closest side of the reef
         driverController.a().whileTrue(drivetrain.targetHeadingContinuous(() -> {
             Pose2d closestReefPose = vision.getClosestReefPose();
             if (closestReefPose == null) {
