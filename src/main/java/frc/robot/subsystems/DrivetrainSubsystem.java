@@ -13,6 +13,8 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+import com.spamrobotics.util.Helpers;
+
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -26,6 +28,7 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.Subsystem;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
@@ -40,10 +43,14 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         POSE
     }
 
-    
+    public enum PoseTarget {
+        STANDARD,
+        REEF
+    }
+
     // STOLEN FROM SONIC, NOT CORRECT
     public static final double MAX_SPEED = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // Meters per second desired top speed
-    public static final double MAX_SPEED_ACCEL = 8; // Meters per second squared max acceleration, was 6
+    public static final double MAX_SPEED_ACCEL = 10; // Meters per second squared max acceleration, was 8
     public static final double MAX_ANGULAR_RATE = 1.5 * Math.PI; // 3/4 of a rotation per second max angular velocity
     public static final double MAX_ANGULAR_ACCEL = MAX_ANGULAR_RATE * 8; // was * 4
 
@@ -71,6 +78,8 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     private Double targetHeading = null;
     private HeadingTarget targetHeadingType = HeadingTarget.POSE;
     private double headingError = 0;
+    private PoseTarget poseTargetType = PoseTarget.STANDARD;
+    private Pose2d targetPose = null;
 
     private ProfiledPIDController xPidController, yPidController, driverRotationPidController;
 
@@ -246,8 +255,57 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         return ChassisSpeeds.fromFieldRelativeSpeeds(xFeedback, yFeedback, thetaFeedback, currentPose.getRotation());
     }
 
+    /**
+     * Returns if the drivetrain is currently targeting a pose that is for Reef scoring.
+     * @return If the drivetrain is targeting a Reef pose. If the pose is not specifically for the reef,
+     * or the pose is null, this returns false.
+     */
+    public boolean isTargetingReefPose() {
+        return poseTargetType == PoseTarget.REEF && targetPose != null;
+    }
+
+    /**
+     * Returns the pose the drivetrain is currently targeting (based on the DriveToPose command)
+     * @return The pose the drivetrain is currently targeting. If no command that targets a pose is running,
+     * this will return null.
+     */
+    public Pose2d getTargetPose() {
+        return targetPose;
+    }
+
+    /**
+     * Sets the target pose for the drivetrain. This is for tracking purposes only - setting this alone will
+     * not cause the robot to move to the pose. To follow a pose, use the DriveToPose command.
+     * @param target
+     */
+    public void setTargetPose(Pose2d target) {
+        targetPose = target;
+    }
+
+    /**
+     * Returns the type of pose we're targeting.
+     * @return The type of pose the drivetrain is targeting. STANDARD by default, or REEF for reef alignment.
+     */
+    public PoseTarget getPoseTargetType() {
+        return poseTargetType;
+    }
+
+    public void setPoseTargetType(PoseTarget type) {
+        poseTargetType = type;
+    }
+
     public Pose2d getPose() {
         return getState().Pose;
+    }
+    
+    public Trigger targetingReef() {
+        return new Trigger(this::isTargetingReefPose);
+    }
+
+    public Trigger withinTargetPoseTolerance(Double xMeters, Double yMeters, Double degrees) {
+        return new Trigger(() -> {
+            return Helpers.withinTolerance(getPose(), targetPose, xMeters, yMeters, degrees);
+        });
     }
 
     private void configureAutoBuilder() {

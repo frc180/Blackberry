@@ -1,5 +1,7 @@
 package com.spamrobotics.util;
 
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import frc.robot.subsystems.DrivetrainSubsystem;
 
@@ -23,5 +25,33 @@ public class Helpers {
     public static double capValue(double value, double max) {
         if (Math.abs(value) > max) return max * (value / Math.abs(value));
         return value;
+    }
+
+    public static boolean withinTolerance(Pose2d pose, Pose2d targetPose, Double xMeters, Double yMeters, Double degrees) {
+        // If one or more of the poses don't exist, we can't be within tolerance
+        if (pose == null || targetPose == null) {
+            return false;
+        }
+        
+        Transform2d diff = null;
+        if (xMeters != null || yMeters != null) {
+            diff = pose.minus(targetPose);
+        }
+
+        boolean xSatisfied = xMeters == null || Math.abs(diff.getX()) <= xMeters;
+        boolean ySatisfied = yMeters == null || Math.abs(diff.getY()) <= yMeters;
+
+        // If we haven't met the x and y criteria, don't bother calculating any further
+        if (!xSatisfied || !ySatisfied) {
+            return false;
+        }
+
+        boolean headingSatisfied;
+        if (degrees == null) {
+            headingSatisfied = true;
+        } else {
+            headingSatisfied = Math.abs(pose.getRotation().getDegrees() - targetPose.getRotation().getDegrees()) <= degrees;
+        }
+        return headingSatisfied;
     }
 }
