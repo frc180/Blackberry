@@ -117,6 +117,11 @@ public class RobotContainer {
         driverController.povDown().and(driverController.leftTrigger()).onTrue(intakeAlgaePivot.extend().alongWith(intakeAlgae.intake()))
                             .onFalse(intakeAlgaePivot.stow().alongWith(intakeAlgae.stopIntake()));
 
+        //left and right alignment for the reef (x is left and b is right)
+        driverController.x().whileTrue(new DriveToPose(drivetrain, () -> vision.getReefPose(true)));
+
+        driverController.b().whileTrue(new DriveToPose(drivetrain, () -> vision.getReefPose(false)));
+
 
         // Example of using DriveToPose command + allowing the position to be influenced by the driver
         Supplier<ChassisSpeeds> additionalSpeedsSupplier = () -> {
