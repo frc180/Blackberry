@@ -136,19 +136,15 @@ public class RobotContainer {
             }
         }, HeadingTarget.POSE));
 
-        // Example of using the targetHeadingContinuous to make the robot drive towards a specific gyro heading
-        driverController.y().whileTrue(drivetrain.targetHeadingContinuous(90.0, HeadingTarget.GYRO));
-
-
         // Example of using DriveToPose command + allowing the position to be influenced by the driver
-        Supplier<ChassisSpeeds> additionalSpeedsSupplier = () -> {
-            return new ChassisSpeeds(driverController.getLeftX() * DrivetrainSubsystem.MAX_SPEED, 0, 0);
-        };
+        // Supplier<ChassisSpeeds> additionalSpeedsSupplier = () -> {
+        //     return new ChassisSpeeds(driverController.getLeftX() * DrivetrainSubsystem.MAX_SPEED, 0, 0);
+        // };
         
-        Command testDrive = new DriveToPose(drivetrain, () -> new Pose2d(14, 5, Rotation2d.fromDegrees(15)))
-                                .withAdditionalSpeeds(additionalSpeedsSupplier);
+        // Command testDrive = new DriveToPose(drivetrain, () -> new Pose2d(14, 5, Rotation2d.fromDegrees(15)))
+        //                         .withAdditionalSpeeds(additionalSpeedsSupplier);
 
-        driverController.rightBumper().whileTrue(testDrive);
+        // driverController.rightBumper().whileTrue(testDrive);
 
         
         // ================== SysId Routines ==================

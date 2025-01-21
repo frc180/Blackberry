@@ -33,7 +33,7 @@ public class ElevatorSubsystem extends SubsystemBase {
       io = new ElevatorIOSim();
     } else {
       // TalonFX supports realistic physics simulation
-      io = new ElevatorIOSim();
+      io = new ElevatorIOTalonFX();
     }
   }
 
