@@ -124,6 +124,9 @@ public class RobotContainer {
 
         driverController.b().whileTrue(new DriveToPose(drivetrain, () -> vision.getReefPose(false)));
 
+        //testing the trigger
+        elevator.elevatorInPosition.whileTrue(Commands.print("ELEVETOR IN POSITINONNN!!!!"));
+
 
 
         // Example of using the targetHeadingContinuous to make the robot point towards the closest side of the reef
