@@ -36,7 +36,7 @@ public class DefaultDriveCommand extends Command {
     @Override
     public void initialize() {
         manuallyRotating = false;
-        m_drivetrainSubsystem.resetHeadingPID(HeadingTarget.GYRO);
+        m_drivetrainSubsystem.setTargetHeading(null);
         // m_drivetrainSubsystem.setTargetHeading(m_drivetrainSubsystem.getGyroscopeRotation().getDegrees(), HeadingTarget.GYRO);
     }
 

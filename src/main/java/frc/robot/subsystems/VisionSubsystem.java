@@ -1,10 +1,9 @@
 package frc.robot.subsystems;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
-
+import java.util.Map.Entry;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.epilogue.Logged;
@@ -12,22 +11,18 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Robot;
 import frc.robot.RobotContainer;
 import frc.robot.util.LimelightHelpers;
+import frc.robot.util.ReefProximity;
 import frc.robot.util.LimelightHelpers.RawFiducial;
 
 @Logged
 public class VisionSubsystem extends SubsystemBase {
 
-    private static final String BACK_LIMELIGHT = "limelight";
+    private static final String SCORING_LIMELIGHT = "limelight";
     public AprilTagFieldLayout aprilTagFieldLayout;
-
-    private boolean odometryEnabled = false;
-    private boolean backLimelightConnected = false;
 
     private boolean canSeeReef = false;
     public int bestReefID = -1;
@@ -39,11 +34,13 @@ public class VisionSubsystem extends SubsystemBase {
 
     int[] fiducialArray = new int[0];
 
+    private final ReefProximity reefProximity;
+
     private List<Integer> redTags = List.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11);
     private List<Integer> blueTags = List.of(12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22);
 
-    private List<Integer> redReefTags = List.of(6,7,8,9,10,11);
-    private List<Integer> blueReefTags = List.of(17, 18, 19, 20, 21, 22);
+    public static final List<Integer> redReefTags = List.of(6,7,8,9,10,11);
+    public static final List<Integer> blueReefTags = List.of(17, 18, 19, 20, 21, 22);
 
     private final Transform2d leftReefTransform = new Transform2d(0.5, -0.25, new Rotation2d());
     private final Transform2d rightReefTransform = new Transform2d(0.5, 0.25, new Rotation2d());
@@ -53,6 +50,9 @@ public class VisionSubsystem extends SubsystemBase {
 
     private Pose2d exampleLeft;
     private Pose2d exampleRight;
+
+    private boolean closestReefPoseValid = false;
+    private Pose2d closestReefPose = Pose2d.kZero;
     
     public VisionSubsystem() {
 
@@ -76,14 +76,23 @@ public class VisionSubsystem extends SubsystemBase {
         exampleLeft = leftReefHashMap.get(18);
         exampleRight = rightReefHashMap.get(18);
 
-        
+        reefProximity = new ReefProximity(leftReefHashMap, rightReefHashMap);
     }
 
     @Override
     public void periodic() {
+        Pose2d robotPose = RobotContainer.instance.drivetrain.getPose();
+        Entry<Integer, Pose2d> closestTagAndPose = reefProximity.closestReefPose(robotPose, Robot.isBlue());
+        if (closestTagAndPose == null) {
+            closestReefPose = Pose2d.kZero;
+            closestReefPoseValid = false;
+        } else {
+            closestReefPose = closestTagAndPose.getValue();
+            closestReefPoseValid = true;
+        }
 
         if (Robot.isReal()) {
-            rawFiducials = LimelightHelpers.getRawFiducials(BACK_LIMELIGHT);
+            rawFiducials = LimelightHelpers.getRawFiducials(SCORING_LIMELIGHT);
             fiducialArray = new int[rawFiducials.length];
             for(int i = 0; i < rawFiducials.length; i++) {
                 fiducialArray[i] = rawFiducials[i].id;
@@ -92,16 +101,19 @@ public class VisionSubsystem extends SubsystemBase {
             bestReefID = getReefTag(rawFiducials);
             System.out.println(bestReefID);
         } else {
-            bestReefID = 18;
+            // Simulate the vision system by selecting the closest reef tag to the robot position
+            if (closestTagAndPose == null) {
+                bestReefID = -1;
+            } else {
+                bestReefID = closestTagAndPose.getKey();
+            }
         }
-
-
     }
 
     public int getReefTag(RawFiducial[] rawFiducial) {
         RawFiducial bestTag = null;
         List<Integer> reefTags;
-        if (DriverStation.getAlliance().isEmpty() || DriverStation.getAlliance().get() == DriverStation.Alliance.Blue) {
+        if (Robot.isBlue()) {
             reefTags = blueReefTags;
         } else {
             reefTags = redReefTags;
@@ -132,9 +144,12 @@ public class VisionSubsystem extends SubsystemBase {
         } else {
             return pose3d.get().toPose2d().transformBy(rightReefTransform);
         }
-
     }
 
+    /**
+     * Returns a scoring pose for the reef based on the last reef tag seen and the alliance color
+     * @param left whether to return the left branch or the right branch scoring pose
+     */
     public Pose2d getReefPose(boolean left) {
         if (left) {
             return leftReefHashMap.get(bestReefID);
@@ -142,6 +157,11 @@ public class VisionSubsystem extends SubsystemBase {
             return rightReefHashMap.get(bestReefID);
         }
     }
-
     
+    /**
+     * Returns the closest reef scoring pose to the robot (accounting for alliance), or null
+     */
+    public Pose2d getClosestReefPose() {
+        return closestReefPoseValid ? closestReefPose : null;
+    }
 }

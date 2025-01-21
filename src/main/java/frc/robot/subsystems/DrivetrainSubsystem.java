@@ -5,34 +5,26 @@ import static edu.wpi.first.units.Units.*;
 import java.util.function.Supplier;
 
 import com.ctre.phoenix6.SignalLogger;
-import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
-
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
-
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.numbers.N1;
-import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import edu.wpi.first.wpilibj.simulation.ElevatorSim;
-import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.generated.TunerConstants;
@@ -211,9 +203,9 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     }
 
     public void setTargetHeading(Double targetHeading, HeadingTarget type) {
-        targetHeading = targetHeading == null ? null : MathUtil.inputModulus(targetHeading, -180, 180);
+        this.targetHeading = targetHeading == null ? null : MathUtil.inputModulus(targetHeading, -180, 180);
         targetHeadingType = type;
-        if (targetHeading == null) {
+        if (this.targetHeading == null) {
             headingError = 0;
         } else {
             headingError = 999; // reset heading error to make sure we don't think we're at the new target immediately
@@ -285,6 +277,18 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         } catch (Exception ex) {
             DriverStation.reportError("Failed to load PathPlanner config and configure AutoBuilder", ex.getStackTrace());
         }
+    }
+
+    public Command targetHeading(Double heading, HeadingTarget type) {
+        return Commands.runOnce(() -> setTargetHeading(heading, type));
+    }
+    
+    public Command targetHeadingContinuous(Double heading, HeadingTarget type) {
+        return Commands.run(() -> setTargetHeading(heading, type));
+    }
+    
+    public Command targetHeadingContinuous(Supplier<Double> headingSupplier, HeadingTarget type) {
+        return Commands.run(() -> setTargetHeading(headingSupplier.get(), type));
     }
 
     /**

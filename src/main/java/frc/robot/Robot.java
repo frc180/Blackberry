@@ -8,6 +8,8 @@ import com.ctre.phoenix6.Utils;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.Epilogue;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -107,7 +109,14 @@ public class Robot extends TimedRobot {
   @Override
   public void simulationPeriodic() {}
 
+  // Helper method to simplify checking if the robot is blue or red alliance
+  public static boolean isBlue() {
+    return DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue;
+  }
 
+  public static boolean isRed() {
+    return !isBlue();
+  }
 }
 
 

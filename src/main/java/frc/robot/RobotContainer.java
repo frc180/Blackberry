@@ -30,6 +30,7 @@ import frc.robot.commands.DriveToPose;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.DrivetrainSubsystem;
 import frc.robot.subsystems.VisionSubsystem;
+import frc.robot.subsystems.DrivetrainSubsystem.HeadingTarget;
 import frc.robot.subsystems.IntakeAlgae.IntakeAlgaeSubsystem;
 import frc.robot.subsystems.IntakeAlgaePivot.IntakeAlgaePivotSubsystem;
 import frc.robot.subsystems.IntakeCoral.IntakeCoralSubsystem;
@@ -60,6 +61,7 @@ public class RobotContainer {
 
     /* Path follower */
     private final SendableChooser<Command> autoChooser;
+    public static RobotContainer instance;
 
     public RobotContainer() {
         autoChooser = AutoBuilder.buildAutoChooser("Tests");
@@ -123,6 +125,21 @@ public class RobotContainer {
         driverController.b().whileTrue(new DriveToPose(drivetrain, () -> vision.getReefPose(false)));
 
 
+
+        // Example of using the targetHeadingContinuous to make the robot drive towards the closest side of the reef
+        driverController.a().whileTrue(drivetrain.targetHeadingContinuous(() -> {
+            Pose2d closestReefPose = vision.getClosestReefPose();
+            if (closestReefPose == null) {
+                return null;
+            } else {
+                return closestReefPose.getRotation().getDegrees();
+            }
+        }, HeadingTarget.POSE));
+
+        // Example of using the targetHeadingContinuous to make the robot drive towards a specific gyro heading
+        driverController.y().whileTrue(drivetrain.targetHeadingContinuous(90.0, HeadingTarget.GYRO));
+
+
         // Example of using DriveToPose command + allowing the position to be influenced by the driver
         Supplier<ChassisSpeeds> additionalSpeedsSupplier = () -> {
             return new ChassisSpeeds(driverController.getLeftX() * DrivetrainSubsystem.MAX_SPEED, 0, 0);
@@ -146,6 +163,8 @@ public class RobotContainer {
         // driverController.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
         drivetrain.registerTelemetry(logger::telemeterize);
+
+        instance = this;
     }
 
     public Command getAutonomousCommand() {
