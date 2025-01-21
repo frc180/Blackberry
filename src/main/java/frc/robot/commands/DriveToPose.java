@@ -3,15 +3,16 @@ package frc.robot.commands;
 import java.util.function.Supplier;
 import com.spamrobotics.util.Helpers;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.DrivetrainSubsystem;
 import frc.robot.subsystems.DrivetrainSubsystem.HeadingTarget;
+import frc.robot.subsystems.DrivetrainSubsystem.PoseTarget;
 
 public class DriveToPose extends Command {
   
     private final DrivetrainSubsystem drivetrain;
+    private final ChassisSpeeds noneSpeeds = new ChassisSpeeds(0, 0, 0);
 
     private Supplier<Pose2d> targetPoseSupplier = null;
     private Pose2d currentPose = null;
@@ -21,7 +22,9 @@ public class DriveToPose extends Command {
     private Double yEndTolerance = null;
     private Double headingEndTolerance = null;
     private boolean dynamicTarget = false;
+    private boolean holdWithinTolerance = false;
     private Supplier<Boolean> finishCriteria = null;
+    private PoseTarget poseTargetType = PoseTarget.STANDARD;
 
     public DriveToPose(DrivetrainSubsystem drivetrainSubsystem, Supplier<Pose2d> targetPoseSupplier) {
         drivetrain = drivetrainSubsystem;
@@ -68,6 +71,16 @@ public class DriveToPose extends Command {
         this.finishCriteria = finishCriteria;
         return this;
     }
+ 
+    public DriveToPose withHoldWithinTolerance(boolean stopWithinTarget) {
+        this.holdWithinTolerance = stopWithinTarget;
+        return this;
+    }
+
+    public DriveToPose withPoseTargetType(PoseTarget target) {
+        poseTargetType = target;
+        return this;
+    }
 
     @Override
     public void initialize() {
@@ -75,6 +88,8 @@ public class DriveToPose extends Command {
         if (!dynamicTarget && targetPoseSupplier != null) {
             targetPose = targetPoseSupplier.get();
         }
+        drivetrain.setPoseTargetType(poseTargetType);
+        drivetrain.setTargetPose(targetPose);
     }
 
     @Override
@@ -82,6 +97,15 @@ public class DriveToPose extends Command {
         currentPose = drivetrain.getPose();
         if (dynamicTarget && targetPoseSupplier != null) {
             targetPose = targetPoseSupplier.get();
+        }
+        drivetrain.setTargetPose(targetPose);
+
+        if (holdWithinTolerance) {
+            boolean inTolerances = Helpers.withinTolerance(currentPose, targetPose, xEndTolerance, yEndTolerance, headingEndTolerance);
+            if (inTolerances) {
+                drivetrain.drive(noneSpeeds);
+                return;
+            }
         }
 
         ChassisSpeeds speeds = drivetrain.calculateChassisSpeeds(currentPose, targetPose);
@@ -93,33 +117,25 @@ public class DriveToPose extends Command {
 
     @Override
     public boolean isFinished() {
+        // If the desired behavior is to hold position within the tolerance window, instead
+        // of exiting the command, then we should not ever exist by ourselves.
+        if (holdWithinTolerance) {
+            return false;
+        }
         // If no end tolerances are set, then the command will never finish on its own
         if (xEndTolerance == null && yEndTolerance == null && headingEndTolerance == null && finishCriteria == null) {
             return false;
         }
-        
-        Transform2d diff = null;
-        if (xEndTolerance != null || yEndTolerance != null) {
-            diff = currentPose.minus(targetPose);
-        }
-
-        boolean xSatisfied = xEndTolerance == null || Math.abs(diff.getX()) <= xEndTolerance;
-        boolean ySatisfied = yEndTolerance == null || Math.abs(diff.getY()) <= yEndTolerance;
-
-        boolean headingSatisfied;
-        if (headingEndTolerance == null) {
-            headingSatisfied = true;
-        } else {
-            headingSatisfied = Math.abs(currentPose.getRotation().getDegrees() - targetPose.getRotation().getDegrees()) <= headingEndTolerance;
-        }
 
         boolean finishCriteriaSatisfied = finishCriteria == null || finishCriteria.get();
+        boolean inTolerances = Helpers.withinTolerance(currentPose, targetPose, xEndTolerance, yEndTolerance, headingEndTolerance);
 
-        return xSatisfied && ySatisfied && headingSatisfied & finishCriteriaSatisfied;
+        return inTolerances && finishCriteriaSatisfied;
     }
 
     @Override
     public void end(boolean interrupted) {
-        drivetrain.drive(new ChassisSpeeds(0, 0, 0));
+        drivetrain.drive(noneSpeeds);
+        drivetrain.setTargetPose(null);
     }
 }

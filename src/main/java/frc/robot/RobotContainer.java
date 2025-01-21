@@ -4,19 +4,14 @@
 
 package frc.robot;
 
-import static edu.wpi.first.units.Units.*;
 import java.util.function.DoubleSupplier;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
-import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.spamrobotics.util.JoystickInputs;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -31,6 +26,7 @@ import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.DrivetrainSubsystem;
 import frc.robot.subsystems.VisionSubsystem;
 import frc.robot.subsystems.DrivetrainSubsystem.HeadingTarget;
+import frc.robot.subsystems.DrivetrainSubsystem.PoseTarget;
 import frc.robot.subsystems.IntakeAlgae.IntakeAlgaeSubsystem;
 import frc.robot.subsystems.IntakeAlgaePivot.IntakeAlgaePivotSubsystem;
 import frc.robot.subsystems.IntakeCoral.IntakeCoralSubsystem;
@@ -120,13 +116,14 @@ public class RobotContainer {
                             .onFalse(intakeAlgaePivot.stow().alongWith(intakeAlgae.stopIntake()));
 
         //left and right alignment for the reef (x is left and b is right)
-        driverController.x().whileTrue(new DriveToPose(drivetrain, () -> vision.getReefPose(true)));
-
-        driverController.b().whileTrue(new DriveToPose(drivetrain, () -> vision.getReefPose(false)));
+        driverController.x().whileTrue(new DriveToPose(drivetrain, () -> vision.getReefPose(true))
+                                        .withPoseTargetType(PoseTarget.REEF));
 
         //testing the trigger
         elevator.elevatorInPosition.whileTrue(Commands.print("ELEVETOR IN POSITINONNN!!!!"));
 
+        driverController.b().whileTrue(new DriveToPose(drivetrain, () -> vision.getReefPose(false))
+                                        .withPoseTargetType(PoseTarget.REEF));
 
 
         // Example of using the targetHeadingContinuous to make the robot point towards the closest side of the reef
@@ -139,12 +136,19 @@ public class RobotContainer {
             }
         }, HeadingTarget.POSE));
 
+        // Example of doing something when within 2 meters of the reef     
+        Trigger nearReef = drivetrain.targetingReef()
+                            .and(drivetrain.withinTargetPoseTolerance(2.0, 2.0, null)); 
+        nearReef.whileTrue(Commands.print("Near the Reef"));
+
         // Example of using DriveToPose command + allowing the position to be influenced by the driver
         // Supplier<ChassisSpeeds> additionalSpeedsSupplier = () -> {
         //     return new ChassisSpeeds(driverController.getLeftX() * DrivetrainSubsystem.MAX_SPEED, 0, 0);
         // };
         
         // Command testDrive = new DriveToPose(drivetrain, () -> new Pose2d(14, 5, Rotation2d.fromDegrees(15)))
+        //                         .withXEndTolerance(4)
+        //                         .withHoldWithinTolerance(true)
         //                         .withAdditionalSpeeds(additionalSpeedsSupplier);
 
         // driverController.rightBumper().whileTrue(testDrive);
