@@ -3,6 +3,7 @@ package frc.robot.subsystems;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
+import com.spamrobotics.vision.LimelightStatus;
 import java.util.Map.Entry;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
@@ -22,6 +23,7 @@ import frc.robot.util.LimelightHelpers.RawFiducial;
 public class VisionSubsystem extends SubsystemBase {
 
     private static final String SCORING_LIMELIGHT = "limelight";
+
     public AprilTagFieldLayout aprilTagFieldLayout;
 
     private boolean canSeeReef = false;
@@ -34,6 +36,7 @@ public class VisionSubsystem extends SubsystemBase {
 
     int[] fiducialArray = new int[0];
 
+    private final LimelightStatus scoringLimelightStatus = new LimelightStatus(SCORING_LIMELIGHT);
     private final ReefProximity reefProximity;
 
     private List<Integer> redTags = List.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11);
@@ -53,6 +56,7 @@ public class VisionSubsystem extends SubsystemBase {
 
     private boolean closestReefPoseValid = false;
     private Pose2d closestReefPose = Pose2d.kZero;
+    private boolean scoringLimelightConnected = false;
     
     public VisionSubsystem() {
 
@@ -81,6 +85,10 @@ public class VisionSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
+        // Refresh the limelight status
+        scoringLimelightStatus.update();
+        scoringLimelightConnected = scoringLimelightStatus.isConnected();
+
         Pose2d robotPose = RobotContainer.instance.drivetrain.getPose();
         Entry<Integer, Pose2d> closestTagAndPose = reefProximity.closestReefPose(robotPose, Robot.isBlue());
         if (closestTagAndPose == null) {

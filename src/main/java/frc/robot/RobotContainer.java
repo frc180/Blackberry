@@ -39,24 +39,24 @@ import frc.robot.subsystems.elevator.ElevatorSubsystem;
 
 @Logged
 public class RobotContainer {
-    private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
-    private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
+    // private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
 
     public final static double DEADBAND = 0.025;
     public final CommandXboxController driverController = new CommandXboxController(0);
     public final CommandGenericHID testController = new CommandGenericHID(1);
     private final JoystickInputs inputs = new JoystickInputs();
 
-    private final Telemetry logger = new Telemetry(MaxSpeed);
+    private final Telemetry logger = new Telemetry(DrivetrainSubsystem.MAX_SPEED);
 
     public final DrivetrainSubsystem drivetrain = TunerConstants.createDrivetrain();
 
+    @Logged(name = "Vision")
     public final VisionSubsystem vision = new VisionSubsystem();
     public final IntakeAlgaeSubsystem intakeAlgae = new IntakeAlgaeSubsystem();
     public final IntakeAlgaePivotSubsystem intakeAlgaePivot = new IntakeAlgaePivotSubsystem();
     public final IntakeCoralSubsystem intakeCoral = new IntakeCoralSubsystem();
     public final IntakeCoralPivotSubsystem intakeCoralPivot = new IntakeCoralPivotSubsystem();
-    @Logged
+    @Logged(name = "Elevator")
     public final ElevatorSubsystem elevator = new ElevatorSubsystem();
 
     /* Path follower */

@@ -19,6 +19,7 @@ import frc.robot.util.LimelightHelpers;
 public class Robot extends TimedRobot {
   private Command m_autonomousCommand;
 
+  @Logged(name = "RobotContainer")
   private final RobotContainer m_robotContainer;
 
   private final boolean kUseLimelight = false;

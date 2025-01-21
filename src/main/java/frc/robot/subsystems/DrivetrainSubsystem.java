@@ -42,7 +42,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
 
     
     // STOLEN FROM SONIC, NOT CORRECT
-    public static final double MAX_SPEED = TunerConstants.kSpeedAt12Volts.baseUnitMagnitude(); // Meters per second desired top speed
+    public static final double MAX_SPEED = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // Meters per second desired top speed
     public static final double MAX_SPEED_ACCEL = 8; // Meters per second squared max acceleration, was 6
     public static final double MAX_ANGULAR_RATE = 1.5 * Math.PI; // 3/4 of a rotation per second max angular velocity
     public static final double MAX_ANGULAR_ACCEL = MAX_ANGULAR_RATE * 8; // was * 4
