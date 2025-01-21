@@ -30,6 +30,10 @@ import frc.robot.commands.DriveToPose;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.DrivetrainSubsystem;
 import frc.robot.subsystems.VisionSubsystem;
+import frc.robot.subsystems.IntakeAlgae.IntakeAlgaeSubsystem;
+import frc.robot.subsystems.IntakeAlgaePivot.IntakeAlgaePivotSubsystem;
+import frc.robot.subsystems.IntakeCoral.IntakeCoralSubsystem;
+import frc.robot.subsystems.IntakeCoralPivot.IntakeCoralPivotSubsystem;
 import frc.robot.subsystems.elevator.ElevatorSubsystem;
 
 @Logged
@@ -45,9 +49,14 @@ public class RobotContainer {
     private final Telemetry logger = new Telemetry(MaxSpeed);
 
     public final DrivetrainSubsystem drivetrain = TunerConstants.createDrivetrain();
+
+    public final VisionSubsystem vision = new VisionSubsystem();
+    public final IntakeAlgaeSubsystem intakeAlgae = new IntakeAlgaeSubsystem();
+    public final IntakeAlgaePivotSubsystem intakeAlgaePivot = new IntakeAlgaePivotSubsystem();
+    public final IntakeCoralSubsystem intakeCoral = new IntakeCoralSubsystem();
+    public final IntakeCoralPivotSubsystem intakeCoralPivot = new IntakeCoralPivotSubsystem();
     @Logged
     public final ElevatorSubsystem elevator = new ElevatorSubsystem();
-    public final VisionSubsystem vision = new VisionSubsystem();
 
     /* Path follower */
     private final SendableChooser<Command> autoChooser;
@@ -83,20 +92,35 @@ public class RobotContainer {
         drivetrain.setDefaultCommand(new DefaultDriveCommand(drivetrain, joystickInputsSupplier, rotationSupplier));
         driverController.back().onTrue(Commands.runOnce(drivetrain::zeroGyroscope));
 
-        driverController.povUp().whileTrue(elevator.runSpeed(1));
-        driverController.povDown().whileTrue(elevator.runSpeed(-0.5));
 
-        driverController.x().onTrue(elevator.setPosition(ElevatorSubsystem.L1))
+//Elevator
+        //Y = L1; LB = L2; RT = L3; RB = L4
+        driverController.y().onTrue(elevator.setPosition(ElevatorSubsystem.L1))
                             .onFalse(elevator.setPosition(0));
 
-        driverController.a().onTrue(elevator.setPosition(ElevatorSubsystem.L2))
+        driverController.leftBumper().onTrue(elevator.setPosition(ElevatorSubsystem.L2))
                             .onFalse(elevator.setPosition(0));
 
-        driverController.b().onTrue(elevator.setPosition(ElevatorSubsystem.L3))
+        driverController.rightTrigger().onTrue(elevator.setPosition(ElevatorSubsystem.L3))
                             .onFalse(elevator.setPosition(0));
 
-        driverController.y().onTrue(elevator.setPosition(ElevatorSubsystem.L4))
+        driverController.rightBumper().onTrue(elevator.setPosition(ElevatorSubsystem.L4))
                             .onFalse(elevator.setPosition(0));
+
+        //Coral Intake (using left trigger)
+        //Left Paddle = POV down
+        //Right Paddle = POV up
+        driverController.leftTrigger().onTrue(intakeCoralPivot.setPosition(IntakeCoralPivotSubsystem.extend).alongWith(intakeCoral.intake()))
+                            .onFalse(intakeCoralPivot.setPosition(IntakeCoralPivotSubsystem.stow).alongWith(intakeCoral.stopIntake()));
+
+        //Algae Intake (using left paddle + right trigger)
+        driverController.povDown().and(driverController.leftTrigger()).onTrue(intakeAlgaePivot.extend().alongWith(intakeAlgae.intake()))
+                            .onFalse(intakeAlgaePivot.stow().alongWith(intakeAlgae.stopIntake()));
+
+        //left and right alignment for the reef (x is left and b is right)
+        driverController.x().whileTrue(new DriveToPose(drivetrain, () -> vision.getReefPose(true)));
+
+        driverController.b().whileTrue(new DriveToPose(drivetrain, () -> vision.getReefPose(false)));
 
 
         // Example of using DriveToPose command + allowing the position to be influenced by the driver

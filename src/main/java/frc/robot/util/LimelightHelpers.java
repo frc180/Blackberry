@@ -9,6 +9,7 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.TimestampedDoubleArray;
 import frc.robot.util.LimelightHelpers.LimelightResults;
 import frc.robot.util.LimelightHelpers.PoseEstimate;
+import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -466,6 +467,8 @@ public class LimelightHelpers {
     /**
      * Represents a Limelight Raw Fiducial result from Limelight's NetworkTables output.
      */
+
+    @Logged
     public static class RawFiducial {
         public int id = 0;
         public double txnc = 0;
