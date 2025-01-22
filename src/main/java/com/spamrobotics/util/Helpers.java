@@ -53,7 +53,8 @@ public class Helpers {
         } else {
             double poseDegrees = MathUtil.inputModulus(pose.getRotation().getDegrees(), -180, 180);
             double targetPoseDegrees = MathUtil.inputModulus(targetPose.getRotation().getDegrees(), -180, 180);
-            headingSatisfied = Math.abs(poseDegrees - targetPoseDegrees) <= degrees;
+            double degreesDiff = MathUtil.inputModulus(poseDegrees - targetPoseDegrees, -180, 180);
+            headingSatisfied = Math.abs(degreesDiff) <= degrees;
         }
         return headingSatisfied;
     }
