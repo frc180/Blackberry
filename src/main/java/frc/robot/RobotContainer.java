@@ -4,6 +4,7 @@
 
 package frc.robot;
 
+import java.util.Set;
 import java.util.function.DoubleSupplier;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -93,6 +94,7 @@ public class RobotContainer {
 
 //Elevator
         //Y = L1; LB = L2; RT = L3; RB = L4
+        /*
         driverController.y().onTrue(elevator.setPosition(ElevatorSubsystem.L1))
                             .onFalse(elevator.setPosition(0));
 
@@ -104,6 +106,8 @@ public class RobotContainer {
 
         driverController.rightBumper().onTrue(elevator.setPosition(ElevatorSubsystem.L4))
                             .onFalse(elevator.setPosition(0));
+        */
+
 
         //Coral Intake (using left trigger)
         //Left Paddle = POV down
@@ -138,8 +142,24 @@ public class RobotContainer {
 
         // Example of doing something when within 2 meters of the reef     
         Trigger nearReef = drivetrain.targetingReef()
-                            .and(drivetrain.withinTargetPoseTolerance(2.0, 2.0, null)); 
-        nearReef.whileTrue(Commands.print("Near the Reef"));
+                            .and(drivetrain.withinTargetPoseTolerance(1.0, 1.0, 90.0)); 
+
+        Supplier<Command> chosenElevatorHeight = () -> {
+            if (driverController.y().getAsBoolean()) {
+                return elevator.setPosition(ElevatorSubsystem.L1);
+            } else if (driverController.leftBumper().getAsBoolean()) {
+                return elevator.setPosition(ElevatorSubsystem.L2);
+            } else if (driverController.rightTrigger().getAsBoolean()) {
+                return elevator.setPosition(ElevatorSubsystem.L3);
+            } else if (driverController.rightBumper().getAsBoolean()) {
+                return elevator.setPosition(ElevatorSubsystem.L4);
+            } else {
+                return elevator.setPosition(0);
+            }
+        };
+
+        nearReef.whileTrue(Commands.defer(chosenElevatorHeight, Set.of(elevator)))
+                            .onFalse(elevator.setPosition(0));
 
         // Example of using DriveToPose command + allowing the position to be influenced by the driver
         // Supplier<ChassisSpeeds> additionalSpeedsSupplier = () -> {
