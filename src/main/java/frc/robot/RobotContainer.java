@@ -119,6 +119,9 @@ public class RobotContainer {
         driverController.x().whileTrue(new DriveToPose(drivetrain, () -> vision.getReefPose(true))
                                         .withPoseTargetType(PoseTarget.REEF));
 
+        //testing the trigger
+        elevator.elevatorInPosition.whileTrue(Commands.print("ELEVETOR IN POSITINONNN!!!!"));
+
         driverController.b().whileTrue(new DriveToPose(drivetrain, () -> vision.getReefPose(false))
                                         .withPoseTargetType(PoseTarget.REEF));
 
