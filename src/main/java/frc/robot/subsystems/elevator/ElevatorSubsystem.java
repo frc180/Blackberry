@@ -64,8 +64,7 @@ public class ElevatorSubsystem extends SubsystemBase {
 
   public Command setPosition(double encoderPosition) {
     return this.run(() -> {
-      io.setPosition(encoderPosition);
-      targetPosition = encoderPosition;
+      setPositionDirect(encoderPosition);
     });
   }
 
@@ -75,5 +74,10 @@ public class ElevatorSubsystem extends SubsystemBase {
     } else {
       return false;
     }
+  }
+
+  public void setPositionDirect(double encoderPosition) {
+    io.setPosition(encoderPosition);
+    targetPosition = encoderPosition;
   }
 }

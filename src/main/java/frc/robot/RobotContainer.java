@@ -68,11 +68,18 @@ public class RobotContainer {
     }
 
     private void configureBindings() {
-        final Trigger driverLeftTrigger = driverController.leftTrigger();
+        final Trigger driverIntake = driverController.leftTrigger();
+        final Trigger driverL1 = driverController.y();
+        final Trigger driverL2 = driverController.leftBumper();
+        final Trigger driverL3 = driverController.rightTrigger();
+        final Trigger driverL4 = driverController.rightBumper();
+        final Trigger driverLeftReef = driverController.x();
+        final Trigger driverRightReef = driverController.b();
+        final Trigger algaeMode = driverController.povDown();
 
         final Function<Double, Double> axisToLinearSpeed = (axis) -> {
             axis *= DrivetrainSubsystem.MAX_SPEED;
-             if (driverLeftTrigger.getAsBoolean()) axis *= 0.5;
+             if (driverIntake.getAsBoolean()) axis *= 0.5;
              return axis;
          };
 
@@ -112,21 +119,22 @@ public class RobotContainer {
         //Coral Intake (using left trigger)
         //Left Paddle = POV down
         //Right Paddle = POV up
-        driverController.leftTrigger().onTrue(intakeCoralPivot.setPosition(IntakeCoralPivotSubsystem.extend).alongWith(intakeCoral.intake()))
+        driverIntake.onTrue(intakeCoralPivot.setPosition(IntakeCoralPivotSubsystem.extend).alongWith(intakeCoral.intake()))
                             .onFalse(intakeCoralPivot.setPosition(IntakeCoralPivotSubsystem.stow).alongWith(intakeCoral.stopIntake()));
 
         //Algae Intake (using left paddle + right trigger)
-        driverController.povDown().and(driverController.leftTrigger()).onTrue(intakeAlgaePivot.extend().alongWith(intakeAlgae.intake()))
+        algaeMode.and(driverIntake).onTrue(intakeAlgaePivot.extend().alongWith(intakeAlgae.intake()))
                             .onFalse(intakeAlgaePivot.stow().alongWith(intakeAlgae.stopIntake()));
 
         //left and right alignment for the reef (x is left and b is right)
-        driverController.x().whileTrue(new DriveToPose(drivetrain, () -> vision.getReefPose(true))
+        driverLeftReef.whileTrue(new DriveToPose(drivetrain, () -> vision.getReefPose(true))
                                         .withPoseTargetType(PoseTarget.REEF));
 
-        //testing the trigger
+                                        
+        //testing the trigger - might use this to decide whether or not to score (is elevator at 0?)
         elevator.elevatorInPosition.whileTrue(Commands.print("ELEVETOR IN POSITINONNN!!!!"));
 
-        driverController.b().whileTrue(new DriveToPose(drivetrain, () -> vision.getReefPose(false))
+        driverRightReef.whileTrue(new DriveToPose(drivetrain, () -> vision.getReefPose(false))
                                         .withPoseTargetType(PoseTarget.REEF));
 
 
@@ -144,22 +152,25 @@ public class RobotContainer {
         Trigger nearReef = drivetrain.targetingReef()
                             .and(drivetrain.withinTargetPoseTolerance(1.0, 1.0, 90.0)); 
 
-        Supplier<Command> chosenElevatorHeight = () -> {
-            if (driverController.y().getAsBoolean()) {
-                return elevator.setPosition(ElevatorSubsystem.L1);
-            } else if (driverController.leftBumper().getAsBoolean()) {
-                return elevator.setPosition(ElevatorSubsystem.L2);
-            } else if (driverController.rightTrigger().getAsBoolean()) {
-                return elevator.setPosition(ElevatorSubsystem.L3);
-            } else if (driverController.rightBumper().getAsBoolean()) {
-                return elevator.setPosition(ElevatorSubsystem.L4);
-            } else {
-                return elevator.setPosition(0);
-            }
-        };
+        Command chosenElevatorHeight = elevator.run(() -> {
+            if (driverL1.getAsBoolean()) {
+                elevator.setPositionDirect(ElevatorSubsystem.L1);
 
-        nearReef.whileTrue(Commands.defer(chosenElevatorHeight, Set.of(elevator)))
-                            .onFalse(elevator.setPosition(0));
+            } else if (driverL2.getAsBoolean()) {
+                elevator.setPositionDirect(ElevatorSubsystem.L2);
+
+            } else if (driverL3.getAsBoolean()) {
+                elevator.setPositionDirect(ElevatorSubsystem.L3);
+
+            } else if (driverL4.getAsBoolean()) {
+                elevator.setPositionDirect(ElevatorSubsystem.L4);
+
+            } else {
+                elevator.setPositionDirect(0);
+            }
+        });
+
+        nearReef.whileTrue(chosenElevatorHeight).onFalse(elevator.setPosition(0));
 
         // Example of using DriveToPose command + allowing the position to be influenced by the driver
         // Supplier<ChassisSpeeds> additionalSpeedsSupplier = () -> {
