@@ -1,5 +1,6 @@
 package com.spamrobotics.util;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -50,7 +51,9 @@ public class Helpers {
         if (degrees == null) {
             headingSatisfied = true;
         } else {
-            headingSatisfied = Math.abs(pose.getRotation().getDegrees() - targetPose.getRotation().getDegrees()) <= degrees;
+            double poseDegrees = MathUtil.inputModulus(pose.getRotation().getDegrees(), -180, 180);
+            double targetPoseDegrees = MathUtil.inputModulus(targetPose.getRotation().getDegrees(), -180, 180);
+            headingSatisfied = Math.abs(poseDegrees - targetPoseDegrees) <= degrees;
         }
         return headingSatisfied;
     }
