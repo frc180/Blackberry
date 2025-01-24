@@ -17,6 +17,7 @@ import frc.robot.Robot;
 import frc.robot.RobotContainer;
 import frc.robot.util.LimelightHelpers;
 import frc.robot.util.ReefProximity;
+import frc.robot.util.LimelightHelpers.PoseEstimate;
 import frc.robot.util.LimelightHelpers.RawFiducial;
 
 @Logged
@@ -88,6 +89,12 @@ public class VisionSubsystem extends SubsystemBase {
         // Refresh the limelight status
         scoringLimelightStatus.update();
         scoringLimelightConnected = scoringLimelightStatus.isConnected();
+
+        // Update odometry using Limelight in apriltag mode
+        PoseEstimate scoringPoseEstimate = LimelightHelpers.getBotPoseEstimate_wpiBlue(SCORING_LIMELIGHT);
+        if (scoringPoseEstimate != null) {
+            RobotContainer.instance.drivetrain.addVisionMeasurement(scoringPoseEstimate.pose, scoringPoseEstimate.timestampSeconds);
+        }
 
         Pose2d robotPose = RobotContainer.instance.drivetrain.getPose();
         Entry<Integer, Pose2d> closestTagAndPose = reefProximity.closestReefPose(robotPose, Robot.isBlue());
@@ -171,5 +178,31 @@ public class VisionSubsystem extends SubsystemBase {
      */
     public Pose2d getClosestReefPose() {
         return closestReefPoseValid ? closestReefPose : null;
+    }
+
+    final boolean megatag2Enabled = false;
+    public PoseEstimate validatePoseEstimate(PoseEstimate poseEstimate, double deltaSeconds) {
+        if (poseEstimate == null) return null;
+
+        if (megatag2Enabled) {
+            if (poseEstimate.tagCount == 0) return null;
+            if (Math.abs(RobotContainer.instance.drivetrain.getPigeon2().getRate()) > 720) return null;
+        } else {
+            double tagMin = 1;
+            double tagMax = 2;
+            double minArea = poseEstimate.tagCount == 1 ? 0.18 : 0.08;
+            if (poseEstimate.tagCount > tagMax || poseEstimate.tagCount < tagMin) return null;
+            if (poseEstimate.avgTagArea < minArea) return null;
+            if (poseEstimate.avgTagDist > 6) return null;
+
+            // Rejected if the pose estimate is too far from the last one
+            // if (lastPoseEstimate != null && deltaSeconds <= 0.25) {
+            //     double maxReasonableDistance = deltaSeconds * DrivetrainSubsystem.MAX_SPEED;
+            //     Translation2d diff = poseEstimate.pose.getTranslation().minus(lastPoseEstimate.pose.getTranslation());
+            //     if (!Helpers.withinTolerance(diff, maxReasonableDistance)) return null;
+            // }
+        }
+
+        return poseEstimate;
     }
 }
