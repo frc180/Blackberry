@@ -37,6 +37,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.Robot;
 import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
 
@@ -189,6 +190,10 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         driverRotationPidController = new ProfiledPIDController(5, 0., 0, // was 10 // was 5
                                         new TrapezoidProfile.Constraints(MAX_ANGULAR_RATE, MAX_ANGULAR_ACCEL)); // formerly 9999
         driverRotationPidController.enableContinuousInput(-Math.PI, Math.PI);
+
+        if (Robot.isSimulation()) {
+            resetPose(new Pose2d(8.77, 4.2, Rotation2d.fromDegrees(90)));
+        }
 
     }
 

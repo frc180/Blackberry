@@ -12,6 +12,7 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.spamrobotics.util.JoystickInputs;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -133,9 +134,10 @@ public class RobotContainer {
             }
         }, HeadingTarget.POSE));
 
-        // Example of doing something when within 2 meters of the reef     
+        // Example of trigger that does something when within 0.8 meters of the reef     
         Trigger nearReef = drivetrain.targetingReef()
-                            .and(drivetrain.withinTargetPoseTolerance(1.0, 1.0, 90.0)); 
+                            .and(drivetrain.withinTargetPoseTolerance(0.8, 0.8, 90.0))
+                            .debounce(0.5, DebounceType.kFalling); 
 
         Command chosenElevatorHeight = elevator.run(() -> {
             if (driverL1.getAsBoolean()) {
