@@ -39,6 +39,10 @@ public class ElevatorIOTalonFX implements ElevatorIO {
 
         TalonFXConfiguration config = new TalonFXConfiguration();
         config.Feedback.SensorToMechanismRatio = elevatorGearing;
+        config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 1.49;
+        // config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = -0.01;
+        config.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+        // config.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
         config.Slot0.kP = 15;
         config.Slot0.kI = 0;
         config.Slot0.kD = 0;

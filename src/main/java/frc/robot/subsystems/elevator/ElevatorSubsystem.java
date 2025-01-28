@@ -38,10 +38,8 @@ public class ElevatorSubsystem extends SubsystemBase {
     inputs = new ElevatorIOInputs();
 
     if (Robot.isReal()) {
-      // There is no elevator on the test robot, so we fake it
       io = new ElevatorIOSim();
     } else {
-      // TalonFX supports realistic physics simulation
       io = new ElevatorIOSim();
     }
   }
