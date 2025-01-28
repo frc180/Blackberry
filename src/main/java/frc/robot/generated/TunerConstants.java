@@ -80,7 +80,7 @@ public class TunerConstants {
 
     private static final double kDriveGearRatio = 6.122448979591837;
     private static final double kSteerGearRatio = 12.8;
-    private static final Distance kWheelRadius = Inches.of(2);
+    private static final Distance kWheelRadius = Inches.of(1.8125);
 
     private static final boolean kInvertLeftSide = false;
     private static final boolean kInvertRightSide = true;

@@ -2,6 +2,7 @@ package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.*;
 
+import java.util.List;
 import java.util.function.Supplier;
 
 import com.ctre.phoenix6.SignalLogger;
@@ -13,13 +14,19 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+import com.pathplanner.lib.path.GoalEndState;
+import com.pathplanner.lib.path.PathConstraints;
+import com.pathplanner.lib.path.PathPlannerPath;
+import com.pathplanner.lib.path.Waypoint;
 import com.spamrobotics.util.Helpers;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.kinematics.Odometry;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -67,6 +74,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
 
     /** Swerve request to apply during robot-centric path following */
     private final SwerveRequest.ApplyRobotSpeeds m_pathApplyRobotSpeeds = new SwerveRequest.ApplyRobotSpeeds();
+    private final SwerveRequest.ApplyRobotSpeeds autoApplyRobotSpeeds = new SwerveRequest.ApplyRobotSpeeds();
 
     /* Swerve requests to apply during SysId characterization */
     private final SwerveRequest.SysIdSwerveTranslation m_translationCharacterization = new SwerveRequest.SysIdSwerveTranslation();
@@ -83,6 +91,13 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
 
     private ProfiledPIDController xPidController, yPidController, driverRotationPidController;
 
+    private RobotConfig config;
+    List<Waypoint> waypoints = PathPlannerPath.waypointsFromPoses(
+        new Pose2d(7.4, 5, new Rotation2d()),
+        new Pose2d(5.347, 5.074, new Rotation2d())
+    );
+
+    PathConstraints constraints = new PathConstraints(MAX_SPEED, MAX_SPEED_ACCEL, MAX_ANGULAR_RATE, MAX_ANGULAR_ACCEL); //must be in m/s and rad/s
 
     /* SysId routine for characterizing translation. This is used to find PID gains for the drive motors. */
     private final SysIdRoutine m_sysIdRoutineTranslation = new SysIdRoutine(
@@ -166,14 +181,15 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         }
         configureAutoBuilder();
 
-        xPidController = new ProfiledPIDController(2.5, 0., 0, // 3.1
+        xPidController = new ProfiledPIDController(3.5, 0., 0.05, // 3.5 almost stable //3.2 good
                                         new TrapezoidProfile.Constraints(MAX_SPEED, MAX_SPEED_ACCEL));
-        yPidController = new ProfiledPIDController(2.5, 0., 0,
+        yPidController = new ProfiledPIDController(3.5, 0., 0.05, // 3.5 almost stable //3.2 good
                                         new TrapezoidProfile.Constraints(MAX_SPEED, MAX_SPEED_ACCEL));
 
-        driverRotationPidController = new ProfiledPIDController(5, 0., 0, // was 10
+        driverRotationPidController = new ProfiledPIDController(5, 0., 0, // was 10 // was 5
                                         new TrapezoidProfile.Constraints(MAX_ANGULAR_RATE, MAX_ANGULAR_ACCEL)); // formerly 9999
         driverRotationPidController.enableContinuousInput(-Math.PI, Math.PI);
+
     }
 
     public void drive(ChassisSpeeds speeds) {
@@ -310,26 +326,17 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
 
     private void configureAutoBuilder() {
         try {
-            var config = RobotConfig.fromGUISettings();
+            config = RobotConfig.fromGUISettings();
             AutoBuilder.configure(
-                () -> getState().Pose,   // Supplier of current robot pose
+                () -> getPose(),   // Supplier of current robot pose
                 this::resetPose,         // Consumer for seeding pose against auto
                 () -> getState().Speeds, // Supplier of current robot speeds
-                // Consumer of ChassisSpeeds and feedforwards to drive the robot
-                (speeds, feedforwards) -> setControl(
-                    m_pathApplyRobotSpeeds.withSpeeds(speeds)
-                        .withWheelForceFeedforwardsX(feedforwards.robotRelativeForcesXNewtons())
-                        .withWheelForceFeedforwardsY(feedforwards.robotRelativeForcesYNewtons())
-                ),
+                (speeds, feedforwards) -> drive(speeds),
                 new PPHolonomicDriveController(
-                    // PID constants for translation
-                    new PIDConstants(10, 0, 0),
-                    // PID constants for rotation
-                    new PIDConstants(7, 0, 0)
-                ),
+                    new PIDConstants(2.5, 0, 0), //translation
+                    new PIDConstants(5, 0, 0)), //rotation
                 config,
-                // Assume the path needs to be flipped for Red vs Blue, this is normally the case
-                () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
+                () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red, //path flips for red/blue alliance
                 this // Subsystem for requirements
             );
         } catch (Exception ex) {
@@ -416,4 +423,11 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         });
         m_simNotifier.startPeriodic(kSimLoopPeriod);
     }
+
+    public PathPlannerPath path = new PathPlannerPath(
+        waypoints,
+        constraints,
+        null, // The ideal starting state, this is only relevant for pre-planned paths, so can be null for on-the-fly paths.
+        new GoalEndState(0.0, new Rotation2d().fromDegrees(240)) // Goal end state. You can set a holonomic rotation here. If using a differential drivetrain, the rotation will have no effect.
+    );
 }

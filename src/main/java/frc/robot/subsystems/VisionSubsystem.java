@@ -3,6 +3,8 @@ package frc.robot.subsystems;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
+
+import com.ctre.phoenix6.Utils;
 import com.spamrobotics.vision.LimelightStatus;
 import java.util.Map.Entry;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
@@ -33,7 +35,7 @@ public class VisionSubsystem extends SubsystemBase {
     private final RawFiducial[] emptyFiducials = new RawFiducial[0];
     public RawFiducial[] rawFiducials = emptyFiducials;
 
-    public int lastReefID;
+    public int lastReefID = -1;
 
     int[] fiducialArray = new int[0];
 
@@ -46,8 +48,8 @@ public class VisionSubsystem extends SubsystemBase {
     public static final List<Integer> redReefTags = List.of(6,7,8,9,10,11);
     public static final List<Integer> blueReefTags = List.of(17, 18, 19, 20, 21, 22);
 
-    private final Transform2d leftReefTransform = new Transform2d(0.5, -0.25, new Rotation2d());
-    private final Transform2d rightReefTransform = new Transform2d(0.5, 0.25, new Rotation2d());
+    private final Transform2d leftReefTransform = new Transform2d(0.45, -0.25, Rotation2d.fromDegrees(180));
+    private final Transform2d rightReefTransform = new Transform2d(0.45, 0.25, Rotation2d.fromDegrees(180));
 
     private final HashMap<Integer, Pose2d> leftReefHashMap = new HashMap<>();
     private final HashMap<Integer, Pose2d> rightReefHashMap = new HashMap<>();
@@ -58,6 +60,12 @@ public class VisionSubsystem extends SubsystemBase {
     private boolean closestReefPoseValid = false;
     private Pose2d closestReefPose = Pose2d.kZero;
     private boolean scoringLimelightConnected = false;
+
+    final boolean megatag2Enabled = false;
+
+    public Pose2d robotPose;
+    private PoseEstimate scoringPoseEstimate;
+    private Pose2d scoringPoseEstimate2d;
     
     public VisionSubsystem() {
 
@@ -78,8 +86,8 @@ public class VisionSubsystem extends SubsystemBase {
             rightReefHashMap.put(i, calculateReefPose(i, false));
         }
 
-        exampleLeft = leftReefHashMap.get(18);
-        exampleRight = rightReefHashMap.get(18);
+        //exampleLeft = leftReefHashMap.get(18);
+        //exampleRight = rightReefHashMap.get(18);
 
         reefProximity = new ReefProximity(leftReefHashMap, rightReefHashMap);
     }
@@ -91,12 +99,23 @@ public class VisionSubsystem extends SubsystemBase {
         scoringLimelightConnected = scoringLimelightStatus.isConnected();
 
         // Update odometry using Limelight in apriltag mode
-        PoseEstimate scoringPoseEstimate = LimelightHelpers.getBotPoseEstimate_wpiBlue(SCORING_LIMELIGHT);
+        scoringPoseEstimate = validatePoseEstimate(LimelightHelpers.getBotPoseEstimate_wpiBlue(SCORING_LIMELIGHT), 0);
+        
         if (scoringPoseEstimate != null) {
-            RobotContainer.instance.drivetrain.addVisionMeasurement(scoringPoseEstimate.pose, scoringPoseEstimate.timestampSeconds);
-        }
+            RobotContainer.instance.drivetrain.addVisionMeasurement(scoringPoseEstimate.pose, Utils.fpgaToCurrentTime(scoringPoseEstimate.timestampSeconds));
+        } //was not doing anything??
 
-        Pose2d robotPose = RobotContainer.instance.drivetrain.getPose();
+
+        robotPose = RobotContainer.instance.drivetrain.getPose();
+        //robotPose = getScoringPoseEstimate();
+
+        //check if robot can see the reef
+        canSeeReef = reefVisible();
+
+        //display on advantage scope where the robot thinks the scoring position should be
+        exampleLeft = getReefPose(true);
+        exampleRight = getReefPose(false);
+
         Entry<Integer, Pose2d> closestTagAndPose = reefProximity.closestReefPose(robotPose, Robot.isBlue());
         if (closestTagAndPose == null) {
             closestReefPose = Pose2d.kZero;
@@ -114,7 +133,7 @@ public class VisionSubsystem extends SubsystemBase {
             }
 
             bestReefID = getReefTag(rawFiducials);
-            System.out.println(bestReefID);
+            System.out.println(getLasReeftTagSeen());
         } else {
             // Simulate the vision system by selecting the closest reef tag to the robot position
             if (closestTagAndPose == null) {
@@ -167,9 +186,9 @@ public class VisionSubsystem extends SubsystemBase {
      */
     public Pose2d getReefPose(boolean left) {
         if (left) {
-            return leftReefHashMap.get(bestReefID);
+            return leftReefHashMap.get(lastReefID);
         } else {
-            return rightReefHashMap.get(bestReefID);
+            return rightReefHashMap.get(lastReefID);
         }
     }
     
@@ -180,7 +199,6 @@ public class VisionSubsystem extends SubsystemBase {
         return closestReefPoseValid ? closestReefPose : null;
     }
 
-    final boolean megatag2Enabled = false;
     public PoseEstimate validatePoseEstimate(PoseEstimate poseEstimate, double deltaSeconds) {
         if (poseEstimate == null) return null;
 
@@ -205,4 +223,33 @@ public class VisionSubsystem extends SubsystemBase {
 
         return poseEstimate;
     }
+
+    public int getLasReeftTagSeen() {
+        if (bestReefID != -1) {
+            lastReefID = bestReefID;
+            return lastReefID;
+        } else {
+            return lastReefID;
+        }
+    }
+
+    public boolean reefVisible() {
+        boolean isReefVisible = false;
+        for (int i = 0; i< rawFiducials.length; i++) {
+            RawFiducial fiducial = rawFiducials[i];
+            if (redReefTags.contains(fiducial.id) || blueReefTags.contains(fiducial.id)) {
+                isReefVisible = true;
+            } else {
+                isReefVisible = false;
+            }
+
+        }
+        return isReefVisible;
+    }
+
+    public Pose2d getScoringPoseEstimate() {
+        scoringPoseEstimate2d = scoringPoseEstimate.pose;
+        return scoringPoseEstimate2d;
+    }
+    
 }

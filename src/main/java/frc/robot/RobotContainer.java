@@ -99,23 +99,6 @@ public class RobotContainer {
         driverController.back().onTrue(Commands.runOnce(drivetrain::zeroGyroscope));
 
 
-//Elevator
-        //Y = L1; LB = L2; RT = L3; RB = L4
-        /*
-        driverController.y().onTrue(elevator.setPosition(ElevatorSubsystem.L1))
-                            .onFalse(elevator.setPosition(0));
-
-        driverController.leftBumper().onTrue(elevator.setPosition(ElevatorSubsystem.L2))
-                            .onFalse(elevator.setPosition(0));
-
-        driverController.rightTrigger().onTrue(elevator.setPosition(ElevatorSubsystem.L3))
-                            .onFalse(elevator.setPosition(0));
-
-        driverController.rightBumper().onTrue(elevator.setPosition(ElevatorSubsystem.L4))
-                            .onFalse(elevator.setPosition(0));
-        */
-
-
         //Coral Intake (using left trigger)
         //Left Paddle = POV down
         //Right Paddle = POV up
@@ -172,6 +155,8 @@ public class RobotContainer {
 
         nearReef.whileTrue(chosenElevatorHeight).onFalse(elevator.setPosition(0));
 
+        elevator.elevatorInScoringPosition.and(elevator.elevatorInPosition).whileTrue(Commands.print("EELVATOR IS IN SCROIGN POSITITIONSS"));
+
         // Example of using DriveToPose command + allowing the position to be influenced by the driver
         // Supplier<ChassisSpeeds> additionalSpeedsSupplier = () -> {
         //     return new ChassisSpeeds(driverController.getLeftX() * DrivetrainSubsystem.MAX_SPEED, 0, 0);
@@ -209,5 +194,9 @@ public class RobotContainer {
     private static double modifyAxis(double value) {
         value = MathUtil.applyDeadband(value, DEADBAND);
         return Math.copySign(value * value, value);
+    }
+
+    public Command plannedPath() {
+        return AutoBuilder.followPath(drivetrain.path);
     }
 }

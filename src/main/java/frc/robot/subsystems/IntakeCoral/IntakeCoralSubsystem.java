@@ -18,7 +18,7 @@ public class IntakeCoralSubsystem extends SubsystemBase {
     public IntakeCoralSubsystem() {
         
         if (Robot.isReal()) {
-            io = new IntakeCoralIOTalonFXS();
+            io = new IntakeCoralIOSim();
         } else {
             io = new IntakeCoralIOSim();
         }

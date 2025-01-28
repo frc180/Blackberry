@@ -8,11 +8,13 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.DrivetrainSubsystem;
 import frc.robot.subsystems.DrivetrainSubsystem.HeadingTarget;
 import frc.robot.subsystems.DrivetrainSubsystem.PoseTarget;
+import frc.robot.subsystems.VisionSubsystem;
 
 public class DriveToPose extends Command {
   
     private final DrivetrainSubsystem drivetrain;
     private final ChassisSpeeds noneSpeeds = new ChassisSpeeds(0, 0, 0);
+    private final VisionSubsystem vision = new VisionSubsystem();
 
     private Supplier<Pose2d> targetPoseSupplier = null;
     private Pose2d currentPose = null;
@@ -95,6 +97,8 @@ public class DriveToPose extends Command {
     @Override
     public void execute() {
         currentPose = drivetrain.getPose();
+        //this is using the current pose as the one from the drivetrain, not the one that is estimated by the limelight
+
         if (dynamicTarget && targetPoseSupplier != null) {
             targetPose = targetPoseSupplier.get();
         }

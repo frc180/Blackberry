@@ -14,7 +14,7 @@ public class IntakeAlgaeSubsystem extends SubsystemBase {
     public IntakeAlgaeSubsystem() {
 
         if (Robot.isReal()) {
-            io = new IntakeAlgaeIOTalonFXS();
+            io = new IntakeAlgaeIOSim();
         } else {
             io = new IntakeAlgaeIOSim();
         }

@@ -27,6 +27,7 @@ public class ElevatorSubsystem extends SubsystemBase {
   private double targetPosition = 0;
 
   public Trigger elevatorInPosition = new Trigger(() -> isElevatorInPosition());
+  public Trigger elevatorInScoringPosition = new Trigger(() -> isElevatorInScoringPosition());
 
   public ElevatorSubsystem() {
     inputs = new ElevatorIOInputs();
@@ -70,6 +71,14 @@ public class ElevatorSubsystem extends SubsystemBase {
 
   public boolean isElevatorInPosition() {
     if (Math.abs(targetPosition - inputs.position) <= 0.025) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  public boolean isElevatorInScoringPosition(){
+    if (targetPosition  != 0){
       return true;
     } else {
       return false;
