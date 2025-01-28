@@ -14,7 +14,6 @@ public class DriveToPose extends Command {
   
     private final DrivetrainSubsystem drivetrain;
     private final ChassisSpeeds noneSpeeds = new ChassisSpeeds(0, 0, 0);
-    private final VisionSubsystem vision = new VisionSubsystem();
 
     private Supplier<Pose2d> targetPoseSupplier = null;
     private Pose2d currentPose = null;

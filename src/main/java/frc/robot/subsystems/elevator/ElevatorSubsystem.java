@@ -77,6 +77,8 @@ public class ElevatorSubsystem extends SubsystemBase {
     }
   }
 
+  // TODO: There's a bug here! Can you find it? Compare what this one is doing to isElevatorInPosition()
+  // (Hint: We should be checking if we're in scoring position, not just targeting scoring position)
   public boolean isElevatorInScoringPosition(){
     if (targetPosition  != 0){
       return true;

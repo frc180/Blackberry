@@ -100,14 +100,11 @@ public class VisionSubsystem extends SubsystemBase {
 
         // Update odometry using Limelight in apriltag mode
         scoringPoseEstimate = validatePoseEstimate(LimelightHelpers.getBotPoseEstimate_wpiBlue(SCORING_LIMELIGHT), 0);
-        
         if (scoringPoseEstimate != null) {
             RobotContainer.instance.drivetrain.addVisionMeasurement(scoringPoseEstimate.pose, Utils.fpgaToCurrentTime(scoringPoseEstimate.timestampSeconds));
-        } //was not doing anything??
-
+        }
 
         robotPose = RobotContainer.instance.drivetrain.getPose();
-        //robotPose = getScoringPoseEstimate();
 
         //check if robot can see the reef
         canSeeReef = reefVisible();
@@ -245,11 +242,5 @@ public class VisionSubsystem extends SubsystemBase {
 
         }
         return isReefVisible;
-    }
-
-    public Pose2d getScoringPoseEstimate() {
-        scoringPoseEstimate2d = scoringPoseEstimate.pose;
-        return scoringPoseEstimate2d;
-    }
-    
+    }    
 }
