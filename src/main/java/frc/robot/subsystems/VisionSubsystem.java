@@ -218,6 +218,13 @@ public class VisionSubsystem extends SubsystemBase {
         return coralPoseValid ? coralPose : null;
     }
 
+    public Pose3d getCoralPose3D() {
+        if (!coralPoseValid) return Pose3d.kZero;
+
+        // TODO: recalculating this every loop is expensive
+        return new Pose3d(coralPose);
+    }
+
     public PoseEstimate validatePoseEstimate(PoseEstimate poseEstimate, double deltaSeconds) {
         if (poseEstimate == null) return null;
 
