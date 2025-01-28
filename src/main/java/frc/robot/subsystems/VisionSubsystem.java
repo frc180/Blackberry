@@ -21,6 +21,9 @@ import frc.robot.util.LimelightHelpers;
 import frc.robot.util.ReefProximity;
 import frc.robot.util.LimelightHelpers.PoseEstimate;
 import frc.robot.util.LimelightHelpers.RawFiducial;
+import frc.robot.vision.CoralDetector;
+import frc.robot.vision.CoralDetectorReal;
+import frc.robot.vision.CoralDetectorSim;
 
 @Logged
 public class VisionSubsystem extends SubsystemBase {
@@ -41,6 +44,7 @@ public class VisionSubsystem extends SubsystemBase {
 
     private final LimelightStatus scoringLimelightStatus = new LimelightStatus(SCORING_LIMELIGHT);
     private final ReefProximity reefProximity;
+    private final CoralDetector coralDetector;
 
     private List<Integer> redTags = List.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11);
     private List<Integer> blueTags = List.of(12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22);
@@ -56,6 +60,8 @@ public class VisionSubsystem extends SubsystemBase {
 
     private Pose2d exampleLeft;
     private Pose2d exampleRight;
+    private Pose2d coralPose = Pose2d.kZero;
+    private boolean coralPoseValid = false;
 
     private boolean closestReefPoseValid = false;
     private Pose2d closestReefPose = Pose2d.kZero;
@@ -68,7 +74,6 @@ public class VisionSubsystem extends SubsystemBase {
     private Pose2d scoringPoseEstimate2d;
     
     public VisionSubsystem() {
-
         try {
             aprilTagFieldLayout = AprilTagFieldLayout.loadFromResource(AprilTagFields.k2025Reefscape.m_resourceFile);
         } catch (Exception e) {
@@ -90,6 +95,7 @@ public class VisionSubsystem extends SubsystemBase {
         //exampleRight = rightReefHashMap.get(18);
 
         reefProximity = new ReefProximity(leftReefHashMap, rightReefHashMap);
+        coralDetector = Robot.isReal() ? new CoralDetectorReal() : new CoralDetectorSim(4.0, true);
     }
 
     @Override
@@ -120,6 +126,15 @@ public class VisionSubsystem extends SubsystemBase {
         } else {
             closestReefPose = closestTagAndPose.getValue();
             closestReefPoseValid = true;
+        }
+
+        // TODO: Pass in an array of RawDetections from the Limelight instead of null
+        coralPose = coralDetector.getCoralPose(robotPose, null);
+        if (coralPose == null) {
+            coralPose = Pose2d.kZero;
+            coralPoseValid = false;
+        } else {
+            coralPoseValid = true;
         }
 
         if (Robot.isReal()) {
@@ -194,6 +209,13 @@ public class VisionSubsystem extends SubsystemBase {
      */
     public Pose2d getClosestReefPose() {
         return closestReefPoseValid ? closestReefPose : null;
+    }
+
+    /**
+     * Returns the position of the closest detected coral, or null
+     */
+    public Pose2d getCoralPose() {
+        return coralPoseValid ? coralPose : null;
     }
 
     public PoseEstimate validatePoseEstimate(PoseEstimate poseEstimate, double deltaSeconds) {

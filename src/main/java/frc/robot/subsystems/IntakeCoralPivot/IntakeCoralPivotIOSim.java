@@ -19,8 +19,8 @@ public class IntakeCoralPivotIOSim implements IntakeCoralPivotIO{
     public void setIntakePosition(double encoderPosition){
         target = encoderPosition;
         usingPID = true;
-        //System.out.println("Target Position: " + target);
-        System.out.println("Current Intake Position: " + position);
+        // System.out.println("Target Position: " + target);
+        // System.out.println("Current Intake Position: " + position);
     }
 
     @Override

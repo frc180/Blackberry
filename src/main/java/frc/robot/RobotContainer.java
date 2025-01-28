@@ -51,6 +51,7 @@ public class RobotContainer {
     public final VisionSubsystem vision = new VisionSubsystem();
     public final IntakeAlgaeSubsystem intakeAlgae = new IntakeAlgaeSubsystem();
     public final IntakeAlgaePivotSubsystem intakeAlgaePivot = new IntakeAlgaePivotSubsystem();
+    @Logged(name = "Coral Intake")
     public final IntakeCoralSubsystem intakeCoral = new IntakeCoralSubsystem();
     public final IntakeCoralPivotSubsystem intakeCoralPivot = new IntakeCoralPivotSubsystem();
     @Logged(name = "Elevator")
@@ -79,8 +80,8 @@ public class RobotContainer {
 
         final Function<Double, Double> axisToLinearSpeed = (axis) -> {
             axis *= DrivetrainSubsystem.MAX_SPEED;
-             if (driverIntake.getAsBoolean()) axis *= 0.5;
-             return axis;
+            // if (driverIntake.getAsBoolean()) axis *= 0.5;
+            return axis;
          };
 
         final Supplier<JoystickInputs> joystickInputsSupplier = () -> {
@@ -155,7 +156,12 @@ public class RobotContainer {
 
         nearReef.whileTrue(chosenElevatorHeight).onFalse(elevator.setPosition(0));
 
+
+        intakeCoral.hasCoral.whileTrue(Commands.print("Coral detected!"));
+        intakeCoral.doneIntaking.whileTrue(Commands.print("Done intaking!"));
+
         elevator.elevatorInScoringPosition.and(elevator.elevatorInPosition).whileTrue(Commands.print("EELVATOR IS IN SCROIGN POSITITIONSS"));
+
 
         // Example of using DriveToPose command + allowing the position to be influenced by the driver
         // Supplier<ChassisSpeeds> additionalSpeedsSupplier = () -> {

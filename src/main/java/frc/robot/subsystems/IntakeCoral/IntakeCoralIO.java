@@ -7,10 +7,11 @@ public interface IntakeCoralIO {
 
     @Logged
     public class IntakeIOInputs {
-        public double position;
-        public double voltage;
-        public double target;
+        public double voltage = 0;
+        public boolean coralSensor = false;
     }
+
+    public void update(IntakeIOInputs inputs);
     
     //to intake a coral
     public void startRollers();

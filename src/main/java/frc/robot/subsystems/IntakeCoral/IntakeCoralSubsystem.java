@@ -1,33 +1,37 @@
 package frc.robot.subsystems.IntakeCoral;
 
-import java.util.function.DoubleSupplier;
-
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Robot;
 import frc.robot.subsystems.IntakeCoral.IntakeCoralIO.IntakeIOInputs;
-import frc.robot.subsystems.elevator.ElevatorIO;
-import frc.robot.subsystems.elevator.ElevatorIO.ElevatorIOInputs;
 
 @Logged
 public class IntakeCoralSubsystem extends SubsystemBase {
 
-    public IntakeCoralIO io;
+    private IntakeCoralIO io;
+    private IntakeIOInputs inputs;
+
+    public final Trigger hasCoral;
+    public final Trigger doneIntaking;
 
     public IntakeCoralSubsystem() {
-        
+        inputs = new IntakeIOInputs();
         if (Robot.isReal()) {
             io = new IntakeCoralIOSim();
         } else {
             io = new IntakeCoralIOSim();
         }
 
+        hasCoral = new Trigger(() -> inputs.coralSensor);
+        doneIntaking = hasCoral.and(() -> inputs.voltage > 0);
     }
 
     @Override
     public void periodic() {
         // This method will be called once per scheduler run
+        io.update(inputs);
     }
 
     @Override
@@ -36,7 +40,6 @@ public class IntakeCoralSubsystem extends SubsystemBase {
         // Runs before periodic()
         io.simulationPeriodic();
     }
-
 
     public Command intake() {
         return this.run (() -> {

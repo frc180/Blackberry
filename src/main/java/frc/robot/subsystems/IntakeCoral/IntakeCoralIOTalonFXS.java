@@ -8,6 +8,12 @@ public class IntakeCoralIOTalonFXS implements IntakeCoralIO{
 
        
     }
+
+    
+    @Override
+    public void update(IntakeIOInputs inputs) {
+
+    }
     
     @Override
     public void startRollers() {
