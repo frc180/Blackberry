@@ -4,7 +4,7 @@ import edu.wpi.first.math.controller.PIDController;
 
 public class IntakeCoralPivotIOSim implements IntakeCoralPivotIO{
 
-    double position = 0;
+    double position = IntakeCoralPivotSubsystem.stow;
     double speed = 0;
     double target = 0;
 

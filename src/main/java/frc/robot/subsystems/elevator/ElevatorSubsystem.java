@@ -5,10 +5,15 @@
 package frc.robot.subsystems.elevator;
 
 import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
+import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
+import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Robot;
+import frc.robot.RobotContainer;
+import frc.robot.SimVisuals;
 import frc.robot.subsystems.elevator.ElevatorIO.ElevatorIOInputs;
 
 @Logged
@@ -45,6 +50,7 @@ public class ElevatorSubsystem extends SubsystemBase {
   public void periodic() {
     // This method will be called once per scheduler run
     io.update(inputs);
+    SimVisuals.setElevatorHeight(inputs.position);
   }
 
   @Override

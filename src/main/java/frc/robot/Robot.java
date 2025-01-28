@@ -4,16 +4,19 @@
 
 package frc.robot;
 
-import com.ctre.phoenix6.Utils;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.Epilogue;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
+import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
+import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.util.Color8Bit;
+import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import frc.robot.util.LimelightHelpers;
 
 @Logged
 public class Robot extends TimedRobot {
@@ -22,10 +25,12 @@ public class Robot extends TimedRobot {
   @Logged(name = "RobotContainer")
   private final RobotContainer m_robotContainer;
 
-  private final boolean kUseLimelight = false;
+  // private final boolean kUseLimelight = false;
 
 
   public Robot() {
+    SimVisuals.init();
+
     m_robotContainer = new RobotContainer();
     Epilogue.bind(this);
   }
@@ -37,6 +42,7 @@ public class Robot extends TimedRobot {
   @Override
   public void robotPeriodic() {
     CommandScheduler.getInstance().run();
+    SimVisuals.update();
 
     /*
      * This example of adding Limelight is very simple and may not be sufficient for on-field use.

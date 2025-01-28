@@ -1,7 +1,9 @@
 package frc.robot.subsystems.IntakeCoral;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import frc.robot.Robot;
 import frc.robot.RobotContainer;
+import frc.robot.subsystems.IntakeCoralPivot.IntakeCoralPivotSubsystem;
 
 public class IntakeCoralIOSim implements IntakeCoralIO {
     
@@ -18,10 +20,13 @@ public class IntakeCoralIOSim implements IntakeCoralIO {
                 // We have the coral and are ejecting it
                 hasCoral = false;
             } else if (!hasCoral && rollerSpeed > 0) {
-                // Say we have the coral if we are within 0.75 meters of it
-                Pose2d robotPose = RobotContainer.instance.drivetrain.getPose();
-                double distance = robotPose.getTranslation().getDistance(coralPose.getTranslation());
-                hasCoral = distance <= 0.75;
+                IntakeCoralPivotSubsystem coralIntake = RobotContainer.instance.intakeCoralPivot;
+                if (coralIntake.getTargetDegrees() == IntakeCoralPivotSubsystem.extend && coralIntake.isAtTarget()) {
+                    // Say we have the coral if we are within 0.75 meters of it
+                    Pose2d robotPose = RobotContainer.instance.drivetrain.getPose();
+                    double distance = robotPose.getTranslation().getDistance(coralPose.getTranslation());
+                    hasCoral = distance <= 0.75;
+                }
             }
         }
 
