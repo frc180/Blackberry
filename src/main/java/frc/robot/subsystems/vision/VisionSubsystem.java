@@ -65,6 +65,7 @@ public class VisionSubsystem extends SubsystemBase {
 
     private Pose2d scoringPoseEstimatePoseUnfiltered = Pose2d.kZero;
     private Pose2d scoringPoseEstimatePose = Pose2d.kZero;
+    private double poseEstimateDiffX, poseEstimateDiffY, poseEstimateDiffTheta;
     
     @SuppressWarnings("unused")
     public VisionSubsystem() {
@@ -114,11 +115,18 @@ public class VisionSubsystem extends SubsystemBase {
         scoringPoseEstimate = validatePoseEstimate(scoringPoseEstimate, 0);
         scoringPoseEstimatePose = scoringPoseEstimate != null ? scoringPoseEstimate.pose : Pose2d.kZero;
         
+        Pose2d robotPose = null;
         if (scoringPoseEstimate != null) {
             RobotContainer.instance.drivetrain.addVisionMeasurement(scoringPoseEstimate.pose, Utils.fpgaToCurrentTime(scoringPoseEstimate.timestampSeconds));
+            // Calculate the difference between the updated robot pose and the scoring pose estimate, to get an idea
+            // of how closely we
+            robotPose = RobotContainer.instance.drivetrain.getPose();
+            poseEstimateDiffX = robotPose.getX() - scoringPoseEstimate.pose.getX();
+            poseEstimateDiffY = robotPose.getY() - scoringPoseEstimate.pose.getY();
+            poseEstimateDiffTheta = robotPose.getRotation().getDegrees() - scoringPoseEstimate.pose.getRotation().getDegrees();
         }
 
-        Pose2d robotPose = RobotContainer.instance.drivetrain.getPose();
+        if (robotPose == null) robotPose = RobotContainer.instance.drivetrain.getPose();
 
         //check if robot can see the reef
         canSeeReef = reefVisible();
