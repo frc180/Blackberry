@@ -1,11 +1,9 @@
-package frc.robot.subsystems;
+package frc.robot.subsystems.vision;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
-
 import com.ctre.phoenix6.Utils;
-import com.spamrobotics.vision.LimelightStatus;
 import java.util.Map.Entry;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
@@ -17,7 +15,7 @@ import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Robot;
 import frc.robot.RobotContainer;
-import frc.robot.util.LimelightHelpers;
+import frc.robot.subsystems.vision.VisionIO.VisionIOInputs;
 import frc.robot.util.ReefProximity;
 import frc.robot.util.LimelightHelpers.PoseEstimate;
 import frc.robot.util.LimelightHelpers.RawFiducial;
@@ -28,21 +26,18 @@ import frc.robot.vision.CoralDetectorSim;
 @Logged
 public class VisionSubsystem extends SubsystemBase {
 
-    private static final String SCORING_LIMELIGHT = "limelight";
+    private VisionIO io;
+    private VisionIOInputs inputs;
 
     public AprilTagFieldLayout aprilTagFieldLayout;
 
     private boolean canSeeReef = false;
     public int bestReefID = -1;
 
-    private final RawFiducial[] emptyFiducials = new RawFiducial[0];
-    public RawFiducial[] rawFiducials = emptyFiducials;
-
     public int lastReefID = -1;
 
     int[] fiducialArray = new int[0];
 
-    private final LimelightStatus scoringLimelightStatus = new LimelightStatus(SCORING_LIMELIGHT);
     private final ReefProximity reefProximity;
     private final CoralDetector coralDetector;
 
@@ -65,14 +60,13 @@ public class VisionSubsystem extends SubsystemBase {
 
     private boolean closestReefPoseValid = false;
     private Pose2d closestReefPose = Pose2d.kZero;
-    private boolean scoringLimelightConnected = false;
 
     final boolean megatag2Enabled = false;
 
-    public Pose2d robotPose;
-    private PoseEstimate scoringPoseEstimate;
-    private Pose2d scoringPoseEstimate2d;
+    private Pose2d scoringPoseEstimatePoseUnfiltered = Pose2d.kZero;
+    private Pose2d scoringPoseEstimatePose = Pose2d.kZero;
     
+    @SuppressWarnings("unused")
     public VisionSubsystem() {
         try {
             aprilTagFieldLayout = AprilTagFieldLayout.loadFromResource(AprilTagFields.k2025Reefscape.m_resourceFile);
@@ -80,8 +74,19 @@ public class VisionSubsystem extends SubsystemBase {
             aprilTagFieldLayout = null;
         }
 
+        inputs = new VisionIOInputs();
+        io = new VisionIOLimelight();
+        // if (Robot.isReal() || !RobotContainer.MAPLESIM) {
+        //     io = new VisionIOLimelight();
+        // } else {
+        //     // PhotonVision has simulated apriltag odometry, which is needed in Maplesim
+        //     // because odometry slippage is properly simulated, meaning we need to simulate
+        //     // feeding in vision data to fix the odometry like we would in real life
+        //     io = new VisionIOPhoton(aprilTagFieldLayout);
+        // }
+
         //red reef tags
-        for (int i = 6; i <=11; i++) {
+        for (int i = 6; i <= 11; i++) {
             leftReefHashMap.put(i, calculateReefPose(i, true));
             rightReefHashMap.put(i, calculateReefPose(i, false));
         }
@@ -100,17 +105,20 @@ public class VisionSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
-        // Refresh the limelight status
-        scoringLimelightStatus.update();
-        scoringLimelightConnected = scoringLimelightStatus.isConnected();
+        io.update(inputs);
 
         // Update odometry using Limelight in apriltag mode
-        scoringPoseEstimate = validatePoseEstimate(LimelightHelpers.getBotPoseEstimate_wpiBlue(SCORING_LIMELIGHT), 0);
+        // scoringPoseEstimate = validatePoseEstimate(LimelightHelpers.getBotPoseEstimate_wpiBlue(SCORING_LIMELIGHT), 0);
+        PoseEstimate scoringPoseEstimate = inputs.scoringPoseEstimate;
+        scoringPoseEstimatePoseUnfiltered = scoringPoseEstimate != null ? scoringPoseEstimate.pose : Pose2d.kZero;
+        scoringPoseEstimate = validatePoseEstimate(scoringPoseEstimate, 0);
+        scoringPoseEstimatePose = scoringPoseEstimate != null ? scoringPoseEstimate.pose : Pose2d.kZero;
+        
         if (scoringPoseEstimate != null) {
             RobotContainer.instance.drivetrain.addVisionMeasurement(scoringPoseEstimate.pose, Utils.fpgaToCurrentTime(scoringPoseEstimate.timestampSeconds));
         }
 
-        robotPose = RobotContainer.instance.drivetrain.getPose();
+        Pose2d robotPose = RobotContainer.instance.drivetrain.getPose();
 
         //check if robot can see the reef
         canSeeReef = reefVisible();
@@ -128,7 +136,7 @@ public class VisionSubsystem extends SubsystemBase {
             closestReefPoseValid = true;
         }
 
-        // TODO: Pass in an array of RawDetections from the Limelight instead of null
+        // TODO: Pass in an array of RawDetections from VisionInputs instead of null
         coralPose = coralDetector.getCoralPose(robotPose, null);
         if (coralPose == null) {
             coralPose = Pose2d.kZero;
@@ -137,14 +145,13 @@ public class VisionSubsystem extends SubsystemBase {
             coralPoseValid = true;
         }
 
-        if (Robot.isReal()) {
-            rawFiducials = LimelightHelpers.getRawFiducials(SCORING_LIMELIGHT);
-            fiducialArray = new int[rawFiducials.length];
-            for(int i = 0; i < rawFiducials.length; i++) {
-                fiducialArray[i] = rawFiducials[i].id;
+        if (inputs.scoringCameraConnected) {
+            fiducialArray = new int[inputs.scoringFiducials.length];
+            for(int i = 0; i < inputs.scoringFiducials.length; i++) {
+                fiducialArray[i] = inputs.scoringFiducials[i].id;
             }
 
-            bestReefID = getReefTag(rawFiducials);
+            bestReefID = getReefTag(inputs.scoringFiducials);
             System.out.println(getLasReeftTagSeen());
         } else {
             // Simulate the vision system by selecting the closest reef tag to the robot position
@@ -154,6 +161,12 @@ public class VisionSubsystem extends SubsystemBase {
                 bestReefID = closestTagAndPose.getKey();
             }
         }
+    }
+
+    
+    @Override
+    public void simulationPeriodic() {
+        io.simulationPeriodic();
     }
 
     public int getReefTag(RawFiducial[] rawFiducial) {
@@ -261,8 +274,8 @@ public class VisionSubsystem extends SubsystemBase {
 
     public boolean reefVisible() {
         boolean isReefVisible = false;
-        for (int i = 0; i< rawFiducials.length; i++) {
-            RawFiducial fiducial = rawFiducials[i];
+        for (int i = 0; i < inputs.scoringFiducials.length; i++) {
+            RawFiducial fiducial = inputs.scoringFiducials[i];
             if (redReefTags.contains(fiducial.id) || blueReefTags.contains(fiducial.id)) {
                 isReefVisible = true;
             } else {

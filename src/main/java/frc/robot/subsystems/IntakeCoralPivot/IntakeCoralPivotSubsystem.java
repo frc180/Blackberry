@@ -4,8 +4,8 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Robot;
-import frc.robot.SimVisuals;
 import frc.robot.subsystems.IntakeCoralPivot.IntakeCoralPivotIO.IntakeCoralPivotIOInputs;
+import frc.robot.util.simulation.SimVisuals;
 
 public class IntakeCoralPivotSubsystem extends SubsystemBase {
     

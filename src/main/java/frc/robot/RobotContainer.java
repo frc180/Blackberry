@@ -14,12 +14,14 @@ import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.button.CommandGenericHID;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -29,7 +31,6 @@ import frc.robot.commands.DriveToPose;
 import frc.robot.commands.RumbleCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.DrivetrainSubsystem;
-import frc.robot.subsystems.VisionSubsystem;
 import frc.robot.subsystems.DrivetrainSubsystem.HeadingTarget;
 import frc.robot.subsystems.DrivetrainSubsystem.PoseTarget;
 import frc.robot.subsystems.IntakeAlgae.IntakeAlgaeSubsystem;
@@ -37,10 +38,14 @@ import frc.robot.subsystems.IntakeAlgaePivot.IntakeAlgaePivotSubsystem;
 import frc.robot.subsystems.IntakeCoral.IntakeCoralSubsystem;
 import frc.robot.subsystems.IntakeCoralPivot.IntakeCoralPivotSubsystem;
 import frc.robot.subsystems.elevator.ElevatorSubsystem;
+import frc.robot.subsystems.vision.VisionSubsystem;
+import frc.robot.util.simulation.SimLogic;
 
 @Logged
 public class RobotContainer {
     // private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
+
+    public static final boolean MAPLESIM = true;
 
     public final static double DEADBAND = 0.025;
     public final CommandXboxController driverController = new CommandXboxController(0);
@@ -49,6 +54,7 @@ public class RobotContainer {
 
     private final Telemetry logger = new Telemetry(DrivetrainSubsystem.MAX_SPEED);
 
+    @Logged(name = "Drivetrain")
     public final DrivetrainSubsystem drivetrain = TunerConstants.createDrivetrain();
 
     @Logged(name = "Vision")
@@ -106,39 +112,38 @@ public class RobotContainer {
         //Coral Intake (using left trigger)
         //Left Paddle = POV down
         //Right Paddle = POV up
-        driverIntake.onTrue(intakeCoralPivot.setPosition(IntakeCoralPivotSubsystem.extend).alongWith(intakeCoral.intake()))
+
+        driverIntake.and(intakeCoral.hasCoral.negate())
+                            .whileTrue(intakeCoralPivot.setPosition(IntakeCoralPivotSubsystem.extend).alongWith(intakeCoral.intake()))
                             .onFalse(intakeCoralPivot.setPosition(IntakeCoralPivotSubsystem.stow).alongWith(intakeCoral.stopIntake()));
 
         //Algae Intake (using left paddle + right trigger)
-        algaeMode.and(driverIntake).onTrue(intakeAlgaePivot.extend().alongWith(intakeAlgae.intake()))
+        algaeMode.and(driverIntake).whileTrue(intakeAlgaePivot.extend().alongWith(intakeAlgae.intake()))
                             .onFalse(intakeAlgaePivot.stow().alongWith(intakeAlgae.stopIntake()));
 
         //left and right alignment for the reef (x is left and b is right)
         driverLeftReef.whileTrue(new DriveToPose(drivetrain, () -> vision.getReefPose(true))
                                         .withPoseTargetType(PoseTarget.REEF));
 
-                                        
-        //testing the trigger - might use this to decide whether or not to score (is elevator at 0?)
-        elevator.elevatorInPosition.whileTrue(Commands.print("ELEVETOR IN POSITINONNN!!!!"));
 
         driverRightReef.whileTrue(new DriveToPose(drivetrain, () -> vision.getReefPose(false))
                                         .withPoseTargetType(PoseTarget.REEF));
 
 
         // Example of using the targetHeadingContinuous to make the robot point towards the closest side of the reef
-        driverController.a().whileTrue(drivetrain.targetHeadingContinuous(() -> {
-            Pose2d closestReefPose = vision.getClosestReefPose();
-            if (closestReefPose == null) {
-                return null;
-            } else {
-                return closestReefPose.getRotation().getDegrees();
-            }
-        }, HeadingTarget.POSE));
+        driverController.a().or(intakeCoral.hasCoral)
+            .whileTrue(drivetrain.targetHeadingContinuous(() -> {
+                Pose2d reefPose = vision.getClosestReefPose();
+                return reefPose != null ? reefPose.getRotation().getDegrees() : null;
+            }, HeadingTarget.POSE));
 
         // Example of trigger that does something when within 0.8 meters of the reef     
         Trigger nearReef = drivetrain.targetingReef()
                             .and(drivetrain.withinTargetPoseTolerance(0.8, 0.8, 90.0))
                             .debounce(0.5, DebounceType.kFalling); 
+
+        Trigger atReef = drivetrain.targetingReef()
+                            .and(drivetrain.withinTargetPoseTolerance(0.1, 0.1, 5.0));
 
         Command chosenElevatorHeight = elevator.run(() -> {
             if (driverL1.getAsBoolean()) {
@@ -164,7 +169,18 @@ public class RobotContainer {
         intakeCoral.hasCoral.whileTrue(Commands.print("Coral detected!"));
         intakeCoral.doneIntaking.whileTrue(Commands.print("Done intaking!"));
 
+        //testing the trigger - might use this to decide whether or not to score (is elevator at 0?)
+        elevator.elevatorInPosition.whileTrue(Commands.print("ELEVETOR IN POSITINONNN!!!!"));
         elevator.elevatorInScoringPosition.and(elevator.elevatorInPosition).whileTrue(Commands.print("EELVATOR IS IN SCROIGN POSITITIONSS"));
+
+        // Example scoring sequence - kCancelIncoming means nothing else will be able to stop this command until it finishes
+        atReef.and(elevator.elevatorInScoringPosition).and(elevator.elevatorInPosition).onTrue(
+            Commands.sequence(
+                drivetrain.runOnce(() -> drivetrain.drive(new ChassisSpeeds())),
+                Commands.waitSeconds(0.2),
+                Commands.runOnce(() -> SimLogic.hasCoral = false)
+            ).withInterruptBehavior(InterruptionBehavior.kCancelIncoming)
+        );
 
 
         // Example of using DriveToPose command + allowing the position to be influenced by the driver

@@ -1,18 +1,24 @@
 package frc.robot.commands;
 
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.RobotContainer;
 import frc.robot.subsystems.DrivetrainSubsystem;
 import frc.robot.subsystems.DrivetrainSubsystem.HeadingTarget;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
-
+import com.spamrobotics.util.Helpers;
 import com.spamrobotics.util.JoystickInputs;
 
 public class DefaultDriveCommand extends Command {
+    private final double coralAssistKp = 0.9;
+    private final double coralAssistExponent = -3/2;
     private final DrivetrainSubsystem m_drivetrainSubsystem;
 
     private final Supplier<JoystickInputs> m_joystickInputsSupplier;
@@ -76,6 +82,8 @@ public class DefaultDriveCommand extends Command {
         } else {
             speeds = new ChassisSpeeds(inputs.x, inputs.y, rotationSpeed);
         }
+
+        applyCoralAimAssist(speeds, inputs);
         m_drivetrainSubsystem.drive(speeds);
     }
 
@@ -83,5 +91,40 @@ public class DefaultDriveCommand extends Command {
     public void end(boolean interrupted) {
         if (DriverStation.isAutonomous()) return;
         m_drivetrainSubsystem.drive(new ChassisSpeeds(0.0, 0.0, 0.0));
+    }
+
+    public void applyCoralAimAssist(ChassisSpeeds speeds, JoystickInputs inputs) {
+        Pose2d coralPose = RobotContainer.instance.vision.getCoralPose();
+        if (coralPose == null || !RobotContainer.instance.driverController.leftTrigger().getAsBoolean()) {
+            return;
+        }
+
+        Pose2d currentPose = m_drivetrainSubsystem.getPose();
+        double xFeedback = (currentPose.getX() - coralPose.getX());
+        double yFeedback = (currentPose.getY() - coralPose.getY());
+        ChassisSpeeds coralSpeeds = new ChassisSpeeds(xFeedback, yFeedback, 0);
+
+        Translation2d coralTranslation = coralPose.getTranslation();
+        Translation2d rayStart = m_drivetrainSubsystem.getPose().getTranslation();
+        Translation2d rayTest = rayStart.plus(new Translation2d(inputs.y, inputs.x));
+
+        // Ensure we're driving towards the coral
+        // if (rayTest.getDistance(coralTranslation) <= rayStart.getDistance(coralTranslation)) {
+        //     return;
+        // }
+
+        Translation2d rayEnd = rayStart.plus(new Translation2d(inputs.y * 1000, inputs.x * 1000));
+    
+        double perpdist = Helpers.perpendicularLineLength(coralTranslation, rayStart, rayEnd);
+        perpdist = Math.pow(perpdist, coralAssistExponent);
+
+        coralSpeeds.vxMetersPerSecond *= (perpdist * coralAssistKp);
+        coralSpeeds.vyMetersPerSecond *= (perpdist * coralAssistKp);
+        
+        // Track the top speed of the speeds request, so that we can keep the coral assist from exceeding that
+        double maxSpeed = Math.max(Math.abs(speeds.vxMetersPerSecond), Math.abs(speeds.vyMetersPerSecond));
+        Helpers.addChassisSpeedsOverwrite(speeds, coralSpeeds);
+        speeds.vxMetersPerSecond = Helpers.capValue(speeds.vxMetersPerSecond, maxSpeed);
+        speeds.vyMetersPerSecond = Helpers.capValue(speeds.vyMetersPerSecond, maxSpeed);
     }
 }

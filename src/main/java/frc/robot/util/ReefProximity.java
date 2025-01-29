@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
 import edu.wpi.first.math.geometry.Pose2d;
-import frc.robot.subsystems.VisionSubsystem;
+import frc.robot.subsystems.vision.VisionSubsystem;
 
 /**
  * This class is used to determine the closest reef scoring position to the robot's current position.

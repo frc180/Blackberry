@@ -4,11 +4,11 @@ import edu.wpi.first.math.geometry.Pose2d;
 import frc.robot.Robot;
 import frc.robot.RobotContainer;
 import frc.robot.subsystems.IntakeCoralPivot.IntakeCoralPivotSubsystem;
+import frc.robot.util.simulation.SimLogic;
 
 public class IntakeCoralIOSim implements IntakeCoralIO {
     
     double rollerSpeed = 0;
-    boolean hasCoral = false;
 
     public IntakeCoralIOSim() {}
 
@@ -16,22 +16,22 @@ public class IntakeCoralIOSim implements IntakeCoralIO {
     public void update(IntakeIOInputs inputs) {
         Pose2d coralPose = RobotContainer.instance.vision.getCoralPose();
         if (coralPose != null && rollerSpeed != 0) {
-            if (hasCoral && rollerSpeed < 0) {
+            if (SimLogic.hasCoral && rollerSpeed < 0) {
                 // We have the coral and are ejecting it
-                hasCoral = false;
-            } else if (!hasCoral && rollerSpeed > 0) {
+                SimLogic.hasCoral = false;
+            } else if (!SimLogic.hasCoral && rollerSpeed > 0) {
                 IntakeCoralPivotSubsystem coralIntake = RobotContainer.instance.intakeCoralPivot;
                 if (coralIntake.getTargetDegrees() == IntakeCoralPivotSubsystem.extend && coralIntake.isAtTarget()) {
                     // Say we have the coral if we are within 0.75 meters of it
                     Pose2d robotPose = RobotContainer.instance.drivetrain.getPose();
                     double distance = robotPose.getTranslation().getDistance(coralPose.getTranslation());
-                    hasCoral = distance <= 0.75;
+                    SimLogic.hasCoral = distance <= 0.75;
                 }
             }
         }
 
         inputs.voltage = rollerSpeed * 12;
-        inputs.coralSensor = hasCoral;
+        inputs.coralSensor = SimLogic.hasCoral;
     }
 
     @Override

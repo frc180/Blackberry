@@ -2,7 +2,9 @@ package com.spamrobotics.util;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import frc.robot.subsystems.DrivetrainSubsystem;
 
@@ -21,6 +23,20 @@ public class Helpers {
         a.vyMetersPerSecond = capValue(a.vyMetersPerSecond + b.vyMetersPerSecond, DrivetrainSubsystem.MAX_SPEED);
         a.omegaRadiansPerSecond = capValue(a.omegaRadiansPerSecond + b.omegaRadiansPerSecond, DrivetrainSubsystem.MAX_ANGULAR_RATE);
         return a;
+    }
+
+    public static ChassisSpeeds rotateChassisSpeeds(ChassisSpeeds speeds, Rotation2d rotation) {
+        Translation2d rotated = new Translation2d(speeds.vxMetersPerSecond, speeds.vxMetersPerSecond).rotateBy(rotation);
+        return new ChassisSpeeds(rotated.getX(), rotated.getY(), speeds.omegaRadiansPerSecond);
+    }
+
+    public static double perpendicularLineLength(Translation2d point, Translation2d vectorStart, Translation2d vectorEnd) {
+        double numerator = Math.abs((vectorEnd.getY() - vectorStart.getY()) * point.getX() - 
+                                    (vectorEnd.getX() - vectorStart.getX()) * point.getY() + 
+                                    vectorEnd.getX() * vectorStart.getY() - 
+                                    vectorEnd.getY() * vectorStart.getX());
+        double denominator = vectorStart.getDistance(vectorEnd);
+        return numerator / denominator;
     }
 
     public static double capValue(double value, double max) {

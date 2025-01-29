@@ -1,6 +1,4 @@
-package frc.robot;
-
-import static edu.wpi.first.units.Units.Meters;
+package frc.robot.util.simulation;
 
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
@@ -27,6 +25,9 @@ public abstract class SimVisuals {
     private static final double CORAL_INTAKE_LENGTH = 0.3;
     private static final double CORAL_INTAKE_X = 0.65;
 
+    private static final Color8Bit ELEVATOR_NOCORAL_COLOR = new Color8Bit(Color.kBlue);
+    private static final Color8Bit ELEVATOR_CORAL_COLOR = new Color8Bit(Color.kGreen);
+
     public static void init() {
         elevatorRoot = mech2d.getRoot("Elevator Root", ELEVATOR_X, Y_BOTTOM);
         coralArmRoot = mech2d.getRoot("Coral Arm Root", CORAL_ARM_X, Y_BOTTOM);
@@ -49,5 +50,6 @@ public abstract class SimVisuals {
 
     public static void update() {
         coralArmRoot.setPosition(CORAL_ARM_X, Y_BOTTOM + CORAL_ARM_Y_OFFSET + elevatorLigament.getLength());
+        elevatorLigament.setColor(SimLogic.hasCoral ? ELEVATOR_CORAL_COLOR : ELEVATOR_NOCORAL_COLOR);
     }
 }
