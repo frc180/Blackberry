@@ -55,23 +55,34 @@ public class RobotContainer {
     private final Telemetry logger = new Telemetry(DrivetrainSubsystem.MAX_SPEED);
 
     @Logged(name = "Drivetrain")
-    public final DrivetrainSubsystem drivetrain = TunerConstants.createDrivetrain();
+    public final DrivetrainSubsystem drivetrain;
 
     @Logged(name = "Vision")
-    public final VisionSubsystem vision = new VisionSubsystem();
-    public final IntakeAlgaeSubsystem intakeAlgae = new IntakeAlgaeSubsystem();
-    public final IntakeAlgaePivotSubsystem intakeAlgaePivot = new IntakeAlgaePivotSubsystem();
+    public final VisionSubsystem vision;
+    public final IntakeAlgaeSubsystem intakeAlgae;
+    public final IntakeAlgaePivotSubsystem intakeAlgaePivot;
     @Logged(name = "Coral Intake")
-    public final IntakeCoralSubsystem intakeCoral = new IntakeCoralSubsystem();
-    public final IntakeCoralPivotSubsystem intakeCoralPivot = new IntakeCoralPivotSubsystem();
+    public final IntakeCoralSubsystem intakeCoral;
+    public final IntakeCoralPivotSubsystem intakeCoralPivot;
     @Logged(name = "Elevator")
-    public final ElevatorSubsystem elevator = new ElevatorSubsystem();
+    public final ElevatorSubsystem elevator;
 
     private final SendableChooser<Command> autoChooser;
 
     public static RobotContainer instance;
 
     public RobotContainer() {
+        instance = this;
+
+        drivetrain = TunerConstants.createDrivetrain();
+
+        vision = new VisionSubsystem();
+        intakeAlgae = new IntakeAlgaeSubsystem();
+        intakeAlgaePivot = new IntakeAlgaePivotSubsystem();
+        intakeCoral = new IntakeCoralSubsystem();
+        intakeCoralPivot = new IntakeCoralPivotSubsystem();
+        elevator = new ElevatorSubsystem();
+
         autoChooser = AutoBuilder.buildAutoChooser("Tests");
         SmartDashboard.putData("Auto Mode", autoChooser);
 
@@ -178,7 +189,10 @@ public class RobotContainer {
             Commands.sequence(
                 drivetrain.runOnce(() -> drivetrain.drive(new ChassisSpeeds())),
                 Commands.waitSeconds(0.2),
-                Commands.runOnce(() -> SimLogic.hasCoral = false)
+                Commands.runOnce(() -> {
+                    SimLogic.hasCoral = false;
+                    SimLogic.spawnHumanPlayerCoral();
+                })
             ).withInterruptBehavior(InterruptionBehavior.kCancelIncoming)
         );
 
@@ -208,8 +222,6 @@ public class RobotContainer {
         // driverController.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
         drivetrain.registerTelemetry(logger::telemeterize);
-
-        instance = this;
     }
 
     public Command getAutonomousCommand() {

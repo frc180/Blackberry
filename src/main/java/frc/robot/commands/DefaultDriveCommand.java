@@ -100,9 +100,9 @@ public class DefaultDriveCommand extends Command {
         }
 
         Pose2d currentPose = m_drivetrainSubsystem.getPose();
-        double xFeedback = (currentPose.getX() - coralPose.getX());
-        double yFeedback = (currentPose.getY() - coralPose.getY());
-        ChassisSpeeds coralSpeeds = new ChassisSpeeds(xFeedback, yFeedback, 0);
+        double xFeedback = coralPose.getX() - currentPose.getX();
+        double yFeedback = coralPose.getY() - currentPose.getY();
+        ChassisSpeeds coralSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(xFeedback, yFeedback, 0, currentPose.getRotation());
 
         Translation2d coralTranslation = coralPose.getTranslation();
         Translation2d rayStart = m_drivetrainSubsystem.getPose().getTranslation();

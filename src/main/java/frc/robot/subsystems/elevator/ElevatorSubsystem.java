@@ -40,7 +40,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     if (Robot.isReal()) {
       io = new ElevatorIOSim();
     } else {
-      io = new ElevatorIOSim();
+      io = new ElevatorIOTalonFX();
     }
   }
 

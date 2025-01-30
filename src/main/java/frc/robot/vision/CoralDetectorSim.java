@@ -1,17 +1,20 @@
 package frc.robot.vision;
 
+import org.ironmaple.simulation.SimulatedArena;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import frc.robot.Robot;
+import frc.robot.RobotContainer;
 import frc.robot.util.LimelightHelpers.RawDetection;
+import frc.robot.util.simulation.SimLogic;
 
 /**
- * A simulated coral detector that returns a fixed pose, ignoring any detections passed to it.
+ * A coral detector that returns poses based off simulation, ignoring any detections passed to it.
  */
 public class CoralDetectorSim implements CoralDetector {
 
-    private final Pose2d blueCoralPose, redCoralPose;
     private final double detectionDistance;
     private final boolean useFOV;
 
@@ -23,15 +26,21 @@ public class CoralDetectorSim implements CoralDetector {
      * @param useFOV Whether to use the robot's field of view to determine if the coral is in sight.
      */
     public CoralDetectorSim(double detectionMeters, boolean useFOV) {
-        blueCoralPose = new Pose2d(1.56, 1.33, new Rotation2d());
-        redCoralPose = new Pose2d(16.17, 1.33, new Rotation2d());
         detectionDistance = detectionMeters;
         this.useFOV = useFOV;
     }
 
     @Override
     public Pose2d getCoralPose(Pose2d robotPose, RawDetection[] _detections) {
-        Pose2d coralPose = Robot.isBlue() ? blueCoralPose : redCoralPose;
+        if (RobotContainer.MAPLESIM) {
+            return getCoralPoseMapleSim(robotPose);
+        } else {
+            return getCoralPoseBasic(robotPose);
+        }
+    }
+
+    private Pose2d getCoralPoseBasic(Pose2d robotPose) {
+        Pose2d coralPose = Robot.isBlue() ? SimLogic.blueHPCoralPose : SimLogic.redHPCoralPose;
 
         if (useFOV && poseWithinPOV(robotPose, coralPose)) {
             return coralPose;
@@ -40,6 +49,27 @@ public class CoralDetectorSim implements CoralDetector {
         }
 
         return null;
+    }
+
+    /**
+     * Selects the closest coral to the robot within its field of view.
+     */
+    private Pose2d getCoralPoseMapleSim(Pose2d robotPose) {
+        Pose3d[] corals = SimulatedArena.getInstance().getGamePiecesArrayByType("Coral");
+        Pose2d bestCoral = null;
+        double bestDistance = Double.MAX_VALUE;
+        for (int i = 0; i < corals.length; i++) {
+            Pose2d coral = corals[i].toPose2d();
+            if (poseWithinPOV(robotPose, coral)) {
+                double distance = robotPose.getTranslation().getDistance(coral.getTranslation());
+                if (distance < bestDistance) {
+                    bestCoral = coral;
+                    bestDistance = distance;
+                }
+            }
+        }
+
+        return bestCoral;
     }
 
     // =========== Helper methods to calculate robot POV ===========

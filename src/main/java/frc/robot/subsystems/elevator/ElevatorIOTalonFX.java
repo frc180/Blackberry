@@ -1,5 +1,8 @@
 package frc.robot.subsystems.elevator;
 
+import static edu.wpi.first.units.Units.Inches;
+import static edu.wpi.first.units.Units.Meters;
+
 import java.util.List;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
@@ -21,6 +24,7 @@ import frc.robot.Robot;
 public class ElevatorIOTalonFX implements ElevatorIO {
 
     final double elevatorGearing = 6;
+    final double metersToMotorRotations = 1 / Inches.of(1.67).in(Meters);
 
     TalonFX motorA, motorB;
     List<TalonFX> motors;
@@ -47,11 +51,11 @@ public class ElevatorIOTalonFX implements ElevatorIO {
         config.Slot0.kI = 0;
         config.Slot0.kD = 0;
         config.Slot0.kG = 0.34;
-        config.Slot0.kV = 3.3;
+        config.Slot0.kV = 0.9;
         config.Slot0.kA = 0;
         config.Slot0.GravityType = GravityTypeValue.Elevator_Static;
-        config.MotionMagic.MotionMagicCruiseVelocity = 0.8;
-        config.MotionMagic.MotionMagicAcceleration = 2;
+        config.MotionMagic.MotionMagicCruiseVelocity = 999;
+        config.MotionMagic.MotionMagicAcceleration = 8;
         config.MotionMagic.MotionMagicJerk = 0;
 
         motors.forEach(motor -> {
@@ -112,7 +116,7 @@ public class ElevatorIOTalonFX implements ElevatorIO {
         );
 
         motorSims.forEach(motorSim -> {
-            motorSim.setRawRotorPosition(elevatorSim.getPositionMeters() * elevatorGearing);
+            motorSim.setRawRotorPosition(elevatorSim.getPositionMeters() * metersToMotorRotations);
             motorSim.setSupplyVoltage(RobotController.getBatteryVoltage());
         });
     }

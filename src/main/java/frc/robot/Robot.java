@@ -5,6 +5,15 @@
 package frc.robot;
 
 import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructArrayPublisher;
+import org.ironmaple.simulation.SimulatedArena;
+import org.ironmaple.simulation.seasonspecific.crescendo2024.CrescendoNoteOnField;
+import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeCoralOnField;
 
 import edu.wpi.first.epilogue.Epilogue;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -33,6 +42,8 @@ public class Robot extends TimedRobot {
 
   @Override
   public void robotInit() {
+    SimulatedArena.getInstance().addGamePiece(new ReefscapeCoralOnField(new Pose2d(16.17, 1.33, new Rotation2d())));
+
   }
 
   @Override
@@ -112,8 +123,16 @@ public class Robot extends TimedRobot {
   @Override
   public void testExit() {}
 
+  StructArrayPublisher<Pose3d> coralPoses = NetworkTableInstance.getDefault()
+        .getStructArrayTopic("CoralPoses", Pose3d.struct)
+        .publish();
+
   @Override
-  public void simulationPeriodic() {}
+  public void simulationPeriodic() {
+      // Get the positions of the notes (both on the field and in the air)
+      Pose3d[] coral = SimulatedArena.getInstance().getGamePiecesArrayByType("Coral");
+      coralPoses.accept(coral);
+  }
 
   // Helper method to simplify checking if the robot is blue or red alliance
   public static boolean isBlue() {

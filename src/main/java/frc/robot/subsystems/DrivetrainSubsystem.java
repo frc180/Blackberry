@@ -5,6 +5,8 @@ import static edu.wpi.first.units.Units.*;
 import java.util.List;
 import java.util.function.Supplier;
 
+import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
+
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
@@ -446,6 +448,13 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         if (mapleSimSwerveDrivetrain != null) {
             mapleSimPose = mapleSimSwerveDrivetrain.mapleSimDrive.getSimulatedDriveTrainPose();
         }
+    }
+
+    public SwerveDriveSimulation getDriveSim() {
+        if (mapleSimSwerveDrivetrain != null) {
+            return mapleSimSwerveDrivetrain.mapleSimDrive;
+        }
+        return null;
     }
 
     // Original CTRE code
