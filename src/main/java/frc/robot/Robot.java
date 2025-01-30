@@ -21,6 +21,7 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.util.simulation.SimLogic;
 import frc.robot.util.simulation.SimVisuals;
 
 @Logged
@@ -42,8 +43,8 @@ public class Robot extends TimedRobot {
 
   @Override
   public void robotInit() {
-    SimulatedArena.getInstance().addGamePiece(new ReefscapeCoralOnField(new Pose2d(16.17, 1.33, new Rotation2d())));
-
+    SimLogic.spawnHumanPlayerCoral(true);
+    SimLogic.spawnHumanPlayerCoral(false);
   }
 
   @Override
@@ -129,7 +130,7 @@ public class Robot extends TimedRobot {
 
   @Override
   public void simulationPeriodic() {
-      // Get the positions of the notes (both on the field and in the air)
+      // Get the positions of all maplesim coral and publish them to NetworkTables
       Pose3d[] coral = SimulatedArena.getInstance().getGamePiecesArrayByType("Coral");
       coralPoses.accept(coral);
   }

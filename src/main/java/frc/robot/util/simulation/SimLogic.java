@@ -16,24 +16,23 @@ public abstract class SimLogic {
     public static boolean hasCoral = false;
 
     public static void spawnHumanPlayerCoral() {
+        spawnHumanPlayerCoral(Robot.isBlue());
+    }
+
+    public static void spawnHumanPlayerCoral(boolean blue) {
         if (!RobotContainer.MAPLESIM) {
             return;
         }
 
-        Pose2d coralPose = Robot.isBlue() ? blueHPCoralPose : redHPCoralPose;
+        Pose2d coralPose = blue ? blueHPCoralPose : redHPCoralPose;
 
-        // Apply a random x, y, and rotation offset to the coral
-
-        // generate a random x offset between -0.3 and 0.3 meters
+        // generate a random physical offset between -0.6 and 0.6 meters and a random rotation
         double xOffset = randomNumberPlusMinus(0.6);
         double yOffset = randomNumberPlusMinus(0.6);
         double rotationOffset = Math.random() * 360;
-
         Transform2d randomTransform = new Transform2d(xOffset, yOffset, Rotation2d.fromDegrees(rotationOffset));
 
-        coralPose = coralPose.transformBy(randomTransform);
-
-        SimulatedArena.getInstance().addGamePiece(new ReefscapeCoralOnField(coralPose));
+        SimulatedArena.getInstance().addGamePiece(new ReefscapeCoralOnField(coralPose.transformBy(randomTransform)));
     }
 
     private static double randomNumberPlusMinus(double range) {
