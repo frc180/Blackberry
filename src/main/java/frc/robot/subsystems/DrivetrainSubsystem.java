@@ -104,12 +104,10 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     private ProfiledPIDController xPidController, yPidController, driverRotationPidController;
 
     private RobotConfig config;
-    List<Waypoint> waypoints = PathPlannerPath.waypointsFromPoses(
-        new Pose2d(7.4, 5, new Rotation2d()),
-        new Pose2d(5.347, 5.074, new Rotation2d())
-    );
 
     PathConstraints constraints = new PathConstraints(MAX_SPEED, MAX_SPEED_ACCEL, MAX_ANGULAR_RATE, MAX_ANGULAR_ACCEL); //must be in m/s and rad/s
+    
+    public PathPlannerPath path;
 
     /* SysId routine for characterizing translation. This is used to find PID gains for the drive motors. */
     private final SysIdRoutine m_sysIdRoutineTranslation = new SysIdRoutine(
@@ -497,10 +495,21 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         m_simNotifier.startPeriodic(kSimLoopPeriod);
     }
 
-    public PathPlannerPath path = new PathPlannerPath(
+    /*public PathPlannerPath path = new PathPlannerPath(
         waypoints,
         constraints,
         null, // The ideal starting state, this is only relevant for pre-planned paths, so can be null for on-the-fly paths.
         new GoalEndState(0.0, new Rotation2d().fromDegrees(240)) // Goal end state. You can set a holonomic rotation here. If using a differential drivetrain, the rotation will have no effect.
-    );
+    );*/
+
+    public PathPlannerPath getPath(double endVel, Rotation2d endRotation, List<Waypoint> waypoints) {
+        //note that waypoints must contain at least 2 pose2ds wrapped inside PathPlannerPath.waypointsfromPoses(waypoints)
+        path = new PathPlannerPath(waypoints, constraints, null, new GoalEndState(endVel, endRotation));
+       
+        return path;
+    }
+
+    public Command followPath(double endVel, Rotation2d endRotation, List<Waypoint> waypoints) {
+        return AutoBuilder.followPath(new PathPlannerPath(waypoints, constraints, null, new GoalEndState(endVel, endRotation)));
+    }
 }

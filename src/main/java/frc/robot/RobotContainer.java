@@ -4,20 +4,28 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Newton;
+
+import java.util.List;
+import java.util.Set;
 import java.util.function.DoubleSupplier;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.path.PathPlannerPath;
+import com.pathplanner.lib.path.Waypoint;
 import com.spamrobotics.util.JoystickInputs;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.button.CommandGenericHID;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -36,6 +44,8 @@ import frc.robot.subsystems.IntakeCoralPivot.IntakeCoralPivotSubsystem;
 import frc.robot.subsystems.elevator.ElevatorSubsystem;
 import frc.robot.subsystems.vision.VisionSubsystem;
 import frc.robot.util.simulation.SimLogic;
+import frc.robot.subsystems.elevatorArm.ElevatorArmSubsystem;
+import frc.robot.subsystems.elevatorArmPivot.ElevatorArmPivotSubsystem;
 
 @Logged
 public class RobotContainer {
@@ -62,10 +72,17 @@ public class RobotContainer {
     public final IntakeCoralPivotSubsystem intakeCoralPivot;
     @Logged(name = "Elevator")
     public final ElevatorSubsystem elevator;
+    @Logged(name = "Elevator Arm")
+    public final ElevatorArmPivotSubsystem elevatorArmPivot;
+    public final ElevatorArmSubsystem elevatorArm;
 
-    private final SendableChooser<Command> autoChooser;
+    private final SendableChooser<Command> autoChooser = new SendableChooser<Command>();
 
     public static RobotContainer instance;
+    public Pose2d backLeftReefPose;
+
+    //auto path
+    public List<Waypoint> leftBargeToLeftReef;
 
     public RobotContainer() {
         instance = this;
@@ -78,8 +95,20 @@ public class RobotContainer {
         intakeCoral = new IntakeCoralSubsystem();
         intakeCoralPivot = new IntakeCoralPivotSubsystem();
         elevator = new ElevatorSubsystem();
+        elevatorArmPivot = new ElevatorArmPivotSubsystem();
+        elevatorArm = new ElevatorArmSubsystem();
 
-        autoChooser = AutoBuilder.buildAutoChooser("Tests");
+        backLeftReefPose = vision.calculateReefPose(20, true);
+            leftBargeToLeftReef = PathPlannerPath.waypointsFromPoses(
+            new Pose2d(7.4, 5, new Rotation2d()),
+            backLeftReefPose
+        );
+
+        autoChooser.addOption("left barge to left reef", Commands.sequence(
+                    Commands.runOnce(() -> drivetrain.resetPose(new Pose2d(7.4, 5, new Rotation2d()))),
+                    drivetrain.followPath(0.0, backLeftReefPose.getRotation(), leftBargeToLeftReef)
+                    ));
+
         SmartDashboard.putData("Auto Mode", autoChooser);
 
         configureBindings();
@@ -94,6 +123,8 @@ public class RobotContainer {
         final Trigger driverLeftReef = driverController.x();
         final Trigger driverRightReef = driverController.b();
         final Trigger algaeMode = driverController.povDown();
+
+
 
         final Function<Double, Double> axisToLinearSpeed = (axis) -> {
             axis *= DrivetrainSubsystem.MAX_SPEED;
@@ -121,8 +152,16 @@ public class RobotContainer {
         //Right Paddle = POV up
 
         driverIntake.and(intakeCoral.hasCoral.negate())
-                            .whileTrue(intakeCoralPivot.setPosition(IntakeCoralPivotSubsystem.extend).alongWith(intakeCoral.intake()))
+                            .onTrue(intakeCoralPivot.setPosition(IntakeCoralPivotSubsystem.extend).alongWith(intakeCoral.intake(), elevatorArmPivot.receivePosition()))
                             .onFalse(intakeCoralPivot.setPosition(IntakeCoralPivotSubsystem.stow).alongWith(intakeCoral.stopIntake()));
+        //added that while we are intaking, the elevator arm also moves to the receiving position as well
+
+        intakeCoral.doneIntaking.onTrue(intakeCoralPivot.setPosition(IntakeCoralPivotSubsystem.stow).alongWith(intakeCoral.stopIntake()));
+        
+        intakeCoral.doneIntaking.and(elevatorArmPivot.elevatorArmInPosition).onTrue(intakeCoral.intake().alongWith(elevatorArm.runArm()));
+        //writing this down so i dont forget:
+        //create a trigger to check if the elevatorArm has a coral in it so that way it can stop running and go to a score/stow position
+
 
         //Algae Intake (using left paddle + right trigger)
         algaeMode.and(driverIntake).whileTrue(intakeAlgaePivot.extend().alongWith(intakeAlgae.intake()))
@@ -193,6 +232,9 @@ public class RobotContainer {
         );
 
 
+        //using the doneIntaking & hasCoral triggers to pass on to arm
+
+
         // Example of using DriveToPose command + allowing the position to be influenced by the driver
         // Supplier<ChassisSpeeds> additionalSpeedsSupplier = () -> {
         //     return new ChassisSpeeds(driverController.getLeftX() * DrivetrainSubsystem.MAX_SPEED, 0, 0);
@@ -230,7 +272,4 @@ public class RobotContainer {
         return Math.copySign(value * value, value);
     }
 
-    public Command plannedPath() {
-        return AutoBuilder.followPath(drivetrain.path);
-    }
 }
