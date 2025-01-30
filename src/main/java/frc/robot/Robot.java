@@ -7,14 +7,11 @@ package frc.robot;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
+import java.util.ArrayList;
+import java.util.List;
 import org.ironmaple.simulation.SimulatedArena;
-import org.ironmaple.simulation.seasonspecific.crescendo2024.CrescendoNoteOnField;
-import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeCoralOnField;
-
 import edu.wpi.first.epilogue.Epilogue;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -23,6 +20,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.util.simulation.SimLogic;
 import frc.robot.util.simulation.SimVisuals;
+import frc.robot.util.simulation.SimulatedAIRobot;
 
 @Logged
 public class Robot extends TimedRobot {
@@ -32,6 +30,7 @@ public class Robot extends TimedRobot {
   private final RobotContainer m_robotContainer;
 
   // private final boolean kUseLimelight = false;
+  private List<SimulatedAIRobot> simulatedAIRobots = new ArrayList<>();
 
 
   public Robot() {
@@ -42,10 +41,7 @@ public class Robot extends TimedRobot {
   }
 
   @Override
-  public void robotInit() {
-    SimLogic.spawnHumanPlayerCoral(true);
-    SimLogic.spawnHumanPlayerCoral(false);
-  }
+  public void robotInit() {}
 
   @Override
   public void robotPeriodic() {
@@ -124,15 +120,35 @@ public class Robot extends TimedRobot {
   @Override
   public void testExit() {}
 
+  StructArrayPublisher<Pose2d> aiRobotPoses = NetworkTableInstance.getDefault()
+          .getStructArrayTopic("AI Robot Poses", Pose2d.struct)
+          .publish();
+
   StructArrayPublisher<Pose3d> coralPoses = NetworkTableInstance.getDefault()
-        .getStructArrayTopic("CoralPoses", Pose3d.struct)
-        .publish();
+          .getStructArrayTopic("Coral Poses", Pose3d.struct)
+          .publish();
+
+  @Override
+  public void simulationInit() {
+    if (RobotContainer.MAPLESIM) {
+        SimLogic.spawnHumanPlayerCoral(true);
+        SimLogic.spawnHumanPlayerCoral(false);
+        simulatedAIRobots.add(new SimulatedAIRobot(0));
+    }
+  }
 
   @Override
   public void simulationPeriodic() {
       // Get the positions of all maplesim coral and publish them to NetworkTables
       Pose3d[] coral = SimulatedArena.getInstance().getGamePiecesArrayByType("Coral");
       coralPoses.accept(coral);
+
+      // Get the positions of all maplesim AI robots and publish them to NetworkTables
+      Pose2d[] aiRobotPosesArray = new Pose2d[simulatedAIRobots.size()];
+      for (int i = 0; i < simulatedAIRobots.size(); i++) {
+          aiRobotPosesArray[i] = simulatedAIRobots.get(i).getPose();
+      }
+      aiRobotPoses.accept(aiRobotPosesArray);
   }
 
   // Helper method to simplify checking if the robot is blue or red alliance
