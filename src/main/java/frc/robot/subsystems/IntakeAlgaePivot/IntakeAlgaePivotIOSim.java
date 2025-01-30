@@ -30,7 +30,7 @@ public class IntakeAlgaePivotIOSim implements IntakeAlgaePivotIO {
     public void setPosition(double encoderPosition) {
         target = encoderPosition;
         usingPID = true;
-        System.out.println("Current algae intake position: " + position);
+        //System.out.println("Current algae intake position: " + position);
     }
 
     @Override
