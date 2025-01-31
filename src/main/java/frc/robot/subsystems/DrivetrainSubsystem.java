@@ -44,6 +44,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.Constants;
 import frc.robot.Robot;
 import frc.robot.RobotContainer;
 import frc.robot.generated.TunerConstants;
@@ -228,6 +229,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
 
     public void drive(ChassisSpeeds speeds) {
         // Helpers.discretizeOverwrite(speeds, Constants.LOOP_TIME);
+        ChassisSpeeds.discretize(speeds, Constants.LOOP_TIME);
         setControl(m_pathApplyRobotSpeeds.withSpeeds(speeds));
     }
 
