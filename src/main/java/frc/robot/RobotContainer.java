@@ -114,7 +114,9 @@ public class RobotContainer {
                             if (Robot.isRed()) start = FlippingUtil.flipFieldPose(start);
                             drivetrain.resetPose(start);
                         }),
-                        drivetrain.followPath(0.0, backLeftReefPose.getRotation(), leftBargeToLeftReef)
+                        drivetrain.followPath(0.0, backLeftReefPose, false, leftBargeToLeftReef)
+                            .until(drivetrain.withinTargetPoseDistance(0.8))
+                            .andThen(new DriveToPose(drivetrain, () -> vision.getClosestReefPose()).withPoseTargetType(PoseTarget.REEF))
                     ));
 
         SmartDashboard.putData("Auto Mode", autoChooser);

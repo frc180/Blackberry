@@ -20,6 +20,7 @@ import com.pathplanner.lib.path.GoalEndState;
 import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.path.Waypoint;
+import com.pathplanner.lib.util.FlippingUtil;
 import com.spamrobotics.util.Helpers;
 
 import edu.wpi.first.epilogue.Logged;
@@ -364,6 +365,15 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         });
     }
 
+    public Trigger withinTargetPoseDistance(double meters) {
+        return new Trigger(() -> {
+            if (targetPose == null) {
+                return false;
+            }
+            return getPose().getTranslation().getDistance(targetPose.getTranslation()) <= meters;
+        });
+    }
+
     private void configureAutoBuilder() {
         try {
             config = RobotConfig.fromGUISettings();
@@ -506,14 +516,26 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         new GoalEndState(0.0, new Rotation2d().fromDegrees(240)) // Goal end state. You can set a holonomic rotation here. If using a differential drivetrain, the rotation will have no effect.
     );*/
 
-    public PathPlannerPath getPath(double endVel, Rotation2d endRotation, List<Waypoint> waypoints) {
+    public PathPlannerPath getPath(double endVel, Rotation2d endRotation, boolean preventFlipping, List<Waypoint> waypoints) {
         //note that waypoints must contain at least 2 pose2ds wrapped inside PathPlannerPath.waypointsfromPoses(waypoints)
         path = new PathPlannerPath(waypoints, constraints, null, new GoalEndState(endVel, endRotation));
-       
+        path.preventFlipping = preventFlipping;
         return path;
     }
 
-    public Command followPath(double endVel, Rotation2d endRotation, List<Waypoint> waypoints) {
+    public Command followPath(double endVel, Rotation2d endRotation, boolean preventFlipping, List<Waypoint> waypoints) {
         return AutoBuilder.followPath(new PathPlannerPath(waypoints, constraints, null, new GoalEndState(endVel, endRotation)));
+    }
+
+    public Command followPath(double endVel, Pose2d endPose, boolean preventFlipping, List<Waypoint> waypoints) {
+        Command pathCommand = followPath(endVel, endPose.getRotation(), preventFlipping, waypoints);
+        return Commands.parallel(
+            Commands.runOnce(() -> {
+                Pose2d currentEndPose = endPose;
+                if (!preventFlipping && Robot.isRed()) currentEndPose = FlippingUtil.flipFieldPose(endPose);
+                setTargetPose(currentEndPose);
+            }),
+            pathCommand
+        );
     }
 }
