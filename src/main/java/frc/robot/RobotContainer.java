@@ -116,6 +116,7 @@ public class RobotContainer {
     }
 
     private void configureBindings() {
+        // Driver buttons
         final Trigger driverIntake = driverController.leftTrigger();
         final Trigger driverL1 = driverController.y();
         final Trigger driverL2 = driverController.leftBumper();
@@ -125,6 +126,8 @@ public class RobotContainer {
         final Trigger driverRightReef = driverController.b();
         final Trigger algaeMode = driverController.povDown();
 
+        // More complex triggers
+        final Trigger robotHasCoral = intakeCoral.hasCoral.or(elevatorArm.hasCoral);
 
 
         final Function<Double, Double> axisToLinearSpeed = (axis) -> {
@@ -152,14 +155,17 @@ public class RobotContainer {
         //Left Paddle = POV down
         //Right Paddle = POV up
 
-        driverIntake.and(intakeCoral.hasCoral.negate())
-                            .onTrue(intakeCoralPivot.setPosition(IntakeCoralPivotSubsystem.extend).alongWith(intakeCoral.intake(), elevatorArmPivot.receivePosition()))
-                            .onFalse(intakeCoralPivot.setPosition(IntakeCoralPivotSubsystem.stow).alongWith(intakeCoral.stopIntake()));
-        //added that while we are intaking, the elevator arm also moves to the receiving position as well
+        // Driver Coral Intake
+        driverIntake.and(robotHasCoral.negate())
+            .whileTrue(intakeCoralPivot.setPosition(IntakeCoralPivotSubsystem.extend).alongWith(intakeCoral.intake(), elevatorArmPivot.receivePosition()))
+            .onFalse(intakeCoralPivot.setPosition(IntakeCoralPivotSubsystem.stow).alongWith(intakeCoral.stopIntake()));
 
-        intakeCoral.doneIntaking.onTrue(intakeCoralPivot.setPosition(IntakeCoralPivotSubsystem.stow).alongWith(intakeCoral.stopIntake()));
+        // intakeCoral.hasCoral
+        //     .onTrue(intakeCoralPivot.setPosition(IntakeCoralPivotSubsystem.stow).alongWith(intakeCoral.stopIntake()));
         
-        intakeCoral.doneIntaking.and(elevatorArmPivot.elevatorArmInPosition).onTrue(intakeCoral.intake().alongWith(elevatorArm.runArm()));
+        intakeCoral.hasCoral.and(elevatorArmPivot.elevatorArmInPosition)
+            .onTrue(intakeCoral.intake().alongWith(elevatorArm.runArm()));
+        
         //writing this down so i dont forget:
         //create a trigger to check if the elevatorArm has a coral in it so that way it can stop running and go to a score/stow position
         elevatorArm.hasCoral.onTrue(intakeCoral.stopIntake().alongWith(elevatorArm.stop(), elevatorArmPivot.stowPosition()));
@@ -179,7 +185,7 @@ public class RobotContainer {
 
 
         // Example of using the targetHeadingContinuous to make the robot point towards the closest side of the reef
-        driverController.a().or(intakeCoral.hasCoral)
+        driverController.a().or(robotHasCoral)
             .whileTrue(drivetrain.targetHeadingContinuous(() -> {
                 Pose2d reefPose = vision.getClosestReefPose();
                 return reefPose != null ? reefPose.getRotation().getDegrees() : null;
@@ -227,7 +233,7 @@ public class RobotContainer {
                 drivetrain.runOnce(() -> drivetrain.drive(new ChassisSpeeds())),
                 Commands.waitSeconds(0.2),
                 Commands.runOnce(() -> {
-                    SimLogic.hasCoral = false;
+                    SimLogic.armHasCoral = false;
                     SimLogic.spawnHumanPlayerCoral();
                 })
             ).withInterruptBehavior(InterruptionBehavior.kCancelIncoming)

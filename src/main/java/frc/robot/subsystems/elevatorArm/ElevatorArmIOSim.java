@@ -7,7 +7,6 @@ import frc.robot.util.simulation.SimLogic;
 public class ElevatorArmIOSim implements ElevatorArmIO{
  
     double rollerSpeed = 0;
-    boolean armHasCoral = false;
     boolean readyForCoral = false;
 
     public ElevatorArmIOSim() {}
@@ -19,19 +18,17 @@ public class ElevatorArmIOSim implements ElevatorArmIO{
 
     @Override
     public void update(ElevatorArmIOInputs inputs) {
+        // TODO: eventually add logic that ensures the intake is also at the right position to pass off coral
         ElevatorArmPivotSubsystem armPivot = RobotContainer.instance.elevatorArmPivot;
-        readyForCoral = armPivot.isAtReceivingPosition();
-        //armHasCoral = readyForCoral && rollerSpeed > 0;
+        readyForCoral = SimLogic.intakeHasCoral && armPivot.isAtReceivingPosition();
 
-        if (readyForCoral) {
-            run();
-            armHasCoral = true;
+        if (readyForCoral && rollerSpeed > 0) {
+            SimLogic.armHasCoral = true;
+            SimLogic.intakeHasCoral = false;
         }
 
-        SimLogic.hasCoral = false;
-
         inputs.voltage = Math.abs(rollerSpeed) * 12;
-        inputs.coralSensor = armHasCoral;
+        inputs.coralSensor = SimLogic.armHasCoral;
     }
 
     @Override

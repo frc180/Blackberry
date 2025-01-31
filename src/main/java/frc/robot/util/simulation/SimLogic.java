@@ -13,7 +13,12 @@ public abstract class SimLogic {
     public static final Pose2d blueHPCoralPose = new Pose2d(1.56, 1.33, new Rotation2d());
     public static final Pose2d redHPCoralPose = new Pose2d(16.17, 1.33, new Rotation2d());
 
-    public static boolean hasCoral = false;
+    public static boolean intakeHasCoral = false;
+    public static boolean armHasCoral = false;
+
+    public static boolean robotHasCoral() {
+        return intakeHasCoral || armHasCoral;
+    }
 
     public static void spawnHumanPlayerCoral() {
         spawnHumanPlayerCoral(Robot.isBlue());

@@ -39,26 +39,26 @@ public class IntakeCoralIOSim implements IntakeCoralIO {
             } else {
                 intakeSim.stopIntake();
             }
-            if (!SimLogic.hasCoral) {
-                SimLogic.hasCoral = intakeSim.obtainGamePieceFromIntake();
+            if (!SimLogic.intakeHasCoral) {
+                SimLogic.intakeHasCoral = intakeSim.obtainGamePieceFromIntake();
             }
         } else {
             Pose2d coralPose = RobotContainer.instance.vision.getCoralPose();
             if (coralPose != null && rollerSpeed != 0) {
-                if (SimLogic.hasCoral && rollerSpeed < 0) {
+                if (SimLogic.intakeHasCoral && rollerSpeed < 0) {
                     // We have the coral and are ejecting it
-                    SimLogic.hasCoral = false;
-                } else if (!SimLogic.hasCoral && intakeReady) {
+                    SimLogic.intakeHasCoral = false;
+                } else if (!SimLogic.intakeHasCoral && intakeReady) {
                     // Say we have the coral if we are within 0.75 meters of it
                     Pose2d robotPose = RobotContainer.instance.drivetrain.getPose();
                     double distance = robotPose.getTranslation().getDistance(coralPose.getTranslation());
-                    SimLogic.hasCoral = distance <= 0.75;
+                    SimLogic.intakeHasCoral = distance <= 0.75;
                 }
             }
         }
 
         inputs.voltage = rollerSpeed * 12;
-        inputs.coralSensor = SimLogic.hasCoral;
+        inputs.coralSensor = SimLogic.intakeHasCoral;
     }
 
     @Override
