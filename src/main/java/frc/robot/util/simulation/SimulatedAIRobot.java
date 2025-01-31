@@ -1,10 +1,13 @@
 package frc.robot.util.simulation;
 
+import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.Pounds;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import org.ironmaple.simulation.SimulatedArena;
+import org.ironmaple.simulation.drivesims.COTS;
 import org.ironmaple.simulation.drivesims.SelfControlledSwerveDriveSimulation;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.ironmaple.simulation.drivesims.configs.DriveTrainSimulationConfig;
@@ -15,12 +18,13 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class SimulatedAIRobot extends SubsystemBase {
-    /* If an opponent robot is not on the field, it is placed in a queening position for performance. */
+    /* If an AI robot is not on the field, it is placed in a queening position for performance. */
     public static final Pose2d[] ROBOT_QUEENING_POSITIONS = new Pose2d[] {
         new Pose2d(-6, 0, new Rotation2d()),
         new Pose2d(-5, 0, new Rotation2d()),
@@ -42,7 +46,6 @@ public class SimulatedAIRobot extends SubsystemBase {
     private final int id;
 
     private XboxController controller = null;
-
     private Rotation2d zeroHeading = Rotation2d.kZero;
     private JoystickInputs inputs = new JoystickInputs();
 
@@ -50,13 +53,11 @@ public class SimulatedAIRobot extends SubsystemBase {
         this.id = id;
         this.queeningPose = ROBOT_QUEENING_POSITIONS[id];
         this.driveSimulation = new SelfControlledSwerveDriveSimulation(new SwerveDriveSimulation(
-            DriveTrainSimulationConfig.Default(), 
+            drivetrainConfig(), 
             queeningPose
         ));
 
-        SimulatedArena.getInstance().addDriveTrainSimulation(
-            driveSimulation.getDriveTrainSimulation()
-        );
+        SimulatedArena.getInstance().addDriveTrainSimulation(driveSimulation.getDriveTrainSimulation());
 
         controller = new XboxController(id + 1);
         this.setDefaultCommand(joystickDrive(controller));
@@ -70,7 +71,6 @@ public class SimulatedAIRobot extends SubsystemBase {
         return driveSimulation.getActualPoseInSimulationWorld();
     }
 
-    /** Joystick drive command for opponent robots */
     private Command joystickDrive(XboxController joystick) {
          final Function<Double, Double> axisToLinearSpeed = (axis) -> {
             return axis * driveSimulation.maxLinearVelocity().in(MetersPerSecond);
@@ -109,6 +109,19 @@ public class SimulatedAIRobot extends SubsystemBase {
                 })
                 .beforeStarting(() -> driveSimulation.setSimulationWorldPose(
                         FieldMirroringUtils.toCurrentAlliancePose(ROBOTS_STARTING_POSITIONS[id])
+                ));
+    }
+
+    private DriveTrainSimulationConfig drivetrainConfig() {
+        return DriveTrainSimulationConfig.Default()
+                .withRobotMass(Pounds.of(115))
+                .withBumperSize(Inches.of(30), Inches.of(30))
+                .withGyro(COTS.ofPigeon2())
+                .withSwerveModule(COTS.ofMark4(
+                    DCMotor.getKrakenX60Foc(1),
+                    DCMotor.getKrakenX60Foc(1),
+                    COTS.WHEELS.BLUE_NITRILE_TREAD.cof,
+                    3
                 ));
     }
 }

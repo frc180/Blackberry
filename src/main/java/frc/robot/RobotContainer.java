@@ -22,6 +22,7 @@ import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -215,6 +216,12 @@ public class RobotContainer {
                             .and(drivetrain.withinTargetPoseTolerance(0.1, 0.1, 5.0));
 
         Command chosenElevatorHeight = elevator.run(() -> {
+            // In autonomous, always go to L4
+            if (RobotState.isAutonomous()) {
+                elevator.setPositionDirect(ElevatorSubsystem.L4);
+                return;
+            }
+
             if (driverL1.getAsBoolean()) {
                 elevator.setPositionDirect(ElevatorSubsystem.L1);
 
