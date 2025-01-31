@@ -103,6 +103,10 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     private Pose2d mapleSimPose = null;
 
     private ProfiledPIDController xPidController, yPidController, driverRotationPidController;
+    private double xPosition = 0;
+    private double yPosition = 0;
+    private double xPidTarget = 0;
+    private double yPidTarget = 0;
 
     private RobotConfig config;
 
@@ -196,9 +200,19 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         }
         configureAutoBuilder();
 
-        xPidController = new ProfiledPIDController(3.5, 0., 0.05, // 3.5 almost stable //3.2 good
+        double translationP = 3.5; // 3.5 almost stable //3.2 good
+        double translationI = 0.0;
+        double translationD = 0.05;
+
+        if (Robot.isSimulation()) {
+            translationP = 10;
+            translationI = 0.0;
+            translationD = 1.6;
+        }
+
+        xPidController = new ProfiledPIDController(translationP, translationI, translationD,
                                         new TrapezoidProfile.Constraints(MAX_SPEED, MAX_SPEED_ACCEL));
-        yPidController = new ProfiledPIDController(3.5, 0., 0.05, // 3.5 almost stable //3.2 good
+        yPidController = new ProfiledPIDController(translationP, translationI, translationD,
                                         new TrapezoidProfile.Constraints(MAX_SPEED, MAX_SPEED_ACCEL));
 
         driverRotationPidController = new ProfiledPIDController(5, 0., 0, // was 10 // was 5
@@ -460,6 +474,10 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         if (mapleSimSwerveDrivetrain != null) {
             mapleSimPose = mapleSimSwerveDrivetrain.mapleSimDrive.getSimulatedDriveTrainPose();
         }
+        xPosition = getPose().getX();
+        yPosition = getPose().getY();
+        xPidTarget = xPidController.getSetpoint().position;
+        yPidTarget = yPidController.getSetpoint().position;
     }
 
     public SwerveDriveSimulation getDriveSim() {
