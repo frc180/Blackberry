@@ -14,6 +14,7 @@ import java.util.function.Supplier;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.path.Waypoint;
+import com.pathplanner.lib.util.FlippingUtil;
 import com.spamrobotics.util.JoystickInputs;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.MathUtil;
@@ -102,14 +103,18 @@ public class RobotContainer {
         elevatorArm = new ElevatorArmSubsystem();
 
         backLeftReefPose = vision.calculateReefPose(20, true);
-            leftBargeToLeftReef = PathPlannerPath.waypointsFromPoses(
-            new Pose2d(7.4, 5, new Rotation2d()),
+        leftBargeToLeftReef = PathPlannerPath.waypointsFromPoses(
+            new Pose2d(7.4, 5, Rotation2d.k180deg),
             backLeftReefPose
         );
 
-        autoChooser.addOption("left barge to left reef", Commands.sequence(
-                    Commands.runOnce(() -> drivetrain.resetPose(new Pose2d(7.4, 5, new Rotation2d()))),
-                    drivetrain.followPath(0.0, backLeftReefPose.getRotation(), leftBargeToLeftReef)
+        autoChooser.setDefaultOption("left barge to left reef", Commands.sequence(
+                        Commands.runOnce(() -> {
+                            Pose2d start = new Pose2d(7.4, 5, Rotation2d.k180deg);
+                            if (Robot.isRed()) start = FlippingUtil.flipFieldPose(start);
+                            drivetrain.resetPose(start);
+                        }),
+                        drivetrain.followPath(0.0, backLeftReefPose.getRotation(), leftBargeToLeftReef)
                     ));
 
         SmartDashboard.putData("Auto Mode", autoChooser);
