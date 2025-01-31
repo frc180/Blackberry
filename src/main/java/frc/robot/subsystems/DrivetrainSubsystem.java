@@ -229,7 +229,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
 
     public void drive(ChassisSpeeds speeds) {
         // Helpers.discretizeOverwrite(speeds, Constants.LOOP_TIME);
-        ChassisSpeeds.discretize(speeds, Constants.LOOP_TIME);
+        speeds = ChassisSpeeds.discretize(speeds, Constants.LOOP_TIME);
         setControl(m_pathApplyRobotSpeeds.withSpeeds(speeds));
     }
 
