@@ -266,8 +266,12 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     }
 
     public void resetPIDs(HeadingTarget type) {
-        xPidController.reset(getPose().getX());
-        yPidController.reset(getPose().getY());
+        SwerveDriveState state = getState();
+        // TODO: this speed transform seems to work, but best I can tell it should be using
+        // getGyroscopeRotation() instead of the pose rotation...
+        ChassisSpeeds speeds = ChassisSpeeds.fromRobotRelativeSpeeds(state.Speeds, state.Pose.getRotation());
+        xPidController.reset(state.Pose.getX(), speeds.vxMetersPerSecond);
+        yPidController.reset(state.Pose.getY(), speeds.vyMetersPerSecond);
         resetHeadingPID(type);
     }
 

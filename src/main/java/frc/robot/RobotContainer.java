@@ -26,6 +26,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.button.CommandGenericHID;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -33,6 +34,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.commands.DefaultDriveCommand;
 import frc.robot.commands.DriveToPose;
+import frc.robot.commands.RumbleCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.DrivetrainSubsystem;
 import frc.robot.subsystems.DrivetrainSubsystem.HeadingTarget;
@@ -166,6 +168,12 @@ public class RobotContainer {
         intakeCoral.hasCoral.and(elevatorArmPivot.elevatorArmInPosition)
             .onTrue(intakeCoral.intake().alongWith(elevatorArm.runArm()));
         
+         // Notify driver we've intaken a coral
+        driverIntake.and(intakeCoral.hasCoral)
+                            .onTrue(new RumbleCommand(1).withTimeout(0.5));
+        
+        // intakeCoral.doneIntaking.and(elevatorArmPivot.elevatorArmInPosition).onTrue(intakeCoral.intake().alongWith(elevatorArm.runArm()));
+        
         //writing this down so i dont forget:
         //create a trigger to check if the elevatorArm has a coral in it so that way it can stop running and go to a score/stow position
         elevatorArm.hasCoral.onTrue(intakeCoral.stopIntake().alongWith(elevatorArm.stop(), elevatorArmPivot.stowPosition()));
@@ -235,6 +243,7 @@ public class RobotContainer {
                 Commands.runOnce(() -> {
                     SimLogic.armHasCoral = false;
                     SimLogic.spawnHumanPlayerCoral();
+                    CommandScheduler.getInstance().schedule(new RumbleCommand(1).withTimeout(0.5));
                 })
             ).withInterruptBehavior(InterruptionBehavior.kCancelIncoming)
         );
