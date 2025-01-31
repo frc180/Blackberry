@@ -1,9 +1,14 @@
 package frc.robot.subsystems.elevatorArm;
 
+import frc.robot.RobotContainer;
+import frc.robot.subsystems.elevatorArmPivot.ElevatorArmPivotSubsystem;
+import frc.robot.util.simulation.SimLogic;
+
 public class ElevatorArmIOSim implements ElevatorArmIO{
  
     double rollerSpeed = 0;
-    boolean hasCoral = false;
+    boolean armHasCoral = false;
+    boolean readyForCoral = false;
 
     public ElevatorArmIOSim() {}
 
@@ -14,8 +19,19 @@ public class ElevatorArmIOSim implements ElevatorArmIO{
 
     @Override
     public void update(ElevatorArmIOInputs inputs) {
-        inputs.voltage = rollerSpeed * 12;
-        inputs.coralSensor = hasCoral;
+        ElevatorArmPivotSubsystem armPivot = RobotContainer.instance.elevatorArmPivot;
+        readyForCoral = armPivot.isAtReceivingPosition();
+        //armHasCoral = readyForCoral && rollerSpeed > 0;
+
+        if (readyForCoral) {
+            run();
+            armHasCoral = true;
+        }
+
+        SimLogic.hasCoral = false;
+
+        inputs.voltage = Math.abs(rollerSpeed) * 12;
+        inputs.coralSensor = armHasCoral;
     }
 
     @Override

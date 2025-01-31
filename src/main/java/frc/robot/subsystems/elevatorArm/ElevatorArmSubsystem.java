@@ -1,18 +1,27 @@
 package frc.robot.subsystems.elevatorArm;
 
+import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Robot;
 import frc.robot.subsystems.elevatorArm.ElevatorArmIO.ElevatorArmIOInputs;
 
+@Logged
 public class ElevatorArmSubsystem extends SubsystemBase{
 
     ElevatorArmIO io;
     ElevatorArmIOInputs inputs;
 
+    public Trigger hasCoral;
+    public Trigger doneIntaking;
+
     public ElevatorArmSubsystem() {
         inputs = new ElevatorArmIOInputs();
         io = new ElevatorArmIOSim();
+
+        hasCoral = new Trigger(() -> inputs.coralSensor);
+        doneIntaking = hasCoral.and(() -> inputs.voltage == 0);
     }
 
     @Override

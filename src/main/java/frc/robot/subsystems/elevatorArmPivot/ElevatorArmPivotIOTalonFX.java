@@ -94,5 +94,6 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO{
         armPivotMotorSim.setRawRotorPosition(armSim.getAngleRads());
         armPivotMotorSim.setSupplyVoltage(RobotController.getBatteryVoltage());
     }
+
     
 }

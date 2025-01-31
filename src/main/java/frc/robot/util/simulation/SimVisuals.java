@@ -48,6 +48,10 @@ public abstract class SimVisuals {
         coralIntakeLigament.setAngle(degrees);
     }
 
+    public static void setElevatorArmPivotDegrees(double degrees) {
+        coralArmLigament.setAngle(degrees);
+    }
+
     public static void update() {
         coralArmRoot.setPosition(CORAL_ARM_X, Y_BOTTOM + CORAL_ARM_Y_OFFSET + elevatorLigament.getLength());
         elevatorLigament.setColor(SimLogic.hasCoral ? ELEVATOR_CORAL_COLOR : ELEVATOR_NOCORAL_COLOR);

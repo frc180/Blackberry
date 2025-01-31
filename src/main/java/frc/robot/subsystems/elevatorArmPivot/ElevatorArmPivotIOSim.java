@@ -11,13 +11,15 @@ public class ElevatorArmPivotIOSim implements ElevatorArmPivotIO{
     PIDController pid;
     boolean usingPID = false;
 
+    ElevatorArmPivotIOInputs input = new ElevatorArmPivotIOInputs();
+
     public ElevatorArmPivotIOSim() {
         pid = new PIDController(0.01, 0, 0);
     }
 
     @Override
-    public void setPosition(double encoderPosition) {
-        target = encoderPosition;
+    public void setPosition(double degrees) {
+        target = degrees;
         usingPID = true;
 
     }
@@ -39,4 +41,5 @@ public class ElevatorArmPivotIOSim implements ElevatorArmPivotIO{
     public void simulationPeriodic() {
         position += speed * 8;
     }
+
 }

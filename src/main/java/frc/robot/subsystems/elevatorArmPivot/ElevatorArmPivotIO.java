@@ -17,5 +17,6 @@ public interface ElevatorArmPivotIO {
     public default void simulationPeriodic() {}
 
     public void update(ElevatorArmPivotIOInputs inputs);
+
     
 }

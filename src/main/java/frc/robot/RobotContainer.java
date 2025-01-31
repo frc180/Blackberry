@@ -72,8 +72,9 @@ public class RobotContainer {
     public final IntakeCoralPivotSubsystem intakeCoralPivot;
     @Logged(name = "Elevator")
     public final ElevatorSubsystem elevator;
-    @Logged(name = "Elevator Arm")
+    @Logged(name = "Elevator ArmP")
     public final ElevatorArmPivotSubsystem elevatorArmPivot;
+    @Logged(name = "Elevator arm")
     public final ElevatorArmSubsystem elevatorArm;
 
     private final SendableChooser<Command> autoChooser = new SendableChooser<Command>();
@@ -161,7 +162,8 @@ public class RobotContainer {
         intakeCoral.doneIntaking.and(elevatorArmPivot.elevatorArmInPosition).onTrue(intakeCoral.intake().alongWith(elevatorArm.runArm()));
         //writing this down so i dont forget:
         //create a trigger to check if the elevatorArm has a coral in it so that way it can stop running and go to a score/stow position
-
+        elevatorArm.hasCoral.onTrue(intakeCoral.stopIntake().alongWith(elevatorArm.stop(), elevatorArmPivot.stowPosition()));
+        //elevatorArm.doneIntaking.onTrue(elevatorArmPivot.stowPosition());
 
         //Algae Intake (using left paddle + right trigger)
         algaeMode.and(driverIntake).whileTrue(intakeAlgaePivot.extend().alongWith(intakeAlgae.intake()))
