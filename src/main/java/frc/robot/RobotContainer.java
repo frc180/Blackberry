@@ -139,6 +139,7 @@ public class RobotContainer {
         final Trigger autonomous = RobotModeTriggers.autonomous();
 
         // Driver buttons
+        //coral
         final Trigger driverIntake = driverController.leftTrigger();
         final Trigger driverL1 = driverController.y();
         final Trigger driverL2 = driverController.leftBumper();
@@ -146,7 +147,15 @@ public class RobotContainer {
         final Trigger driverL4 = driverController.rightBumper();
         final Trigger driverLeftReef = driverController.x();
         final Trigger driverRightReef = driverController.b();
+        //algae
         final Trigger algaeMode = driverController.povDown();
+        final Trigger driverProcessor = algaeMode.and(driverController.x());
+        final Trigger driverBarge = algaeMode.and(driverController.rightBumper());
+        final Trigger driverSpitAlgae = algaeMode.and(driverController.y());
+        final Trigger driverIntakeAlgae = algaeMode.and(driverController.leftTrigger());
+        //climb (must be in algae mode)
+        final Trigger driverReadyClimb = algaeMode.and(driverController.leftStick().and(driverController.rightStick())); // left/right stick is M1 and M2
+        final Trigger driverStartClimb = algaeMode.and(driverController.start());
 
         // More complex triggers
         final Trigger robotHasCoral = intakeCoral.hasCoral.or(elevatorArm.hasCoral);
@@ -208,7 +217,8 @@ public class RobotContainer {
         //elevatorArm.doneIntaking.onTrue(elevatorArmPivot.stowPosition());
 
         //Algae Intake (using left paddle + right trigger)
-        algaeMode.and(driverIntake).whileTrue(intakeAlgaePivot.extend().alongWith(intakeAlgae.intake()))
+        //algaeMode.and(driverIntake)
+        driverIntakeAlgae.whileTrue(intakeAlgaePivot.extend().alongWith(intakeAlgae.intake()))
                             .onFalse(intakeAlgaePivot.stow().alongWith(intakeAlgae.stopIntake()));
 
         //left and right alignment for the reef (x is left and b is right)
@@ -263,7 +273,7 @@ public class RobotContainer {
             }
         });
 
-        nearReef.and(elevatorArm.hasCoral).whileTrue(chosenElevatorHeight).onFalse(elevator.setPosition(0));
+        nearReef.whileTrue(chosenElevatorHeight).onFalse(elevator.setPosition(0));
 
 
         intakeCoral.hasCoral.whileTrue(Commands.print("Coral detected!"));
@@ -285,6 +295,7 @@ public class RobotContainer {
                         }
                     }
                     Robot.justScoredCoral = true;
+                    SimLogic.intakeHasCoral = false;
                     SimLogic.armHasCoral = false;
                     SimLogic.spawnHumanPlayerCoral();
                 })
