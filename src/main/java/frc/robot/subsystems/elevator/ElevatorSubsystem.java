@@ -95,4 +95,23 @@ public class ElevatorSubsystem extends SubsystemBase {
     io.setPosition(encoderPosition);
     targetPosition = encoderPosition;
   }
+  
+  public double levelToPosition(int level) {
+    switch (level) {
+      case 0:
+        return 0;
+      case 1:
+        return L1;
+      case 2:
+        return L2;
+      case 3:
+        return L3;
+      case 4:
+        return L4;
+      case 5:
+        return NET;
+      default:
+        return 0;
+    }
+  }
 }

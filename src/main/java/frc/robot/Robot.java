@@ -18,12 +18,17 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.util.CoralScoringPosition;
 import frc.robot.util.simulation.SimLogic;
 import frc.robot.util.simulation.SimVisuals;
 import frc.robot.util.simulation.SimulatedAIRobot;
 
 @Logged
 public class Robot extends TimedRobot {
+
+  public static boolean justScoredCoral = false;
+  public static List<CoralScoringPosition> autoCoralScoringPositions = new ArrayList<>();
+
   private Command m_autonomousCommand;
 
   @Logged(name = "RobotContainer")
@@ -47,7 +52,6 @@ public class Robot extends TimedRobot {
   public void robotPeriodic() {
     CommandScheduler.getInstance().run();
     SimVisuals.update();
-
     /*
      * This example of adding Limelight is very simple and may not be sufficient for on-field use.
      * Users typically need to provide a standard deviation that scales with the distance to target
@@ -80,6 +84,7 @@ public class Robot extends TimedRobot {
 
   @Override
   public void autonomousInit() {
+    Auto.init();
     if (Robot.isSimulation()) {
       SimLogic.armHasCoral = true;
       SimLogic.intakeHasCoral = false;
@@ -163,6 +168,23 @@ public class Robot extends TimedRobot {
 
   public static boolean isRed() {
     return !isBlue();
+  }
+
+  public static CoralScoringPosition nextAutoCoralScoringPosition() {
+    if (autoCoralScoringPositions.isEmpty()) {
+      return null;
+    }
+
+    return autoCoralScoringPositions.get(0);
+  }
+
+  public static void setAutoCoralScoringPositions(CoralScoringPosition... positions) {
+    setAutoCoralScoringPositions(List.of(positions));
+  }
+
+  public static void setAutoCoralScoringPositions(List<CoralScoringPosition> positions) {
+    autoCoralScoringPositions.clear();
+    positions.forEach(position -> autoCoralScoringPositions.add(position.getFlippedIfNeeded()));
   }
 }
 

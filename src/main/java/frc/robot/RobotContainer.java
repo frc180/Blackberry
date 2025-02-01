@@ -4,14 +4,10 @@
 
 package frc.robot;
 
-import static edu.wpi.first.units.Units.Newton;
-
 import java.util.List;
-import java.util.Set;
 import java.util.function.DoubleSupplier;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.path.Waypoint;
 import com.pathplanner.lib.util.FlippingUtil;
@@ -23,15 +19,14 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.RobotState;
-import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.button.CommandGenericHID;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.commands.DefaultDriveCommand;
@@ -47,6 +42,7 @@ import frc.robot.subsystems.IntakeCoral.IntakeCoralSubsystem;
 import frc.robot.subsystems.IntakeCoralPivot.IntakeCoralPivotSubsystem;
 import frc.robot.subsystems.elevator.ElevatorSubsystem;
 import frc.robot.subsystems.vision.VisionSubsystem;
+import frc.robot.util.CoralScoringPosition;
 import frc.robot.util.simulation.SimLogic;
 import frc.robot.subsystems.elevatorArm.ElevatorArmSubsystem;
 import frc.robot.subsystems.elevatorArmPivot.ElevatorArmPivotSubsystem;
@@ -103,7 +99,15 @@ public class RobotContainer {
         elevatorArmPivot = new ElevatorArmPivotSubsystem();
         elevatorArm = new ElevatorArmSubsystem();
 
-        backLeftReefPose = vision.calculateReefPose(20, true);
+        List<CoralScoringPosition> sampleAutoPositions = List.of(
+            new CoralScoringPosition(20, 4, true),
+            new CoralScoringPosition(19, 4, false),
+            new CoralScoringPosition(19, 4, true),
+            new CoralScoringPosition(18, 4, true),
+            new CoralScoringPosition(18, 4, false)
+        );
+
+        backLeftReefPose = sampleAutoPositions.get(0).getPose();
         leftBargeToLeftReef = PathPlannerPath.waypointsFromPoses(
             new Pose2d(7.4, 5, Rotation2d.k180deg),
             backLeftReefPose
@@ -111,13 +115,17 @@ public class RobotContainer {
 
         autoChooser.setDefaultOption("left barge to left reef", Commands.sequence(
                         Commands.runOnce(() -> {
-                            Pose2d start = new Pose2d(7.4, 5, Rotation2d.k180deg);
-                            if (Robot.isRed()) start = FlippingUtil.flipFieldPose(start);
-                            drivetrain.resetPose(start);
+                            Robot.setAutoCoralScoringPositions(sampleAutoPositions);
+                            if (Robot.isSimulation()) {
+                                Pose2d start = new Pose2d(7.4, 5, Rotation2d.k180deg);
+                                if (Robot.isRed()) start = FlippingUtil.flipFieldPose(start);
+                                drivetrain.resetPose(start);
+                            }
+
                         }),
                         drivetrain.followPath(0.0, backLeftReefPose, false, leftBargeToLeftReef)
-                            .until(drivetrain.withinTargetPoseDistance(0.8))
-                            .andThen(new DriveToPose(drivetrain, () -> vision.getClosestReefPose()).withPoseTargetType(PoseTarget.REEF))
+                            .until(drivetrain.withinTargetPoseDistance(1))
+                            .andThen(new DriveToPose(drivetrain, () -> Robot.nextAutoCoralScoringPosition().getPose()).withPoseTargetType(PoseTarget.REEF))
                     ));
 
         SmartDashboard.putData("Auto Mode", autoChooser);
@@ -126,6 +134,10 @@ public class RobotContainer {
     }
 
     private void configureBindings() {
+        // Robot modes
+        final Trigger teleop = RobotModeTriggers.teleop();
+        final Trigger autonomous = RobotModeTriggers.autonomous();
+
         // Driver buttons
         final Trigger driverIntake = driverController.leftTrigger();
         final Trigger driverL1 = driverController.y();
@@ -138,6 +150,11 @@ public class RobotContainer {
 
         // More complex triggers
         final Trigger robotHasCoral = intakeCoral.hasCoral.or(elevatorArm.hasCoral);
+        final Trigger justScoredCoral = new Trigger(() -> Robot.justScoredCoral);
+        final Trigger drivetrainAvailable = new Trigger(() -> drivetrain.getCurrentCommand() == drivetrain.getDefaultCommand());
+
+        // Auto triggers
+        final Trigger autoCoralIntake = autonomous.and(Auto::isCoralIntaking);
 
 
         final Function<Double, Double> axisToLinearSpeed = (axis) -> {
@@ -166,7 +183,7 @@ public class RobotContainer {
         //Right Paddle = POV up
 
         // Driver Coral Intake
-        driverIntake.and(robotHasCoral.negate())
+        driverIntake.or(autoCoralIntake).and(robotHasCoral.negate())
             .whileTrue(intakeCoralPivot.setPosition(IntakeCoralPivotSubsystem.extend).alongWith(intakeCoral.intake(), elevatorArmPivot.receivePosition()))
             .onFalse(intakeCoralPivot.setPosition(IntakeCoralPivotSubsystem.stow).alongWith(intakeCoral.stopIntake()));
 
@@ -178,7 +195,10 @@ public class RobotContainer {
         
          // Notify driver we've intaken a coral
         driverIntake.and(intakeCoral.hasCoral)
-                            .onTrue(new RumbleCommand(1).withTimeout(0.5));
+            .onTrue(new RumbleCommand(1).withTimeout(0.5));
+
+        autoCoralIntake.and(intakeCoral.hasCoral)
+            .onTrue(Auto.driveToReefWithCoral());
         
         // intakeCoral.doneIntaking.and(elevatorArmPivot.elevatorArmInPosition).onTrue(intakeCoral.intake().alongWith(elevatorArm.runArm()));
         
@@ -201,24 +221,28 @@ public class RobotContainer {
 
 
         // Example of using the targetHeadingContinuous to make the robot point towards the closest side of the reef
-        driverController.a().or(robotHasCoral)
+        teleop.and(driverController.a().or(robotHasCoral))
             .whileTrue(drivetrain.targetHeadingContinuous(() -> {
                 Pose2d reefPose = vision.getClosestReefPose();
                 return reefPose != null ? reefPose.getRotation().getDegrees() : null;
             }, HeadingTarget.POSE));
 
-        // Example of trigger that does something when within 0.8 meters of the reef     
         Trigger nearReef = drivetrain.targetingReef()
-                            .and(drivetrain.withinTargetPoseTolerance(0.8, 0.8, 90.0))
+                            .and(drivetrain.withinTargetPoseTolerance(1.0, 1.0, 90.0))
                             .debounce(0.5, DebounceType.kFalling); 
 
         Trigger atReef = drivetrain.targetingReef()
                             .and(drivetrain.withinTargetPoseTolerance(0.1, 0.1, 5.0));
 
         Command chosenElevatorHeight = elevator.run(() -> {
-            // In autonomous, always go to L4
+            // In autonomous, read the next coral scoring position from the list to determine the elevator height
             if (RobotState.isAutonomous()) {
-                elevator.setPositionDirect(ElevatorSubsystem.L4);
+                CoralScoringPosition next = Robot.nextAutoCoralScoringPosition();
+                if (next == null) {
+                    elevator.setPositionDirect(0);
+                    return;
+                }
+                elevator.setPositionDirect(elevator.levelToPosition(next.level));
                 return;
             }
 
@@ -239,7 +263,7 @@ public class RobotContainer {
             }
         });
 
-        nearReef.whileTrue(chosenElevatorHeight).onFalse(elevator.setPosition(0));
+        nearReef.and(elevatorArm.hasCoral).whileTrue(chosenElevatorHeight).onFalse(elevator.setPosition(0));
 
 
         intakeCoral.hasCoral.whileTrue(Commands.print("Coral detected!"));
@@ -253,15 +277,39 @@ public class RobotContainer {
         atReef.and(elevator.elevatorInScoringPosition).and(elevator.elevatorInPosition).onTrue(
             Commands.sequence(
                 drivetrain.runOnce(() -> drivetrain.drive(new ChassisSpeeds())),
-                Commands.waitSeconds(0.2),
+                Commands.waitSeconds(0.3),
                 Commands.runOnce(() -> {
+                    if (RobotState.isAutonomous()) {
+                        if (!Robot.autoCoralScoringPositions.isEmpty()) {
+                            Robot.autoCoralScoringPositions.remove(0);
+                        }
+                    }
+                    Robot.justScoredCoral = true;
                     SimLogic.armHasCoral = false;
                     SimLogic.spawnHumanPlayerCoral();
-                    CommandScheduler.getInstance().schedule(new RumbleCommand(1).withTimeout(0.5));
                 })
             ).withInterruptBehavior(InterruptionBehavior.kCancelIncoming)
         );
 
+        justScoredCoral.and(teleop).onTrue(
+            new RumbleCommand(1).withTimeout(0.5)
+                .alongWith(Commands.runOnce(() -> Robot.justScoredCoral = false))
+        );
+
+
+        Command autoIntakeCoral = Commands.sequence(
+            Auto.driveToHPStation().until(() -> vision.getCoralPose() != null)
+                                    .alongWith(Auto.coralIntake()),
+            Auto.driveToCoral().until(intakeCoral.hasCoral) // at this point, the command gets interrupted by the auto coral intake trigger
+        );
+                                    
+        justScoredCoral.and(autonomous).and(drivetrainAvailable).onTrue(
+            Commands.either(
+                autoIntakeCoral,
+                Commands.none(),
+                () -> Robot.nextAutoCoralScoringPosition() != null
+            ).alongWith(Commands.runOnce(() -> Robot.justScoredCoral = false))
+        );
 
         //using the doneIntaking & hasCoral triggers to pass on to arm
 

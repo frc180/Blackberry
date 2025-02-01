@@ -50,8 +50,8 @@ public class VisionSubsystem extends SubsystemBase {
     private final Transform2d leftReefTransform = new Transform2d(0.45, -0.25, Rotation2d.fromDegrees(180));
     private final Transform2d rightReefTransform = new Transform2d(0.45, 0.25, Rotation2d.fromDegrees(180));
 
-    private final HashMap<Integer, Pose2d> leftReefHashMap = new HashMap<>();
-    private final HashMap<Integer, Pose2d> rightReefHashMap = new HashMap<>();
+    public final HashMap<Integer, Pose2d> leftReefHashMap = new HashMap<>();
+    public final HashMap<Integer, Pose2d> rightReefHashMap = new HashMap<>();
 
     private Pose2d exampleLeft;
     private Pose2d exampleRight;
@@ -292,5 +292,43 @@ public class VisionSubsystem extends SubsystemBase {
 
         }
         return isReefVisible;
-    }    
+    }
+    
+    public int blueReefTagToRed(int blueTag) {
+        switch(blueTag) {
+            case 17:
+                return 8;
+            case 18:
+                return 7;
+            case 19:
+                return 6;
+            case 20:
+                return 11;
+            case 21:
+                return 10;
+            case 22:
+                return 9;
+            default:
+                return -1;
+        }
+    }
+
+    public int redReefTagToBlue(int redTag) {
+        switch(redTag) {
+            case 6:
+                return 19;
+            case 7:
+                return 18;
+            case 8:
+                return 17;
+            case 9:
+                return 22;
+            case 10:
+                return 21;
+            case 11:
+                return 20;
+            default:
+                return -1;
+        }
+    }
 }

@@ -20,14 +20,17 @@ public class ReefProximity {
         rightReefHashMap.entrySet().forEach(reefList::add);
     }
 
-    public Entry<Integer, Pose2d> closestReefPose(Pose2d position, boolean blue) {
+    public Entry<Integer, Pose2d> closestReefPose(Pose2d position, boolean blueAlliance) {
+        return closestReefPose(position, blueAlliance ? VisionSubsystem.blueReefTags : VisionSubsystem.redReefTags);
+    }
+
+    public Entry<Integer, Pose2d> closestReefPose(Pose2d position, List<Integer> tagOptions) {
         double currentDistance = Double.MAX_VALUE;
         Entry<Integer, Pose2d> closest = null;
 
         for (var entry : reefList) {
-            // Ensure the reef tag belongs to the same alliance as the robot, and skip if it doesn't
-            boolean sameAlliance = blue ? VisionSubsystem.blueReefTags.contains(entry.getKey()) : VisionSubsystem.redReefTags.contains(entry.getKey());
-            if (!sameAlliance) {
+            // Ensure the reef tag is in the list of tags we are looking for
+            if (!tagOptions.contains(entry.getKey())) {
                 continue;
             }
 
