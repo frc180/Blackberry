@@ -5,6 +5,7 @@ import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.GravityTypeValue;
+import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.math.system.plant.DCMotor;
@@ -36,6 +37,7 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO{
         config.Slot0.kV = 0;
         config.Slot0.kA = 0;
         config.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
+        config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         config.MotionMagic.MotionMagicCruiseVelocity = 0;
         config.MotionMagic.MotionMagicAcceleration = 0;
         config.MotionMagic.MotionMagicJerk = 0;

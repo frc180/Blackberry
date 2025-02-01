@@ -8,6 +8,7 @@ import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.GravityTypeValue;
+import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.math.system.plant.DCMotor;
@@ -46,6 +47,7 @@ public class IntakeAlgaePivotIOTalonFXS implements IntakeAlgaePivotIO{
         configuration.Slot0.kV = 0;
         configuration.Slot0.kA = 0;
         configuration.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
+        configuration.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         configuration.MotionMagic.MotionMagicCruiseVelocity = 0;
         configuration.MotionMagic.MotionMagicAcceleration = 0;
         configuration.MotionMagic.MotionMagicJerk = 0;
