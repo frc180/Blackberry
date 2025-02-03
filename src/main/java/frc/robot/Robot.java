@@ -7,6 +7,8 @@ package frc.robot;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
 import java.util.ArrayList;
@@ -27,6 +29,7 @@ import frc.robot.util.simulation.SimulatedAIRobot;
 public class Robot extends TimedRobot {
 
   public static boolean justScoredCoral = false;
+  public static CoralScoringPosition autoPreviousCoralScoringPosition = null; 
   public static List<CoralScoringPosition> autoCoralScoringPositions = new ArrayList<>();
 
   private Command m_autonomousCommand;
@@ -40,6 +43,7 @@ public class Robot extends TimedRobot {
 
   public Robot() {
     SimVisuals.init();
+    Field.init();
 
     m_robotContainer = new RobotContainer();
     Epilogue.bind(this);
@@ -85,9 +89,13 @@ public class Robot extends TimedRobot {
   @Override
   public void autonomousInit() {
     Auto.init();
+    Field.resetReefAlgae();
     if (Robot.isSimulation()) {
+      SimulatedArena.getInstance().resetFieldForAuto();
       SimLogic.armHasCoral = true;
       SimLogic.intakeHasCoral = false;
+      SimLogic.armHasAlgae = false;
+      SimLogic.intakeHasAlgae = false;
     }
   
     m_autonomousCommand = m_robotContainer.getAutonomousCommand();
@@ -138,6 +146,10 @@ public class Robot extends TimedRobot {
           .getStructArrayTopic("Coral Poses", Pose3d.struct)
           .publish();
 
+  StructArrayPublisher<Pose3d> algaePoses = NetworkTableInstance.getDefault()
+          .getStructArrayTopic("Algae Poses", Pose3d.struct)
+          .publish();
+
   @Override
   public void simulationInit() {
     if (RobotContainer.MAPLESIM) {
@@ -147,11 +159,28 @@ public class Robot extends TimedRobot {
     }
   }
 
+  private final Transform3d robotAlgaeTransform = new Transform3d(0, 0.2, 0.3, Rotation3d.kZero);
+
   @Override
   public void simulationPeriodic() {
       // Get the positions of all maplesim coral and publish them to NetworkTables
       Pose3d[] coral = SimulatedArena.getInstance().getGamePiecesArrayByType("Coral");
       coralPoses.accept(coral);
+
+      // Get the positions of all algae and publish them to NetworkTables
+      Pose3d[] algae = SimulatedArena.getInstance().getGamePiecesArrayByType("Algae");
+      Pose3d[] fieldAlgae = Field.getReefAlgaePoses();
+      Pose3d robotAlgae;
+      if (SimLogic.robotHasAlgae()) {
+        robotAlgae = new Pose3d(RobotContainer.instance.drivetrain.getSimPose()).transformBy(robotAlgaeTransform);
+      } else {
+        robotAlgae = Pose3d.kZero;
+      }
+      Pose3d[] combinedAlgae = new Pose3d[algae.length + fieldAlgae.length + 1];
+      System.arraycopy(algae, 0, combinedAlgae, 0, algae.length);
+      System.arraycopy(fieldAlgae, 0, combinedAlgae, algae.length, fieldAlgae.length);
+      combinedAlgae[algae.length + fieldAlgae.length] = robotAlgae;
+      algaePoses.accept(combinedAlgae);
 
       // Get the positions of all maplesim AI robots and publish them to NetworkTables
       Pose2d[] aiRobotPosesArray = new Pose2d[simulatedAIRobots.size()];

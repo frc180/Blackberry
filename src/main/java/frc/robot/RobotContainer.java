@@ -1,7 +1,19 @@
-// Copyright (c) FIRST and other WPILib contributors.
-// Open Source Software; you can modify and/or share it under the terms of
-// the WPILib BSD license file in the root directory of this project.
+/*
+           _   _ ______ __  __  ____  _   _ ______ 
+     /\   | \ | |  ____|  \/  |/ __ \| \ | |  ____|
+    /  \  |  \| | |__  | \  / | |  | |  \| | |__   
+   / /\ \ | . ` |  __| | |\/| | |  | | . ` |  __|  
+  / ____ \| |\  | |____| |  | | |__| | |\  | |____ 
+ /_/    \_\_| \_|______|_|  |_|\____/|_| \_|______|
 
+ ====================================================
+
+ 2025 FRC Team 180 - S.P.A.M.
+
+ Contributors:
+    - TODO
+
+*/
 package frc.robot;
 
 import java.util.List;
@@ -81,10 +93,6 @@ public class RobotContainer {
     private final SendableChooser<Command> autoChooser = new SendableChooser<Command>();
 
     public static RobotContainer instance;
-    public Pose2d backLeftReefPose;
-
-    //auto path
-    public List<Waypoint> leftBargeToLeftReef;
 
     public RobotContainer() {
         instance = this;
@@ -108,8 +116,8 @@ public class RobotContainer {
             new CoralScoringPosition(18, 4, false)
         );
 
-        backLeftReefPose = sampleAutoPositions.get(0).getPose();
-        leftBargeToLeftReef = PathPlannerPath.waypointsFromPoses(
+        Pose2d backLeftReefPose = sampleAutoPositions.get(0).getPose();
+        List<Waypoint> leftBargeToLeftReef = PathPlannerPath.waypointsFromPoses(
             new Pose2d(7.4, 5, Rotation2d.k180deg),
             backLeftReefPose
         );
@@ -195,16 +203,13 @@ public class RobotContainer {
         // Driver Coral Intake
         driverIntake.or(autoCoralIntake).and(robotHasCoral.negate())
             .whileTrue(intakeCoralPivot.setPosition(IntakeCoralPivotSubsystem.extend).alongWith(intakeCoral.intake(), elevatorArmPivot.receivePosition()))
-            .onFalse(intakeCoralPivot.setPosition(IntakeCoralPivotSubsystem.stow).alongWith(intakeCoral.stopIntake()));
-
-        // intakeCoral.hasCoral
-        //     .onTrue(intakeCoralPivot.setPosition(IntakeCoralPivotSubsystem.stow).alongWith(intakeCoral.stopIntake()));
+            .onFalse(intakeCoralPivot.setPosition(IntakeCoralPivotSubsystem.stow));
         
         //noticed that sometimes when we have a coral the intake doesnt go back to the stow position to tansfer to the arm
         intakeCoral.hasCoral.and(elevatorArmPivot.elevatorArmInPosition).and(intakeCoralPivot.atStowPosition)
             .onTrue(intakeCoral.intake().alongWith(elevatorArm.runArm()));
         
-         // Notify driver we've intaken a coral
+        // Notify driver we've intaken a coral
         driverIntake.and(intakeCoral.hasCoral)
             .onTrue(new RumbleCommand(1).withTimeout(0.5));
 
@@ -247,7 +252,7 @@ public class RobotContainer {
                             .debounce(0.5, DebounceType.kFalling); 
 
         Trigger atReef = drivetrain.targetingReef()
-                            .and(drivetrain.withinTargetPoseTolerance(0.1, 0.1, 5.0));
+                            .and(drivetrain.withinTargetPoseTolerance(0.0254, 0.0254, 2.0));
 
         Command chosenElevatorHeight = elevator.run(() -> {
             // In autonomous, read the next coral scoring position from the list to determine the elevator height
@@ -278,8 +283,8 @@ public class RobotContainer {
             }
         });
 
-        nearReef.whileTrue(chosenElevatorHeight).onFalse(elevator.setPosition(0));
-
+        nearReef//.and(elevatorArm.hasCoral)
+            .whileTrue(chosenElevatorHeight).onFalse(elevator.setPosition(0));
 
         intakeCoral.hasCoral.whileTrue(Commands.print("Coral detected!"));
         intakeCoral.doneIntaking.whileTrue(Commands.print("Done intaking!"));
@@ -288,21 +293,35 @@ public class RobotContainer {
         elevator.elevatorInPosition.whileTrue(Commands.print("ELEVETOR IN POSITINONNN!!!!"));
         elevator.elevatorInScoringPosition.and(elevator.elevatorInPosition).whileTrue(Commands.print("EELVATOR IS IN SCROIGN POSITITIONSS"));
 
-        // Example scoring sequence - kCancelIncoming means nothing else will be able to stop this command until it finishes
-        atReef.and(elevator.elevatorInScoringPosition).and(elevator.elevatorInPosition).onTrue(
+        // Coral scoring sequence - kCancelIncoming means nothing else will be able to stop this command until it finishes
+        // TODO: Add trigger that ensures coral arm is in the position needed to score at this level
+        atReef.and(elevator.elevatorInScoringPosition).onTrue(
             Commands.sequence(
                 drivetrain.runOnce(() -> drivetrain.drive(new ChassisSpeeds())),
+                // TODO: eject coral from arm
                 Commands.waitSeconds(0.3),
                 Commands.runOnce(() -> {
                     if (RobotState.isAutonomous()) {
                         if (!Robot.autoCoralScoringPositions.isEmpty()) {
+                            Robot.autoPreviousCoralScoringPosition = Robot.autoCoralScoringPositions.get(0);
                             Robot.autoCoralScoringPositions.remove(0);
                         }
                     }
                     Robot.justScoredCoral = true;
-                    SimLogic.intakeHasCoral = false;
-                    SimLogic.armHasCoral = false;
-                    SimLogic.spawnHumanPlayerCoral();
+                    if (Robot.isSimulation()) {
+                        if (SimLogic.armHasCoral) SimLogic.scoreCoral();
+                        SimLogic.spawnHumanPlayerCoral();
+                        SimLogic.intakeHasCoral = false;
+                        SimLogic.armHasCoral = false;
+                        // TODO: replace this with better simulation logic that reads from subsystem states
+                        if (!SimLogic.armHasAlgae && (elevator.getTargetPosition() == ElevatorSubsystem.L2 || elevator.getTargetPosition() == ElevatorSubsystem.L3)) {
+                            int tag = drivetrain.getTargetPoseTag();
+                            if (tag != -1 && Field.hasReefAlgae(tag)) {
+                                SimLogic.armHasAlgae = true;
+                                Field.removeReefAlgae(tag);
+                            }
+                        }
+                    }
                 })
             ).withInterruptBehavior(InterruptionBehavior.kCancelIncoming)
         );
@@ -312,9 +331,17 @@ public class RobotContainer {
                 .alongWith(Commands.runOnce(() -> Robot.justScoredCoral = false))
         );
 
+        Command autoHPDrive = Commands.either(
+            Auto.driveToHPStationFar(),
+            Auto.driveToHPStation(),
+            () -> {
+                CoralScoringPosition previous = Robot.autoPreviousCoralScoringPosition;
+                return previous != null && previous.isFarTag();
+            }
+        );
 
         Command autoIntakeCoral = Commands.sequence(
-            Auto.driveToHPStation().until(() -> vision.getCoralPose() != null)
+            autoHPDrive.until(() -> vision.getCoralPose() != null)
                                     .alongWith(Auto.coralIntake()),
             Auto.driveToCoral().until(intakeCoral.hasCoral) // at this point, the command gets interrupted by the auto coral intake trigger
         );

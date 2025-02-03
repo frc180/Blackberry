@@ -1,15 +1,21 @@
 package frc.robot.util.simulation;
 
+import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.MetersPerSecond;
 import org.ironmaple.simulation.SimulatedArena;
+import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeCoralOnField;
-
+import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeCoralOnFly;
 import com.pathplanner.lib.util.FlippingUtil;
-
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.units.measure.Distance;
 import frc.robot.Robot;
 import frc.robot.RobotContainer;
+import frc.robot.subsystems.elevator.ElevatorSubsystem;
 
 public abstract class SimLogic {
 
@@ -18,9 +24,15 @@ public abstract class SimLogic {
 
     public static boolean intakeHasCoral = false;
     public static boolean armHasCoral = false;
+    public static boolean intakeHasAlgae = false;
+    public static boolean armHasAlgae = false;
 
     public static boolean robotHasCoral() {
         return intakeHasCoral || armHasCoral;
+    }
+
+    public static boolean robotHasAlgae() {
+        return intakeHasAlgae || armHasAlgae;
     }
 
     public static void spawnHumanPlayerCoral() {
@@ -32,15 +44,54 @@ public abstract class SimLogic {
             return;
         }
 
-        Pose2d coralPose = blue ? blueHPCoralPose : redHPCoralPose;
+        for (int i = 0; i < 2; i++) {
+            Pose2d coralPose = blue ? blueHPCoralPose : redHPCoralPose;
+            
+            if (i == 1) {
+                coralPose = coralPose.transformBy(new Transform2d(0, 5, new Rotation2d()));
+            }
 
-        // generate a random physical offset between -0.6 and 0.6 meters and a random rotation
-        double xOffset = randomNumberPlusMinus(0.6);
-        double yOffset = randomNumberPlusMinus(0.6);
-        double rotationOffset = Math.random() * 360;
-        Transform2d randomTransform = new Transform2d(xOffset, yOffset, Rotation2d.fromDegrees(rotationOffset));
+            // generate a random physical offset between -0.6 and 0.6 meters and a random rotation
+            double xOffset = randomNumberPlusMinus(0.6);
+            double yOffset = randomNumberPlusMinus(0.6);
+            double rotationOffset = Math.random() * 360;
+            Transform2d randomTransform = new Transform2d(xOffset, yOffset, Rotation2d.fromDegrees(rotationOffset));
 
-        SimulatedArena.getInstance().addGamePiece(new ReefscapeCoralOnField(coralPose.transformBy(randomTransform)));
+            SimulatedArena.getInstance().addGamePiece(new ReefscapeCoralOnField(coralPose.transformBy(randomTransform)));
+        }
+    }
+
+    // TODO: tie coralAngle to the angle of the elevator arm
+    public static void scoreCoral() {
+        if (!RobotContainer.MAPLESIM) {
+            return;
+        }
+
+        RobotContainer rc = RobotContainer.instance;
+        SwerveDriveSimulation swerveSim = rc.drivetrain.getDriveSim();
+        Pose2d simRobotPose = swerveSim.getSimulatedDriveTrainPose();
+        double coralAngle;
+        double positionOffset;
+        if (rc.elevator.getTargetPosition() == ElevatorSubsystem.L4) {
+            coralAngle = -90;
+            positionOffset = 0.6;
+        } else {
+            coralAngle = -35;
+            positionOffset = 0.3;
+        }
+        Distance coralHeight = Meters.of(rc.elevator.getPositionMeters() + positionOffset);
+    
+        SimulatedArena.getInstance().addGamePieceProjectile(new ReefscapeCoralOnFly(
+            simRobotPose.getTranslation(),
+            // The scoring mechanism position on the robot
+            new Translation2d(0.6, 0),
+            swerveSim.getDriveTrainSimulatedChassisSpeedsFieldRelative(),
+            simRobotPose.getRotation(),
+            coralHeight,
+            // The initial speed of the coral
+            MetersPerSecond.of(1),
+            Degrees.of(coralAngle))
+        );
     }
 
     private static double randomNumberPlusMinus(double range) {

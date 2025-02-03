@@ -3,16 +3,11 @@
 // the WPILib BSD license file in the root directory of this project.
 
 package frc.robot.subsystems.elevator;
-
 import edu.wpi.first.epilogue.Logged;
-import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
-import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
-import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Robot;
-import frc.robot.RobotContainer;
 import frc.robot.subsystems.elevator.ElevatorIO.ElevatorIOInputs;
 import frc.robot.util.simulation.SimVisuals;
 
@@ -56,6 +51,14 @@ public class ElevatorSubsystem extends SubsystemBase {
     // This method will be called once per scheduler run during simulation.
     // Runs before periodic()
     io.simulationPeriodic();
+  }
+
+  public double getPositionMeters() {
+    return inputs.position;
+  }
+
+  public double getTargetPosition() {
+    return targetPosition;
   }
 
   public Command runSpeed(double speed) {

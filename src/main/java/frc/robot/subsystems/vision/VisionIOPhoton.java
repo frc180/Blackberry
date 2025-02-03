@@ -13,7 +13,6 @@ import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import frc.robot.Robot;
 import frc.robot.RobotContainer;
@@ -22,7 +21,6 @@ import frc.robot.util.LimelightHelpers.RawFiducial;
 
 public class VisionIOPhoton implements VisionIO {
     PhotonCamera scoringCamera;
-    Transform3d robotToCamera = new Transform3d();
     PhotonPoseEstimator photonPoseEstimator;
 
     VisionSystemSim visionSim = null;
@@ -30,7 +28,7 @@ public class VisionIOPhoton implements VisionIO {
 
     public VisionIOPhoton(AprilTagFieldLayout apriltagLayout) {
         scoringCamera = new PhotonCamera("scoring");
-        photonPoseEstimator = new PhotonPoseEstimator(apriltagLayout, PoseStrategy.LOWEST_AMBIGUITY, robotToCamera);
+        photonPoseEstimator = new PhotonPoseEstimator(apriltagLayout, PoseStrategy.LOWEST_AMBIGUITY, VisionSubsystem.ROBOT_TO_SCORING_CAMERA);
 
         // Everything past this point is simulation only
         if (Robot.isReal()) return;
@@ -38,18 +36,18 @@ public class VisionIOPhoton implements VisionIO {
         visionSim = new VisionSystemSim("main");
         visionSim.addAprilTags(apriltagLayout);
 
-        // These have not been adjusted yet, just copied from the PhotonVision example
         SimCameraProperties cameraProp = new SimCameraProperties();
-        cameraProp.setCalibration(960, 720, Rotation2d.fromDegrees(90));
+        // TODO: set LL4 diagonal FOV instead of 90
+        cameraProp.setCalibration(1280, 800, Rotation2d.fromDegrees(90));
         cameraProp.setCalibError(0.35, 0.10);
-        cameraProp.setFPS(80);
+        cameraProp.setFPS(45);
         cameraProp.setAvgLatencyMs(50);
         cameraProp.setLatencyStdDevMs(15);
         // Create a PhotonCameraSim which will update the linked PhotonCamera's values with visible
         // targets.
         cameraSim = new PhotonCameraSim(scoringCamera, cameraProp);
         // Add the simulated camera to view the targets on this simulated field.
-        visionSim.addCamera(cameraSim, robotToCamera);
+        visionSim.addCamera(cameraSim, VisionSubsystem.ROBOT_TO_SCORING_CAMERA);
 
         cameraSim.enableDrawWireframe(true);
     }
@@ -70,36 +68,9 @@ public class VisionIOPhoton implements VisionIO {
         }
         List<PhotonTrackedTarget> targets = latestResult != null ? latestResult.getTargets() : null;
 
-        if (latestEstimate != null) {
-            // Convert the photonvision estimate to a Limelight PoseEstimate
-            PoseEstimate est = new PoseEstimate();
-            est.pose = latestEstimate.estimatedPose.toPose2d();
-            est.timestampSeconds = latestEstimate.timestampSeconds;
-            est.tagCount = targets.size();
-            est.avgTagDist = targets.stream().mapToDouble(t -> t.getBestCameraToTarget().getTranslation().getDistance(Translation3d.kZero)).average().orElse(0);
-            est.avgTagArea = 99;//targets.stream().mapToDouble(t -> t.area).average().orElse(0);
-            inputs.scoringPoseEstimate = est;
-        } else {
-            inputs.scoringPoseEstimate = null;
-        }
-
+        inputs.scoringPoseEstimate = toPoseEstimate(latestEstimate, targets);
         if (targets != null) {
-            RawFiducial[] fiducials = new RawFiducial[targets.size()];
-            for (int i = 0; i < targets.size(); i++) {
-                PhotonTrackedTarget target = targets.get(i);
-                double dist = target.getBestCameraToTarget().getTranslation().getDistance(Translation3d.kZero);
-
-                fiducials[i] = new RawFiducial(
-                    target.getFiducialId(),
-                    0,
-                    0,
-                    target.area,
-                    dist,
-                    dist,
-                    target.poseAmbiguity
-                );
-            }
-            inputs.scoringFiducials = fiducials;
+            inputs.scoringFiducials = toRawFiducials(targets);
         } else {
             inputs.scoringFiducials = inputs.emptyFiducials;
         }
@@ -108,5 +79,42 @@ public class VisionIOPhoton implements VisionIO {
     @Override
     public void simulationPeriodic() {
         visionSim.update(RobotContainer.instance.drivetrain.getSimPose());
+    }
+
+    /**
+     * Converts a PhotonVision EstimatedRobotPose to a Limelight PoseEstimate
+     */
+    public PoseEstimate toPoseEstimate(EstimatedRobotPose estimate, List<PhotonTrackedTarget> targets) {
+        if (estimate == null) return null;
+
+        PoseEstimate est = new PoseEstimate();
+        est.pose = estimate.estimatedPose.toPose2d();
+        est.timestampSeconds = estimate.timestampSeconds;
+        est.tagCount = targets.size();
+        est.avgTagDist = targets.stream().mapToDouble(t -> t.getBestCameraToTarget().getTranslation().getDistance(Translation3d.kZero)).average().orElse(0);
+        est.avgTagArea = 99;//targets.stream().mapToDouble(t -> t.area).average().orElse(0);
+        return est;
+    }
+
+    /**
+     * Converts a PhotonTrackedTarget list to a RawFiducials array
+     */
+    public RawFiducial[] toRawFiducials(List<PhotonTrackedTarget> targets) {
+        RawFiducial[] fiducials = new RawFiducial[targets.size()];
+        for (int i = 0; i < targets.size(); i++) {
+            PhotonTrackedTarget target = targets.get(i);
+            double dist = target.getBestCameraToTarget().getTranslation().getDistance(Translation3d.kZero);
+
+            fiducials[i] = new RawFiducial(
+                target.getFiducialId(),
+                0,
+                0,
+                target.area,
+                dist,
+                dist,
+                target.poseAmbiguity
+            );
+        }
+        return fiducials;
     }
 }
