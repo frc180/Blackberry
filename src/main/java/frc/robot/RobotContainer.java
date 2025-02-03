@@ -69,6 +69,7 @@ public class RobotContainer {
     public final IntakeAlgaePivotSubsystem intakeAlgaePivot;
     @Logged(name = "Coral Intake")
     public final IntakeCoralSubsystem intakeCoral;
+    @Logged(name = "Coral Intake Pivot")
     public final IntakeCoralPivotSubsystem intakeCoralPivot;
     @Logged(name = "Elevator")
     public final ElevatorSubsystem elevator;
@@ -199,7 +200,8 @@ public class RobotContainer {
         // intakeCoral.hasCoral
         //     .onTrue(intakeCoralPivot.setPosition(IntakeCoralPivotSubsystem.stow).alongWith(intakeCoral.stopIntake()));
         
-        intakeCoral.hasCoral.and(elevatorArmPivot.elevatorArmInPosition)
+        //noticed that sometimes when we have a coral the intake doesnt go back to the stow position to tansfer to the arm
+        intakeCoral.hasCoral.and(elevatorArmPivot.elevatorArmInPosition).and(intakeCoralPivot.atStowPosition)
             .onTrue(intakeCoral.intake().alongWith(elevatorArm.runArm()));
         
          // Notify driver we've intaken a coral
@@ -211,7 +213,6 @@ public class RobotContainer {
         
         // intakeCoral.doneIntaking.and(elevatorArmPivot.elevatorArmInPosition).onTrue(intakeCoral.intake().alongWith(elevatorArm.runArm()));
         
-        //writing this down so i dont forget:
         //create a trigger to check if the elevatorArm has a coral in it so that way it can stop running and go to a score/stow position
         elevatorArm.hasCoral.onTrue(intakeCoral.stopIntake().alongWith(elevatorArm.stop(), elevatorArmPivot.stowPosition()));
         //elevatorArm.doneIntaking.onTrue(elevatorArmPivot.stowPosition());
@@ -220,6 +221,10 @@ public class RobotContainer {
         //algaeMode.and(driverIntake)
         driverIntakeAlgae.whileTrue(intakeAlgaePivot.extend().alongWith(intakeAlgae.intake()))
                             .onFalse(intakeAlgaePivot.stow().alongWith(intakeAlgae.stopIntake()));
+
+        //climbing sequence
+        driverReadyClimb.whileTrue(intakeAlgaePivot.readyClimb());
+        driverStartClimb.whileTrue(intakeAlgaePivot.stow()); //didnt put any onFalse commands because once we climb we physically cannot un-climb
 
         //left and right alignment for the reef (x is left and b is right)
         driverLeftReef.whileTrue(new DriveToPose(drivetrain, () -> vision.getReefPose(true))

@@ -18,6 +18,7 @@ public class IntakeCoralIOTalonFXS implements IntakeCoralIO{
     TalonFX intakeMotor;
 
     DigitalInput intakeSensor;
+    
 
 
     public IntakeCoralIOTalonFXS() {

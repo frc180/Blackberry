@@ -1,5 +1,6 @@
 package frc.robot.subsystems.IntakeCoralPivot;
 
+import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -7,6 +8,7 @@ import frc.robot.Robot;
 import frc.robot.subsystems.IntakeCoralPivot.IntakeCoralPivotIO.IntakeCoralPivotIOInputs;
 import frc.robot.util.simulation.SimVisuals;
 
+@Logged
 public class IntakeCoralPivotSubsystem extends SubsystemBase {
     
     //presets for intake positions
@@ -19,6 +21,7 @@ public class IntakeCoralPivotSubsystem extends SubsystemBase {
     private double targetPosition = 0;
 
     public final Trigger atTarget = new Trigger(this::isAtTarget);
+    public final Trigger atStowPosition = new Trigger(this::isAtStowPosition);
 
     public IntakeCoralPivotSubsystem() {
         if (Robot.isReal()) {
@@ -57,5 +60,9 @@ public class IntakeCoralPivotSubsystem extends SubsystemBase {
             io.setIntakePosition(encoderPosition);
             targetPosition = encoderPosition;
           });
+    }
+
+    public boolean isAtStowPosition() {
+        return targetPosition == stow && isAtTarget();
     }
 }

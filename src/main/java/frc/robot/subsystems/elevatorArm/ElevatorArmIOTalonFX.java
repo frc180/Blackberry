@@ -12,12 +12,17 @@ import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.RobotController;
 import frc.robot.Constants;
 import frc.robot.Robot;
+import frc.robot.RobotContainer;
+import frc.robot.subsystems.IntakeCoral.IntakeCoralSubsystem;
+import frc.robot.subsystems.IntakeCoralPivot.IntakeCoralPivotSubsystem;
+import frc.robot.subsystems.elevatorArmPivot.ElevatorArmPivotSubsystem;
 
 public class ElevatorArmIOTalonFX implements ElevatorArmIO {
 
     
     TalonFX rollerMotor;
     DigitalInput armSensor;
+    boolean readyForCoral = false;
 
     public ElevatorArmIOTalonFX() {
         rollerMotor = new TalonFX(Constants.ELEVATOR_ARM_TALON);
@@ -32,6 +37,12 @@ public class ElevatorArmIOTalonFX implements ElevatorArmIO {
 
     @Override
     public void update(ElevatorArmIOInputs inputs) {
+        ElevatorArmPivotSubsystem elevatorArm = RobotContainer.instance.elevatorArmPivot;
+        IntakeCoralPivotSubsystem intakeCoralPivot = RobotContainer.instance.intakeCoralPivot;
+        IntakeCoralSubsystem intake = RobotContainer.instance.intakeCoral;
+        readyForCoral = elevatorArm.isAtReceivingPosition() && intakeCoralPivot.isAtTarget() && intake.hasCoral.getAsBoolean();
+
+
         inputs.coralSensor = armSensor.get();
         inputs.voltage = rollerMotor.getMotorVoltage().getValueAsDouble();
     }

@@ -7,8 +7,9 @@ import frc.robot.subsystems.IntakeAlgaePivot.IntakeAlgaePivotIO.IntakeAlgaePivot
 
 public class IntakeAlgaePivotSubsystem extends SubsystemBase {
     
-    public static final double extend = 100;
+    public static final double extend = 70;
     public static final double stow = 0;
+    public static final double climbReady = 90; //on the floor
 
     public IntakeAlgaePivotIO io;
     private IntakeAlgaePivotIOInputs inputs;
@@ -38,6 +39,12 @@ public class IntakeAlgaePivotSubsystem extends SubsystemBase {
     public Command stow() {
         return this.run (() -> {
             io.setPosition(stow);
+        });
+    }
+
+    public Command readyClimb() {
+        return this.run (() -> {
+            io.setPosition(climbReady);
         });
     }
 }

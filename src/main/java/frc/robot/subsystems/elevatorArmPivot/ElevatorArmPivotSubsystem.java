@@ -18,6 +18,7 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
     public final double horizontal = 0;
     public final double score = -45;
     public final double L1Score = -60;
+    public final double grabAlgaePosition = 90;
 
     public double targetPosition = 0;
 
