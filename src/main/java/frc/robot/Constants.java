@@ -19,10 +19,13 @@ public class Constants {
     public static final int INTAKE_CORAL_TALON = 32;
     public static final int INTAKE_CORAL_PIVOT_TALON = 33;
 
+    public static final int ELEVATOR_ARM_ALGAE = 34;
+
 
     //sensor channels
     public static final int INTAKE_CORAL_SENSOR = 0;
     public static final int ELEVATOR_ARM_SENSOR = 1;
+    public static final int ELEVATOR_ARM_ALGAE_SENSOR = 2;
 
 
     
