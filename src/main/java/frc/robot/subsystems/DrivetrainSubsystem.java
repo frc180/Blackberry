@@ -100,6 +100,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     private double headingError = 0;
     private PoseTarget poseTargetType = PoseTarget.STANDARD;
     private Pose2d targetPose = null;
+    private int targetPoseTag = -1;
 
     private Pose2d mapleSimPose = null;
 
@@ -329,6 +330,14 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         return poseTargetType == PoseTarget.REEF && targetPose != null;
     }
 
+    public int getTargetPoseTag() {
+        return targetPoseTag;
+    }
+
+    public void setTargetPoseTag(int tag) {
+        targetPoseTag = tag;
+    }
+
     /**
      * Returns the pose the drivetrain is currently targeting (based on the DriveToPose command)
      * @return The pose the drivetrain is currently targeting. If no command that targets a pose is running,
@@ -402,7 +411,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
                     new PIDConstants(2.5, 0, 0), //translation
                     new PIDConstants(5, 0, 0)), //rotation
                 config,
-                () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red, //path flips for red/blue alliance
+                Robot::isRed, //path flips for red/blue alliance
                 this // Subsystem for requirements
             );
         } catch (Exception ex) {
@@ -515,7 +524,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
                 Inches.of(30), // bumper width
                 DCMotor.getKrakenX60Foc(1), // drive motor type
                 DCMotor.getKrakenX60Foc(1), // steer motor type
-                1.9, // wheel COF
+                1.916, // wheel COF, Vex Grip V2
                 getModuleLocations(),
                 getPigeon2(),
                 getModules(),
@@ -544,7 +553,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     }
 
     public Command followPath(double endVel, Rotation2d endRotation, boolean preventFlipping, List<Waypoint> waypoints) {
-        return AutoBuilder.followPath(new PathPlannerPath(waypoints, constraints, null, new GoalEndState(endVel, endRotation)));
+        return AutoBuilder.followPath(getPath(endVel, endRotation, preventFlipping, waypoints));
     }
 
     public Command followPath(double endVel, Pose2d endPose, boolean preventFlipping, List<Waypoint> waypoints) {

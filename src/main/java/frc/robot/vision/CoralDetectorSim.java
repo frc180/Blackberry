@@ -59,6 +59,7 @@ public class CoralDetectorSim implements CoralDetector {
         Pose2d bestCoral = null;
         double bestDistance = Double.MAX_VALUE;
         for (int i = 0; i < corals.length; i++) {
+            if (corals[i].getRotation().getY() > 0.2) continue;
             Pose2d coral = corals[i].toPose2d();
             if (poseWithinPOV(robotPose, coral)) {
                 double distance = robotPose.getTranslation().getDistance(coral.getTranslation());

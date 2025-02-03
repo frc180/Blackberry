@@ -21,6 +21,7 @@ public class ElevatorArmIOTalonFX implements ElevatorArmIO {
 
     
     TalonFX rollerMotor;
+    // TODO: add front and back sensors too
     DigitalInput armSensor;
     boolean readyForCoral = false;
 
@@ -43,7 +44,7 @@ public class ElevatorArmIOTalonFX implements ElevatorArmIO {
         readyForCoral = elevatorArm.isAtReceivingPosition() && intakeCoralPivot.isAtTarget() && intake.hasCoral.getAsBoolean();
 
 
-        inputs.coralSensor = armSensor.get();
+        inputs.middleCoralSensor = armSensor.get();
         inputs.voltage = rollerMotor.getMotorVoltage().getValueAsDouble();
     }
 

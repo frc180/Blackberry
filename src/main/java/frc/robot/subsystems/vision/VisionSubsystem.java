@@ -8,10 +8,14 @@ import java.util.Map.Entry;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Robot;
 import frc.robot.RobotContainer;
@@ -25,6 +29,10 @@ import frc.robot.vision.CoralDetectorSim;
 
 @Logged
 public class VisionSubsystem extends SubsystemBase {
+
+    public static final List<Integer> redReefTags = List.of(6,7,8,9,10,11);
+    public static final List<Integer> blueReefTags = List.of(17, 18, 19, 20, 21, 22);
+    public static final Transform3d ROBOT_TO_SCORING_CAMERA = new Transform3d(0.1, 0, 0.65, new Rotation3d(0, Units.degreesToRadians(35), 0));
 
     private VisionIO io;
     private VisionIOInputs inputs;
@@ -44,11 +52,8 @@ public class VisionSubsystem extends SubsystemBase {
     private List<Integer> redTags = List.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11);
     private List<Integer> blueTags = List.of(12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22);
 
-    public static final List<Integer> redReefTags = List.of(6,7,8,9,10,11);
-    public static final List<Integer> blueReefTags = List.of(17, 18, 19, 20, 21, 22);
-
-    private final Transform2d leftReefTransform = new Transform2d(0.45, -0.25, Rotation2d.fromDegrees(180));
-    private final Transform2d rightReefTransform = new Transform2d(0.45, 0.25, Rotation2d.fromDegrees(180));
+    private final Transform2d leftReefTransform = new Transform2d(0.55, -0.15, Rotation2d.fromDegrees(180));
+    private final Transform2d rightReefTransform = new Transform2d(0.55, 0.15, Rotation2d.fromDegrees(180));
 
     public final HashMap<Integer, Pose2d> leftReefHashMap = new HashMap<>();
     public final HashMap<Integer, Pose2d> rightReefHashMap = new HashMap<>();
@@ -63,6 +68,7 @@ public class VisionSubsystem extends SubsystemBase {
 
     final boolean megatag2Enabled = false;
 
+    private Pose3d scoringCamera = Pose3d.kZero;
     private Pose2d scoringPoseEstimatePoseUnfiltered = Pose2d.kZero;
     private Pose2d scoringPoseEstimatePose = Pose2d.kZero;
     private double poseEstimateDiffX, poseEstimateDiffY, poseEstimateDiffTheta;
@@ -76,7 +82,8 @@ public class VisionSubsystem extends SubsystemBase {
         }
 
         inputs = new VisionIOInputs();
-        io = new VisionIOLimelight();
+        // io = new VisionIOLimelight();
+        io = new VisionIOPhoton(aprilTagFieldLayout);
         // if (Robot.isReal() || !RobotContainer.MAPLESIM) {
         //     io = new VisionIOLimelight();
         // } else {
@@ -128,6 +135,8 @@ public class VisionSubsystem extends SubsystemBase {
 
         if (robotPose == null) robotPose = RobotContainer.instance.drivetrain.getPose();
 
+        scoringCamera = new Pose3d(robotPose).transformBy(ROBOT_TO_SCORING_CAMERA);
+
         //check if robot can see the reef
         canSeeReef = reefVisible();
 
@@ -153,7 +162,8 @@ public class VisionSubsystem extends SubsystemBase {
             coralPoseValid = true;
         }
 
-        if (inputs.scoringCameraConnected) {
+        // For now, we're just going to use the closest reef tag to the robot
+        if (false && inputs.scoringCameraConnected) {
             fiducialArray = new int[inputs.scoringFiducials.length];
             for(int i = 0; i < inputs.scoringFiducials.length; i++) {
                 fiducialArray[i] = inputs.scoringFiducials[i].id;
@@ -232,6 +242,20 @@ public class VisionSubsystem extends SubsystemBase {
         return closestReefPoseValid ? closestReefPose : null;
     }
 
+    public int getReefTagFromPose(Pose2d pose) {
+        for (Entry<Integer, Pose2d> entry : leftReefHashMap.entrySet()) {
+            if (entry.getValue().equals(pose)) {
+                return entry.getKey();
+            }
+        }
+        for (Entry<Integer, Pose2d> entry : rightReefHashMap.entrySet()) {
+            if (entry.getValue().equals(pose)) {
+                return entry.getKey();
+            }
+        }
+        return -1;
+    }
+
     /**
      * Returns the position of the closest detected coral, or null
      */
@@ -254,11 +278,12 @@ public class VisionSubsystem extends SubsystemBase {
             if (Math.abs(RobotContainer.instance.drivetrain.getPigeon2().getRate()) > 720) return null;
         } else {
             double tagMin = 1;
-            double tagMax = 2;
+            double tagMax = 99;
+            double maxDist = poseEstimate.tagCount == 1 ? 3.7 : 6;
             double minArea = poseEstimate.tagCount == 1 ? 0.18 : 0.08;
             if (poseEstimate.tagCount > tagMax || poseEstimate.tagCount < tagMin) return null;
             if (poseEstimate.avgTagArea < minArea) return null;
-            if (poseEstimate.avgTagDist > 6) return null;
+            if (poseEstimate.avgTagDist > maxDist) return null;
 
             // Rejected if the pose estimate is too far from the last one
             // if (lastPoseEstimate != null && deltaSeconds <= 0.25) {
@@ -292,43 +317,5 @@ public class VisionSubsystem extends SubsystemBase {
 
         }
         return isReefVisible;
-    }
-    
-    public int blueReefTagToRed(int blueTag) {
-        switch(blueTag) {
-            case 17:
-                return 8;
-            case 18:
-                return 7;
-            case 19:
-                return 6;
-            case 20:
-                return 11;
-            case 21:
-                return 10;
-            case 22:
-                return 9;
-            default:
-                return -1;
-        }
-    }
-
-    public int redReefTagToBlue(int redTag) {
-        switch(redTag) {
-            case 6:
-                return 19;
-            case 7:
-                return 18;
-            case 8:
-                return 17;
-            case 9:
-                return 22;
-            case 10:
-                return 21;
-            case 11:
-                return 20;
-            default:
-                return -1;
-        }
     }
 }

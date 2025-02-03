@@ -1,10 +1,12 @@
 package frc.robot.commands;
 
 import java.util.function.Supplier;
+
 import com.spamrobotics.util.Helpers;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.RobotContainer;
 import frc.robot.subsystems.DrivetrainSubsystem;
 import frc.robot.subsystems.DrivetrainSubsystem.HeadingTarget;
 import frc.robot.subsystems.DrivetrainSubsystem.PoseTarget;
@@ -90,6 +92,11 @@ public class DriveToPose extends Command {
         }
         drivetrain.setPoseTargetType(poseTargetType);
         drivetrain.setTargetPose(targetPose);
+        if (poseTargetType == PoseTarget.REEF) {
+            drivetrain.setTargetPoseTag(RobotContainer.instance.vision.getReefTagFromPose(targetPose));
+        } else {
+            drivetrain.setTargetPoseTag(-1);
+        }
     }
 
     @Override

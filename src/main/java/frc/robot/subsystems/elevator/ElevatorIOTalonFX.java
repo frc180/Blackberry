@@ -6,6 +6,7 @@ import static edu.wpi.first.units.Units.Meters;
 import java.util.List;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
+import com.ctre.phoenix6.controls.MotionMagicExpoVoltage;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
@@ -24,12 +25,13 @@ import frc.robot.Robot;
 
 public class ElevatorIOTalonFX implements ElevatorIO {
 
-    final double elevatorGearing = 6;
-    final double metersToMotorRotations = 1 / Inches.of(1.67).in(Meters);
+    final double elevatorGearing = 5;
+    final double metersToMotorRotations = 1 / Meters.of(0.053848).in(Meters);
 
     TalonFX motorA, motorB;
     List<TalonFX> motors;
     MotionMagicVoltage motionMagicControl;
+    MotionMagicExpoVoltage motionMagicExpoControl;
     VoltageOut voltageControl;
     Follower followerControl;
 
@@ -48,16 +50,21 @@ public class ElevatorIOTalonFX implements ElevatorIO {
         // config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = -0.01;
         config.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
         // config.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
-        config.Slot0.kP = 15;
+        config.Slot0.kP = 1;
         config.Slot0.kI = 0;
         config.Slot0.kD = 0;
-        config.Slot0.kG = 0.34;
-        config.Slot0.kV = 0.9;
-        config.Slot0.kA = 0;
+        config.Slot0.kG = 0.405;
+        config.Slot0.kV = 0.86;
+        config.Slot0.kA = 0.01;
         config.Slot0.GravityType = GravityTypeValue.Elevator_Static;
-        config.MotionMagic.MotionMagicCruiseVelocity = 999;
-        config.MotionMagic.MotionMagicAcceleration = 8;
         config.MotionMagic.MotionMagicJerk = 0;
+        // normal MotionMagic config
+        // config.MotionMagic.MotionMagicCruiseVelocity = 999;
+        // config.MotionMagic.MotionMagicAcceleration = 8;
+        // MotionMagicExpo config
+        config.MotionMagic.MotionMagicCruiseVelocity = 0; // Unlimited cruise velocity
+        config.MotionMagic.MotionMagicExpo_kV = 2.5;
+        config.MotionMagic.MotionMagicExpo_kA = 0.5;
 
         motors.forEach(motor -> {
             motor.setNeutralMode(NeutralModeValue.Brake);
@@ -65,6 +72,7 @@ public class ElevatorIOTalonFX implements ElevatorIO {
         });
 
         motionMagicControl = new MotionMagicVoltage(0);
+        motionMagicExpoControl = new MotionMagicExpoVoltage(0);
         voltageControl = new VoltageOut(0);
         followerControl = new Follower(Constants.ELEVATOR_TALON_A, false);
 
@@ -96,7 +104,8 @@ public class ElevatorIOTalonFX implements ElevatorIO {
 
     @Override
     public void setPosition(double encoderPosition) {
-        motorA.setControl(motionMagicControl.withPosition(encoderPosition));
+        // motorA.setControl(motionMagicControl.withPosition(encoderPosition));
+        motorA.setControl(motionMagicExpoControl.withPosition(encoderPosition));
     }
 
     @Override

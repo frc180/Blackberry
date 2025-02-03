@@ -1,10 +1,12 @@
 package frc.robot.commands;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -95,11 +97,14 @@ public class DefaultDriveCommand extends Command {
 
     public void applyCoralAimAssist(ChassisSpeeds speeds, JoystickInputs inputs) {
         Pose2d coralPose = RobotContainer.instance.vision.getCoralPose();
-        if (coralPose == null || !RobotContainer.instance.driverController.leftTrigger().getAsBoolean()) {
+        if (coralPose == null || 
+            !RobotContainer.instance.driverController.leftTrigger().getAsBoolean() || 
+            RobotContainer.instance.intakeCoral.hasCoral.getAsBoolean()) {
             return;
         }
 
         Pose2d currentPose = m_drivetrainSubsystem.getPose();
+        Translation2d robotTranslation = currentPose.getTranslation();
         double xFeedback = coralPose.getX() - currentPose.getX();
         double yFeedback = coralPose.getY() - currentPose.getY();
         ChassisSpeeds coralSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(xFeedback, yFeedback, 0, currentPose.getRotation());
@@ -118,8 +123,14 @@ public class DefaultDriveCommand extends Command {
         double perpdist = Helpers.perpendicularLineLength(coralTranslation, rayStart, rayEnd);
         perpdist = Math.pow(perpdist, coralAssistExponent);
 
+        // Calculate the angle to the coral
+        double angleToCoral = Math.atan2(coralTranslation.getY() - robotTranslation.getY(), coralTranslation.getX() - robotTranslation.getX());
+        double angleDiff = Units.radiansToDegrees(angleToCoral) - currentPose.getRotation().getDegrees();
+        angleDiff = MathUtil.inputModulus(-angleDiff, -180, 180);
+
         coralSpeeds.vxMetersPerSecond *= (perpdist * coralAssistKp);
         coralSpeeds.vyMetersPerSecond *= (perpdist * coralAssistKp);
+        coralSpeeds.omegaRadiansPerSecond = angleDiff * 0.008; // 0.01
         
         // Track the top speed of the speeds request, so that we can keep the coral assist from exceeding that
         double maxSpeed = Math.max(Math.abs(speeds.vxMetersPerSecond), Math.abs(speeds.vyMetersPerSecond));

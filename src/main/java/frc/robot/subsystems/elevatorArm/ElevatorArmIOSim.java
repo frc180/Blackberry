@@ -30,7 +30,9 @@ public class ElevatorArmIOSim implements ElevatorArmIO{
         }
 
         inputs.voltage = Math.abs(rollerSpeed) * 12;
-        inputs.coralSensor = SimLogic.armHasCoral;
+        inputs.frontCoralSensor = SimLogic.armHasCoral;
+        inputs.middleCoralSensor = SimLogic.armHasCoral;
+        inputs.backCoralSensor = SimLogic.armHasCoral;
     }
 
     @Override

@@ -20,7 +20,7 @@ public class ElevatorArmSubsystem extends SubsystemBase{
         inputs = new ElevatorArmIOInputs();
         io = new ElevatorArmIOSim();
 
-        hasCoral = new Trigger(() -> inputs.coralSensor);
+        hasCoral = new Trigger(() -> inputs.middleCoralSensor);
         doneIntaking = hasCoral.and(() -> inputs.voltage == 0);
     }
 

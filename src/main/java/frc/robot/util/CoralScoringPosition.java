@@ -1,6 +1,7 @@
 package frc.robot.util;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import frc.robot.Field;
 import frc.robot.Robot;
 import frc.robot.RobotContainer;
 import frc.robot.subsystems.vision.VisionSubsystem;
@@ -19,6 +20,11 @@ public class CoralScoringPosition {
         this.level = level;
         this.isLeft = isLeft;
         blueAlliance = VisionSubsystem.blueReefTags.contains(tag);
+    }
+
+    public boolean isFarTag() {
+        // return true for tags 9, 10, 11, 20, 21, 22
+        return tag >= 9 && tag <= 11 || tag >= 20 && tag <= 22;
     }
 
     public Pose2d getPose() {
@@ -42,8 +48,7 @@ public class CoralScoringPosition {
      * Get the equivalent reef scoring position on the opposite alliance
      */
     public CoralScoringPosition getFlipped() {
-        VisionSubsystem vision = RobotContainer.instance.vision;
-        int flippedTag = blueAlliance ? vision.blueReefTagToRed(tag) : vision.redReefTagToBlue(tag);
+        int flippedTag = blueAlliance ? Field.blueReefTagToRed(tag) : Field.redReefTagToBlue(tag);
         if (flippedTag == -1) {
             throw new RuntimeException("Tag " + tag + " (blue=" + blueAlliance + ") not found in opposite alliance");
         }

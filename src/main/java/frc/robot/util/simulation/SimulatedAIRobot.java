@@ -92,35 +92,33 @@ public class SimulatedAIRobot extends SubsystemBase {
         };
 
         return run(() -> {
-                    if (joystick == null || !joystick.isConnected()) {
-                        drive(new ChassisSpeeds());
-                        return;
-                    }
+            if (joystick == null || !joystick.isConnected()) {
+                drive(new ChassisSpeeds());
+                return;
+            }
 
-                    if (joystick.getBackButton()) {
-                        zeroHeading = driveSimulation.getActualPoseInSimulationWorld().getRotation();
-                    }
+            Pose2d pose = driveSimulation.getActualPoseInSimulationWorld(); 
+            if (joystick.getBackButton()) {
+                zeroHeading = pose.getRotation();
+            }
 
-                    final ChassisSpeeds driveSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
-                            joystickSpeeds.get(),
-                            driveSimulation.getActualPoseInSimulationWorld().getRotation().minus(zeroHeading)
-                    );
-                    drive(driveSpeeds);
-                })
-                .beforeStarting(() -> driveSimulation.setSimulationWorldPose(
-                        FieldMirroringUtils.toCurrentAlliancePose(ROBOTS_STARTING_POSITIONS[id])
-                ));
+            ChassisSpeeds driveSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(joystickSpeeds.get(), pose.getRotation().minus(zeroHeading));
+            drive(driveSpeeds);
+        })
+        .beforeStarting(() -> driveSimulation.setSimulationWorldPose(
+            FieldMirroringUtils.toCurrentAlliancePose(ROBOTS_STARTING_POSITIONS[id])
+        ));
     }
 
     private DriveTrainSimulationConfig drivetrainConfig() {
         return DriveTrainSimulationConfig.Default()
-                .withRobotMass(Pounds.of(115))
+                .withRobotMass(Pounds.of(130))
                 .withBumperSize(Inches.of(30), Inches.of(30))
                 .withGyro(COTS.ofPigeon2())
                 .withSwerveModule(COTS.ofMark4(
                     DCMotor.getKrakenX60Foc(1),
                     DCMotor.getKrakenX60Foc(1),
-                    COTS.WHEELS.BLUE_NITRILE_TREAD.cof,
+                    COTS.WHEELS.SLS_PRINTED_WHEELS.cof,
                     3
                 ));
     }
