@@ -207,6 +207,9 @@ public class RobotContainer {
         drivetrain.setDefaultCommand(new DefaultDriveCommand(drivetrain, joystickInputsSupplier, rotationSupplier));
         driverController.back().onTrue(Commands.runOnce(drivetrain::zeroGyroscope));
 
+        // driverController.back().whileTrue(drivetrain.wheelRadiusCharacterization(-1));
+        driverController.start().whileTrue(drivetrain.wheelRadiusCharacterization(1));
+
         //Coral Intake (using left trigger)
         //Left Paddle = POV down
         //Right Paddle = POV up

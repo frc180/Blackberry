@@ -3,6 +3,7 @@ package frc.robot.subsystems;
 import static edu.wpi.first.units.Units.*;
 
 import java.util.List;
+import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
@@ -10,6 +11,7 @@ import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
+import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -24,9 +26,11 @@ import com.pathplanner.lib.util.FlippingUtil;
 import com.spamrobotics.util.Helpers;
 
 import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.epilogue.NotLogged;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -34,6 +38,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.Odometry;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Notifier;
@@ -115,6 +120,18 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     PathConstraints constraints = new PathConstraints(MAX_SPEED, MAX_SPEED_ACCEL, MAX_ANGULAR_RATE, MAX_ANGULAR_ACCEL); //must be in m/s and rad/s
     
     public PathPlannerPath path;
+
+
+    // Wheel radius characterization
+    @NotLogged
+    private double lastGyroYawRads = 0;
+    @NotLogged
+    private double accumGyroYawRads = 0;
+    @NotLogged
+    private double averageWheelPosition = 0;
+    @NotLogged
+    private double[] startWheelPositions = new double[4];
+    private double currentEffectiveWheelRadius = 0;
 
     /* SysId routine for characterizing translation. This is used to find PID gains for the drive motors. */
     private final SysIdRoutine m_sysIdRoutineTranslation = new SysIdRoutine(
@@ -462,6 +479,60 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     public Command sysIdDynamic(SysIdRoutine.Direction direction) {
         return m_sysIdRoutineToApply.dynamic(direction);
     }
+
+    // Adapted from https://github.com/WaltonRobotics/Reefscape/blob/bca8e2b01ee13f46fc53a4748f4cf2c9eb5de017/src/main/java/frc/robot/subsystems/Swerve.java#L308
+    public Command wheelRadiusCharacterization(double omegaDirection) {
+        final DoubleSupplier m_gyroYawRadsSupplier = () -> Units.degreesToRadians(getPigeon2().getYaw().getValueAsDouble());
+        final SlewRateLimiter m_omegaLimiter = new SlewRateLimiter(0.5);
+        final SwerveRequest.RobotCentric m_characterizationReq = new SwerveRequest.RobotCentric()
+		    .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
+        final double m_characterizationSpeed = 1.5;
+
+		var initialize = runOnce(() -> {
+			lastGyroYawRads = m_gyroYawRadsSupplier.getAsDouble();
+			accumGyroYawRads = 0;
+			currentEffectiveWheelRadius = 0;
+            averageWheelPosition = 0;
+			for (int i = 0; i < getModules().length; i++) {
+				var pos = getModules()[i].getPosition(true);
+				startWheelPositions[i] = pos.distanceMeters * TunerConstants.kDriveRotationsPerMeter;
+			}
+			m_omegaLimiter.reset(0);
+		});
+
+		var executeEnd = runEnd(
+			() -> {
+				setControl(m_characterizationReq
+					.withRotationalRate(m_omegaLimiter.calculate(m_characterizationSpeed * omegaDirection)));
+				accumGyroYawRads += MathUtil.angleModulus(m_gyroYawRadsSupplier.getAsDouble() - lastGyroYawRads);
+				lastGyroYawRads = m_gyroYawRadsSupplier.getAsDouble();
+				averageWheelPosition = 0;
+				double[] wheelPositions = new double[4];
+				for (int i = 0; i < getModules().length; i++) {
+					var pos = getModules()[i].getPosition(true);
+					wheelPositions[i] = pos.distanceMeters * TunerConstants.kDriveRotationsPerMeter;
+					averageWheelPosition += Math.abs(wheelPositions[i] - startWheelPositions[i]);
+				}
+				averageWheelPosition = averageWheelPosition / 4.0;
+				currentEffectiveWheelRadius = (accumGyroYawRads * TunerConstants.kDriveRadius) / averageWheelPosition;
+			}, () -> {
+				setControl(m_characterizationReq.withRotationalRate(0));
+				if (Math.abs(accumGyroYawRads) <= Math.PI * 2.0) {
+					System.out.println("not enough data for characterization " + accumGyroYawRads
+                    + "\navgWheelPos: " + averageWheelPosition + "radians");
+				} else {
+					System.out.println(
+						"effective wheel radius: "
+							+ currentEffectiveWheelRadius
+							+ " inches" + 
+                            "\naccumGryoYawRads: " + accumGyroYawRads + "radians" 
+                            + "\navgWheelPos: " + averageWheelPosition + "radians");
+				}
+			});
+
+		return Commands.sequence(
+			initialize, executeEnd);
+	}
 
     @Override
     public void periodic() {
