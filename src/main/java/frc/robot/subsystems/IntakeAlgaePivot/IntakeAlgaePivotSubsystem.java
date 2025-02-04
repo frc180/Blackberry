@@ -47,4 +47,8 @@ public class IntakeAlgaePivotSubsystem extends SubsystemBase {
             io.setPosition(climbReady);
         });
     }
+
+    public double getPositionDegrees() {
+        return inputs.position;
+    }
 }

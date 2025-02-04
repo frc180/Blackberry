@@ -24,8 +24,11 @@ public class Constants {
 
     //sensor channels
     public static final int INTAKE_CORAL_SENSOR = 0;
-    public static final int ELEVATOR_ARM_SENSOR = 1;
-    public static final int ELEVATOR_ARM_ALGAE_SENSOR = 2;
+    public static final int ELEVATOR_ARM_FRONT_SENSOR = 1;
+    public static final int ELEVATOR_ARM_MIDDLE_SENSOR = 2;
+    public static final int ELEVATOR_ARM_BACK_SENSOR = 3;
+    public static final int ELEVATOR_ARM_ALGAE_SENSOR = 4;
+    public static final int INTALE_ALGAE_SENSOR = 5;
 
 
     

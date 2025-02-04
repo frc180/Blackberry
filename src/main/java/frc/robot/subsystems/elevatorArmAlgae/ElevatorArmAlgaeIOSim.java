@@ -1,9 +1,12 @@
 package frc.robot.subsystems.elevatorArmAlgae;
 
+import frc.robot.RobotContainer;
+import frc.robot.subsystems.elevator.ElevatorSubsystem;
+
 public class ElevatorArmAlgaeIOSim implements ElevatorArmAlgaeIO{
 
     double speed = 0;
-    boolean hasCoral;
+    boolean hasAlgae;
 
     public ElevatorArmAlgaeIOSim() {}
 
@@ -24,6 +27,10 @@ public class ElevatorArmAlgaeIOSim implements ElevatorArmAlgaeIO{
 
     @Override
     public void update(ElevatorArmAlgaeInputs inputs) {
-        //later
+        //if the elevator is at L2 or L3 and the rollers are running, then we can lie to the simulation and say we have an algae
+        ElevatorSubsystem elevator = RobotContainer.instance.elevator;
+        hasAlgae = ((elevator.getPositionMeters() == elevator.L2) || (elevator.getPositionMeters() == elevator.L3)) && (speed > 0);
+
+        inputs.aglaeSensor = hasAlgae;
     }
 }

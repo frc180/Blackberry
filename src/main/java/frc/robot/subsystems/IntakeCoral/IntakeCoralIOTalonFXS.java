@@ -16,7 +16,6 @@ import frc.robot.Robot;
 public class IntakeCoralIOTalonFXS implements IntakeCoralIO{
 
     TalonFX intakeMotor;
-
     DigitalInput intakeSensor;
     
 
