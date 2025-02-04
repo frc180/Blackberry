@@ -1,33 +1,61 @@
 package frc.robot.subsystems.IntakeAlgae;
 
+import static edu.wpi.first.units.Units.Inches;
+import org.ironmaple.simulation.IntakeSimulation;
+import org.ironmaple.simulation.IntakeSimulation.IntakeSide;
 import frc.robot.RobotContainer;
 import frc.robot.subsystems.IntakeAlgaePivot.IntakeAlgaePivotSubsystem;
+import frc.robot.util.simulation.SimLogic;
 
 public class IntakeAlgaeIOSim implements IntakeAlgaeIO {
 
-    double rollerSpeed;
-    boolean hasAlgae;
+    double rollerSpeed = 0;
+    IntakeSimulation intakeSim = null;
 
-    public IntakeAlgaeIOSim() {}
+    public IntakeAlgaeIOSim() {
+        if (RobotContainer.MAPLESIM) {
+            intakeSim = IntakeSimulation.OverTheBumperIntake(
+                "Algae",
+                RobotContainer.instance.drivetrain.getDriveSim(),
+                Inches.of(15),
+                Inches.of(6),
+                IntakeSide.LEFT,
+                1
+            );
+        }
+    }
 
     @Override   
     public void startRollers() {
         rollerSpeed = 1;
-        // System.out.println("Algae Intake Roller Speed: " + rollerSpeed);
     }
 
     @Override
     public void stopRollers() {
         rollerSpeed = 0;
-        // System.out.println("Algae Intake Roller Speed: " + rollerSpeed);
     }
 
     @Override
     public void update(IntakeAlgaeIOInputs inputs) {
-        IntakeAlgaePivotSubsystem intakePivot = RobotContainer.instance.intakeAlgaePivot;
-        hasAlgae = (intakePivot.getPositionDegrees() == intakePivot.extend) && (rollerSpeed > 0);
+        IntakeAlgaePivotSubsystem algaePivot = RobotContainer.instance.intakeAlgaePivot;
+        boolean ableToIntake = algaePivot.getTargetDegrees() == algaePivot.extend && algaePivot.isAtTarget() && rollerSpeed > 0;
 
-        inputs.hasAlgae = hasAlgae;
+        if (intakeSim != null) {
+            // Using physics simulation with simulated intake
+            if (ableToIntake) {
+                intakeSim.startIntake();
+            } else {
+                intakeSim.stopIntake();
+            }
+            if (!SimLogic.intakeHasAlgae) {
+                SimLogic.intakeHasAlgae = intakeSim.obtainGamePieceFromIntake();
+            }
+        } else {
+            // No physics sim, assume there's an algae if we are intaking
+            if (!SimLogic.intakeHasAlgae) {
+                SimLogic.intakeHasAlgae = ableToIntake;
+            }
+        }
+        inputs.hasAlgae = SimLogic.intakeHasAlgae;
     }
-    
 }

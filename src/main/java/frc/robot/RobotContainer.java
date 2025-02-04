@@ -13,7 +13,7 @@
  Contributors:
     - Isabella B.
     - Andrew C.
-    - Placeholder
+    - Ryan S.
     - Placeholder
     - Placeholder
     - Placeholder
@@ -82,6 +82,7 @@ public class RobotContainer {
 
     @Logged(name = "Vision")
     public final VisionSubsystem vision;
+    @Logged(name = "Algae Intake")
     public final IntakeAlgaeSubsystem intakeAlgae;
     @Logged(name = "Algae Intake Pivot")
     public final IntakeAlgaePivotSubsystem intakeAlgaePivot;

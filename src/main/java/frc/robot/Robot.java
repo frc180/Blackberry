@@ -37,9 +37,15 @@ public class Robot extends TimedRobot {
   @Logged(name = "RobotContainer")
   private final RobotContainer m_robotContainer;
 
+
+  StructArrayPublisher<Pose3d> robotComponentPoses = NetworkTableInstance.getDefault()
+                                                    .getStructArrayTopic("Robot Component Poses", Pose3d.struct)
+                                                    .publish();
+
+  Pose3d[] robotComponentPosesArray = new Pose3d[1];
+
   // private final boolean kUseLimelight = false;
   private List<SimulatedAIRobot> simulatedAIRobots = new ArrayList<>();
-
 
   public Robot() {
     SimVisuals.init();
@@ -56,6 +62,11 @@ public class Robot extends TimedRobot {
   public void robotPeriodic() {
     CommandScheduler.getInstance().run();
     SimVisuals.update();
+
+    // Get all robot component (mechanism) poses and publish them to NetworkTables
+    robotComponentPosesArray[0] = RobotContainer.instance.intakeAlgaePivot.getPose();
+    robotComponentPoses.accept(robotComponentPosesArray);
+
     /*
      * This example of adding Limelight is very simple and may not be sufficient for on-field use.
      * Users typically need to provide a standard deviation that scales with the distance to target
@@ -119,10 +130,7 @@ public class Robot extends TimedRobot {
   }
 
   @Override
-  public void teleopPeriodic() {
-
-    
-  }
+  public void teleopPeriodic() {}
 
   @Override
   public void teleopExit() {}
@@ -163,6 +171,7 @@ public class Robot extends TimedRobot {
 
   @Override
   public void simulationPeriodic() {
+      RobotContainer rc = RobotContainer.instance;
       // Get the positions of all maplesim coral and publish them to NetworkTables
       Pose3d[] coral = SimulatedArena.getInstance().getGamePiecesArrayByType("Coral");
       coralPoses.accept(coral);
@@ -172,7 +181,7 @@ public class Robot extends TimedRobot {
       Pose3d[] fieldAlgae = Field.getReefAlgaePoses();
       Pose3d robotAlgae;
       if (SimLogic.robotHasAlgae()) {
-        robotAlgae = new Pose3d(RobotContainer.instance.drivetrain.getSimPose()).transformBy(robotAlgaeTransform);
+        robotAlgae = new Pose3d(rc.drivetrain.getSimPose()).transformBy(robotAlgaeTransform);
       } else {
         robotAlgae = Pose3d.kZero;
       }

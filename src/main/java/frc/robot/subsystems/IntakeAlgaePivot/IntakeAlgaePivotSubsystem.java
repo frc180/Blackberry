@@ -1,6 +1,7 @@
 package frc.robot.subsystems.IntakeAlgaePivot;
 
 import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.epilogue.NotLogged;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.util.Units;
@@ -18,6 +19,8 @@ public class IntakeAlgaePivotSubsystem extends SubsystemBase {
 
     public IntakeAlgaePivotIO io;
     private IntakeAlgaePivotIOInputs inputs;
+
+    private double targetPosition = stow;
 
     public IntakeAlgaePivotSubsystem() {
         inputs = new IntakeAlgaePivotIOInputs();
@@ -41,20 +44,21 @@ public class IntakeAlgaePivotSubsystem extends SubsystemBase {
     }
 
     public Command extend() {
-        return this.run(() -> {
-            io.setPosition(extend);
-        });
+        return setPosition(extend);
     }
 
     public Command stow() {
-        return this.run (() -> {
-            io.setPosition(stow);
-        });
+        return setPosition(stow);
     }
 
     public Command readyClimb() {
-        return this.run (() -> {
-            io.setPosition(climbReady);
+        return setPosition(climbReady);
+    }
+
+    public Command setPosition(double position) {
+        return this.run(() -> {
+            io.setPosition(position);
+            targetPosition = position;
         });
     }
 
@@ -62,6 +66,15 @@ public class IntakeAlgaePivotSubsystem extends SubsystemBase {
         return inputs.position;
     }
 
+    public double getTargetDegrees() {
+        return targetPosition;
+    }
+
+    public boolean isAtTarget() {
+        return Math.abs(getPositionDegrees() - getTargetDegrees()) <= 3;
+    }
+
+    @NotLogged
     public Pose3d getPose() {
         double angle = Units.degreesToRadians(inputs.position);
         return new Pose3d(0, 0.2, 0.2, new Rotation3d(0, angle, Units.degreesToRadians(270)));
