@@ -140,7 +140,7 @@ public class RobotContainer {
                         Commands.runOnce(() -> {
                             Robot.setAutoCoralScoringPositions(sampleAutoPositions);
                             if (Robot.isSimulation()) {
-                                Pose2d start = new Pose2d(7.4, 5, Rotation2d.k180deg);
+                                Pose2d start = new Pose2d(7.9, 5, Rotation2d.k180deg);
                                 if (Robot.isRed()) start = FlippingUtil.flipFieldPose(start);
                                 drivetrain.resetPose(start);
                             }
@@ -182,10 +182,9 @@ public class RobotContainer {
 
         // More complex triggers
         robotHasCoral = intakeCoral.hasCoral.or(elevatorArm.hasCoral);
+        robotHasAlgae = intakeAlgae.hasAlgae.or(elevatorArmAlgae.hasAlgae);
         final Trigger justScoredCoral = new Trigger(() -> Robot.justScoredCoral);
         final Trigger drivetrainAvailable = new Trigger(() -> drivetrain.getCurrentCommand() == drivetrain.getDefaultCommand());
-
-        robotHasAlgae = intakeAlgae.hasAlgae.or(elevatorArmAlgae.hasAlgae);
 
         // Auto triggers
         final Trigger autoCoralIntake = autonomous.and(Auto::isCoralIntaking);
