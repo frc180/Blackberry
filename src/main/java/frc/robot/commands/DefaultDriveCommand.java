@@ -97,9 +97,7 @@ public class DefaultDriveCommand extends Command {
 
     public void applyCoralAimAssist(ChassisSpeeds speeds, JoystickInputs inputs) {
         Pose2d coralPose = RobotContainer.instance.vision.getCoralPose();
-        if (coralPose == null || 
-            !RobotContainer.instance.driverController.leftTrigger().getAsBoolean() || 
-            RobotContainer.instance.intakeCoral.hasCoral.getAsBoolean()) {
+        if (coralPose == null || !RobotContainer.instance.coralIntakeTrigger.getAsBoolean()) {
             return;
         }
 
@@ -130,7 +128,9 @@ public class DefaultDriveCommand extends Command {
 
         coralSpeeds.vxMetersPerSecond *= (perpdist * coralAssistKp);
         coralSpeeds.vyMetersPerSecond *= (perpdist * coralAssistKp);
-        coralSpeeds.omegaRadiansPerSecond = angleDiff * 0.008; // 0.01
+        // TODO: Bug - when this is enabled, driver cannot turn at all when this is active
+        // They should be able to fight against the turning input
+        // coralSpeeds.omegaRadiansPerSecond = angleDiff * 0.008; // 0.01
         
         // Track the top speed of the speeds request, so that we can keep the coral assist from exceeding that
         double maxSpeed = Math.max(Math.abs(speeds.vxMetersPerSecond), Math.abs(speeds.vyMetersPerSecond));

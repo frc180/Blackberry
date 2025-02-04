@@ -78,6 +78,7 @@ public class RobotContainer {
     @Logged(name = "Vision")
     public final VisionSubsystem vision;
     public final IntakeAlgaeSubsystem intakeAlgae;
+    @Logged(name = "Algae Intake Pivot")
     public final IntakeAlgaePivotSubsystem intakeAlgaePivot;
     @Logged(name = "Coral Intake")
     public final IntakeCoralSubsystem intakeCoral;
@@ -91,6 +92,8 @@ public class RobotContainer {
     public final ElevatorArmSubsystem elevatorArm;
 
     private final SendableChooser<Command> autoChooser = new SendableChooser<Command>();
+
+    public Trigger coralIntakeTrigger = null;
 
     public static RobotContainer instance;
 
@@ -201,7 +204,8 @@ public class RobotContainer {
         //Right Paddle = POV up
 
         // Driver Coral Intake
-        driverIntake.or(autoCoralIntake).and(robotHasCoral.negate())
+        coralIntakeTrigger = driverIntake.or(autoCoralIntake).and(robotHasCoral.negate());
+        coralIntakeTrigger
             .whileTrue(intakeCoralPivot.setPosition(IntakeCoralPivotSubsystem.extend).alongWith(intakeCoral.intake(), elevatorArmPivot.receivePosition()))
             .onFalse(intakeCoralPivot.setPosition(IntakeCoralPivotSubsystem.stow));
         

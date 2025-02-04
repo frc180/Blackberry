@@ -1,42 +1,50 @@
 package frc.robot.subsystems.IntakeCoralPivot;
 
-import java.util.List;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.MotionMagicExpoVoltage;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
-import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.sim.TalonFXSimState;
 import frc.robot.Constants;
 import frc.robot.Robot;
-
 
 public class IntakeCoralPivotIOTalonFXS implements IntakeCoralPivotIO {
 
     TalonFX motor;
-    MotionMagicVoltage motionMagicControl;
+    MotionMagicExpoVoltage motionMagicControl;
     VoltageOut voltageControl;
+
+    // Simulation-only variables
+    TalonFXSimState motorSim = null;
+    double simulatedPosition = 90 * -1;
     
     public IntakeCoralPivotIOTalonFXS() {
         motor = new TalonFX(Constants.INTAKE_CORAL_PIVOT_TALON);
         motor.setNeutralMode(NeutralModeValue.Brake);
         TalonFXConfiguration config = new TalonFXConfiguration();
-        config.Slot0.kP = 0;
+        config.Slot0.kP = 4;
         config.Slot0.kI = 0;
         config.Slot0.kD = 0;
         config.Slot0.kG = 0;
         config.Slot0.kV = 0;
         config.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
         config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-        config.MotionMagic.MotionMagicAcceleration = 0;
-        config.MotionMagic.MotionMagicCruiseVelocity = 0;
+        // config.MotionMagic.MotionMagicAcceleration = 999;
+        // config.MotionMagic.MotionMagicCruiseVelocity = 999;
+        config.MotionMagic.MotionMagicExpo_kV = .05;
+        config.MotionMagic.MotionMagicExpo_kA = 0;
         config.MotionMagic.MotionMagicJerk = 0;
-
         motor.getConfigurator().apply(config);
 
+        motionMagicControl = new MotionMagicExpoVoltage(0);
 
+        if (Robot.isReal()) return;
+
+        motorSim = motor.getSimState();
     }
 
     @Override
@@ -46,7 +54,8 @@ public class IntakeCoralPivotIOTalonFXS implements IntakeCoralPivotIO {
 
     @Override
     public void simulationPeriodic() {
-
+        simulatedPosition += motorSim.getMotorVoltage() * 1.5;
+        motorSim.setRawRotorPosition(simulatedPosition);
     }
 
     @Override
@@ -59,5 +68,4 @@ public class IntakeCoralPivotIOTalonFXS implements IntakeCoralPivotIO {
     public void stop() {
         motor.stopMotor();
     }
-
 }

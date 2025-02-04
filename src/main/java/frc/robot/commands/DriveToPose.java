@@ -146,5 +146,6 @@ public class DriveToPose extends Command {
     public void end(boolean interrupted) {
         drivetrain.drive(noneSpeeds);
         drivetrain.setTargetPose(null);
+        drivetrain.setPoseTargetType(PoseTarget.STANDARD);
     }
 }

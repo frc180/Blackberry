@@ -6,12 +6,12 @@ public class IntakeAlgaePivotIOSim implements IntakeAlgaePivotIO {
     
     PIDController pid;
     boolean usingPID = false;
-    double position = 0;
+    double position = IntakeAlgaePivotSubsystem.stow;
     double speed = 0;
     double target = 0;
 
     public IntakeAlgaePivotIOSim() {
-        pid = new PIDController(0.1,  0, 0);
+        pid = new PIDController(0.05,  0, 0);
     }
 
     @Override
@@ -30,11 +30,10 @@ public class IntakeAlgaePivotIOSim implements IntakeAlgaePivotIO {
     public void setPosition(double encoderPosition) {
         target = encoderPosition;
         usingPID = true;
-        //System.out.println("Current algae intake position: " + position);
     }
 
     @Override
     public void simulationPeriodic() {
-        position += speed * 8;
+        position += speed * 4;
     }
 }

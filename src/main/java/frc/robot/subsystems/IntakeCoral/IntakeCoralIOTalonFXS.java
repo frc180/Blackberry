@@ -1,32 +1,25 @@
 package frc.robot.subsystems.IntakeCoral;
 
-import java.util.List;
-import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.MotionMagicVoltage;
-import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.wpilibj.DigitalInput;
-import edu.wpi.first.wpilibj.RobotController;
 import frc.robot.Constants;
-import frc.robot.Robot;
 
 public class IntakeCoralIOTalonFXS implements IntakeCoralIO{
 
     TalonFX intakeMotor;
-
     DigitalInput intakeSensor;
-    
-
+    VoltageOut voltageControl;
 
     public IntakeCoralIOTalonFXS() {
         intakeMotor = new TalonFX(Constants.INTAKE_CORAL_TALON);
         intakeMotor.setInverted(false);
         intakeMotor.setNeutralMode(NeutralModeValue.Brake);
         
-        intakeSensor = new DigitalInput(Constants.INTAKE_CORAL_SENSOR);       
+        intakeSensor = new DigitalInput(Constants.INTAKE_CORAL_SENSOR);   
+        
+        voltageControl = new VoltageOut(0);
     }
 
     
@@ -38,13 +31,15 @@ public class IntakeCoralIOTalonFXS implements IntakeCoralIO{
     
     @Override
     public void startRollers() {
-        intakeMotor.set(1);
+        setSpeed(1);
     }
 
     @Override
     public void stopRollers() {
-        intakeMotor.stopMotor();
+        setSpeed(0);
     }
 
-    
+    private void setSpeed(double speed) {
+        intakeMotor.setControl(voltageControl.withOutput(speed * 12));
+    }
 }
