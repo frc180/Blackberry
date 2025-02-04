@@ -96,10 +96,13 @@ public class RobotContainer {
     public final ElevatorArmPivotSubsystem elevatorArmPivot;
     @Logged(name = "Elevator arm")
     public final ElevatorArmSubsystem elevatorArm;
+    @Logged(name = "Elevator Arm Algea")
     public final ElevatorArmAlgaeSubsystem elevatorArmAlgae;
 
     private final SendableChooser<Command> autoChooser = new SendableChooser<Command>();
 
+    public Trigger robotHasCoral = null;
+    public Trigger robotHasAlgae = null;
     public Trigger coralIntakeTrigger = null;
 
     public static RobotContainer instance;
@@ -178,9 +181,11 @@ public class RobotContainer {
         final Trigger driverStartClimb = algaeMode.and(driverController.start());
 
         // More complex triggers
-        final Trigger robotHasCoral = intakeCoral.hasCoral.or(elevatorArm.hasCoral);
+        robotHasCoral = intakeCoral.hasCoral.or(elevatorArm.hasCoral);
         final Trigger justScoredCoral = new Trigger(() -> Robot.justScoredCoral);
         final Trigger drivetrainAvailable = new Trigger(() -> drivetrain.getCurrentCommand() == drivetrain.getDefaultCommand());
+
+        robotHasAlgae = intakeAlgae.hasAlgae.or(elevatorArmAlgae.hasAlgae);
 
         // Auto triggers
         final Trigger autoCoralIntake = autonomous.and(Auto::isCoralIntaking);

@@ -180,7 +180,7 @@ public class Robot extends TimedRobot {
       Pose3d[] algae = SimulatedArena.getInstance().getGamePiecesArrayByType("Algae");
       Pose3d[] fieldAlgae = Field.getReefAlgaePoses();
       Pose3d robotAlgae;
-      if (SimLogic.robotHasAlgae()) {
+      if (rc.robotHasAlgae.getAsBoolean()) {
         robotAlgae = new Pose3d(rc.drivetrain.getSimPose()).transformBy(robotAlgaeTransform);
       } else {
         robotAlgae = Pose3d.kZero;

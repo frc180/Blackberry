@@ -31,7 +31,7 @@ public class ElevatorArmAlgaeIOTalonFX implements ElevatorArmAlgaeIO{
 
     @Override
     public void update(ElevatorArmAlgaeInputs inputs) {
-        inputs.aglaeSensor = sensor.get();
+        inputs.hasAlgae = sensor.get();
     }
 
     

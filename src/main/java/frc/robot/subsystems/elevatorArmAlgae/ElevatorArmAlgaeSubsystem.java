@@ -1,17 +1,19 @@
 package frc.robot.subsystems.elevatorArmAlgae;
 
+import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Robot;
 import frc.robot.subsystems.elevatorArmAlgae.ElevatorArmAlgaeIO.ElevatorArmAlgaeInputs;
 
+@Logged
 public class ElevatorArmAlgaeSubsystem extends SubsystemBase{
 
     ElevatorArmAlgaeIO io;
     ElevatorArmAlgaeInputs inputs;
 
-    Trigger hasAlgae;
+    public Trigger hasAlgae;
 
     public ElevatorArmAlgaeSubsystem() {
         inputs = new 
@@ -22,7 +24,7 @@ public class ElevatorArmAlgaeSubsystem extends SubsystemBase{
             io = new ElevatorArmAlgaeIOSim();
         }
 
-        hasAlgae = new Trigger(() -> inputs.aglaeSensor);
+        hasAlgae = new Trigger(() -> inputs.hasAlgae);
     }
 
     @Override

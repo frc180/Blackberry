@@ -1,9 +1,13 @@
 package frc.robot.subsystems.elevatorArmAlgae;
 
+import edu.wpi.first.epilogue.Logged;
+
+@Logged
 public interface ElevatorArmAlgaeIO {
 
+    @Logged
     public class ElevatorArmAlgaeInputs {
-        public boolean aglaeSensor;
+        public boolean hasAlgae;
     }
     
     public void run();

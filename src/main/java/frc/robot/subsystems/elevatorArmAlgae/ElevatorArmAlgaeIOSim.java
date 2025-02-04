@@ -2,6 +2,7 @@ package frc.robot.subsystems.elevatorArmAlgae;
 
 import frc.robot.RobotContainer;
 import frc.robot.subsystems.elevator.ElevatorSubsystem;
+import frc.robot.util.simulation.SimLogic;
 
 public class ElevatorArmAlgaeIOSim implements ElevatorArmAlgaeIO{
 
@@ -31,6 +32,7 @@ public class ElevatorArmAlgaeIOSim implements ElevatorArmAlgaeIO{
         ElevatorSubsystem elevator = RobotContainer.instance.elevator;
         hasAlgae = ((elevator.getPositionMeters() == elevator.L2) || (elevator.getPositionMeters() == elevator.L3)) && (speed > 0);
 
-        inputs.aglaeSensor = hasAlgae;
+        // inputs.algaeSensor = hasAlgae;
+        inputs.hasAlgae = SimLogic.armHasAlgae;
     }
 }
