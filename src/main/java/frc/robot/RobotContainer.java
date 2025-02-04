@@ -1,4 +1,4 @@
-/*
+/* 
            _   _ ______ __  __  ____  _   _ ______ 
      /\   | \ | |  ____|  \/  |/ __ \| \ | |  ____|
     /  \  |  \| | |__  | \  / | |  | |  \| | |__   
@@ -12,7 +12,11 @@
 
  Contributors:
     - Isabella B.
-
+    - Andrew C.
+    - Placeholder
+    - Placeholder
+    - Placeholder
+    - Placeholder
 */
 package frc.robot;
 
