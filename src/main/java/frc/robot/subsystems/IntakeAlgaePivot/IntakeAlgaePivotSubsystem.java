@@ -58,6 +58,10 @@ public class IntakeAlgaePivotSubsystem extends SubsystemBase {
         });
     }
 
+    public double getPositionDegrees() {
+        return inputs.position;
+    }
+
     public Pose3d getPose() {
         double angle = Units.degreesToRadians(inputs.position);
         return new Pose3d(0, 0.2, 0.2, new Rotation3d(0, angle, Units.degreesToRadians(270)));

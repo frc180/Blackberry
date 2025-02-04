@@ -1,4 +1,4 @@
-/*
+/* 
            _   _ ______ __  __  ____  _   _ ______ 
      /\   | \ | |  ____|  \/  |/ __ \| \ | |  ____|
     /  \  |  \| | |__  | \  / | |  | |  \| | |__   
@@ -11,8 +11,12 @@
  2025 FRC Team 180 - S.P.A.M.
 
  Contributors:
-    - TODO
-
+    - Isabella B.
+    - Andrew C.
+    - Placeholder
+    - Placeholder
+    - Placeholder
+    - Placeholder
 */
 package frc.robot;
 
@@ -57,6 +61,7 @@ import frc.robot.subsystems.vision.VisionSubsystem;
 import frc.robot.util.CoralScoringPosition;
 import frc.robot.util.simulation.SimLogic;
 import frc.robot.subsystems.elevatorArm.ElevatorArmSubsystem;
+import frc.robot.subsystems.elevatorArmAlgae.ElevatorArmAlgaeSubsystem;
 import frc.robot.subsystems.elevatorArmPivot.ElevatorArmPivotSubsystem;
 
 @Logged
@@ -90,6 +95,7 @@ public class RobotContainer {
     public final ElevatorArmPivotSubsystem elevatorArmPivot;
     @Logged(name = "Elevator arm")
     public final ElevatorArmSubsystem elevatorArm;
+    public final ElevatorArmAlgaeSubsystem elevatorArmAlgae;
 
     private final SendableChooser<Command> autoChooser = new SendableChooser<Command>();
 
@@ -110,6 +116,7 @@ public class RobotContainer {
         elevator = new ElevatorSubsystem();
         elevatorArmPivot = new ElevatorArmPivotSubsystem();
         elevatorArm = new ElevatorArmSubsystem();
+        elevatorArmAlgae = new ElevatorArmAlgaeSubsystem();
 
         List<CoralScoringPosition> sampleAutoPositions = List.of(
             new CoralScoringPosition(20, 4, true),
