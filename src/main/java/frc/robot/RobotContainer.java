@@ -163,8 +163,8 @@ public class RobotContainer {
 
         // Driver buttons
         //coral
-        final Trigger driverIntake = driverController.leftTrigger();
-        final Trigger driverL1 = driverController.y();
+        final Trigger driverIntake = driverController.leftTrigger().and(driverController.povDown().negate());
+        final Trigger driverL1 = driverController.y(); //processor is different than spit because processor will have autoalign
         final Trigger driverL2 = driverController.leftBumper();
         final Trigger driverL3 = driverController.rightTrigger();
         final Trigger driverL4 = driverController.rightBumper();
@@ -217,10 +217,6 @@ public class RobotContainer {
         // test outtaking coral
         driverController.start().onTrue(Commands.runOnce(() -> SimLogic.outtakeAlgae()));
 
-        //Coral Intake (using left trigger)
-        //Left Paddle = POV down
-        //Right Paddle = POV up
-
         // Driver Coral Intake
         coralIntakeTrigger = driverIntake.or(autoCoralIntake).and(robotHasCoral.negate());
         coralIntakeTrigger
@@ -249,6 +245,8 @@ public class RobotContainer {
         driverIntakeAlgae.whileTrue(intakeAlgaePivot.extend().alongWith(intakeAlgae.intake()))
                             .onFalse(intakeAlgaePivot.stow().alongWith(intakeAlgae.stopIntake()));
 
+        
+                            
         //climbing sequence
         driverReadyClimb.whileTrue(intakeAlgaePivot.readyClimb());
         driverStartClimb.whileTrue(intakeAlgaePivot.stow()); //didnt put any onFalse commands because once we climb we physically cannot un-climb
