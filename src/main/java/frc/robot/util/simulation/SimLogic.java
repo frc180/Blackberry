@@ -1,10 +1,13 @@
 package frc.robot.util.simulation;
 
 import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
+import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeAlgaeOnField;
+import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeAlgaeOnFly;
 import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeCoralOnField;
 import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeCoralOnFly;
 import com.pathplanner.lib.util.FlippingUtil;
@@ -91,6 +94,25 @@ public abstract class SimLogic {
             // The initial speed of the coral
             MetersPerSecond.of(1),
             Degrees.of(coralAngle))
+        );
+    }
+
+    public static void outtakeAlgae() {
+        if (!RobotContainer.MAPLESIM) {
+            return;
+        }
+
+        SwerveDriveSimulation swerveSim = RobotContainer.instance.drivetrain.getDriveSim();
+        Pose2d simRobotPose = swerveSim.getSimulatedDriveTrainPose();
+    
+        SimulatedArena.getInstance().addGamePieceProjectile(new ReefscapeAlgaeOnFly(
+            simRobotPose.getTranslation(),
+            new Translation2d(0.6, 0), // scoring mechanism position on the robot
+            swerveSim.getDriveTrainSimulatedChassisSpeedsFieldRelative(),
+            simRobotPose.getRotation().rotateBy(Rotation2d.kCCW_90deg),
+            Inches.of(16), // outtake height
+            MetersPerSecond.of(2), // outtake speed
+            Degrees.of(0))
         );
     }
 

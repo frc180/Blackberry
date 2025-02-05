@@ -30,6 +30,16 @@ public class Helpers {
         return new ChassisSpeeds(rotated.getX(), rotated.getY(), speeds.omegaRadiansPerSecond);
     }
 
+    // Untested, should help with limiting acceleration dynamically
+    public static ChassisSpeeds rateLimit(ChassisSpeeds prev, ChassisSpeeds next, double maxDeltaV) {
+        ChassisSpeeds diff = next.minus(prev);
+        double diffSqMag = diff.vxMetersPerSecond * diff.vxMetersPerSecond + diff.vyMetersPerSecond * diff.vyMetersPerSecond;
+        if (diffSqMag <= maxDeltaV * maxDeltaV) {
+          return next;
+        }
+        return prev.plus(diff.times(maxDeltaV / Math.sqrt(diffSqMag)));
+      }
+
     public static double perpendicularLineLength(Translation2d point, Translation2d vectorStart, Translation2d vectorEnd) {
         double numerator = Math.abs((vectorEnd.getY() - vectorStart.getY()) * point.getX() - 
                                     (vectorEnd.getX() - vectorStart.getX()) * point.getY() + 

@@ -212,7 +212,10 @@ public class RobotContainer {
         driverController.back().onTrue(Commands.runOnce(drivetrain::zeroGyroscope));
 
         // driverController.back().whileTrue(drivetrain.wheelRadiusCharacterization(-1));
-        driverController.start().whileTrue(drivetrain.wheelRadiusCharacterization(1));
+        // driverController.start().whileTrue(drivetrain.wheelRadiusCharacterization(1));
+        
+        // test outtaking coral
+        driverController.start().onTrue(Commands.runOnce(() -> SimLogic.outtakeAlgae()));
 
         //Coral Intake (using left trigger)
         //Left Paddle = POV down
