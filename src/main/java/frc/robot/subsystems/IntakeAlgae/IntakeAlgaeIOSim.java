@@ -39,6 +39,7 @@ public class IntakeAlgaeIOSim implements IntakeAlgaeIO {
     public void update(IntakeAlgaeIOInputs inputs) {
         IntakeAlgaePivotSubsystem algaePivot = RobotContainer.instance.intakeAlgaePivot;
         boolean ableToIntake = algaePivot.getTargetDegrees() == algaePivot.extend && algaePivot.isAtTarget() && rollerSpeed > 0;
+        boolean spitting = rollerSpeed == 0;
 
         if (intakeSim != null) {
             // Using physics simulation with simulated intake
@@ -56,6 +57,13 @@ public class IntakeAlgaeIOSim implements IntakeAlgaeIO {
                 SimLogic.intakeHasAlgae = ableToIntake;
             }
         }
+
+        if ( spitting && SimLogic.intakeHasAlgae) {
+            SimLogic.intakeHasAlgae = false;
+            spitting = false;
+        }
+
+
         inputs.hasAlgae = SimLogic.intakeHasAlgae;
     }
 }
