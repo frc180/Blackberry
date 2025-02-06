@@ -50,6 +50,7 @@ import frc.robot.commands.DriveToPose;
 import frc.robot.commands.RumbleCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.DrivetrainSubsystem;
+import frc.robot.subsystems.LEDSubsystem;
 import frc.robot.subsystems.DrivetrainSubsystem.HeadingTarget;
 import frc.robot.subsystems.DrivetrainSubsystem.PoseTarget;
 import frc.robot.subsystems.IntakeAlgae.IntakeAlgaeSubsystem;
@@ -98,6 +99,7 @@ public class RobotContainer {
     public final ElevatorArmSubsystem elevatorArm;
     @Logged(name = "Elevator Arm Algea")
     public final ElevatorArmAlgaeSubsystem elevatorArmAlgae;
+    public final LEDSubsystem leds;
 
     private final SendableChooser<Command> autoChooser = new SendableChooser<Command>();
 
@@ -121,6 +123,7 @@ public class RobotContainer {
         elevatorArmPivot = new ElevatorArmPivotSubsystem();
         elevatorArm = new ElevatorArmSubsystem();
         elevatorArmAlgae = new ElevatorArmAlgaeSubsystem();
+        leds = new LEDSubsystem();
 
         List<CoralScoringPosition> sampleAutoPositions = List.of(
             new CoralScoringPosition(20, 4, true),
@@ -373,6 +376,20 @@ public class RobotContainer {
                 () -> Robot.nextAutoCoralScoringPosition() != null
             ).alongWith(Commands.runOnce(() -> Robot.justScoredCoral = false))
         );
+
+        leds.setDefaultCommand(leds.run(() -> {
+            if (!vision.isScoringCameraConnected()) {
+                leds.setAnimation(leds.rainbow);
+                return;
+            }
+
+            if (RobotState.isDisabled()) {
+                leds.setAnimation(Robot.isBlue() ? leds.blueFade : leds.redFade);
+                return;
+            }
+
+            leds.setAnimation(leds.blueTwinkle);
+        }));
 
         //using the doneIntaking & hasCoral triggers to pass on to arm
 

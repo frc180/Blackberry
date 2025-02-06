@@ -270,6 +270,10 @@ public class VisionSubsystem extends SubsystemBase {
         return new Pose3d(coralPose);
     }
 
+    public boolean isScoringCameraConnected() {
+        return inputs.scoringCameraConnected;
+    }
+
     public PoseEstimate validatePoseEstimate(PoseEstimate poseEstimate, double deltaSeconds) {
         if (poseEstimate == null) return null;
 

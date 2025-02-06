@@ -30,6 +30,8 @@ public class Constants {
     public static final int ELEVATOR_ARM_ALGAE_SENSOR = 4;
     public static final int INTALE_ALGAE_SENSOR = 5;
 
+    public static final int CANDLE = 40;
+
 
     
     
