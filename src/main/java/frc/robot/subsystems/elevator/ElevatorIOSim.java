@@ -21,6 +21,11 @@ public class ElevatorIOSim implements ElevatorIO {
     }
 
     @Override
+    public void setVoltage(double volts) {
+        setPower(volts / 12);
+    }
+
+    @Override
     public void setPosition(double encoderPosition) {
         target = encoderPosition;
         usingPID = true;

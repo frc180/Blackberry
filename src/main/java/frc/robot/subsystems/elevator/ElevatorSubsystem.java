@@ -3,10 +3,16 @@
 // the WPILib BSD license file in the root directory of this project.
 
 package frc.robot.subsystems.elevator;
+
+import static edu.wpi.first.units.Units.Second;
+import static edu.wpi.first.units.Units.Volts;
+import java.util.function.BooleanSupplier;
+import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Robot;
 import frc.robot.subsystems.elevator.ElevatorIO.ElevatorIOInputs;
 import frc.robot.util.simulation.SimVisuals;
@@ -28,6 +34,21 @@ public class ElevatorSubsystem extends SubsystemBase {
 
   public Trigger elevatorInPosition = new Trigger(() -> isElevatorInPosition());
   public Trigger elevatorInScoringPosition = new Trigger(() -> isElevatorInScoringPosition());
+
+
+  private final SysIdRoutine sysIdRoutine = new SysIdRoutine(
+      new SysIdRoutine.Config(
+          Volts.per(Second).of(1), // Ramp rate
+          Volts.of(1), // Dynamic step voltage
+          null,        // Use default timeout (10 s)
+          state -> SignalLogger.writeString("ElevatorSysId_State", state.toString())
+      ),
+      new SysIdRoutine.Mechanism(
+          output -> io.setVoltage(output.in(Volts)),
+          null,
+          this
+      )
+  );
 
   public ElevatorSubsystem() {
     inputs = new ElevatorIOInputs();
@@ -74,6 +95,26 @@ public class ElevatorSubsystem extends SubsystemBase {
     return this.run(() -> {
       setPositionDirect(encoderPosition);
     });
+  }
+
+  public Command sysidQuasi(SysIdRoutine.Direction direction) {
+    return sysIdRoutine.quasistatic(direction).until(sysIdEnd(direction));
+  }
+
+  public Command sysidDynamic(SysIdRoutine.Direction direction) {
+    return sysIdRoutine.dynamic(direction).until(sysIdEnd(direction));
+  }
+
+  public BooleanSupplier sysIdEnd(SysIdRoutine.Direction direction) {
+    return direction == SysIdRoutine.Direction.kReverse ? this::isAtLowerLimit : this::isAtUpperLimit;
+  }
+
+  public boolean isAtUpperLimit() {
+    return inputs.position > NET;
+  }
+
+  public boolean isAtLowerLimit() {
+    return inputs.position <= 0;
   }
 
   public boolean isElevatorInPosition() {

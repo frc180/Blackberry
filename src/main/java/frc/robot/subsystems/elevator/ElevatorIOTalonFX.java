@@ -50,12 +50,12 @@ public class ElevatorIOTalonFX implements ElevatorIO {
         // config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = -0.01;
         config.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
         // config.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
-        config.Slot0.kP = 1;
+        config.Slot0.kP = 0.97;
         config.Slot0.kI = 0;
         config.Slot0.kD = 0;
-        config.Slot0.kG = 0.405;
-        config.Slot0.kV = 0.86;
-        config.Slot0.kA = 0.01;
+        config.Slot0.kG = 0.4031;
+        config.Slot0.kV = 0.78;
+        config.Slot0.kA = 0.0017552;
         config.Slot0.GravityType = GravityTypeValue.Elevator_Static;
         config.MotionMagic.MotionMagicJerk = 0;
         // normal MotionMagic config
@@ -103,6 +103,11 @@ public class ElevatorIOTalonFX implements ElevatorIO {
     }
 
     @Override
+    public void setVoltage(double volts) {
+        motorA.setControl(voltageControl.withOutput(volts));
+    }
+
+    @Override
     public void setPosition(double encoderPosition) {
         // motorA.setControl(motionMagicControl.withPosition(encoderPosition));
         motorA.setControl(motionMagicExpoControl.withPosition(encoderPosition));
@@ -111,6 +116,7 @@ public class ElevatorIOTalonFX implements ElevatorIO {
     @Override
     public void update(ElevatorIOInputs inputs) {
         inputs.position = motorA.getPosition(true).getValueAsDouble();
+        inputs.velocity = motorA.getVelocity(true).getValueAsDouble();
         inputs.voltage = motorA.getMotorVoltage(true).getValueAsDouble();
         inputs.target = motorA.getClosedLoopReference(true).getValueAsDouble();
     }
@@ -119,15 +125,12 @@ public class ElevatorIOTalonFX implements ElevatorIO {
     @Override
     public void simulationPeriodic() {
         elevatorSim.setInput(motorASim.getMotorVoltage());
-        elevatorSim.update(0.020);
-
-        RoboRioSim.setVInVoltage(
-            BatterySim.calculateDefaultBatteryLoadedVoltage(elevatorSim.getCurrentDrawAmps())
-        );
+        elevatorSim.update(0.020);;
 
         motorSims.forEach(motorSim -> {
             motorSim.setRawRotorPosition(elevatorSim.getPositionMeters() * metersToMotorRotations);
-            motorSim.setSupplyVoltage(RobotController.getBatteryVoltage());
+            motorSim.setRotorVelocity(elevatorSim.getVelocityMetersPerSecond() * metersToMotorRotations);
+            motorSim.setSupplyVoltage(12);
         });
     }
 }
