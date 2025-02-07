@@ -116,6 +116,25 @@ public abstract class SimLogic {
         );
     }
 
+    public static void netAlgae() {
+        if (!RobotContainer.MAPLESIM) {
+            return;
+        }
+
+        SwerveDriveSimulation swerveSim = RobotContainer.instance.drivetrain.getDriveSim();
+        Pose2d simRobotPose = swerveSim.getSimulatedDriveTrainPose();
+    
+        SimulatedArena.getInstance().addGamePieceProjectile(new ReefscapeAlgaeOnFly(
+            simRobotPose.getTranslation(),
+            new Translation2d(0, 0), // scoring mechanism position on the robot
+            swerveSim.getDriveTrainSimulatedChassisSpeedsFieldRelative(),
+            simRobotPose.getRotation().rotateBy(Rotation2d.kZero),
+            Meters.of(ElevatorSubsystem.NET), // outtake height
+            MetersPerSecond.of(6), // outtake speed
+            Degrees.of(85))
+        );
+    }
+
     private static double randomNumberPlusMinus(double range) {
         return Math.random() * (range * 2) - range;
     }

@@ -49,5 +49,9 @@ public class ElevatorArmAlgaeSubsystem extends SubsystemBase{
             io.reverse();
         });
     }
+
+    public void reverseDirect() {
+        io.reverse();
+    }
     
 }

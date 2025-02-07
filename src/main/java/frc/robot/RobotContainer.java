@@ -173,7 +173,7 @@ public class RobotContainer {
         //algae
         final Trigger algaeMode = driverController.povDown();
         final Trigger driverProcessor = algaeMode.and(driverController.x());
-        final Trigger driverBarge = algaeMode.and(driverController.rightBumper());
+        final Trigger driverNet = algaeMode.and(driverController.rightBumper());
         final Trigger driverSpitAlgae = algaeMode.and(driverController.y());
         final Trigger driverIntakeAlgae = algaeMode.and(driverController.leftTrigger());
         //climb (must be in algae mode)
@@ -215,7 +215,7 @@ public class RobotContainer {
         // driverController.start().whileTrue(drivetrain.wheelRadiusCharacterization(1));
         
         // test outtaking coral
-        driverController.start().onTrue(Commands.runOnce(() -> SimLogic.outtakeAlgae()));
+        driverSpitAlgae.onTrue(Commands.runOnce(() -> SimLogic.outtakeAlgae()));
 
         // Driver Coral Intake
         coralIntakeTrigger = driverIntake.or(autoCoralIntake).and(robotHasCoral.negate());
@@ -246,7 +246,7 @@ public class RobotContainer {
                             .onFalse(intakeAlgaePivot.stow().alongWith(intakeAlgae.stopIntake()));
 
         
-                            
+
         //climbing sequence
         driverReadyClimb.whileTrue(intakeAlgaePivot.readyClimb());
         driverStartClimb.whileTrue(intakeAlgaePivot.stow()); //didnt put any onFalse commands because once we climb we physically cannot un-climb
@@ -314,8 +314,7 @@ public class RobotContainer {
         elevator.elevatorInScoringPosition.and(elevator.elevatorInPosition).whileTrue(Commands.print("EELVATOR IS IN SCROIGN POSITITIONSS"));
 
         // Coral scoring sequence - kCancelIncoming means nothing else will be able to stop this command until it finishes
-        // TODO: Add trigger that ensures coral arm is in the position needed to score at this level
-        atReef.and(elevator.elevatorInScoringPosition).onTrue(
+        atReef.and(elevator.elevatorInScoringPosition).and(elevatorArmPivot.elevatorArmInScoringPosition).onTrue(
             Commands.sequence(
                 drivetrain.runOnce(() -> drivetrain.drive(new ChassisSpeeds())),
                 // TODO: eject coral from arm
@@ -350,6 +349,43 @@ public class RobotContainer {
             new RumbleCommand(1).withTimeout(0.5)
                 .alongWith(Commands.runOnce(() -> Robot.justScoredCoral = false))
         );
+
+        //scoring algae net
+        //TODO- make sure the elevatorAlgaeArm either already has an algae or the robot has an algae via algae intake (elevatorArmAlgae needs to grab it from the robot)
+        /*
+        driverNet.onTrue(elevator.setPosition(ElevatorSubsystem.NET).alongWith(elevatorArmPivot.netScorePosition()))
+                    .onFalse(elevator.setPosition(0).alongWith(elevatorArmPivot.stowPosition()));
+        */
+
+        //if arm does not have algae already
+        driverNet.and(intakeAlgae.hasAlgae).onTrue(
+            Commands.sequence(
+                elevator.setPosition(ElevatorSubsystem.L1),
+                elevatorArmPivot.receiveAlgaePosition()
+            )
+        );
+
+        //if arm already has algae
+        driverNet.and(elevatorArmAlgae.hasAlgae).onTrue(
+            Commands.parallel(
+            elevator.setPosition(ElevatorSubsystem.NET),
+            elevatorArmPivot.netScorePosition()
+            )
+        );
+
+        //scoring the algae
+        driverNet.and(elevator.elevatorInScoringPosition).and(elevatorArmPivot.elevatorArmInScoringPosition).and(elevatorArmAlgae.hasAlgae).whileTrue(
+            Commands.parallel(
+                elevatorArmAlgae.reverse(),
+                Commands.runOnce(() -> {
+                    if (Robot.isSimulation()) {
+                        SimLogic.netAlgae();
+                        SimLogic.armHasAlgae = false;
+                    }
+                })
+            )
+        ).onFalse(elevator.setPosition(0).alongWith(elevatorArmPivot.stowPosition(), elevatorArmAlgae.stop()));
+
 
         Command autoHPDrive = Commands.either(
             Auto.driveToHPStationFar(),

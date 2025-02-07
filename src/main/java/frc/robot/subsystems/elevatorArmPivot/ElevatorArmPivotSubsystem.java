@@ -14,15 +14,18 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
     private ElevatorArmPivotIO io;
     private ElevatorArmPivotIOInputs inputs;
 
-    public final double receiving = 45;
-    public final double horizontal = 0;
-    public final double score = -45;
-    public final double L1Score = -60;
-    public final double grabAlgaePosition = 90;
+    public static final double receiving = 45;
+    public static final double algaeReceive = -70;
+    public static final double horizontal = 0;
+    public static final double score = 0;
+    public static final double L1Score = -60;
+    public static final double grabAlgaePosition = 90;
+    public static final double netPosition = -90;
 
     public double targetPosition = 0;
 
     public Trigger elevatorArmInPosition = new Trigger(() -> isElevatorArmInPosition());
+    public Trigger elevatorArmInScoringPosition = new Trigger (() -> isElevatorArmInScoringPosition());
 
     public ElevatorArmPivotSubsystem() {
         inputs = new ElevatorArmPivotIOInputs();
@@ -71,6 +74,19 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
         });
     }
 
+    public Command netScorePosition() {
+        return this.run (() -> {
+            io.setPosition(netPosition);
+            targetPosition = netPosition;
+        });
+    }
+
+    public Command receiveAlgaePosition() {
+        return this.run (() -> {
+            io.setPosition(algaeReceive);
+        });
+    }
+
     public boolean isElevatorArmInPosition() {
         if (Math.abs(targetPosition - inputs.position) <= 0.025) {
             return true;
@@ -85,7 +101,11 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
     }
 
     public boolean isAtReceivingPosition() {
-        return (targetPosition == receiving) && isElevatorArmInPosition();
+        return (targetPosition == receiving || targetPosition == algaeReceive) && isElevatorArmInPosition();
+    }
+
+    public boolean isElevatorArmInScoringPosition() {
+        return isElevatorArmInPosition() && (targetPosition == score || targetPosition == L1Score || targetPosition == netPosition);
     }
 
 
