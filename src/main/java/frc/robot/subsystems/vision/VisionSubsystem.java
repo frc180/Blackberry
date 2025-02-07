@@ -185,6 +185,10 @@ public class VisionSubsystem extends SubsystemBase {
                 bestReefID = closestTagAndPose.getKey();
             }
         }
+
+        if (bestReefID != -1) {
+            lastReefID = bestReefID;
+        }
     }
 
     

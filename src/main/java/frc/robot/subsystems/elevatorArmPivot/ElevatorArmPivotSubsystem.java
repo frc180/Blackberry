@@ -28,7 +28,7 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
 
     public ElevatorArmPivotSubsystem() {
         inputs = new ElevatorArmPivotIOInputs();
-        io = new ElevatorArmPivotIOSim();
+        io = new ElevatorArmPivotIOTalonFX();
     }
 
     @Override
