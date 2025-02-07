@@ -8,6 +8,7 @@ import java.util.Map.Entry;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.epilogue.NotLogged;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -16,6 +17,8 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Robot;
 import frc.robot.RobotContainer;
@@ -73,6 +76,8 @@ public class VisionSubsystem extends SubsystemBase {
     private Pose2d scoringPoseEstimatePose = Pose2d.kZero;
     private double poseEstimateDiffX, poseEstimateDiffY, poseEstimateDiffTheta;
     
+    private Alert scoringCameraDisconnectedAlert = new Alert("Scoring Camera disconnected!", AlertType.kError);
+
     @SuppressWarnings("unused")
     public VisionSubsystem() {
         try {
@@ -114,6 +119,8 @@ public class VisionSubsystem extends SubsystemBase {
     @Override
     public void periodic() {
         io.update(inputs);
+
+        scoringCameraDisconnectedAlert.set(!inputs.scoringCameraConnected);
 
         // Update odometry using Limelight in apriltag mode
         // scoringPoseEstimate = validatePoseEstimate(LimelightHelpers.getBotPoseEstimate_wpiBlue(SCORING_LIMELIGHT), 0);
@@ -170,7 +177,6 @@ public class VisionSubsystem extends SubsystemBase {
             }
 
             bestReefID = getReefTag(inputs.scoringFiducials);
-            System.out.println(getLasReeftTagSeen());
         } else {
             // Simulate the vision system by selecting the closest reef tag to the robot position
             if (closestTagAndPose == null) {
@@ -238,6 +244,7 @@ public class VisionSubsystem extends SubsystemBase {
     /**
      * Returns the closest reef scoring pose to the robot (accounting for alliance), or null
      */
+    @NotLogged
     public Pose2d getClosestReefPose() {
         return closestReefPoseValid ? closestReefPose : null;
     }
@@ -259,6 +266,7 @@ public class VisionSubsystem extends SubsystemBase {
     /**
      * Returns the position of the closest detected coral, or null
      */
+    @NotLogged
     public Pose2d getCoralPose() {
         return coralPoseValid ? coralPose : null;
     }
@@ -296,15 +304,7 @@ public class VisionSubsystem extends SubsystemBase {
         return poseEstimate;
     }
 
-    public int getLasReeftTagSeen() {
-        if (bestReefID != -1) {
-            lastReefID = bestReefID;
-            return lastReefID;
-        } else {
-            return lastReefID;
-        }
-    }
-
+    @NotLogged
     public boolean reefVisible() {
         boolean isReefVisible = false;
         for (int i = 0; i < inputs.scoringFiducials.length; i++) {

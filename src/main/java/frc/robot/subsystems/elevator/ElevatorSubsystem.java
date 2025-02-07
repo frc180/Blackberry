@@ -9,6 +9,7 @@ import static edu.wpi.first.units.Units.Volts;
 import java.util.function.BooleanSupplier;
 import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.epilogue.NotLogged;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -117,6 +118,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     return inputs.position <= 0;
   }
 
+  @NotLogged
   public boolean isElevatorInPosition() {
     if (Math.abs(targetPosition - inputs.position) <= 0.025) {
       return true;
@@ -125,6 +127,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     }
   }
 
+  @NotLogged
   public boolean isElevatorInScoringPosition(){
     if ((targetPosition  != 0) && (Math.abs(targetPosition - inputs.position) <= 0.025)){
       return true;

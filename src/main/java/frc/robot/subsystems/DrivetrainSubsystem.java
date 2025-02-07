@@ -1,13 +1,10 @@
 package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.*;
-
 import java.util.List;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
-
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
-
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
@@ -24,26 +21,24 @@ import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.path.Waypoint;
 import com.pathplanner.lib.util.FlippingUtil;
 import com.spamrobotics.util.Helpers;
-
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.NotLogged;
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.kinematics.Odometry;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.Subsystem;
@@ -114,6 +109,9 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     private double yPosition = 0;
     private double xPidTarget = 0;
     private double yPidTarget = 0;
+
+    private boolean pigeonConnected = false;
+    private Alert pigeonDisconnectedAlert = new Alert("Pigeon gyro disconnected!", AlertType.kError);
 
     private RobotConfig config;
 
@@ -251,10 +249,12 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         setControl(m_pathApplyRobotSpeeds.withSpeeds(speeds));
     }
 
+    @NotLogged
     public Rotation2d getGyroscopeRotation() {
         return Rotation2d.fromDegrees(getGyroscopeDegrees());
     }
 
+    @NotLogged
     public double getGyroscopeDegrees() {        
         return (-this.getPigeon2().getAngle()) - gyroOffset.getDegrees();
     }
@@ -274,14 +274,17 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         super.resetPose(pose);
     }
 
-    public boolean pigeonConnected() {
-        return getPigeon2().isConnected();
+    @NotLogged
+    public boolean isPigeonConnected() {
+        return pigeonConnected;
     }
 
+    @NotLogged
     public Double getTargetHeading() {
         return targetHeading;
     }
 
+    @NotLogged
     public HeadingTarget getTargetHeadingType() {
         return targetHeadingType;
     }
@@ -347,6 +350,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         return poseTargetType == PoseTarget.REEF && targetPose != null;
     }
 
+    @NotLogged
     public int getTargetPoseTag() {
         return targetPoseTag;
     }
@@ -397,6 +401,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         return mapleSimPose != null ? mapleSimPose : getPose();
     }
     
+    @NotLogged
     public Trigger targetingReef() {
         return new Trigger(this::isTargetingReefPose);
     }
@@ -553,13 +558,18 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
                 m_hasAppliedOperatorPerspective = true;
             });
         }
-        if (mapleSimSwerveDrivetrain != null) {
-            mapleSimPose = mapleSimSwerveDrivetrain.mapleSimDrive.getSimulatedDriveTrainPose();
-        }
+
+        pigeonConnected = getPigeon2().isConnected();
+        pigeonDisconnectedAlert.set(!pigeonConnected);
+
         xPosition = getPose().getX();
         yPosition = getPose().getY();
         xPidTarget = xPidController.getSetpoint().position;
         yPidTarget = yPidController.getSetpoint().position;
+
+        if (mapleSimSwerveDrivetrain != null) {
+            mapleSimPose = mapleSimSwerveDrivetrain.mapleSimDrive.getSimulatedDriveTrainPose();
+        }
     }
 
     public SwerveDriveSimulation getDriveSim() {

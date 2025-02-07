@@ -79,7 +79,6 @@ public class RobotContainer {
 
     @Logged(name = "Drivetrain")
     public final DrivetrainSubsystem drivetrain;
-
     @Logged(name = "Vision")
     public final VisionSubsystem vision;
     @Logged(name = "Algae Intake")
@@ -92,11 +91,11 @@ public class RobotContainer {
     public final IntakeCoralPivotSubsystem intakeCoralPivot;
     @Logged(name = "Elevator")
     public final ElevatorSubsystem elevator;
-    @Logged(name = "Elevator ArmP")
+    @Logged(name = "Elevator Arm Pivot")
     public final ElevatorArmPivotSubsystem elevatorArmPivot;
-    @Logged(name = "Elevator arm")
+    @Logged(name = "Elevator Arm")
     public final ElevatorArmSubsystem elevatorArm;
-    @Logged(name = "Elevator Arm Algea")
+    @Logged(name = "Elevator Arm Algae")
     public final ElevatorArmAlgaeSubsystem elevatorArmAlgae;
 
     private final SendableChooser<Command> autoChooser = new SendableChooser<Command>();

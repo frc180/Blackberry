@@ -79,7 +79,7 @@ public class DefaultDriveCommand extends Command {
 
         JoystickInputs inputs = m_joystickInputsSupplier.get();
         ChassisSpeeds speeds;
-        if (m_drivetrainSubsystem.pigeonConnected()) {
+        if (m_drivetrainSubsystem.isPigeonConnected()) {
             speeds = ChassisSpeeds.fromFieldRelativeSpeeds(inputs.x, inputs.y, rotationSpeed, gyroRotation);
         } else {
             speeds = new ChassisSpeeds(inputs.x, inputs.y, rotationSpeed);

@@ -4,7 +4,6 @@ import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.subsystems.elevatorArmPivot.ElevatorArmPivotIO;
 import frc.robot.subsystems.elevatorArmPivot.ElevatorArmPivotIO.ElevatorArmPivotIOInputs;
 import frc.robot.util.simulation.SimVisuals;
 
@@ -44,60 +43,44 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
     }
 
     public Command receivePosition() {
-        return this.run(() -> {
-            io.setPosition(receiving);
-            targetPosition = receiving;
-        });
+        return setPosition(receiving);
     }
 
     public Command stowPosition() {
-        return this.run (() -> {
-            io.setPosition(horizontal);
-            targetPosition = horizontal;
-
-        });
+        return setPosition(horizontal);
     }
 
     public Command scorePosition() {
-        return this.run(() -> {
-            io.setPosition(score);
-            targetPosition = score;
-
-        });
+        return setPosition(score);
     }
 
     public Command lowScorePosition() {
-        return this.run (() -> {
-            io.setPosition(L1Score);
-            targetPosition = L1Score;
-
-        });
+        return setPosition(L1Score);
     }
 
     public Command netScorePosition() {
-        return this.run (() -> {
-            io.setPosition(netPosition);
-            targetPosition = netPosition;
-        });
+        return setPosition(netPosition);
     }
 
     public Command receiveAlgaePosition() {
-        return this.run (() -> {
-            io.setPosition(algaeReceive);
-        });
+        return setPosition(algaeReceive);
     }
 
-    public boolean isElevatorArmInPosition() {
-        if (Math.abs(targetPosition - inputs.position) <= 0.025) {
-            return true;
-        } else {
-            return false;
-        }
+    public Command setPosition(double position) {
+        return run(() -> setArmPositionDirect(position));
     }
 
     public void setArmPositionDirect(double position) {
         io.setPosition(position);
         targetPosition = position;
+    }
+
+    public boolean isElevatorArmInPosition() {
+        if (Math.abs(targetPosition - inputs.position) <= 2) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     public boolean isAtReceivingPosition() {
