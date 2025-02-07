@@ -25,11 +25,7 @@ public class IntakeAlgaePivotSubsystem extends SubsystemBase {
     public IntakeAlgaePivotSubsystem() {
         inputs = new IntakeAlgaePivotIOInputs();
 
-        if(Robot.isReal()) {
-            io = new IntakeAlgaePivotIOTalonFXS();
-        } else {
-            io = new IntakeAlgaePivotIOSim();
-        }
+        io = new IntakeAlgaePivotIOTalonFXS();
     }
 
     @Override
