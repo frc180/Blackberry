@@ -1,5 +1,6 @@
 package frc.robot.subsystems.elevatorArm;
 
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -19,9 +20,10 @@ public class ElevatorArmIOTalonFX implements ElevatorArmIO {
     boolean readyForCoral = false;
 
     public ElevatorArmIOTalonFX() {
+        TalonFXConfiguration config = new TalonFXConfiguration();
         rollerMotor = new TalonFX(Constants.ELEVATOR_ARM_TALON);
+        rollerMotor.getConfigurator().apply(config);
         rollerMotor.setNeutralMode(NeutralModeValue.Brake);
-        rollerMotor.setInverted(false);
 
         frontSensor = new DigitalInput(Constants.ELEVATOR_ARM_FRONT_SENSOR);
         middleSensor = new DigitalInput(Constants.ELEVATOR_ARM_MIDDLE_SENSOR);

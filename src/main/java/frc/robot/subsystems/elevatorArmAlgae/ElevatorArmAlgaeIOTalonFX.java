@@ -1,5 +1,6 @@
 package frc.robot.subsystems.elevatorArmAlgae;
 
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import edu.wpi.first.wpilibj.DigitalInput;
@@ -13,7 +14,9 @@ public class ElevatorArmAlgaeIOTalonFX implements ElevatorArmAlgaeIO{
     VoltageOut voltageControl;
     
     public ElevatorArmAlgaeIOTalonFX() {
+        TalonFXConfiguration config = new TalonFXConfiguration();
         motor = new TalonFX(Constants.ELEVATOR_ARM_ALGAE);
+        motor.getConfigurator().apply(config);
         sensor = new DigitalInput(Constants.ELEVATOR_ARM_ALGAE_SENSOR);
         voltageControl = new VoltageOut(0);
     }

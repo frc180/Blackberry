@@ -1,5 +1,6 @@
 package frc.robot.subsystems.IntakeCoral;
 
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -13,8 +14,9 @@ public class IntakeCoralIOTalonFXS implements IntakeCoralIO{
     VoltageOut voltageControl;
 
     public IntakeCoralIOTalonFXS() {
+        TalonFXConfiguration config = new TalonFXConfiguration();
         intakeMotor = new TalonFX(Constants.INTAKE_CORAL_TALON);
-        intakeMotor.setInverted(false);
+        intakeMotor.getConfigurator().apply(config);
         intakeMotor.setNeutralMode(NeutralModeValue.Brake);
         
         intakeSensor = new DigitalInput(Constants.INTAKE_CORAL_SENSOR);   

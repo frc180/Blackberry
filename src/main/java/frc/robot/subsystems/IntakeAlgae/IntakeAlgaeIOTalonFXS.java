@@ -15,8 +15,8 @@ public class IntakeAlgaeIOTalonFXS implements IntakeAlgaeIO {
     DigitalInput sensor;
 
     public IntakeAlgaeIOTalonFXS() {
-        intakeMotor = new TalonFX(Constants.INTAKE_ALGAE_TALON);
         TalonFXConfiguration config = new TalonFXConfiguration();
+        intakeMotor = new TalonFX(Constants.INTAKE_ALGAE_TALON);
         intakeMotor.getConfigurator().apply(config);
         intakeMotor.setNeutralMode(NeutralModeValue.Brake);
 
