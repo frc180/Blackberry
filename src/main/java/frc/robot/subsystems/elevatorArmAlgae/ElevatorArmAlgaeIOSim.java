@@ -11,9 +11,6 @@ import frc.robot.util.simulation.SimLogic;
 public class ElevatorArmAlgaeIOSim implements ElevatorArmAlgaeIO{
 
     double speed = 0;
-    boolean fromReef;
-    boolean fromIntake;
-    boolean hasAlgae;
     boolean readyForScore;
 
     public ElevatorArmAlgaeIOSim() {}
@@ -41,8 +38,8 @@ public class ElevatorArmAlgaeIOSim implements ElevatorArmAlgaeIO{
         ElevatorArmPivotSubsystem elevatorArmPivot = RobotContainer.instance.elevatorArmPivot;
         IntakeAlgaeSubsystem algaeIntake = RobotContainer.instance.intakeAlgae;
 
-        fromReef = elevator.isElevatorInReefAlgaePosition() && elevatorArmPivot.isElevatorArmInScoringPosition();
-        fromIntake = algaeIntake.hasAlgae.getAsBoolean() && elevatorArmPivot.isAtReceivingPosition();
+        boolean fromReef = elevator.isElevatorInReefAlgaePosition() && elevatorArmPivot.isElevatorArmInScoringPosition();
+        boolean fromIntake = algaeIntake.hasAlgae.getAsBoolean() && elevatorArmPivot.isAtReceivingPosition();
 
         if (SimLogic.armHasAlgae) {
             if (speed < 0) {
