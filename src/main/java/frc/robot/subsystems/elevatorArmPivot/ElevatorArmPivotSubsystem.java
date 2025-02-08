@@ -18,8 +18,7 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
     public static final double horizontal = 0;
     public static final double score = 0;
     public static final double L1Score = -60;
-    public static final double grabAlgaePosition = 90;
-    public static final double netPosition = -90;
+    public static final double netPosition = -80;
 
     public double targetPosition = 0;
 
@@ -91,6 +90,16 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
         return isElevatorArmInPosition() && (targetPosition == score || targetPosition == L1Score || targetPosition == netPosition);
     }
 
+    public Command test() {
+        return this.run(() -> {
+          io.runMotorTest();
+        });
+    }
 
+    public Command stop() {
+        return this.run(() -> {
+            io.stopMotor();
+        });
+    }
     
 }

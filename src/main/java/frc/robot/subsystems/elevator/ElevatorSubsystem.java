@@ -118,7 +118,6 @@ public class ElevatorSubsystem extends SubsystemBase {
     return inputs.position <= 0;
   }
 
-  @NotLogged
   public boolean isElevatorInPosition() {
     if (Math.abs(targetPosition - inputs.position) <= 0.025) {
       return true;
@@ -134,6 +133,26 @@ public class ElevatorSubsystem extends SubsystemBase {
     } else {
       return false;
     }
+  }
+
+  public boolean isElevatorInReefAlgaePosition() {
+    if (targetPosition == L2 || targetPosition == L3) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  public Command test() {
+    return this.run(() -> {
+      io.runMotorTest();
+    });
+  }
+
+  public Command stop() {
+    return this.run(() -> {
+      io.stopMotor();
+    });
   }
 
   public void setPositionDirect(double encoderPosition) {

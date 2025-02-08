@@ -40,6 +40,11 @@ public class IntakeAlgaeIOTalonFXS implements IntakeAlgaeIO {
         setSpeed(0);
     }
 
+    @Override
+    public void spit() {
+        setSpeed(-1);
+    }
+
     /**
      * Sets the speed (-1 to 1) of the intake
      */
@@ -49,5 +54,11 @@ public class IntakeAlgaeIOTalonFXS implements IntakeAlgaeIO {
 
     private void setVoltage(double voltage) {
         intakeMotor.setControl(voltageControl.withOutput(voltage));
+    }
+
+    @Override
+    public void runMotorTest() {
+        System.out.println("algae intake running");
+        intakeMotor.set(0.25);
     }
 }

@@ -70,4 +70,10 @@ public class IntakeCoralIOSim implements IntakeCoralIO {
     public void stopRollers() {
         rollerSpeed = 0;
     }
+
+    @Override
+    public void runMotorTest() {
+        System.out.println("intake coral test");
+
+    }
 }

@@ -14,7 +14,7 @@ public class ElevatorArmPivotIOSim implements ElevatorArmPivotIO{
     ElevatorArmPivotIOInputs input = new ElevatorArmPivotIOInputs();
 
     public ElevatorArmPivotIOSim() {
-        pid = new PIDController(0.01, 0, 0);
+        pid = new PIDController(0.05, 0, 0);
     }
 
     @Override
@@ -40,6 +40,17 @@ public class ElevatorArmPivotIOSim implements ElevatorArmPivotIO{
     @Override
     public void simulationPeriodic() {
         position += speed * 8;
+    }
+
+    @Override
+    public void runMotorTest() {
+        System.out.println("elevator arm pivot test");
+
+    }
+
+    @Override
+    public void stopMotor() {
+        speed = 0;
     }
 
 }

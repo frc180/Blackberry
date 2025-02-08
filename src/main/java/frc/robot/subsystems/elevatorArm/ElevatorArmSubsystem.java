@@ -47,6 +47,10 @@ public class ElevatorArmSubsystem extends SubsystemBase{
         });
     }
 
-
+    public Command test() {
+        return this.run(() -> {
+          io.runMotorTest();
+        });
+      }
     
 }

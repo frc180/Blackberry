@@ -47,5 +47,10 @@ public class ElevatorArmAlgaeIOTalonFX implements ElevatorArmAlgaeIO{
 
     private void setVoltage(double volts) {
         motor.setControl(voltageControl.withOutput(volts));
+   }
+
+    public void runMotorTest() {
+        System.out.println("elevator arm algae running");
+        motor.set(0.25);
     }
 }

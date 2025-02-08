@@ -65,7 +65,13 @@ public class IntakeCoralPivotIOTalonFXS implements IntakeCoralPivotIO {
         inputs.voltage = motor.getMotorVoltage().getValueAsDouble();
     }
 
-    public void stop() {
+    public void stopMotor() {
         motor.stopMotor();
+    }
+
+    @Override
+    public void runMotorTest() {
+        System.out.println("coral intake pivot running");
+        motor.set(0.25);
     }
 }

@@ -131,7 +131,7 @@ public abstract class SimLogic {
             simRobotPose.getRotation().rotateBy(Rotation2d.kZero),
             Meters.of(ElevatorSubsystem.NET), // outtake height
             MetersPerSecond.of(6), // outtake speed
-            Degrees.of(85))
+            Degrees.of(75))
         );
     }
 

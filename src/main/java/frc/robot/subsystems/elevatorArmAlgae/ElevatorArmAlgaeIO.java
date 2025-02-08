@@ -17,4 +17,6 @@ public interface ElevatorArmAlgaeIO {
     public void reverse();
 
     public void update(ElevatorArmAlgaeInputs inputs);
+    
+    public void runMotorTest();
 }

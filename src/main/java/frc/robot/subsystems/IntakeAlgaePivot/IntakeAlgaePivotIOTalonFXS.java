@@ -108,4 +108,15 @@ public class IntakeAlgaePivotIOTalonFXS implements IntakeAlgaePivotIO{
     public void setPosition(double encoderPosition) {
         pivotMotorA.setControl(motionMagicControl.withPosition(encoderPosition));
     }
+
+    public void runMotorTest() {
+        System.out.println("algae intake pivot running");
+        pivotMotorA.set(0.25); //pivotMotorB is follower
+    }
+
+    @Override
+    public void stopMotor() {
+        pivotMotorA.stopMotor();
+        pivotMotorB.stopMotor();
+    }
 }

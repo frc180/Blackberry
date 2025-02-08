@@ -68,4 +68,10 @@ public class ElevatorArmIOTalonFX implements ElevatorArmIO {
     private void setVoltage(double volts) {
         rollerMotor.setControl(voltageControl.withOutput(volts));
     }
+
+    @Override
+    public void runMotorTest() {
+        System.out.println("elevator arm running");
+        rollerMotor.set(0.25);
+    }
 }

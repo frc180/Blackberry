@@ -54,9 +54,13 @@ public class VisionSubsystem extends SubsystemBase {
 
     private List<Integer> redTags = List.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11);
     private List<Integer> blueTags = List.of(12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22);
+    private int redProcessorTag = 3;
+    private int blueProcessorTag = 16;
 
     private final Transform2d leftReefTransform = new Transform2d(0.55, -0.15, Rotation2d.fromDegrees(180));
     private final Transform2d rightReefTransform = new Transform2d(0.55, 0.15, Rotation2d.fromDegrees(180));
+
+    private final Transform2d processorTransform = new Transform2d(0.55, 0.0, Rotation2d.fromDegrees(90));
 
     public final HashMap<Integer, Pose2d> leftReefHashMap = new HashMap<>();
     public final HashMap<Integer, Pose2d> rightReefHashMap = new HashMap<>();
@@ -75,6 +79,9 @@ public class VisionSubsystem extends SubsystemBase {
     private Pose2d scoringPoseEstimatePoseUnfiltered = Pose2d.kZero;
     private Pose2d scoringPoseEstimatePose = Pose2d.kZero;
     private double poseEstimateDiffX, poseEstimateDiffY, poseEstimateDiffTheta;
+
+    private Pose2d redProcessorPose;
+    private Pose2d blueProcessorPose;
     
     private Alert scoringCameraDisconnectedAlert = new Alert("Scoring Camera disconnected!", AlertType.kError);
 
@@ -114,6 +121,9 @@ public class VisionSubsystem extends SubsystemBase {
 
         reefProximity = new ReefProximity(leftReefHashMap, rightReefHashMap);
         coralDetector = Robot.isReal() ? new CoralDetectorReal() : new CoralDetectorSim(4.0, true);
+
+        redProcessorPose = calculateProcessorPose(false);
+        blueProcessorPose = calculateProcessorPose(true);
     }
 
     @Override
@@ -233,6 +243,20 @@ public class VisionSubsystem extends SubsystemBase {
         }
     }
 
+    public Pose2d calculateProcessorPose(boolean blue) {
+        int tagID;
+        if (blue) {
+            tagID = blueProcessorTag;
+        } else {
+            tagID = redProcessorTag;
+        }
+
+        Optional<Pose3d> pose3d = aprilTagFieldLayout.getTagPose(tagID);
+        if (pose3d.isEmpty()) return null;
+
+        return pose3d.get().toPose2d().transformBy(processorTransform);
+    }
+
     /**
      * Returns a scoring pose for the reef based on the last reef tag seen and the alliance color
      * @param left whether to return the left branch or the right branch scoring pose
@@ -242,6 +266,14 @@ public class VisionSubsystem extends SubsystemBase {
             return leftReefHashMap.get(lastReefID);
         } else {
             return rightReefHashMap.get(lastReefID);
+        }
+    }
+
+    public Pose2d getProcessorPose(boolean blue) {
+        if (blue) {
+            return blueProcessorPose;
+        } else {
+            return redProcessorPose;
         }
     }
     

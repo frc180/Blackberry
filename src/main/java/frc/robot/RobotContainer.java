@@ -167,7 +167,7 @@ public class RobotContainer {
         // Driver buttons
         //coral
         final Trigger driverIntake = driverController.leftTrigger().and(driverController.povDown().negate());
-        final Trigger driverL1 = driverController.y(); //processor is different than spit because processor will have autoalign
+        final Trigger driverL1 = driverController.y();
         final Trigger driverL2 = driverController.leftBumper();
         final Trigger driverL3 = driverController.rightTrigger();
         final Trigger driverL4 = driverController.rightBumper();
@@ -218,7 +218,14 @@ public class RobotContainer {
         // driverController.start().whileTrue(drivetrain.wheelRadiusCharacterization(1));
         
         // test outtaking coral
-        driverSpitAlgae.onTrue(Commands.runOnce(() -> SimLogic.outtakeAlgae()));
+        driverSpitAlgae.onTrue(Commands.parallel(
+            intakeAlgae.spit(),
+            Commands.runOnce(() -> {
+                if (Robot.isSimulation()) {
+                    SimLogic.outtakeAlgae();
+                }
+            })
+        ));
 
         // Driver Coral Intake
         coralIntakeTrigger = driverIntake.or(autoCoralIntake).and(robotHasCoral.negate());
@@ -261,6 +268,22 @@ public class RobotContainer {
 
         driverRightReef.whileTrue(new DriveToPose(drivetrain, () -> vision.getReefPose(false))
                                         .withPoseTargetType(PoseTarget.REEF));
+
+        //processor alignment
+        driverProcessor.whileTrue(new DriveToPose(drivetrain, () -> vision.getProcessorPose(Robot.isBlue()))
+                                        .withPoseTargetType(PoseTarget.PROCESSOR));
+
+        Trigger atProcessor = drivetrain.targetingProcessor()
+                                    .and(drivetrain.withinTargetPoseTolerance(0.04, 0.04, 5.0));
+
+        driverProcessor.and(atProcessor).and(intakeAlgae.hasAlgae).whileTrue(Commands.parallel(
+            intakeAlgae.spit(),
+            Commands.runOnce(() -> {
+                if (Robot.isSimulation()) {
+                    SimLogic.outtakeAlgae();
+                }
+            })
+        ));
 
 
         // Example of using the targetHeadingContinuous to make the robot point towards the closest side of the reef
@@ -360,19 +383,14 @@ public class RobotContainer {
         );
 
         //scoring algae net
-        //TODO- make sure the elevatorAlgaeArm either already has an algae or the robot has an algae via algae intake (elevatorArmAlgae needs to grab it from the robot)
-        /*
-        driverNet.onTrue(elevator.setPosition(ElevatorSubsystem.NET).alongWith(elevatorArmPivot.netScorePosition()))
-                    .onFalse(elevator.setPosition(0).alongWith(elevatorArmPivot.stowPosition()));
-        */
-
         //if arm does not have algae already
         driverNet.and(intakeAlgae.hasAlgae).onTrue(
-            Commands.sequence(
+            Commands.parallel(
                 elevator.setPosition(ElevatorSubsystem.L1),
-                elevatorArmPivot.receiveAlgaePosition()
+                elevatorArmPivot.receiveAlgaePosition(),
+                elevatorArmAlgae.run()
             )
-        );
+        );//.onFalse(Commands.parallel(elevator.setPosition(0), elevatorArmPivot.stowPosition()));
 
         //if arm already has algae
         driverNet.and(elevatorArmAlgae.hasAlgae).onTrue(
@@ -419,8 +437,19 @@ public class RobotContainer {
             ).alongWith(Commands.runOnce(() -> Robot.justScoredCoral = false))
         );
 
-        //using the doneIntaking & hasCoral triggers to pass on to arm
-
+        //test controls
+        //coral intake
+        testController.button(1).onTrue(intakeCoral.test()).onFalse(intakeCoral.stopIntake());
+        testController.button(2).onTrue(intakeCoralPivot.test()).onFalse(intakeCoralPivot.stop());
+        //algae intake
+        testController.button(3).onTrue(intakeAlgae.test()).onFalse(intakeAlgae.stopIntake());
+        testController.button(4).onTrue(intakeAlgaePivot.test()).onFalse(intakeAlgaePivot.stop());
+        //elevator arm
+        testController.button(5).onTrue(elevatorArm.test()).onFalse(elevatorArm.stop());
+        testController.button(6).onTrue(elevatorArmAlgae.test()).onFalse(elevatorArmAlgae.stop());
+        testController.button(7).onTrue(elevatorArmPivot.test()).onFalse(elevatorArmPivot.stop());
+        //elevator
+        testController.button(8).onTrue(elevator.test()).onFalse(elevator.stop());
 
         // Example of using DriveToPose command + allowing the position to be influenced by the driver
         // Supplier<ChassisSpeeds> additionalSpeedsSupplier = () -> {

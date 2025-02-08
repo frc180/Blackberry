@@ -1,6 +1,7 @@
 package frc.robot.subsystems.elevatorArmAlgae;
 
 import frc.robot.RobotContainer;
+import frc.robot.subsystems.IntakeAlgae.IntakeAlgaeSubsystem;
 import frc.robot.subsystems.elevator.ElevatorSubsystem;
 import frc.robot.subsystems.elevatorArmPivot.ElevatorArmPivotSubsystem;
 import frc.robot.util.simulation.SimLogic;
@@ -8,6 +9,9 @@ import frc.robot.util.simulation.SimLogic;
 public class ElevatorArmAlgaeIOSim implements ElevatorArmAlgaeIO{
 
     double speed = 0;
+    boolean fromReef;
+    boolean fromIntake;
+    boolean readyForAlgae;
     boolean hasAlgae;
     boolean readyForScore;
 
@@ -33,9 +37,27 @@ public class ElevatorArmAlgaeIOSim implements ElevatorArmAlgaeIO{
         //if the elevator is at L2 or L3 and the rollers are running, then we can lie to the simulation and say we have an algae
         ElevatorSubsystem elevator = RobotContainer.instance.elevator;
         ElevatorArmPivotSubsystem elevatorArmPivot = RobotContainer.instance.elevatorArmPivot;
-        hasAlgae = ((elevator.getPositionMeters() == elevator.L2) || (elevator.getPositionMeters() == elevator.L3) || (elevatorArmPivot.isAtReceivingPosition())) && (speed > 0);
+        IntakeAlgaeSubsystem algaeIntake = RobotContainer.instance.intakeAlgae;
+
+        fromReef = elevator.isElevatorInReefAlgaePosition() && elevatorArmPivot.isElevatorArmInScoringPosition();
+        fromIntake = algaeIntake.hasAlgae.getAsBoolean() && elevatorArmPivot.isAtReceivingPosition();
+        readyForAlgae = fromReef || fromIntake;
+        //hasAlgae = readyForAlgae && speed != 0;
+        if (readyForAlgae && speed != 0) {
+            hasAlgae = true;
+            algaeIntake.inputs.hasAlgae = false;
+        }
+        
+        if (speed < 0) hasAlgae = false;
+
 
         // inputs.algaeSensor = hasAlgae;
-        inputs.hasAlgae = SimLogic.armHasAlgae;
+        inputs.hasAlgae = SimLogic.armHasAlgae || hasAlgae;
+    }
+
+    @Override
+    public void runMotorTest() {
+        System.out.println("elevator arm algae test");
+
     }
 }

@@ -5,6 +5,7 @@ import org.ironmaple.simulation.IntakeSimulation;
 import org.ironmaple.simulation.IntakeSimulation.IntakeSide;
 import frc.robot.RobotContainer;
 import frc.robot.subsystems.IntakeAlgaePivot.IntakeAlgaePivotSubsystem;
+import frc.robot.subsystems.elevatorArmAlgae.ElevatorArmAlgaeSubsystem;
 import frc.robot.util.simulation.SimLogic;
 
 public class IntakeAlgaeIOSim implements IntakeAlgaeIO {
@@ -36,8 +37,14 @@ public class IntakeAlgaeIOSim implements IntakeAlgaeIO {
     }
 
     @Override
+    public void spit() {
+        rollerSpeed = -1;
+    }
+
+    @Override
     public void update(IntakeAlgaeIOInputs inputs) {
         IntakeAlgaePivotSubsystem algaePivot = RobotContainer.instance.intakeAlgaePivot;
+        ElevatorArmAlgaeSubsystem armAlgae = RobotContainer.instance.elevatorArmAlgae;
         boolean ableToIntake = algaePivot.getTargetDegrees() == algaePivot.extend && algaePivot.isAtTarget() && rollerSpeed > 0;
         boolean spitting = rollerSpeed < 0;
 
@@ -63,7 +70,15 @@ public class IntakeAlgaeIOSim implements IntakeAlgaeIO {
             spitting = false;
         }
 
+        if (armAlgae.hasAlgae.getAsBoolean()) SimLogic.intakeHasAlgae = false;
+
 
         inputs.hasAlgae = SimLogic.intakeHasAlgae;
+    }
+
+    @Override
+    public void runMotorTest() {
+        System.out.println("intake algae test");
+
     }
 }

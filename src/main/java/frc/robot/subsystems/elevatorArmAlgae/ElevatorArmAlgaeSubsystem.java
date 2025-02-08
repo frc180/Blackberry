@@ -53,5 +53,11 @@ public class ElevatorArmAlgaeSubsystem extends SubsystemBase{
     public void reverseDirect() {
         io.reverse();
     }
+
+    public Command test() {
+        return this.run(() -> {
+          io.runMotorTest();
+        });
+    }
     
 }

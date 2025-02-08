@@ -44,4 +44,10 @@ public class IntakeCoralIOTalonFXS implements IntakeCoralIO{
     private void setSpeed(double speed) {
         intakeMotor.setControl(voltageControl.withOutput(speed * 12));
     }
+
+    @Override
+    public void runMotorTest() {
+        System.out.println("coral intake running");
+        intakeMotor.set(0.25);
+    }
 }

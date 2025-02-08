@@ -53,6 +53,10 @@ public class IntakeCoralSubsystem extends SubsystemBase {
         });
     }
 
-
+    public Command test() {
+        return this.run(() -> {
+          io.runMotorTest();
+        });
+    }
     
 }

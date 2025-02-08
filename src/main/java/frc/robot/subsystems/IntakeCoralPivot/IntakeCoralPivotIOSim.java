@@ -40,5 +40,16 @@ public class IntakeCoralPivotIOSim implements IntakeCoralPivotIO{
     public void simulationPeriodic() {
         position += speed * 8;
     }
+
+    @Override
+    public void runMotorTest() {
+        System.out.println("intake coral pivot test");
+
+    }
+
+    @Override
+    public void stopMotor() {
+        speed = 0;
+    }
     
 }

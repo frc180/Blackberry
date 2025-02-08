@@ -45,4 +45,14 @@ public class ElevatorIOSim implements ElevatorIO {
         inputs.voltage = speed * 12;
         inputs.target = target;
     }
+
+    @Override
+    public void runMotorTest() {
+        System.out.println("elevator test");
+    }
+
+    @Override
+    public void stopMotor() {
+        speed = 0;
+    }
 }

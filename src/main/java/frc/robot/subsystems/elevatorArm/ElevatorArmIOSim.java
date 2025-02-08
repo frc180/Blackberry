@@ -44,4 +44,10 @@ public class ElevatorArmIOSim implements ElevatorArmIO{
     public void stop() {
         rollerSpeed = 0;
     }
+
+    @Override
+    public void runMotorTest() {
+        System.out.println("elevator arm test");
+
+    }
 }

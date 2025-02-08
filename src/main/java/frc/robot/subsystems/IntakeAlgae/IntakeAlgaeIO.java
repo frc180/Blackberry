@@ -14,6 +14,10 @@ public interface IntakeAlgaeIO {
 
     public void stopRollers();
 
+    public void spit();
+
     public void update(IntakeAlgaeIOInputs inputs);
+
+    public void runMotorTest();
     
 }

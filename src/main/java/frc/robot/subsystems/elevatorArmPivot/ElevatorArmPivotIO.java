@@ -18,5 +18,9 @@ public interface ElevatorArmPivotIO {
 
     public void update(ElevatorArmPivotIOInputs inputs);
 
+    public void runMotorTest();
+
+    public void stopMotor();
+
     
 }

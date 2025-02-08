@@ -36,4 +36,15 @@ public class IntakeAlgaePivotIOSim implements IntakeAlgaePivotIO {
     public void simulationPeriodic() {
         position += speed * 4;
     }
+
+    @Override
+    public void runMotorTest() {
+        System.out.println("intake algae pivot test");
+
+    }
+
+    @Override
+    public void stopMotor() {
+        speed = 0;
+    }
 }
