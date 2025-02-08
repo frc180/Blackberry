@@ -4,6 +4,8 @@
 
 package frc.robot.subsystems.elevator;
 
+import static edu.wpi.first.units.Units.Inches;
+import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Second;
 import static edu.wpi.first.units.Units.Volts;
 import java.util.function.BooleanSupplier;
@@ -118,29 +120,20 @@ public class ElevatorSubsystem extends SubsystemBase {
     return inputs.position <= 0;
   }
 
+  final double IN_POSITION_METERS = Inches.of(1).in(Meters);
+
+  @NotLogged
   public boolean isElevatorInPosition() {
-    if (Math.abs(targetPosition - inputs.position) <= 0.025) {
-      return true;
-    } else {
-      return false;
-    }
+    return Math.abs(targetPosition - inputs.position) <= IN_POSITION_METERS;
   }
 
   @NotLogged
   public boolean isElevatorInScoringPosition(){
-    if ((targetPosition  != 0) && (Math.abs(targetPosition - inputs.position) <= 0.025)){
-      return true;
-    } else {
-      return false;
-    }
+    return isElevatorInPosition() && targetPosition != 0;
   }
 
-  public boolean isElevatorInReefAlgaePosition() {
-    if (targetPosition == L2 || targetPosition == L3) {
-      return true;
-    } else {
-      return false;
-    }
+  public boolean isElevatorInReefAlgaePosition() {  
+    return isElevatorInPosition() && (targetPosition == L2 || targetPosition == L3);
   }
 
   public Command test() {

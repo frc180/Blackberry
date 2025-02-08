@@ -167,7 +167,7 @@ public class Robot extends TimedRobot {
     }
   }
 
-  private final Transform3d robotAlgaeTransform = new Transform3d(0, 0.2, 0.3, Rotation3d.kZero);
+  private final Transform3d robotAlgaeIntakeTransform = new Transform3d(0, 0.2, 0.3, Rotation3d.kZero);
 
   @Override
   public void simulationPeriodic() {
@@ -181,7 +181,13 @@ public class Robot extends TimedRobot {
       Pose3d[] fieldAlgae = Field.getReefAlgaePoses();
       Pose3d robotAlgae;
       if (rc.robotHasAlgae.getAsBoolean()) {
-        robotAlgae = new Pose3d(rc.drivetrain.getSimPose()).transformBy(robotAlgaeTransform);
+        Pose3d robotPose = new Pose3d(rc.drivetrain.getSimPose());
+        if (rc.intakeAlgae.hasAlgae.getAsBoolean()) {
+          robotAlgae = robotPose.transformBy(robotAlgaeIntakeTransform);
+        } else {
+          Transform3d algaeArmTransform = new Transform3d(0, 0.1, rc.elevator.getPositionMeters() + 0.5, Rotation3d.kZero);
+          robotAlgae = robotPose.transformBy(algaeArmTransform);
+        }
       } else {
         robotAlgae = Pose3d.kZero;
       }

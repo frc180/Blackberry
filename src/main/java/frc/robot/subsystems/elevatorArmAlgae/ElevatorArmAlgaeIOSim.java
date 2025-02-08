@@ -1,6 +1,8 @@
 package frc.robot.subsystems.elevatorArmAlgae;
 
+import frc.robot.Field;
 import frc.robot.RobotContainer;
+import frc.robot.subsystems.DrivetrainSubsystem;
 import frc.robot.subsystems.IntakeAlgae.IntakeAlgaeSubsystem;
 import frc.robot.subsystems.elevator.ElevatorSubsystem;
 import frc.robot.subsystems.elevatorArmPivot.ElevatorArmPivotSubsystem;
@@ -11,7 +13,6 @@ public class ElevatorArmAlgaeIOSim implements ElevatorArmAlgaeIO{
     double speed = 0;
     boolean fromReef;
     boolean fromIntake;
-    boolean readyForAlgae;
     boolean hasAlgae;
     boolean readyForScore;
 
@@ -35,24 +36,36 @@ public class ElevatorArmAlgaeIOSim implements ElevatorArmAlgaeIO{
     @Override
     public void update(ElevatorArmAlgaeInputs inputs) {
         //if the elevator is at L2 or L3 and the rollers are running, then we can lie to the simulation and say we have an algae
+        DrivetrainSubsystem drivetrain = RobotContainer.instance.drivetrain;
         ElevatorSubsystem elevator = RobotContainer.instance.elevator;
         ElevatorArmPivotSubsystem elevatorArmPivot = RobotContainer.instance.elevatorArmPivot;
         IntakeAlgaeSubsystem algaeIntake = RobotContainer.instance.intakeAlgae;
 
         fromReef = elevator.isElevatorInReefAlgaePosition() && elevatorArmPivot.isElevatorArmInScoringPosition();
         fromIntake = algaeIntake.hasAlgae.getAsBoolean() && elevatorArmPivot.isAtReceivingPosition();
-        readyForAlgae = fromReef || fromIntake;
-        //hasAlgae = readyForAlgae && speed != 0;
-        if (readyForAlgae && speed != 0) {
-            hasAlgae = true;
-            algaeIntake.inputs.hasAlgae = false;
+
+        if (!SimLogic.armHasAlgae) {
+            if (fromReef) {
+                int tag = drivetrain.getTargetPoseTag();
+                if (tag != -1 && Field.hasReefAlgae(tag)) {
+                    SimLogic.armHasAlgae = true;
+                    Field.removeReefAlgae(tag);
+                }
+            }
+
+            if (fromIntake && speed > 0) {
+                SimLogic.armHasAlgae = true;
+                SimLogic.intakeHasAlgae = false;
+            }
         }
         
-        if (speed < 0) hasAlgae = false;
-
+        if (speed < 0 && SimLogic.armHasAlgae) {
+            SimLogic.netAlgae();
+            SimLogic.armHasAlgae = false;
+        }
 
         // inputs.algaeSensor = hasAlgae;
-        inputs.hasAlgae = SimLogic.armHasAlgae || hasAlgae;
+        inputs.hasAlgae = SimLogic.armHasAlgae;
     }
 
     @Override

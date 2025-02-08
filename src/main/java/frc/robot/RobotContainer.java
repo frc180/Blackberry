@@ -364,14 +364,6 @@ public class RobotContainer {
                         SimLogic.spawnHumanPlayerCoral();
                         SimLogic.intakeHasCoral = false;
                         SimLogic.armHasCoral = false;
-                        // TODO: replace this with better simulation logic that reads from subsystem states
-                        if (!SimLogic.armHasAlgae && (elevator.getTargetPosition() == ElevatorSubsystem.L2 || elevator.getTargetPosition() == ElevatorSubsystem.L3)) {
-                            int tag = drivetrain.getTargetPoseTag();
-                            if (tag != -1 && Field.hasReefAlgae(tag)) {
-                                SimLogic.armHasAlgae = true;
-                                Field.removeReefAlgae(tag);
-                            }
-                        }
                     }
                 })
             ).withInterruptBehavior(InterruptionBehavior.kCancelIncoming)
@@ -392,26 +384,23 @@ public class RobotContainer {
             )
         );//.onFalse(Commands.parallel(elevator.setPosition(0), elevatorArmPivot.stowPosition()));
 
-        //if arm already has algae
-        driverNet.and(elevatorArmAlgae.hasAlgae).onTrue(
+        // Start moving to score algae in net
+        driverNet.and(elevatorArmAlgae.hasAlgae).whileTrue(
             Commands.parallel(
-            elevator.setPosition(ElevatorSubsystem.NET),
-            elevatorArmPivot.netScorePosition()
+                elevator.setPosition(ElevatorSubsystem.NET),
+                elevatorArmPivot.netScorePosition()
             )
+        ).onFalse(
+            elevator.setPosition(0)
+                .alongWith(elevatorArmPivot.stowPosition(), elevatorArmAlgae.stop())
         );
 
-        //scoring the algae
-        driverNet.and(elevator.elevatorInScoringPosition).and(elevatorArmPivot.elevatorArmInScoringPosition).and(elevatorArmAlgae.hasAlgae).whileTrue(
-            Commands.parallel(
-                elevatorArmAlgae.reverse(),
-                Commands.runOnce(() -> {
-                    if (Robot.isSimulation()) {
-                        SimLogic.netAlgae();
-                        SimLogic.armHasAlgae = false;
-                    }
-                })
-            )
-        ).onFalse(elevator.setPosition(0).alongWith(elevatorArmPivot.stowPosition(), elevatorArmAlgae.stop()));
+        // Scoring algae in the net from arm
+        driverNet.and(elevator.elevatorInScoringPosition)
+                 .and(elevatorArmPivot.elevatorArmInScoringPosition)
+                 .and(elevatorArmAlgae.hasAlgae).whileTrue(
+                    elevatorArmAlgae.reverse()
+                 );
 
 
         Command autoHPDrive = Commands.either(
