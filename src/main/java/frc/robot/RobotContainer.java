@@ -163,20 +163,22 @@ public class RobotContainer {
         // Robot modes
         final Trigger teleop = RobotModeTriggers.teleop();
         final Trigger autonomous = RobotModeTriggers.autonomous();
+        final Trigger algaeMode = driverController.povDown();
+        final Trigger coralMode = algaeMode.negate();
+
 
         // Driver buttons
         //coral
-        final Trigger driverIntake = driverController.leftTrigger().and(driverController.povDown().negate());
-        final Trigger driverL1 = driverController.y();
-        final Trigger driverL2 = driverController.leftBumper();
-        final Trigger driverL3 = driverController.rightTrigger();
-        final Trigger driverL4 = driverController.rightBumper();
-        final Trigger driverLeftReef = driverController.x();
-        final Trigger driverRightReef = driverController.b();
+        final Trigger driverIntake = driverController.leftTrigger().and(coralMode);
+        final Trigger driverL1 = driverController.y().and(coralMode);;
+        final Trigger driverL2 = driverController.leftBumper().and(coralMode);;
+        final Trigger driverL3 = driverController.rightTrigger().and(coralMode);;
+        final Trigger driverL4 = driverController.rightBumper().and(coralMode);;
+        final Trigger driverLeftReef = driverController.x().and(coralMode);;
+        final Trigger driverRightReef = driverController.b().and(coralMode);;
         //algae
-        final Trigger algaeMode = driverController.povDown();
-        final Trigger driverProcessor = algaeMode.and(driverController.x());
-        final Trigger driverNet = algaeMode.and(driverController.rightBumper());
+        final Trigger driverProcessor = algaeMode.and(driverController.b());
+        final Trigger driverNet = algaeMode.and(driverController.x());
         final Trigger driverSpitAlgae = algaeMode.and(driverController.y());
         final Trigger driverIntakeAlgae = algaeMode.and(driverController.leftTrigger());
         //climb (must be in algae mode)
@@ -218,7 +220,7 @@ public class RobotContainer {
         // driverController.start().whileTrue(drivetrain.wheelRadiusCharacterization(1));
         
         // test outtaking coral
-        driverSpitAlgae.onTrue(Commands.parallel(
+        driverSpitAlgae.and(intakeAlgae.hasAlgae).onTrue(Commands.parallel(
             intakeAlgae.spit(),
             Commands.runOnce(() -> {
                 if (Robot.isSimulation()) {
@@ -274,9 +276,13 @@ public class RobotContainer {
                                         .withPoseTargetType(PoseTarget.PROCESSOR));
 
         Trigger atProcessor = drivetrain.targetingProcessor()
-                                    .and(drivetrain.withinTargetPoseTolerance(0.04, 0.04, 5.0));
+                                    .and(drivetrain.withinTargetPoseTolerance(
+                                        Inches.of(1),
+                                        Inches.of(1),
+                                        Degrees.of(5)
+                                    ));
 
-        driverProcessor.and(atProcessor).and(intakeAlgae.hasAlgae).whileTrue(Commands.parallel(
+        driverProcessor.and(atProcessor).whileTrue(Commands.parallel(
             intakeAlgae.spit(),
             Commands.runOnce(() -> {
                 if (Robot.isSimulation()) {
@@ -403,7 +409,7 @@ public class RobotContainer {
         //scoring the algae
         driverNet.and(elevator.elevatorInScoringPosition).and(elevatorArmPivot.elevatorArmInScoringPosition).and(elevatorArmAlgae.hasAlgae).whileTrue(
             Commands.parallel(
-                elevatorArmAlgae.reverse(),
+                elevatorArmAlgae.spit(),
                 Commands.runOnce(() -> {
                     if (Robot.isSimulation()) {
                         SimLogic.netAlgae();

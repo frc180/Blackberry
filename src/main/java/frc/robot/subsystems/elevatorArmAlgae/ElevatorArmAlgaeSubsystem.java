@@ -44,7 +44,7 @@ public class ElevatorArmAlgaeSubsystem extends SubsystemBase{
         });
     }
 
-    public Command reverse() {
+    public Command spit() {
         return this.run(() -> {
             io.reverse();
         });
@@ -60,4 +60,7 @@ public class ElevatorArmAlgaeSubsystem extends SubsystemBase{
         });
     }
     
+    public double getSpeed() {
+        return inputs.speed;
+    }
 }

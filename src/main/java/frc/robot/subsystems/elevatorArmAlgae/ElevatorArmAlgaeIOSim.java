@@ -53,6 +53,7 @@ public class ElevatorArmAlgaeIOSim implements ElevatorArmAlgaeIO{
 
         // inputs.algaeSensor = hasAlgae;
         inputs.hasAlgae = SimLogic.armHasAlgae || hasAlgae;
+        inputs.speed = speed;
     }
 
     @Override

@@ -8,6 +8,7 @@ public interface ElevatorArmAlgaeIO {
     @Logged
     public class ElevatorArmAlgaeInputs {
         public boolean hasAlgae;
+        public double speed;
     }
     
     public void run();
