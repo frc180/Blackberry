@@ -44,8 +44,17 @@ public class ElevatorArmAlgaeIOSim implements ElevatorArmAlgaeIO{
         fromReef = elevator.isElevatorInReefAlgaePosition() && elevatorArmPivot.isElevatorArmInScoringPosition();
         fromIntake = algaeIntake.hasAlgae.getAsBoolean() && elevatorArmPivot.isAtReceivingPosition();
 
-        if (!SimLogic.armHasAlgae) {
-            if (fromReef) {
+        if (SimLogic.armHasAlgae) {
+            if (speed < 0) {
+                if (elevatorArmPivot.getTargetPosition() == ElevatorArmPivotSubsystem.netPosition) {
+                    SimLogic.netAlgae();
+                } else {
+                    SimLogic.intakeHasAlgae = true;
+                }
+                SimLogic.armHasAlgae = false;
+            }
+        } else {
+            if (fromReef) { // TODO: && speed > 0?
                 int tag = drivetrain.getTargetPoseTag();
                 if (tag != -1 && Field.hasReefAlgae(tag)) {
                     SimLogic.armHasAlgae = true;
@@ -57,11 +66,6 @@ public class ElevatorArmAlgaeIOSim implements ElevatorArmAlgaeIO{
                 SimLogic.armHasAlgae = true;
                 SimLogic.intakeHasAlgae = false;
             }
-        }
-        
-        if (speed < 0 && SimLogic.armHasAlgae) {
-            SimLogic.netAlgae();
-            SimLogic.armHasAlgae = false;
         }
 
         // inputs.algaeSensor = hasAlgae;

@@ -90,6 +90,10 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
         return isElevatorArmInPosition() && (targetPosition == score || targetPosition == L1Score || targetPosition == netPosition);
     }
 
+    public double getTargetPosition() {
+        return targetPosition;
+    }
+
     public Command test() {
         return this.run(() -> {
           io.runMotorTest();
