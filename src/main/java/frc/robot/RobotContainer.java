@@ -275,6 +275,11 @@ public class RobotContainer {
         driverProcessor.whileTrue(new DriveToPose(drivetrain, () -> vision.getProcessorPose(Robot.isBlue()))
                                         .withPoseTargetType(PoseTarget.PROCESSOR));
 
+        driverProcessor.and(elevatorArmAlgae.hasAlgae).whileTrue(Commands.parallel(
+            elevatorArmPivot.receiveAlgaePosition(),
+            elevatorArmAlgae.spit()
+        ));
+
         Trigger atProcessor = drivetrain.targetingProcessor()
                                     .and(drivetrain.withinTargetPoseTolerance(
                                         Inches.of(1),
@@ -282,7 +287,7 @@ public class RobotContainer {
                                         Degrees.of(5)
                                     ));
 
-        driverProcessor.and(atProcessor).whileTrue(Commands.parallel(
+        driverProcessor.and(atProcessor).and(intakeAlgae.hasAlgae).whileTrue(Commands.parallel(
             intakeAlgae.spit(),
             Commands.runOnce(() -> {
                 if (Robot.isSimulation()) {
@@ -382,7 +387,7 @@ public class RobotContainer {
 
         //scoring algae net
         //if arm does not have algae already
-        driverNet.and(intakeAlgae.hasAlgae).onTrue(
+        driverNet.and(intakeAlgae.hasAlgae).whileTrue(
             Commands.parallel(
                 elevator.setPosition(ElevatorSubsystem.L1),
                 elevatorArmPivot.receiveAlgaePosition(),
