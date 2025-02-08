@@ -1,11 +1,16 @@
 package com.spamrobotics.util;
 
+import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Meters;
+
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.Distance;
 import frc.robot.subsystems.DrivetrainSubsystem;
 
 public class Helpers {
@@ -52,6 +57,13 @@ public class Helpers {
     public static double capValue(double value, double max) {
         if (Math.abs(value) > max) return max * (value / Math.abs(value));
         return value;
+    }
+
+    public static boolean withinTolerance(Pose2d pose, Pose2d targetPose, Distance xDistance, Distance yDistance, Angle angle) {
+        Double xMeters = xDistance == null ? null : xDistance.in(Meters);
+        Double yMeters = yDistance == null ? null : yDistance.in(Meters);
+        Double degrees = angle == null ? null : angle.in(Degrees);
+        return withinTolerance(pose, targetPose, xMeters, yMeters, degrees);
     }
 
     public static boolean withinTolerance(Pose2d pose, Pose2d targetPose, Double xMeters, Double yMeters, Double degrees) {

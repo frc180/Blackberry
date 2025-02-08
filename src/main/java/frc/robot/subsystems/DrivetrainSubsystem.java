@@ -37,6 +37,8 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -435,10 +437,20 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         return new Trigger(this::isTargetingReefPose);
     }
 
+    public Trigger withinTargetPoseTolerance(Distance xDistance, Distance yDistance, Angle angle) {
+        return new Trigger(() -> {
+            return Helpers.withinTolerance(getPose(), targetPose, xDistance, yDistance, angle);
+        });
+    }
+
     public Trigger withinTargetPoseTolerance(Double xMeters, Double yMeters, Double degrees) {
         return new Trigger(() -> {
             return Helpers.withinTolerance(getPose(), targetPose, xMeters, yMeters, degrees);
         });
+    }
+
+    public Trigger withinTargetPoseDistance(Distance distance) {
+        return withinTargetPoseDistance(distance.in(Meters));
     }
 
     public Trigger withinTargetPoseDistance(double meters) {

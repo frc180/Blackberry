@@ -20,6 +20,10 @@
 */
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Inches;
+import static edu.wpi.first.units.Units.Meters;
+
 import java.util.List;
 import java.util.function.DoubleSupplier;
 import java.util.function.Function;
@@ -266,12 +270,18 @@ public class RobotContainer {
                 return reefPose != null ? reefPose.getRotation().getDegrees() : null;
             }, HeadingTarget.POSE));
 
-        Trigger nearReef = drivetrain.targetingReef()
-                            .and(drivetrain.withinTargetPoseTolerance(1.0, 1.0, 90.0))
+        Trigger nearReef = drivetrain.targetingReef().and(drivetrain.withinTargetPoseTolerance(         
+                                Meters.of(1),
+                                Meters.of(1),
+                                Degrees.of(90)
+                            ))
                             .debounce(0.5, DebounceType.kFalling); 
 
-        Trigger atReef = drivetrain.targetingReef()
-                            .and(drivetrain.withinTargetPoseTolerance(0.0254, 0.0254, 2.0));
+        Trigger atReef = drivetrain.targetingReef().and(drivetrain.withinTargetPoseTolerance(
+                                Inches.of(1),
+                                Inches.of(1),
+                                Degrees.of(2)
+                            ));
 
         Command chosenElevatorHeight = elevator.run(() -> {
             // In autonomous, read the next coral scoring position from the list to determine the elevator height
