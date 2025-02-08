@@ -19,7 +19,11 @@ import com.pathplanner.lib.path.GoalEndState;
 import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.path.Waypoint;
+import com.pathplanner.lib.util.DriveFeedforwards;
 import com.pathplanner.lib.util.FlippingUtil;
+import com.pathplanner.lib.util.swerve.SwerveSetpoint;
+import com.pathplanner.lib.util.swerve.SwerveSetpointGenerator;
+import com.spamrobotics.swerve.SwerveModuleStateRequest;
 import com.spamrobotics.util.Helpers;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.NotLogged;
@@ -29,6 +33,7 @@ import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
@@ -87,12 +92,16 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     /** Swerve request to apply during robot-centric path following */
     private final SwerveRequest.ApplyRobotSpeeds m_pathApplyRobotSpeeds = new SwerveRequest.ApplyRobotSpeeds();
     private final SwerveRequest.ApplyRobotSpeeds autoApplyRobotSpeeds = new SwerveRequest.ApplyRobotSpeeds();
+    private final SwerveModuleStateRequest moduleStateRequest = new SwerveModuleStateRequest();
 
     /* Swerve requests to apply during SysId characterization */
     private final SwerveRequest.SysIdSwerveTranslation m_translationCharacterization = new SwerveRequest.SysIdSwerveTranslation();
     private final SwerveRequest.SysIdSwerveSteerGains m_steerCharacterization = new SwerveRequest.SysIdSwerveSteerGains();
     private final SwerveRequest.SysIdSwerveRotation m_rotationCharacterization = new SwerveRequest.SysIdSwerveRotation();
 
+    private final SwerveSetpointGenerator setpointGenerator;
+    private SwerveSetpoint previousSetpoint;
+    private boolean driveWithSetpointGenerator = false;
 
     private Rotation2d gyroOffset = new Rotation2d();
     private Double targetHeading = null;
@@ -236,17 +245,37 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
                                         new TrapezoidProfile.Constraints(MAX_ANGULAR_RATE, MAX_ANGULAR_ACCEL)); // formerly 9999
         driverRotationPidController.enableContinuousInput(-Math.PI, Math.PI);
 
+        setpointGenerator = new SwerveSetpointGenerator(
+            config, // The robot configuration. This is the same config used for generating trajectories and running path following commands.
+            MAX_ANGULAR_RATE // The max rotation velocity of a swerve module in radians per second. This should probably be stored in your Constants file
+        );
+
+        // Initialize the previous setpoint to the robot's current speeds & module states
+        SwerveDriveState state = getState();
+        previousSetpoint = new SwerveSetpoint(state.Speeds, state.ModuleStates, DriveFeedforwards.zeros(config.numModules));
+
         if (Robot.isSimulation()) {
             resetPose(new Pose2d(6.77, 4.2, Rotation2d.fromDegrees(90)));
             zeroGyroscope();
         }
-
     }
 
     public void drive(ChassisSpeeds speeds) {
+        if (driveWithSetpointGenerator) {
+            driveWithSetpoints(speeds);
+            return;
+        }
+        
         // Helpers.discretizeOverwrite(speeds, Constants.LOOP_TIME);
         speeds = ChassisSpeeds.discretize(speeds, Constants.LOOP_TIME);
         setControl(m_pathApplyRobotSpeeds.withSpeeds(speeds));
+    }
+
+    // Allegedly results in smoother driving that causes less wheel slip due to never commanding
+    // physically impossible actions. However, so far in testing, seems to just make robot control poorly.
+    public void driveWithSetpoints(ChassisSpeeds speeds) {
+        previousSetpoint = setpointGenerator.generateSetpoint(previousSetpoint, speeds, Constants.LOOP_TIME);
+        setControl(moduleStateRequest.withModuleStates(previousSetpoint.moduleStates()));
     }
 
     @NotLogged
