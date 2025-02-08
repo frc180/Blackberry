@@ -19,10 +19,9 @@ public class ElevatorArmIOSim implements ElevatorArmIO{
 
     @Override
     public void update(ElevatorArmIOInputs inputs) {
-        // TODO: eventually add logic that ensures the intake is also at the right position to pass off coral
         ElevatorArmPivotSubsystem armPivot = RobotContainer.instance.elevatorArmPivot;
         IntakeCoralPivotSubsystem intakeCoralPivot = RobotContainer.instance.intakeCoralPivot;
-        readyForCoral = SimLogic.intakeHasCoral && armPivot.isAtReceivingPosition() && intakeCoralPivot.isAtTarget(); //ensures the intake is also at the right postion
+        readyForCoral = SimLogic.intakeHasCoral && armPivot.isAtReceivingPosition() && intakeCoralPivot.isAtTarget();
 
         if (readyForCoral && rollerSpeed > 0) {
             SimLogic.armHasCoral = true;
