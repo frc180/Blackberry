@@ -20,6 +20,8 @@ public interface IntakeCoralIO {
 
     public default void simulationPeriodic() {}
 
+    public void runMotorTest();
+
 
 
 }

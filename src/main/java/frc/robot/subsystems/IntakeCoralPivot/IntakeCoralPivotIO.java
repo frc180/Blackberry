@@ -18,4 +18,8 @@ public interface IntakeCoralPivotIO {
     public default void simulationPeriodic() {}
 
     public void update(IntakeCoralPivotIOInputs inputs);
+
+    public void runMotorTest();
+
+    public void stopMotor();
 }

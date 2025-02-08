@@ -62,6 +62,18 @@ public class IntakeAlgaePivotSubsystem extends SubsystemBase {
         });
     }
 
+    public Command test() {
+        return this.run(() -> {
+          io.runMotorTest();
+        });
+    }
+
+    public Command stop() {
+        return this.run (() -> {
+            io.stopMotor();
+        });
+    }
+
     public double getPositionDegrees() {
         return inputs.position;
     }

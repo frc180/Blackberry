@@ -19,4 +19,8 @@ public interface ElevatorIO {
     public void setPosition(double encoderPosition);
 
     public default void simulationPeriodic() {}
+
+    public void runMotorTest();
+
+    public void stopMotor();
 }

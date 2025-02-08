@@ -34,5 +34,9 @@ public class ElevatorArmAlgaeIOTalonFX implements ElevatorArmAlgaeIO{
         inputs.hasAlgae = sensor.get();
     }
 
-    
+    @Override
+    public void runMotorTest() {
+        System.out.println("elevator arm algae running");
+        motor.set(0.25);
+    }
 }

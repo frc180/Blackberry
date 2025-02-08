@@ -93,5 +93,16 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO{
         armPivotMotorSim.setSupplyVoltage(RobotController.getBatteryVoltage());
     }
 
+    @Override
+    public void runMotorTest() {
+        System.out.println("elevator arm pivot running");
+        armPivotMotor.set(0.25);
+    }
+
+    @Override
+    public void stopMotor() {
+        armPivotMotor.stopMotor();
+    }
+
     
 }

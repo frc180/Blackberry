@@ -62,6 +62,18 @@ public class IntakeCoralPivotSubsystem extends SubsystemBase {
           });
     }
 
+    public Command test() {
+        return this.run(() -> {
+          io.runMotorTest();
+        });
+    }
+
+    public Command stop() {
+        return this.run(() -> {
+            io.stopMotor();
+        });
+    }
+
     public boolean isAtStowPosition() {
         return targetPosition == stow && isAtTarget();
     }

@@ -130,4 +130,16 @@ public class ElevatorIOTalonFX implements ElevatorIO {
             motorSim.setSupplyVoltage(RobotController.getBatteryVoltage());
         });
     }
+
+    @Override
+    public void runMotorTest() {
+        System.out.println("running elevator motors");
+        motorA.set(0.25); //motorB is follower
+    }
+
+    @Override
+    public void stopMotor() {
+        motorA.stopMotor();
+        motorB.stopMotor();
+    }
 }

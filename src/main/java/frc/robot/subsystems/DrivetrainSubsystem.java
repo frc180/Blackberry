@@ -69,7 +69,8 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
 
     public enum PoseTarget {
         STANDARD,
-        REEF
+        REEF,
+        PROCESSOR
     }
 
     // STOLEN FROM SONIC, NOT CORRECT
@@ -347,6 +348,10 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         return poseTargetType == PoseTarget.REEF && targetPose != null;
     }
 
+    public boolean isTargetingProcessorPose() {
+        return poseTargetType == PoseTarget.PROCESSOR && targetPose != null;
+    }
+
     public int getTargetPoseTag() {
         return targetPoseTag;
     }
@@ -399,6 +404,10 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     
     public Trigger targetingReef() {
         return new Trigger(this::isTargetingReefPose);
+    }
+
+    public Trigger targetingProcessor() {
+        return new Trigger(this::isTargetingProcessorPose);
     }
 
     public Trigger withinTargetPoseTolerance(Double xMeters, Double yMeters, Double degrees) {

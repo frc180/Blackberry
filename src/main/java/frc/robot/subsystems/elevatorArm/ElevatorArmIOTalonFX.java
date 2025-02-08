@@ -21,7 +21,6 @@ public class ElevatorArmIOTalonFX implements ElevatorArmIO {
 
     
     TalonFX rollerMotor;
-    // TODO: add front and back sensors too
     DigitalInput frontSensor, middleSensor, backSensor;
     boolean readyForCoral = false;
 
@@ -62,6 +61,12 @@ public class ElevatorArmIOTalonFX implements ElevatorArmIO {
     @Override
     public void stop() {
         rollerMotor.stopMotor();
+    }
+
+    @Override
+    public void runMotorTest() {
+        System.out.println("elevator arm running");
+        rollerMotor.set(0.25);
     }
     
 }
