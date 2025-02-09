@@ -43,6 +43,7 @@ public class ElevatorArmAlgaeIOSim implements ElevatorArmAlgaeIO{
 
         if (SimLogic.armHasAlgae) {
             if (speed < 0) {
+                // TODO: could change this to check if actual position is pointing up vs down
                 if (elevatorArmPivot.getTargetPosition() == ElevatorArmPivotSubsystem.netPosition) {
                     SimLogic.netAlgae();
                 } else {

@@ -4,6 +4,7 @@ import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.Robot;
 import frc.robot.subsystems.elevatorArmPivot.ElevatorArmPivotIO.ElevatorArmPivotIOInputs;
 import frc.robot.util.simulation.SimVisuals;
 
@@ -27,7 +28,11 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
 
     public ElevatorArmPivotSubsystem() {
         inputs = new ElevatorArmPivotIOInputs();
-        io = new ElevatorArmPivotIOTalonFX();
+        if (Robot.isReal()) {
+            io = new ElevatorArmPivotIOSim();
+        } else {
+            io = new ElevatorArmPivotIOTalonFX();
+        }
     }
 
     @Override

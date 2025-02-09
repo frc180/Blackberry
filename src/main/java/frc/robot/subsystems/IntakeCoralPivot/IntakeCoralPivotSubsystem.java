@@ -25,7 +25,7 @@ public class IntakeCoralPivotSubsystem extends SubsystemBase {
 
     public IntakeCoralPivotSubsystem() {
         if (Robot.isReal()) {
-            io = new IntakeCoralPivotIOTalonFXS();
+            io = new IntakeCoralPivotIOSim();
         } else {
             io = new IntakeCoralPivotIOTalonFXS();
         }
