@@ -72,7 +72,7 @@ import frc.robot.subsystems.elevatorArmPivot.ElevatorArmPivotSubsystem;
 public class RobotContainer {
     // private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
 
-    public static final boolean MAPLESIM = false;
+    public static final boolean MAPLESIM = true;//Robot.isSimulation();
 
     public final static double DEADBAND = 0.025;
     public final CommandXboxController driverController = new CommandXboxController(0);
