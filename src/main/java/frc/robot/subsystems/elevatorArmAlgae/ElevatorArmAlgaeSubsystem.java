@@ -45,8 +45,10 @@ public class ElevatorArmAlgaeSubsystem extends SubsystemBase{
     }
 
     public Command spit() {
-        return this.run(() -> {
+        return this.runEnd(() -> {
             io.reverse();
+        }, () -> {
+            io.stop();
         });
     }
 
