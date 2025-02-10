@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.ironmaple.simulation.SimulatedArena;
 import edu.wpi.first.epilogue.Epilogue;
+import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.TimedRobot;
@@ -35,7 +36,7 @@ public class Robot extends TimedRobot {
   private Command m_autonomousCommand;
 
   @Logged(name = "RobotContainer")
-  private final RobotContainer m_robotContainer;
+  private final RobotContainer robotContainer;
 
 
   StructArrayPublisher<Pose3d> robotComponentPoses = NetworkTableInstance.getDefault()
@@ -51,7 +52,8 @@ public class Robot extends TimedRobot {
     SimVisuals.init();
     Field.init();
 
-    m_robotContainer = new RobotContainer();
+    robotContainer = new RobotContainer();
+    DataLogManager.start();
     Epilogue.bind(this);
   }
 
@@ -64,7 +66,7 @@ public class Robot extends TimedRobot {
     SimVisuals.update();
 
     // Get all robot component (mechanism) poses and publish them to NetworkTables
-    robotComponentPosesArray[0] = RobotContainer.instance.intakeAlgaePivot.getPose();
+    robotComponentPosesArray[0] = robotContainer.intakeAlgaePivot.getPose();
     robotComponentPoses.accept(robotComponentPosesArray);
 
     /*
@@ -109,7 +111,7 @@ public class Robot extends TimedRobot {
       SimLogic.intakeHasAlgae = false;
     }
   
-    m_autonomousCommand = m_robotContainer.getAutonomousCommand();
+    m_autonomousCommand = robotContainer.getAutonomousCommand();
 
     if (m_autonomousCommand != null) {
       m_autonomousCommand.schedule();
@@ -171,7 +173,7 @@ public class Robot extends TimedRobot {
 
   @Override
   public void simulationPeriodic() {
-      RobotContainer rc = RobotContainer.instance;
+      RobotContainer rc = robotContainer;
       // Get the positions of all maplesim coral and publish them to NetworkTables
       Pose3d[] coral = SimulatedArena.getInstance().getGamePiecesArrayByType("Coral");
       coralPoses.accept(coral);

@@ -9,13 +9,18 @@ import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.NotLogged;
+import edu.wpi.first.math.MatBuilder;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.Nat;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
@@ -74,6 +79,8 @@ public class VisionSubsystem extends SubsystemBase {
     private Pose2d closestReefPose = Pose2d.kZero;
 
     final boolean megatag2Enabled = false;
+    @NotLogged
+    private Matrix<N3, N1> measureStdDev = MatBuilder.fill(Nat.N3(), Nat.N1(), 0.3, 0.3, 0.3);
 
     private Pose3d scoringCamera = Pose3d.kZero;
     private Pose2d scoringPoseEstimatePoseUnfiltered = Pose2d.kZero;
@@ -141,7 +148,10 @@ public class VisionSubsystem extends SubsystemBase {
         
         Pose2d robotPose = null;
         if (scoringPoseEstimate != null) {
-            RobotContainer.instance.drivetrain.addVisionMeasurement(scoringPoseEstimate.pose, Utils.fpgaToCurrentTime(scoringPoseEstimate.timestampSeconds));
+            RobotContainer.instance.drivetrain.addVisionMeasurement(
+                scoringPoseEstimate.pose,
+                Utils.fpgaToCurrentTime(scoringPoseEstimate.timestampSeconds)
+            );
             // Calculate the difference between the updated robot pose and the scoring pose estimate, to get an idea
             // of how closely we
             robotPose = RobotContainer.instance.drivetrain.getPose();

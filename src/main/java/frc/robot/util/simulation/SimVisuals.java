@@ -1,11 +1,14 @@
 package frc.robot.util.simulation;
 
+import com.ctre.phoenix6.mechanisms.swerve.LegacySwerveRequest.RobotCentric;
+
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.util.Color8Bit;
+import frc.robot.RobotContainer;
 
 public abstract class SimVisuals {
 
@@ -62,16 +65,19 @@ public abstract class SimVisuals {
     }
 
     /**
-     * Updates the simulation visuals - called periodically from Robot.simulationPeriodic()
+     * Updates the simulation visuals - called periodically from Robot.robotPeriodic()
      */
     public static void update() {
+        RobotContainer rc = RobotContainer.instance;
+        boolean armHasCoral = rc.elevatorArm.hasCoral.getAsBoolean();
+
         // Keep coral arm attached to elevator
         coralArmRoot.setPosition(CORAL_ARM_X, Y_BOTTOM + CORAL_ARM_Y_OFFSET + elevatorLigament.getLength());
 
         // Update color of mechanisms based on coral status
-        elevatorLigament.setColor(SimLogic.robotHasCoral() ? ELEVATOR_CORAL_COLOR : ELEVATOR_NOCORAL_COLOR);
-        coralIntakeLigament.setColor(SimLogic.intakeHasCoral ? INTAKE_CORAL_COLOR : INTAKE_NOCORAL_COLOR);
-        coralArmLigamentA.setColor(SimLogic.armHasCoral ? ARM_CORAL_COLOR : ARM_NOCORAL_COLOR);
-        coralArmLigamentB.setColor(SimLogic.armHasCoral ? ARM_CORAL_COLOR : ARM_NOCORAL_COLOR);
+        elevatorLigament.setColor(rc.robotHasCoral.getAsBoolean() ? ELEVATOR_CORAL_COLOR : ELEVATOR_NOCORAL_COLOR);
+        coralIntakeLigament.setColor(rc.intakeCoral.hasCoral.getAsBoolean() ? INTAKE_CORAL_COLOR : INTAKE_NOCORAL_COLOR);
+        coralArmLigamentA.setColor(armHasCoral ? ARM_CORAL_COLOR : ARM_NOCORAL_COLOR);
+        coralArmLigamentB.setColor(armHasCoral ? ARM_CORAL_COLOR : ARM_NOCORAL_COLOR);
     }
 }
