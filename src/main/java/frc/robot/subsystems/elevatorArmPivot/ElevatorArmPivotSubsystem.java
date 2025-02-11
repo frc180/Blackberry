@@ -19,7 +19,8 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
     public static final double horizontal = 0;
     public static final double score = 0;
     public static final double L1Score = -60;
-    public static final double netPosition = 80;
+    public static final double netScore = 80;
+    public static final double netScoreBackwards = 100;
 
     public double targetPosition = 0;
 
@@ -63,7 +64,11 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
     }
 
     public Command netScorePosition() {
-        return setPosition(netPosition);
+        return setPosition(netScore);
+    }
+
+    public Command netScoreBackwardsPosition() {
+        return setPosition(netScoreBackwards);
     }
 
     public Command receiveAlgaePosition() {
@@ -92,7 +97,8 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
     }
 
     public boolean isElevatorArmInScoringPosition() {
-        return isElevatorArmInPosition() && (targetPosition == score || targetPosition == L1Score || targetPosition == netPosition);
+        return isElevatorArmInPosition() && 
+            (targetPosition == score || targetPosition == L1Score || targetPosition == netScore || targetPosition == netScoreBackwards);
     }
 
     public double getTargetPosition() {

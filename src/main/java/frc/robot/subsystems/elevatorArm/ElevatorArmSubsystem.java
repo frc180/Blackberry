@@ -12,13 +12,17 @@ public class ElevatorArmSubsystem extends SubsystemBase{
     ElevatorArmIO io;
     ElevatorArmIOInputs inputs;
 
-    public Trigger hasCoral;
+    public final Trigger hasCoral;
+    public final Trigger hasPartialCoral;
+    public final Trigger hasNoCoral;
 
     public ElevatorArmSubsystem() {
         inputs = new ElevatorArmIOInputs();
         io = new ElevatorArmIOSim();
 
         hasCoral = new Trigger(() -> inputs.middleCoralSensor);
+        hasPartialCoral = new Trigger(() -> inputs.frontCoralSensor || inputs.middleCoralSensor || inputs.backCoralSensor);
+        hasNoCoral = hasPartialCoral.negate();
     }
 
     @Override
@@ -26,7 +30,7 @@ public class ElevatorArmSubsystem extends SubsystemBase{
         io.update(inputs);
     }
 
-    public Command runArm() {
+    public Command runRollers() {
         return this.run(() -> {
             io.run();
         });

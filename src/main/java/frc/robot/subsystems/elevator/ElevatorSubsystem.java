@@ -30,7 +30,9 @@ public class ElevatorSubsystem extends SubsystemBase {
   public static final double L2 = 0.6;
   public static final double L1 = 0.25;
 
-  public ElevatorIO io;
+  private static final double IN_POSITION_METERS = Inches.of(1).in(Meters);
+
+  private ElevatorIO io;
   private ElevatorIOInputs inputs;
 
   private double targetPosition = 0;
@@ -119,8 +121,6 @@ public class ElevatorSubsystem extends SubsystemBase {
   public boolean isAtLowerLimit() {
     return inputs.position <= 0;
   }
-
-  final double IN_POSITION_METERS = Inches.of(1).in(Meters);
 
   @NotLogged
   public boolean isElevatorInPosition() {

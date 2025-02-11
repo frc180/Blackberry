@@ -6,10 +6,6 @@ import com.ctre.phoenix6.hardware.TalonFXS;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.wpilibj.DigitalInput;
 import frc.robot.Constants;
-import frc.robot.RobotContainer;
-import frc.robot.subsystems.IntakeCoral.IntakeCoralSubsystem;
-import frc.robot.subsystems.IntakeCoralPivot.IntakeCoralPivotSubsystem;
-import frc.robot.subsystems.elevatorArmPivot.ElevatorArmPivotSubsystem;
 
 public class ElevatorArmIOTalonFX implements ElevatorArmIO {
 

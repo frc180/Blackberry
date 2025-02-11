@@ -116,7 +116,7 @@ public abstract class SimLogic {
         );
     }
 
-    public static void netAlgae() {
+    public static void netAlgae(boolean forwards) {
         if (!RobotContainer.MAPLESIM) {
             return;
         }
@@ -128,7 +128,7 @@ public abstract class SimLogic {
             simRobotPose.getTranslation(),
             new Translation2d(0, 0), // scoring mechanism position on the robot
             swerveSim.getDriveTrainSimulatedChassisSpeedsFieldRelative(),
-            simRobotPose.getRotation().rotateBy(Rotation2d.kZero),
+            simRobotPose.getRotation().rotateBy(forwards ? Rotation2d.kZero : Rotation2d.k180deg),
             Meters.of(ElevatorSubsystem.NET), // outtake height
             MetersPerSecond.of(6), // outtake speed
             Degrees.of(75))

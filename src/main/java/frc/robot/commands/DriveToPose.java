@@ -3,6 +3,8 @@ package frc.robot.commands;
 import java.util.function.Supplier;
 
 import com.spamrobotics.util.Helpers;
+
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -27,6 +29,7 @@ public class DriveToPose extends Command {
     private boolean holdWithinTolerance = false;
     private Supplier<Boolean> finishCriteria = null;
     private PoseTarget poseTargetType = PoseTarget.STANDARD;
+    private double maxSpeed = 1.0;
 
     public DriveToPose(DrivetrainSubsystem drivetrainSubsystem, Supplier<Pose2d> targetPoseSupplier) {
         drivetrain = drivetrainSubsystem;
@@ -84,6 +87,11 @@ public class DriveToPose extends Command {
         return this;
     }
 
+    public DriveToPose withMaxSpeed(double maxSpeedPercentage) {
+        maxSpeed = maxSpeedPercentage;
+        return this;
+    }
+
     @Override
     public void initialize() {
         drivetrain.resetPIDs(HeadingTarget.POSE);
@@ -121,6 +129,9 @@ public class DriveToPose extends Command {
         if (additionalSpeedsSupplier != null) {
             Helpers.addChassisSpeedsOverwrite(speeds, additionalSpeedsSupplier.get());
         }
+        double maxSpeedMeters = DrivetrainSubsystem.MAX_SPEED * maxSpeed;
+        speeds.vxMetersPerSecond = MathUtil.clamp(speeds.vxMetersPerSecond, -maxSpeedMeters, maxSpeedMeters);
+        speeds.vyMetersPerSecond = MathUtil.clamp(speeds.vyMetersPerSecond, -maxSpeedMeters, maxSpeedMeters);
         drivetrain.drive(speeds);
     }
 

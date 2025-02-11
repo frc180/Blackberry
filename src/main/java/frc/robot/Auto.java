@@ -62,7 +62,7 @@ public abstract class Auto {
         }, Set.of(drivetrain));
     }
 
-    public static Command driveToCoral() {
+    public static DriveToPose driveToCoral() {
         DrivetrainSubsystem drivetrain = RobotContainer.instance.drivetrain;
         VisionSubsystem vision = RobotContainer.instance.vision;
 

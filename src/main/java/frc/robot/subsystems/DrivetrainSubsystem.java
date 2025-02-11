@@ -104,6 +104,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
 
     private final SwerveSetpointGenerator setpointGenerator;
     private SwerveSetpoint previousSetpoint;
+    @NotLogged
     private boolean driveWithSetpointGenerator = false;
 
     private Rotation2d gyroOffset = new Rotation2d();
@@ -291,6 +292,11 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         return (-this.getPigeon2().getAngle()) - gyroOffset.getDegrees();
     }
 
+    @NotLogged
+    public double getGyroscopeDegreesWrapped() {
+        return MathUtil.inputModulus(getGyroscopeDegrees(), -180, 180);
+    }
+
     public void zeroGyroscope() {
         gyroOffset = this.getPigeon2().getRotation2d();
         // seedFieldRelative(); // last year
@@ -326,11 +332,12 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     }
 
     public void setTargetHeading(Double targetHeading, HeadingTarget type) {
+        Double oldHeading = this.targetHeading;
         this.targetHeading = targetHeading == null ? null : MathUtil.inputModulus(targetHeading, -180, 180);
         targetHeadingType = type;
         if (this.targetHeading == null) {
             headingError = 0;
-        } else {
+        } else if (oldHeading == null || this.targetHeading == null || this.targetHeading - oldHeading != 0) {
             headingError = 999; // reset heading error to make sure we don't think we're at the new target immediately
         }
     }
@@ -358,7 +365,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     }
 
     public double calculateHeadingPID(double headingDegrees, double targetDegrees) {
-        headingError = targetDegrees - headingDegrees;    
+        headingError =  MathUtil.inputModulus(targetDegrees - headingDegrees, -180, 180);    
         return driverRotationPidController.calculate(
             Math.toRadians(headingDegrees), 
             Math.toRadians(targetDegrees)
@@ -469,6 +476,19 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
                 return false;
             }
             return getPose().getTranslation().getDistance(targetPose.getTranslation()) <= meters;
+        });
+    }
+
+    public Trigger withinTargetHeadingTolerance(Angle angle) {
+        return withinTargetHeadingTolerance(angle.in(Degrees));
+    }
+
+    public Trigger withinTargetHeadingTolerance(double degrees) {
+        return new Trigger(() -> {
+           if (targetHeading == null) {
+               return false;
+           }
+           return Math.abs(headingError) <= degrees;
         });
     }
 
