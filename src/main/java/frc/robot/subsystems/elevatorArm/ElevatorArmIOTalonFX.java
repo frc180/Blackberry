@@ -1,8 +1,8 @@
 package frc.robot.subsystems.elevatorArm;
 
-import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.configs.TalonFXSConfiguration;
 import com.ctre.phoenix6.controls.VoltageOut;
-import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.hardware.TalonFXS;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.wpilibj.DigitalInput;
 import frc.robot.Constants;
@@ -13,15 +13,14 @@ import frc.robot.subsystems.elevatorArmPivot.ElevatorArmPivotSubsystem;
 
 public class ElevatorArmIOTalonFX implements ElevatorArmIO {
 
-    TalonFX rollerMotor;
+    TalonFXS rollerMotor;
     DigitalInput frontSensor, middleSensor, backSensor;
 
     VoltageOut voltageControl;
-    boolean readyForCoral = false;
 
     public ElevatorArmIOTalonFX() {
-        TalonFXConfiguration config = new TalonFXConfiguration();
-        rollerMotor = new TalonFX(Constants.ELEVATOR_ARM_TALON);
+        TalonFXSConfiguration config = new TalonFXSConfiguration();
+        rollerMotor = new TalonFXS(Constants.ELEVATOR_ARM_TALON);
         rollerMotor.getConfigurator().apply(config);
         rollerMotor.setNeutralMode(NeutralModeValue.Brake);
 
@@ -34,12 +33,6 @@ public class ElevatorArmIOTalonFX implements ElevatorArmIO {
 
     @Override
     public void update(ElevatorArmIOInputs inputs) {
-        ElevatorArmPivotSubsystem elevatorArm = RobotContainer.instance.elevatorArmPivot;
-        IntakeCoralPivotSubsystem intakeCoralPivot = RobotContainer.instance.intakeCoralPivot;
-        IntakeCoralSubsystem intake = RobotContainer.instance.intakeCoral;
-        readyForCoral = elevatorArm.isAtReceivingPosition() && intakeCoralPivot.isAtTarget() && intake.hasCoral.getAsBoolean();
-
-
         inputs.middleCoralSensor = middleSensor.get();
         inputs.backCoralSensor = backSensor.get();
         inputs.frontCoralSensor = frontSensor.get();
@@ -61,7 +54,8 @@ public class ElevatorArmIOTalonFX implements ElevatorArmIO {
         setSpeed(0);
     }
 
-    private void setSpeed(double speed) {
+    @Override
+    public void setSpeed(double speed) {
         setVoltage(speed * 12);
     }
 

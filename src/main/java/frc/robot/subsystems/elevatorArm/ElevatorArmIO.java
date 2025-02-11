@@ -21,6 +21,8 @@ public interface ElevatorArmIO {
 
     public void stop();
 
+    public void setSpeed(double speed);
+
     public void runMotorTest();
 
 }
