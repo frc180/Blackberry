@@ -440,11 +440,14 @@ public class RobotContainer {
                 CoralScoringPosition previous = Robot.autoPreviousCoralScoringPosition;
                 return previous != null && previous.isFarTag();
             }
+        ).withDeadline(
+            Commands.waitSeconds(0.25).andThen(
+                Commands.waitUntil(() -> vision.getCoralPose() != null)
+            )
         );
 
         Command autoIntakeCoral = Commands.sequence(
-            autoHPDrive.until(() -> vision.getCoralPose() != null)
-                                    .alongWith(Auto.coralIntake()),
+            autoHPDrive.alongWith(Auto.startCoralIntake()),
             Auto.driveToCoral()
                 .withMaxSpeed(1)
                 .until(intakeCoral.hasCoral) // at this point, the command gets interrupted by the auto coral intake trigger

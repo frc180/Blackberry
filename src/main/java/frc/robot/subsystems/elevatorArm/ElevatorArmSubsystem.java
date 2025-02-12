@@ -21,6 +21,8 @@ public class ElevatorArmSubsystem extends SubsystemBase{
         io = new ElevatorArmIOSim();
 
         hasCoral = new Trigger(() -> inputs.middleCoralSensor);
+        // TODO: depending on how coral indexing works on the real robot, "hasCoral" might need to require all sensors (or 2/3)
+        // hasCoral = new Trigger(() -> inputs.frontCoralSensor && inputs.middleCoralSensor && inputs.backCoralSensor);
         hasPartialCoral = new Trigger(() -> inputs.frontCoralSensor || inputs.middleCoralSensor || inputs.backCoralSensor);
         hasNoCoral = hasPartialCoral.negate();
     }
@@ -30,27 +32,43 @@ public class ElevatorArmSubsystem extends SubsystemBase{
         io.update(inputs);
     }
 
-    public Command runRollers() {
-        return this.run(() -> {
-            io.run();
+    public Command intakeAndIndex() {
+        return run(() -> {
+            // All the sensors are triggered means coral is perfectly positioned
+            if (inputs.frontCoralSensor && inputs.middleCoralSensor && inputs.backCoralSensor) {
+                io.setSpeed(0);
+                return;
+            }
+
+            // Middle or back sensor without front sensor means we overshot
+            if (!inputs.frontCoralSensor && (inputs.middleCoralSensor || inputs.backCoralSensor)) {
+                io.setSpeed(-0.25);
+                return;
+            }
+
+            // Middle sensor without back sensor means we need to move forward still
+            if (inputs.middleCoralSensor && !inputs.backCoralSensor) {
+                io.setSpeed(0.25);
+                return;
+            }
+
+            io.setSpeed(1);
         });
+    }
+
+    public Command runRollers() {
+        return run(() -> io.run());
     }
 
     public Command reverseRun() {
-        return this.run (() -> {
-            io.reverse();
-        });
+        return run(() -> io.reverse());
     }
 
     public Command stop() {
-        return this.run(() -> {
-            io.stop();
-        });
+        return run(() -> io.stop());
     }
 
     public Command test() {
-        return this.run(() -> {
-          io.runMotorTest();
-        });
+        return run(() -> io.runMotorTest());
     }   
 }

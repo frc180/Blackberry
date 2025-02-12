@@ -30,7 +30,7 @@ public abstract class Auto {
         return coralIntaking;
     }
 
-    public static Command coralIntake() {
+    public static Command startCoralIntake() {
         return Commands.runOnce(() -> coralIntaking = true);
     }
 
@@ -38,8 +38,7 @@ public abstract class Auto {
         return Commands.runOnce(() -> coralIntaking = false);
     }
 
-    // TODO: add version of this that uses pathplanner to not hit reef when coming from far tags
-    public static Command driveToHPStation() {
+    public static DriveToPose driveToHPStation() {
         return new DriveToPose(RobotContainer.instance.drivetrain, () -> {
                                     Pose2d hpStation = Robot.isBlue() ? SimLogic.blueHPCoralPose : SimLogic.redHPCoralPose;
                                     return hpStation.transformBy(hpStationTransform);
