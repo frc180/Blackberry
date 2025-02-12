@@ -1,25 +1,19 @@
 package frc.robot.subsystems.elevator;
 
-import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
-
 import java.util.List;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicExpoVoltage;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
-import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.GravityTypeValue;
-import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.wpilibj.RobotController;
-import edu.wpi.first.wpilibj.simulation.BatterySim;
+import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.simulation.ElevatorSim;
-import edu.wpi.first.wpilibj.simulation.RoboRioSim;
 import frc.robot.Constants;
 import frc.robot.Robot;
 
@@ -34,6 +28,7 @@ public class ElevatorIOTalonFX implements ElevatorIO {
     MotionMagicExpoVoltage motionMagicExpoControl;
     VoltageOut voltageControl;
     Follower followerControl;
+    DigitalInput bottomLimit;
 
     TalonFXSimState motorASim, motorBSim;
     List<TalonFXSimState> motorSims;
@@ -78,6 +73,8 @@ public class ElevatorIOTalonFX implements ElevatorIO {
 
         motorB.setControl(followerControl);
 
+        bottomLimit = new DigitalInput(Constants.DIO_ELEVATOR_BOTTOM_LIMIT);
+
         // Everything past this point is just for simulation setup
         if (Robot.isReal()) return;
 
@@ -115,6 +112,8 @@ public class ElevatorIOTalonFX implements ElevatorIO {
 
     @Override
     public void update(ElevatorIOInputs inputs) {
+        if (Robot.isReal() && bottomLimit.get()) motorA.setPosition(0);
+
         inputs.position = motorA.getPosition(true).getValueAsDouble();
         inputs.velocity = motorA.getVelocity(true).getValueAsDouble();
         inputs.voltage = motorA.getMotorVoltage(true).getValueAsDouble();

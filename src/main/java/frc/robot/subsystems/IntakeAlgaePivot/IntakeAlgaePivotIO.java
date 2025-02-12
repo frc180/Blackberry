@@ -10,6 +10,7 @@ public interface IntakeAlgaePivotIO {
         public double position;
         public double voltage;
         public double target;
+        public double encoderPosition;
     }
 
     public void update(IntakeAlgaePivotIOInputs inputs);
