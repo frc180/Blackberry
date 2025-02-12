@@ -11,6 +11,8 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.TalonFXSimState;
+import com.spamrobotics.util.PIDTuner;
+
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.simulation.ElevatorSim;
@@ -29,6 +31,7 @@ public class ElevatorIOTalonFX implements ElevatorIO {
     VoltageOut voltageControl;
     Follower followerControl;
     DigitalInput bottomLimit;
+    PIDTuner pidTuner = null;
 
     TalonFXSimState motorASim, motorBSim;
     List<TalonFXSimState> motorSims;
@@ -74,6 +77,9 @@ public class ElevatorIOTalonFX implements ElevatorIO {
         motorB.setControl(followerControl);
 
         bottomLimit = new DigitalInput(Constants.DIO_ELEVATOR_BOTTOM_LIMIT);
+        
+        pidTuner = new PIDTuner(config.Slot0, motorA).withName("Elevator");
+        pidTuner.initializeValues(config.Slot0);
 
         // Everything past this point is just for simulation setup
         if (Robot.isReal()) return;
@@ -118,6 +124,8 @@ public class ElevatorIOTalonFX implements ElevatorIO {
         inputs.velocity = motorA.getVelocity(true).getValueAsDouble();
         inputs.voltage = motorA.getMotorVoltage(true).getValueAsDouble();
         inputs.target = motorA.getClosedLoopReference(true).getValueAsDouble();
+
+        if (pidTuner != null) pidTuner.periodic();
     }
 
     // Simulation-only code which runs periodically before update() is called

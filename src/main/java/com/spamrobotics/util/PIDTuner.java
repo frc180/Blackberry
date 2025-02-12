@@ -15,12 +15,15 @@ import edu.wpi.first.networktables.NetworkTableInstance;
  */
 public class PIDTuner {
 
-  public double p, i, d, ff;
+  public double p, i, d;
+  public double ff = 0, kA = 0, kG = 0;
 
   private Consumer<Double> pSetter;
   private Consumer<Double> iSetter;
   private Consumer<Double> dSetter;
   private Consumer<Double> ffSetter;
+  private Consumer<Double> kASetter = null;
+  private Consumer<Double> kGSetter = null;
   private Supplier<Double> targetGetter;
   private Supplier<Double> valueGetter = null;
   private Supplier<Double> outputGetter = null;
@@ -39,7 +42,7 @@ public class PIDTuner {
   //   this(pid::setP, pid::setI, pid::setD, pid::setFF, targetGetter);
   // }
 
-  public PIDTuner(Slot0Configs config, TalonFX talonFX, Supplier<Double> targetGetter) {
+  public PIDTuner(Slot0Configs config, TalonFX talonFX) {
     this(
       (p) -> {
         config.kP = p;
@@ -57,8 +60,18 @@ public class PIDTuner {
         config.kV = ff;
         talonFX.getConfigurator().apply(config);
       },
-      targetGetter
+      () -> talonFX.getClosedLoopReference(false).getValueAsDouble()
     );
+
+    withValue(() -> talonFX.getPosition(false).getValueAsDouble());
+    withKA(kAValue-> {
+      config.kA = kAValue;
+      talonFX.getConfigurator().apply(config);
+    });
+    withKG(KGValue -> {
+      config.kG = KGValue;
+      talonFX.getConfigurator().apply(config);
+    });
   }
 
   public PIDTuner(Consumer<Double> pSetter, 
@@ -105,6 +118,16 @@ public class PIDTuner {
     return this;
   }
 
+  public PIDTuner withKA(Consumer<Double> kASetter) {
+    this.kASetter = kASetter;
+    return this;
+  }
+
+  public PIDTuner withKG(Consumer<Double> kGSetter) {
+    this.kGSetter = kGSetter;
+    return this;
+  }
+
   /**
    * Initializes the PID values to the ones stored in the PIDController.
    * @param pid
@@ -135,6 +158,8 @@ public class PIDTuner {
    */
   public void initializeValues(Slot0Configs config) {
     initializeValues(config.kP, config.kI, config.kD, config.kV);
+    setKA(config.kA);
+    setKG(config.kG);
   }
 
   /**
@@ -162,11 +187,15 @@ public class PIDTuner {
     double nP = nt.getEntry("P Value").getDouble(p);
     double nI = nt.getEntry("I Value").getDouble(i);
     double nD = nt.getEntry("D Value").getDouble(d);
-    double nFF = nt.getEntry("FF Value").getDouble(ff);
+    double nFF = nt.getEntry("kV Value").getDouble(ff);
+    double nKA = nt.getEntry("kA Value").getDouble(0);
+    double nKG = nt.getEntry("kG Value").getDouble(0);
     if(nP != p) setP(nP);
     if(nI != i) setI(nI); 
     if(nD != d) setD(nD);
     if (nFF != ff) setFF(nFF); 
+    if (nKA != kA) setKA(nKA);
+    if (nKG != kG) setKG(nKG);
   }
 
   public void setP(double p) {
@@ -190,6 +219,18 @@ public class PIDTuner {
   public void setFF(double ff) {
     this.ff = ff;
     if (ffSetter != null) ffSetter.accept(ff);
-    nt.getEntry("FF Value").setNumber(ff);
+    nt.getEntry("kV Value").setNumber(ff);
+  }
+
+  public void setKA(double kA) {
+    this.kA = kA;
+    if (kASetter != null) kASetter.accept(kA);
+    nt.getEntry("kA Value").setNumber(kA);
+  }
+
+  public void setKG(double kG) {
+    this.kG = kG;
+    if (kGSetter != null) kGSetter.accept(kG);
+    nt.getEntry("kG Value").setNumber(kG);
   }
 }

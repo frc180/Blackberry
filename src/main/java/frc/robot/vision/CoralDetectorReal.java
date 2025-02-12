@@ -1,7 +1,6 @@
 package frc.robot.vision;
 
 import static edu.wpi.first.units.Units.*;
-
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -9,6 +8,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
+import frc.robot.subsystems.vision.VisionSubsystem;
 import frc.robot.util.LimelightHelpers.RawDetection;
 
 public class CoralDetectorReal implements CoralDetector {
@@ -39,13 +39,16 @@ public class CoralDetectorReal implements CoralDetector {
         }
         sortedDetections.sort(detectionTYComparator);
 
+        Pose2d basePose = robotPose;
+        // Pose2d basePose = robotPose.transformBy(VisionSubsystem.ROBOT_TO_INTAKE_CAMERA);
+
         for (RawDetection detection : sortedDetections) {
             double distanceMeters = distanceMap.get(detection.tync);
             double degrees = detection.txnc;
 
             // TODO: double check if x or y is the correct value for distanceMeters
             Transform2d coralTransform = new Transform2d(0, distanceMeters, Rotation2d.fromDegrees(degrees));
-            Pose2d coralPose = robotPose.transformBy(coralTransform);
+            Pose2d coralPose = basePose.transformBy(coralTransform);
 
             // TODO: reject coralPoses that are outside the field or (perhaps) where the stacked coral are
             return coralPose;
