@@ -23,7 +23,6 @@ package frc.robot;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
-
 import java.util.List;
 import java.util.function.DoubleSupplier;
 import java.util.function.Function;
@@ -48,7 +47,6 @@ import edu.wpi.first.wpilibj2.command.button.CommandGenericHID;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.commands.DefaultDriveCommand;
 import frc.robot.commands.DriveToPose;
 import frc.robot.commands.RumbleCommand;
@@ -112,6 +110,8 @@ public class RobotContainer {
     public Trigger robotHasCoral = null;
     public Trigger robotHasAlgae = null;
     public Trigger coralIntakeTrigger = null;
+    public Trigger driverRightReef = null;
+    public Trigger driverLeftReef = null;
 
     public static RobotContainer instance;
 
@@ -179,8 +179,8 @@ public class RobotContainer {
         final Trigger driverL2 = driverController.leftBumper().and(coralMode);
         final Trigger driverL3 = driverController.rightTrigger().and(coralMode);
         final Trigger driverL4 = driverController.rightBumper().and(coralMode);
-        final Trigger driverLeftReef = driverController.x().and(coralMode);
-        final Trigger driverRightReef = driverController.b().and(coralMode);
+        driverLeftReef = driverController.x().and(coralMode);
+        driverRightReef = driverController.b().and(coralMode);
         //algae
         final Trigger driverProcessor = algaeMode.and(driverController.b());
         final Trigger driverNet = algaeMode.and(driverController.x());

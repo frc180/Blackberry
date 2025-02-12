@@ -309,6 +309,11 @@ public class VisionSubsystem extends SubsystemBase {
         return -1;
     }
 
+    // Unused
+    public boolean getLeftFromPose(Pose2d pose) {
+        return leftReefHashMap.values().contains(pose);
+    }
+
     /**
      * Returns the position of the closest detected coral, or null
      */

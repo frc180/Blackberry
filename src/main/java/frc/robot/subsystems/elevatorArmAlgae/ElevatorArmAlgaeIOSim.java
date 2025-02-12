@@ -55,7 +55,7 @@ public class ElevatorArmAlgaeIOSim implements ElevatorArmAlgaeIO{
         } else {
             if (fromReef) { // TODO: && speed > 0?
                 int tag = drivetrain.getTargetPoseTag();
-                if (tag != -1 && Field.hasReefAlgae(tag)) {
+                if (tag != -1 && Field.hasReefAlgae(tag) && RobotContainer.instance.driverRightReef.getAsBoolean()) {
                     SimLogic.armHasAlgae = true;
                     Field.removeReefAlgae(tag);
                 }
