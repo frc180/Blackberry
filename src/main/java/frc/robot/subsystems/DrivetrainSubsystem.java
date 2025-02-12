@@ -36,6 +36,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.State;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
@@ -118,6 +119,8 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     private Pose2d mapleSimPose = null;
 
     private ProfiledPIDController xPidController, yPidController, driverRotationPidController;
+    private State xPidGoalState = new State();
+    private State yPidGoalState = new State();
     private double xPosition = 0;
     private double yPosition = 0;
     private double xPidTarget = 0;
@@ -344,8 +347,6 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
 
     public void resetPIDs(HeadingTarget type) {
         SwerveDriveState state = getState();
-        // TODO: this speed transform seems to work, but best I can tell it should be using
-        // getGyroscopeRotation() instead of the pose rotation...
         ChassisSpeeds speeds = ChassisSpeeds.fromRobotRelativeSpeeds(state.Speeds, state.Pose.getRotation());
         xPidController.reset(state.Pose.getX(), speeds.vxMetersPerSecond);
         yPidController.reset(state.Pose.getY(), speeds.vyMetersPerSecond);
@@ -353,11 +354,15 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     }
 
     public void resetHeadingPID(HeadingTarget type) {
-        resetHeadingPID(type == HeadingTarget.GYRO ? getGyroscopeRotation() : getPose().getRotation());
+        resetHeadingPID(type == HeadingTarget.GYRO ? getGyroscopeDegrees() : getPose().getRotation().getDegrees());
     }
 
     public void resetHeadingPID(Rotation2d rotation) {
-        driverRotationPidController.reset(rotation.getRadians());
+        resetHeadingPID(rotation.getDegrees());
+    }
+
+    public void resetHeadingPID(double degrees) {
+        driverRotationPidController.reset(Units.degreesToRadians(degrees));
     }
 
     public double calculateHeadingPID(Rotation2d heading, double targetDegrees) {
@@ -365,16 +370,24 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     }
 
     public double calculateHeadingPID(double headingDegrees, double targetDegrees) {
-        headingError =  MathUtil.inputModulus(targetDegrees - headingDegrees, -180, 180);    
+        headingError = MathUtil.inputModulus(targetDegrees - headingDegrees, -180, 180);    
         return driverRotationPidController.calculate(
             Math.toRadians(headingDegrees), 
             Math.toRadians(targetDegrees)
         );
     }
-    
+
     public ChassisSpeeds calculateChassisSpeeds(Pose2d currentPose, Pose2d pidPose) {
-        double xFeedback = xPidController.calculate(currentPose.getX(), pidPose.getX());
-        double yFeedback = yPidController.calculate(currentPose.getY(), pidPose.getY());
+        return calculateChassisSpeeds(currentPose, pidPose, 0, 0);
+    }
+    
+    public ChassisSpeeds calculateChassisSpeeds(Pose2d currentPose, Pose2d pidPose, double xGoalVelocity, double yGoalVelocity) {
+        xPidGoalState.position = pidPose.getX();
+        xPidGoalState.velocity = xGoalVelocity;
+        yPidGoalState.position = pidPose.getY();
+        yPidGoalState.velocity = yGoalVelocity;
+        double xFeedback = xPidController.calculate(currentPose.getX(), xPidGoalState);
+        double yFeedback = yPidController.calculate(currentPose.getY(), yPidGoalState);
         double thetaFeedback = calculateHeadingPID(currentPose.getRotation(), pidPose.getRotation().getDegrees());
 
         return ChassisSpeeds.fromFieldRelativeSpeeds(xFeedback, yFeedback, thetaFeedback, currentPose.getRotation());

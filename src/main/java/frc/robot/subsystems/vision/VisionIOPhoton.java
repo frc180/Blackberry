@@ -55,10 +55,10 @@ public class VisionIOPhoton implements VisionIO {
     @Override
     public void update(VisionIOInputs inputs) {
         inputs.scoringCameraConnected = true;
+        inputs.backCameraConnected = true;
 
         PhotonPipelineResult latestResult = null;
         EstimatedRobotPose latestEstimate = null;
-
         for (PhotonPipelineResult result : scoringCamera.getAllUnreadResults()) {
             Optional<EstimatedRobotPose> poseEst = photonPoseEstimator.update(result);
             if (poseEst.isPresent()) {

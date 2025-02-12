@@ -10,23 +10,39 @@ import frc.robot.util.LimelightHelpers.PoseEstimate;
 public class VisionIOLimelight implements VisionIO {
 
     private static final String SCORING_LIMELIGHT = "limelight";
+    private static final String FRONT_LIMEIGHT = "front-limelight";
+    private static final String BACK_LIMEIGHT = "back-limelight";
     private final LimelightStatus scoringLimelightStatus;
+    private final LimelightStatus frontLimelightStatus;
+    private final LimelightStatus backLimelightStatus;
+
     private final PoseEstimate simPoseEstimate = new PoseEstimate();
 
     public VisionIOLimelight() {
         scoringLimelightStatus = new LimelightStatus(SCORING_LIMELIGHT);
+        frontLimelightStatus = new LimelightStatus(FRONT_LIMEIGHT);
+        backLimelightStatus = new LimelightStatus(BACK_LIMEIGHT);
     }
 
     @Override
     public void update(VisionIOInputs inputs) {
         scoringLimelightStatus.update();
+        frontLimelightStatus.update();
+        backLimelightStatus.update();
 
         inputs.scoringCameraConnected = scoringLimelightStatus.isConnected();
+        inputs.frontCameraConnected = frontLimelightStatus.isConnected();
+        inputs.backCameraConnected = backLimelightStatus.isConnected();
+
         inputs.scoringFiducials = LimelightHelpers.getRawFiducials(SCORING_LIMELIGHT);
+        inputs.backDetections = LimelightHelpers.getRawDetections(BACK_LIMEIGHT);
+        
         if (Robot.isSimulation() && RobotContainer.MAPLESIM) {
             inputs.scoringPoseEstimate = simPoseEstimate;
+            inputs.frontPoseEstimate = simPoseEstimate;
         } else {
             inputs.scoringPoseEstimate = LimelightHelpers.getBotPoseEstimate_wpiBlue(SCORING_LIMELIGHT);
+            inputs.frontPoseEstimate = LimelightHelpers.getBotPoseEstimate_wpiBlue(FRONT_LIMEIGHT);
         }
     }
 

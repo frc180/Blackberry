@@ -7,6 +7,9 @@ import frc.robot.util.LimelightHelpers.PoseEstimate;
 
 @CustomLoggerFor(PoseEstimate.class)
 public class PoseEstimateLogger extends ClassSpecificLogger<PoseEstimate> {
+
+  private double[] poseArray = new double[3];
+
   public PoseEstimateLogger() {
     super(PoseEstimate.class);
   }
@@ -21,5 +24,10 @@ public class PoseEstimateLogger extends ClassSpecificLogger<PoseEstimate> {
     backend.log("Tag Count", estimate.tagCount);
     backend.log("Avg Tag Area", estimate.avgTagArea);
     backend.log("Avg Tag Dist", estimate.avgTagDist);
+
+    poseArray[0] = estimate.pose.getTranslation().getX();
+    poseArray[1] = estimate.pose.getTranslation().getY();
+    poseArray[2] = estimate.pose.getRotation().getRadians();
+    backend.log("Pose", poseArray);
   }
 }

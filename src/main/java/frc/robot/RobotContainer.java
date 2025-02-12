@@ -367,7 +367,9 @@ public class RobotContainer {
         }
 
         // Coral scoring sequence - kCancelIncoming means nothing else will be able to stop this command until it finishes
-        atReef.and(elevator.elevatorInScoringPosition).and(elevatorArmPivot.elevatorArmInScoringPosition).onTrue(
+        atReef.and(elevator.elevatorInScoringPosition)
+              .and(elevatorArmPivot.elevatorArmInScoringPosition)
+              .and(vision.poseEstimateDiffLow).onTrue(
             Commands.sequence(
                 drivetrain.runOnce(() -> drivetrain.drive(new ChassisSpeeds())),
                 elevatorArmEject,
