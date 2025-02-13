@@ -467,8 +467,6 @@ public class LimelightHelpers {
     /**
      * Represents a Limelight Raw Fiducial result from Limelight's NetworkTables output.
      */
-
-    @Logged
     public static class RawFiducial {
         public int id = 0;
         public double txnc = 0;

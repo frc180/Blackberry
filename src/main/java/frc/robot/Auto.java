@@ -16,11 +16,13 @@ import frc.robot.subsystems.DrivetrainSubsystem.PoseTarget;
 import frc.robot.subsystems.vision.VisionSubsystem;
 import frc.robot.util.simulation.SimLogic;
 
-public abstract class Auto {
+public final class Auto {
 
-    static final Transform2d hpStationTransform = new Transform2d(0, 0, Rotation2d.fromDegrees(150));
+    private static final Transform2d HP_STATION_TRANSFORM = new Transform2d(0, 0, Rotation2d.fromDegrees(150));
 
     public static boolean coralIntaking = false;
+
+    private Auto() {}
     
     public static void init() {
         coralIntaking = false;
@@ -41,7 +43,7 @@ public abstract class Auto {
     public static DriveToPose driveToHPStation() {
         return new DriveToPose(RobotContainer.instance.drivetrain, () -> {
                                     Pose2d hpStation = Robot.isBlue() ? SimLogic.blueHPCoralPose : SimLogic.redHPCoralPose;
-                                    return hpStation.transformBy(hpStationTransform);
+                                    return hpStation.transformBy(HP_STATION_TRANSFORM);
                                 });
     }
 
@@ -51,13 +53,13 @@ public abstract class Auto {
             double sign = Robot.isBlue() ? 1 : -1;
 
             Pose2d hpStation = new Pose2d((Robot.isBlue() ? SimLogic.blueHPCoralPose : SimLogic.redHPCoralPose).getTranslation(), Rotation2d.kZero);
-            Translation2d start = hpStation.getTranslation().plus(new Translation2d(2 * sign, -0.5 * sign));
+            Translation2d end = hpStation.getTranslation().plus(new Translation2d(2 * sign, -0.5 * sign));
             List<Pose2d> pathA = List.of(
                 new Pose2d(drivetrain.getPose().getTranslation(), Rotation2d.fromDegrees(90 * sign)),
-                new Pose2d(start, Rotation2d.fromDegrees(0)),
-                new Pose2d(start, Rotation2d.fromDegrees(Robot.isBlue() ? (160 - 180) : 160))
+                new Pose2d(end, Rotation2d.fromDegrees(0)),
+                new Pose2d(end, Rotation2d.fromDegrees(160 - (Robot.isBlue() ? 180 : 0)))
             );
-            return drivePath(pathA, 0, true);
+            return drivetrain.followPath(pathA, 0, true);
         }, Set.of(drivetrain));
     }
 
@@ -73,25 +75,16 @@ public abstract class Auto {
             Translation2d robotTranslation = robotPose.getTranslation();
             Translation2d coralTranslation = coralPose.getTranslation();
 
-            // Calculate the angle to the coral
+            // Calculate the angle in radians to the coral
             double angleToCoral = Math.atan2(coralTranslation.getY() - robotTranslation.getY(), coralTranslation.getX() - robotTranslation.getX());
 
             return new Pose2d(coralPose.getTranslation(), new Rotation2d(angleToCoral + Math.PI));
         }).withDynamicTarget(true);
     }
 
-    // TODO: This doesn't work great if the reef is not within a straight line from the robot position.
-    // This method should be updated to use use Pathplanner paths (either all of the time, or when deemed necessary)
-    // to move the robot most of the way there without collisions, then switch to the DriveToPose command to finish the job.
     public static Command driveToReefWithCoral() {
         return new DriveToPose(RobotContainer.instance.drivetrain, () -> Robot.nextAutoCoralScoringPosition().getPose())
                     .withPoseTargetType(PoseTarget.REEF)
                     .alongWith(Auto.stopCoralIntake());
-    }
-
-    public static Command drivePath(List<Pose2d> path, double endVel, boolean preventFlipping) {
-        int lastIndex = path.size() - 1;
-        List<Waypoint> waypoints = PathPlannerPath.waypointsFromPoses(path.subList(0, lastIndex));
-        return RobotContainer.instance.drivetrain.followPath(endVel, path.get(lastIndex), preventFlipping, waypoints);
     }
 }

@@ -1,9 +1,7 @@
 package com.spamrobotics.util;
 
 import java.util.function.Function;
-
 import edu.wpi.first.math.MathUtil;
-import frc.robot.RobotContainer;
 
 public class JoystickInputs {
 

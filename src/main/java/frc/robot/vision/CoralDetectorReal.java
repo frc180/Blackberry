@@ -8,7 +8,6 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
-import frc.robot.subsystems.vision.VisionSubsystem;
 import frc.robot.util.LimelightHelpers.RawDetection;
 
 public class CoralDetectorReal implements CoralDetector {
@@ -35,6 +34,9 @@ public class CoralDetectorReal implements CoralDetector {
 
         sortedDetections.clear();
         for (RawDetection detection : detections) {
+            // Skip non-coral detections
+            if (detection.classId != 1) continue;
+
             sortedDetections.add(detection);
         }
         sortedDetections.sort(detectionTYComparator);

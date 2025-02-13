@@ -703,13 +703,6 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         m_simNotifier.startPeriodic(kSimLoopPeriod);
     }
 
-    /*public PathPlannerPath path = new PathPlannerPath(
-        waypoints,
-        constraints,
-        null, // The ideal starting state, this is only relevant for pre-planned paths, so can be null for on-the-fly paths.
-        new GoalEndState(0.0, new Rotation2d().fromDegrees(240)) // Goal end state. You can set a holonomic rotation here. If using a differential drivetrain, the rotation will have no effect.
-    );*/
-
     public PathPlannerPath getPath(double endVel, Rotation2d endRotation, boolean preventFlipping, List<Waypoint> waypoints) {
         //note that waypoints must contain at least 2 pose2ds wrapped inside PathPlannerPath.waypointsfromPoses(waypoints)
         path = new PathPlannerPath(waypoints, constraints, null, new GoalEndState(endVel, endRotation));
@@ -717,12 +710,13 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         return path;
     }
 
-    public Command followPath(double endVel, Rotation2d endRotation, boolean preventFlipping, List<Waypoint> waypoints) {
-        return AutoBuilder.followPath(getPath(endVel, endRotation, preventFlipping, waypoints));
-    }
+    /**
+     * Follows a path defined by a list of waypoints.
+     */
+    public Command followPath(List<Waypoint> waypoints, double endVel, Pose2d endPose, boolean preventFlipping) {
+        PathPlannerPath path = getPath(endVel, endPose.getRotation(), preventFlipping, waypoints);
+        Command pathCommand = AutoBuilder.followPath(path);
 
-    public Command followPath(double endVel, Pose2d endPose, boolean preventFlipping, List<Waypoint> waypoints) {
-        Command pathCommand = followPath(endVel, endPose.getRotation(), preventFlipping, waypoints);
         return Commands.parallel(
             Commands.runOnce(() -> {
                 Pose2d currentEndPose = endPose;
@@ -731,5 +725,14 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
             }),
             pathCommand
         );
+    }
+
+    /**
+     * Follows a path defined by a list of poses, with the last pose being the end pose (position & rotation)
+     */
+    public Command followPath(List<Pose2d> path, double endVel, boolean preventFlipping) {
+        int lastIndex = path.size() - 1;
+        List<Waypoint> waypoints = PathPlannerPath.waypointsFromPoses(path.subList(0, lastIndex));
+        return followPath(waypoints, endVel, path.get(lastIndex), preventFlipping);
     }
 }

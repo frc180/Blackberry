@@ -144,7 +144,7 @@ public class RobotContainer {
             backLeftReefPose
         );
 
-        autoChooser.setDefaultOption("left barge to left reef", Commands.sequence(
+        autoChooser.setDefaultOption("Left Barge to Left Reef", Commands.sequence(
                         Commands.runOnce(() -> {
                             Robot.setAutoCoralScoringPositions(sampleAutoPositions);
                             if (Robot.isSimulation()) {
@@ -152,9 +152,8 @@ public class RobotContainer {
                                 if (Robot.isRed()) start = FlippingUtil.flipFieldPose(start);
                                 drivetrain.resetPose(start);
                             }
-
                         }),
-                        drivetrain.followPath(0.0, backLeftReefPose, false, leftBargeToLeftReef)
+                        drivetrain.followPath(leftBargeToLeftReef, 0.0, backLeftReefPose, false)
                             .until(drivetrain.withinTargetPoseDistance(1))
                             .andThen(new DriveToPose(drivetrain, () -> Robot.nextAutoCoralScoringPosition().getPose()).withPoseTargetType(PoseTarget.REEF))
                     ));
