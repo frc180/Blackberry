@@ -30,8 +30,6 @@ import frc.robot.util.simulation.SimulatedAIRobot;
 public class Robot extends TimedRobot {
 
   public static boolean justScoredCoral = false;
-  public static CoralScoringPosition autoPreviousCoralScoringPosition = null; 
-  public static List<CoralScoringPosition> autoCoralScoringPositions = new ArrayList<>();
 
   private Command m_autonomousCommand;
 
@@ -218,23 +216,6 @@ public class Robot extends TimedRobot {
 
   public static boolean isRed() {
     return !isBlue();
-  }
-
-  public static CoralScoringPosition nextAutoCoralScoringPosition() {
-    if (autoCoralScoringPositions.isEmpty()) {
-      return null;
-    }
-
-    return autoCoralScoringPositions.get(0);
-  }
-
-  public static void setAutoCoralScoringPositions(CoralScoringPosition... positions) {
-    setAutoCoralScoringPositions(List.of(positions));
-  }
-
-  public static void setAutoCoralScoringPositions(List<CoralScoringPosition> positions) {
-    autoCoralScoringPositions.clear();
-    positions.forEach(position -> autoCoralScoringPositions.add(position.getFlippedIfNeeded()));
   }
 }
 

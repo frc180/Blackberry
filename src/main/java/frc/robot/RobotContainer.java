@@ -310,7 +310,7 @@ public class RobotContainer {
         Command chosenElevatorHeight = elevator.run(() -> {
             // In autonomous, read the next coral scoring position from the list to determine the elevator height
             if (RobotState.isAutonomous()) {
-                CoralScoringPosition next = Robot.nextAutoCoralScoringPosition();
+                CoralScoringPosition next = Auto.nextCoralScoringPosition();
                 if (next == null) {
                     elevator.setPositionDirect(0);
                     return;
@@ -360,9 +360,9 @@ public class RobotContainer {
                 elevatorArmEject,
                 Commands.runOnce(() -> {
                     if (RobotState.isAutonomous()) {
-                        if (!Robot.autoCoralScoringPositions.isEmpty()) {
-                            Robot.autoPreviousCoralScoringPosition = Robot.autoCoralScoringPositions.get(0);
-                            Robot.autoCoralScoringPositions.remove(0);
+                        if (!Auto.coralScoringPositions.isEmpty()) {
+                            Auto.previousCoralScoringPosition = Auto.coralScoringPositions.get(0);
+                            Auto.coralScoringPositions.remove(0);
                         }
                     }
                     Robot.justScoredCoral = true;
@@ -424,7 +424,7 @@ public class RobotContainer {
             Auto.driveToHPStationFar(),
             Auto.driveToHPStation(),
             () -> {
-                CoralScoringPosition previous = Robot.autoPreviousCoralScoringPosition;
+                CoralScoringPosition previous = Auto.previousCoralScoringPosition;
                 return previous != null && previous.isFarTag();
             }
         ).withDeadline(
@@ -444,7 +444,7 @@ public class RobotContainer {
             Commands.either(
                 autoIntakeCoral,
                 Commands.none(),
-                () -> Robot.nextAutoCoralScoringPosition() != null
+                () -> Auto.nextCoralScoringPosition() != null
             ).alongWith(Commands.runOnce(() -> Robot.justScoredCoral = false))
         );
 

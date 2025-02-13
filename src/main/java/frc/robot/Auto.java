@@ -1,5 +1,6 @@
 package frc.robot;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import com.pathplanner.lib.path.PathPlannerPath;
@@ -22,7 +23,10 @@ import frc.robot.util.simulation.SimLogic;
 public final class Auto {
 
     private static final Transform2d HP_STATION_TRANSFORM = new Transform2d(0, 0, Rotation2d.fromDegrees(150));
+    
     private static boolean coralIntaking = false;
+    public static CoralScoringPosition previousCoralScoringPosition = null; 
+    public static List<CoralScoringPosition> coralScoringPositions = new ArrayList<>();
 
     public static final List<CoralScoringPosition> LEFT_BARGE_CORAL_POSITIONS = List.of(
         new CoralScoringPosition(20, 4, true),
@@ -93,7 +97,7 @@ public final class Auto {
     }
 
     public static Command driveToReefWithCoral() {
-        return new DriveToPose(RobotContainer.instance.drivetrain, () -> Robot.nextAutoCoralScoringPosition().getPose())
+        return new DriveToPose(RobotContainer.instance.drivetrain, () -> nextCoralScoringPosition().getPose())
                     .withPoseTargetType(PoseTarget.REEF)
                     .alongWith(Auto.stopCoralIntake());
     }
@@ -106,7 +110,7 @@ public final class Auto {
      */
     public static Command configureAuto(List<CoralScoringPosition> coralScoringPositions, Pose2d simAutoStart) {
         return Commands.runOnce(() -> {
-            Robot.setAutoCoralScoringPositions(coralScoringPositions);
+            setCoralScoringPositions(coralScoringPositions);
             if (Robot.isSimulation()) {
                 Pose2d start = simAutoStart;
                 if (Robot.isRed()) start = FlippingUtil.flipFieldPose(start);
@@ -122,7 +126,24 @@ public final class Auto {
             Auto.configureAuto(coralScoringPositions, simStart),
             drivetrain.followPath(startingPath, 0.0, false)
                 .until(drivetrain.withinTargetPoseDistance(1))
-                .andThen(new DriveToPose(drivetrain, () -> Robot.nextAutoCoralScoringPosition().getPose()).withPoseTargetType(PoseTarget.REEF))
+                .andThen(new DriveToPose(drivetrain, () -> nextCoralScoringPosition().getPose()).withPoseTargetType(PoseTarget.REEF))
         );
+    }
+
+    public static CoralScoringPosition nextCoralScoringPosition() {
+        if (coralScoringPositions.isEmpty()) {
+            return null;
+        }
+
+        return coralScoringPositions.get(0);
+    }
+
+    public static void setCoralScoringPositions(CoralScoringPosition... positions) {
+        setCoralScoringPositions(List.of(positions));
+    }
+
+    public static void setCoralScoringPositions(List<CoralScoringPosition> positions) {
+        coralScoringPositions.clear();
+        positions.forEach(position -> coralScoringPositions.add(position.getFlippedIfNeeded()));
     }
 }
