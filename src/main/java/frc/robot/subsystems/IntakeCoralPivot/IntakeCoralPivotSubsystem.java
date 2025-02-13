@@ -1,6 +1,7 @@
 package frc.robot.subsystems.IntakeCoralPivot;
 
 import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -12,8 +13,10 @@ import frc.robot.util.simulation.SimVisuals;
 public class IntakeCoralPivotSubsystem extends SubsystemBase {
     
     //presets for intake positions
-    public static final double stow = 90;
-    public static final double extend = 200;
+    public static final double stow = Units.degreesToRotations(90);
+    public static final double extend = Units.degreesToRotations(200);
+
+    private static final double IN_POSITION_TOLERANCE = Units.degreesToRotations(6);
 
     public IntakeCoralPivotIO io;
     private IntakeCoralPivotIOInputs inputs;
@@ -37,7 +40,7 @@ public class IntakeCoralPivotSubsystem extends SubsystemBase {
     public void periodic() {
         // This method will be called once per scheduler run
         io.update(inputs);
-        SimVisuals.setCoralIntakeDegrees(inputs.position);
+        SimVisuals.setCoralIntakeDegrees(getDegrees());
     }
 
     @Override
@@ -48,11 +51,19 @@ public class IntakeCoralPivotSubsystem extends SubsystemBase {
     }
 
     public boolean isAtTarget() {
-        return Math.abs(inputs.position - targetPosition) <= 6;
+        return Math.abs(inputs.position - targetPosition) <= IN_POSITION_TOLERANCE;
+    }
+
+    public double getTargetPosition() {
+        return targetPosition;
+    }
+
+    public double getDegrees() {
+        return Units.rotationsToDegrees(inputs.position);
     }
 
     public double getTargetDegrees() {
-        return targetPosition;
+        return Units.rotationsToDegrees(targetPosition);
     }
 
     public Command setPosition(double encoderPosition) {

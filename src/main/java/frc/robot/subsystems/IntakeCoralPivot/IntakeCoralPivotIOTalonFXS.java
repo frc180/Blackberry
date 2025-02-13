@@ -2,13 +2,13 @@ package frc.robot.subsystems.IntakeCoralPivot;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicExpoVoltage;
-import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.TalonFXSimState;
+import edu.wpi.first.math.util.Units;
 import frc.robot.Constants;
 import frc.robot.Robot;
 
@@ -20,13 +20,13 @@ public class IntakeCoralPivotIOTalonFXS implements IntakeCoralPivotIO {
 
     // Simulation-only variables
     TalonFXSimState motorSim = null;
-    double simulatedPosition = 90 * -1;
+    double simulatedPosition = Units.degreesToRotations(-90);
     
     public IntakeCoralPivotIOTalonFXS() {
         motor = new TalonFX(Constants.INTAKE_CORAL_PIVOT_TALON);
         motor.setNeutralMode(NeutralModeValue.Brake);
         TalonFXConfiguration config = new TalonFXConfiguration();
-        config.Slot0.kP = 4;
+        config.Slot0.kP = 1440;
         config.Slot0.kI = 0;
         config.Slot0.kD = 0;
         config.Slot0.kG = 0;
@@ -54,7 +54,7 @@ public class IntakeCoralPivotIOTalonFXS implements IntakeCoralPivotIO {
 
     @Override
     public void simulationPeriodic() {
-        simulatedPosition += motorSim.getMotorVoltage() * 1.5;
+        simulatedPosition += motorSim.getMotorVoltage() * Units.degreesToRotations(1.5);
         motorSim.setRawRotorPosition(simulatedPosition);
     }
 
