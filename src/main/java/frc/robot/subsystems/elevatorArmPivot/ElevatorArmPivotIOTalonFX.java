@@ -1,5 +1,6 @@
 package frc.robot.subsystems.elevatorArmPivot;
 
+import static edu.wpi.first.units.Units.*;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
@@ -27,11 +28,11 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO{
     public ElevatorArmPivotIOTalonFX() {
         armPivotMotor = new TalonFX(Constants.ELEVATOR_ARM_PIVOT_TALON);
         TalonFXConfiguration config = new TalonFXConfiguration();
-        config.Feedback.SensorToMechanismRatio = elevatorArmPivotGearing / 360; // convert rotations to degrees
-        config.Slot0.kP = 0.45;
+        config.Feedback.SensorToMechanismRatio = elevatorArmPivotGearing;
+        config.Slot0.kP = 50;
         config.Slot0.kI = 0;
         config.Slot0.kD = 0;
-        config.Slot0.kG = 0.9;
+        config.Slot0.kG = 0.521;
         config.Slot0.kV = 0;
         config.Slot0.kA = 0;
         config.Slot0.GravityType = GravityTypeValue.Arm_Cosine;

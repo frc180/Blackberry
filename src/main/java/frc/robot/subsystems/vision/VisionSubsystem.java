@@ -43,7 +43,7 @@ public class VisionSubsystem extends SubsystemBase {
         SCORING_CAMERA(0.05),
         FRONT_CAMERA(0.3),
         BACK_CAMERA(0.3),
-        NONE(0);
+        NONE(99);
 
         private Matrix<N3, N1> stdDev;
 

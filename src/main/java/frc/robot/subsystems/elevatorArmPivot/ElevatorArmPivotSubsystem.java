@@ -1,6 +1,7 @@
 package frc.robot.subsystems.elevatorArmPivot;
 
 import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -14,13 +15,15 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
     private ElevatorArmPivotIO io;
     private ElevatorArmPivotIOInputs inputs;
 
-    public static final double receiving = 45;
-    public static final double algaeReceive = -70;
+    public static final double receiving = Units.degreesToRotations(45);
+    public static final double algaeReceive = Units.degreesToRotations(-70);
     public static final double horizontal = 0;
     public static final double score = 0;
-    public static final double L1Score = -60;
-    public static final double netScore = 80;
-    public static final double netScoreBackwards = 100;
+    public static final double L1Score = Units.degreesToRotations(-60);
+    public static final double netScore = Units.degreesToRotations(80);
+    public static final double netScoreBackwards = Units.degreesToRotations(100);
+
+    private static final double IN_POSITION_TOLERANCE = Units.degreesToRotations(2);
 
     public double targetPosition = 0;
 
@@ -39,7 +42,7 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
     @Override
     public void periodic() {
         io.update(inputs);
-        SimVisuals.setElevatorArmPivotDegrees(inputs.position);
+        SimVisuals.setElevatorArmPivotDegrees(getDegrees());
     }
 
     @Override
@@ -85,24 +88,31 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
     }
 
     public boolean isElevatorArmInPosition() {
-        if (Math.abs(targetPosition - inputs.position) <= 2) {
-            return true;
-        } else {
-            return false;
-        }
+        return Math.abs(targetPosition - inputs.position) <= IN_POSITION_TOLERANCE;
     }
 
     public boolean isAtReceivingPosition() {
-        return (targetPosition == receiving || targetPosition == algaeReceive) && isElevatorArmInPosition();
+        if (!isElevatorArmInPosition()) return false;
+        
+        return (targetPosition == receiving || targetPosition == algaeReceive);
     }
 
     public boolean isElevatorArmInScoringPosition() {
-        return isElevatorArmInPosition() && 
-            (targetPosition == score || targetPosition == L1Score || targetPosition == netScore || targetPosition == netScoreBackwards);
+        if (!isElevatorArmInPosition()) return false;
+
+        return targetPosition == score || targetPosition == L1Score || targetPosition == netScore || targetPosition == netScoreBackwards;
     }
 
     public double getTargetPosition() {
         return targetPosition;
+    }
+
+    public double getDegrees() {
+        return Units.rotationsToDegrees(inputs.position);
+    }
+
+    public double getTargetDegrees() {
+        return Units.rotationsToDegrees(targetPosition);
     }
 
     public Command test() {
