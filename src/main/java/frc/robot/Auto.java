@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Set;
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.path.Waypoint;
+import com.pathplanner.lib.util.FlippingUtil;
+
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
@@ -14,13 +16,13 @@ import frc.robot.commands.DriveToPose;
 import frc.robot.subsystems.DrivetrainSubsystem;
 import frc.robot.subsystems.DrivetrainSubsystem.PoseTarget;
 import frc.robot.subsystems.vision.VisionSubsystem;
+import frc.robot.util.CoralScoringPosition;
 import frc.robot.util.simulation.SimLogic;
 
 public final class Auto {
 
     private static final Transform2d HP_STATION_TRANSFORM = new Transform2d(0, 0, Rotation2d.fromDegrees(150));
-
-    public static boolean coralIntaking = false;
+    private static boolean coralIntaking = false;
 
     private Auto() {}
     
@@ -28,8 +30,35 @@ public final class Auto {
         coralIntaking = false;
     }
 
+    public static List<CoralScoringPosition> leftAutoCoralPositions() {
+        return List.of(
+            new CoralScoringPosition(20, 4, true),
+            new CoralScoringPosition(19, 4, false),
+            new CoralScoringPosition(19, 4, true),
+            new CoralScoringPosition(18, 4, true),
+            new CoralScoringPosition(18, 4, false)
+        );
+    }
+
     public static boolean isCoralIntaking() {
         return coralIntaking;
+    }
+
+    /**
+     * Creates a command that configures variables needed for autonomous mode.
+     * The Command should be the first one to be executed at the start of autonomous.
+     * @param coralScoringPositions The list of coral scoring positions to be used in autonomous
+     * @param simAutoStart The starting pose for the robot in simulation
+     */
+    public static Command configureAuto(List<CoralScoringPosition> coralScoringPositions, Pose2d simAutoStart) {
+        return Commands.runOnce(() -> {
+            Robot.setAutoCoralScoringPositions(coralScoringPositions);
+            if (Robot.isSimulation()) {
+                Pose2d start = simAutoStart;
+                if (Robot.isRed()) start = FlippingUtil.flipFieldPose(start);
+                RobotContainer.instance.drivetrain.resetPose(start);
+            }
+        });
     }
 
     public static Command startCoralIntake() {

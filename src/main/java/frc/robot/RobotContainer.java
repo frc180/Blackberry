@@ -130,30 +130,17 @@ public class RobotContainer {
         elevatorArm = new ElevatorArmSubsystem();
         elevatorArmAlgae = new ElevatorArmAlgaeSubsystem();
 
-        List<CoralScoringPosition> sampleAutoPositions = List.of(
-            new CoralScoringPosition(20, 4, true),
-            new CoralScoringPosition(19, 4, false),
-            new CoralScoringPosition(19, 4, true),
-            new CoralScoringPosition(18, 4, true),
-            new CoralScoringPosition(18, 4, false)
-        );
-
-        Pose2d backLeftReefPose = sampleAutoPositions.get(0).getPose();
-        List<Waypoint> leftBargeToLeftReef = PathPlannerPath.waypointsFromPoses(
+        List<CoralScoringPosition> leftAutoCoralPositions = Auto.leftAutoCoralPositions();
+        Pose2d firstCoralPose = leftAutoCoralPositions.get(0).getPose();
+        List<Pose2d> leftBargeToLeftReef = List.of(
             new Pose2d(7.4, 5, Rotation2d.k180deg),
-            backLeftReefPose
+            firstCoralPose,
+            firstCoralPose
         );
 
-        autoChooser.setDefaultOption("Left Barge to Left Reef", Commands.sequence(
-                        Commands.runOnce(() -> {
-                            Robot.setAutoCoralScoringPositions(sampleAutoPositions);
-                            if (Robot.isSimulation()) {
-                                Pose2d start = new Pose2d(7.9, 5, Rotation2d.k180deg);
-                                if (Robot.isRed()) start = FlippingUtil.flipFieldPose(start);
-                                drivetrain.resetPose(start);
-                            }
-                        }),
-                        drivetrain.followPath(leftBargeToLeftReef, 0.0, backLeftReefPose, false)
+        autoChooser.setDefaultOption("Left Barge to Left Reef", Commands.parallel(
+                        Auto.configureAuto(leftAutoCoralPositions, new Pose2d(7.9, 5, Rotation2d.k180deg)),
+                        drivetrain.followPath(leftBargeToLeftReef, 0.0, false)
                             .until(drivetrain.withinTargetPoseDistance(1))
                             .andThen(new DriveToPose(drivetrain, () -> Robot.nextAutoCoralScoringPosition().getPose()).withPoseTargetType(PoseTarget.REEF))
                     ));
