@@ -20,16 +20,11 @@
 */
 package frc.robot;
 
-import static edu.wpi.first.units.Units.Degrees;
-import static edu.wpi.first.units.Units.Inches;
-import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.*;
 import java.util.List;
 import java.util.function.DoubleSupplier;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import com.pathplanner.lib.path.PathPlannerPath;
-import com.pathplanner.lib.path.Waypoint;
-import com.pathplanner.lib.util.FlippingUtil;
 import com.spamrobotics.util.JoystickInputs;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.MathUtil;
@@ -137,7 +132,7 @@ public class RobotContainer {
             firstCoralPose
         );
 
-        Command leftBargeAuto = Auto.coralAuto(
+        Command leftBargeAuto = Auto.bargeCoralAuto(
             Auto.LEFT_BARGE_CORAL_POSITIONS,            // what positions to score at
             leftBargeToLeftReef,                        // the path to take from our starting position to the first coral position
             new Pose2d(7.9, 5, Rotation2d.k180deg)  // the position the robot should start at in simulation
@@ -420,14 +415,7 @@ public class RobotContainer {
         autoCoralIntake.and(intakeCoral.hasCoral)
             .onTrue(Auto.driveToReefWithCoral());
 
-        Command autoHPDrive = Commands.either(
-            Auto.driveToHPStationFar(),
-            Auto.driveToHPStation(),
-            () -> {
-                CoralScoringPosition previous = Auto.previousCoralScoringPosition;
-                return previous != null && previous.isFarTag();
-            }
-        ).withDeadline(
+        Command autoHPDrive = Auto.driveToHPStation().withDeadline(
             Commands.waitSeconds(0.25).andThen(
                 Commands.waitUntil(() -> vision.getCoralPose() != null)
             )

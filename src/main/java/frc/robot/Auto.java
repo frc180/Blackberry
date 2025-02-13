@@ -3,10 +3,7 @@ package frc.robot;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import com.pathplanner.lib.path.PathPlannerPath;
-import com.pathplanner.lib.path.Waypoint;
 import com.pathplanner.lib.util.FlippingUtil;
-
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
@@ -54,7 +51,18 @@ public final class Auto {
         return Commands.runOnce(() -> coralIntaking = false);
     }
 
-    public static DriveToPose driveToHPStation() {
+    public static Command driveToHPStation() {
+        return Commands.either(
+            driveToHPStationFar(),
+            driveToHPStationClose(),
+            () -> {
+                CoralScoringPosition previous = previousCoralScoringPosition;
+                return previous != null && previous.isFarTag();
+            }
+        );
+    }
+
+    public static DriveToPose driveToHPStationClose() {
         return new DriveToPose(RobotContainer.instance.drivetrain, () -> {
                                     Pose2d hpStation = Robot.isBlue() ? SimLogic.blueHPCoralPose : SimLogic.redHPCoralPose;
                                     return hpStation.transformBy(HP_STATION_TRANSFORM);
@@ -119,7 +127,7 @@ public final class Auto {
         });
     }
 
-    public static Command coralAuto(List<CoralScoringPosition> coralScoringPositions, List<Pose2d> startingPath, Pose2d simStart) {
+    public static Command bargeCoralAuto(List<CoralScoringPosition> coralScoringPositions, List<Pose2d> startingPath, Pose2d simStart) {
         DrivetrainSubsystem drivetrain = RobotContainer.instance.drivetrain;
 
         return Commands.parallel(
