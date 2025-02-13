@@ -130,20 +130,19 @@ public class RobotContainer {
         elevatorArm = new ElevatorArmSubsystem();
         elevatorArmAlgae = new ElevatorArmAlgaeSubsystem();
 
-        List<CoralScoringPosition> leftAutoCoralPositions = Auto.leftAutoCoralPositions();
-        Pose2d firstCoralPose = leftAutoCoralPositions.get(0).getPose();
+        Pose2d firstCoralPose = Auto.LEFT_BARGE_CORAL_POSITIONS.get(0).getPose();
         List<Pose2d> leftBargeToLeftReef = List.of(
             new Pose2d(7.4, 5, Rotation2d.k180deg),
             firstCoralPose,
             firstCoralPose
         );
 
-        autoChooser.setDefaultOption("Left Barge to Left Reef", Commands.parallel(
-                        Auto.configureAuto(leftAutoCoralPositions, new Pose2d(7.9, 5, Rotation2d.k180deg)),
-                        drivetrain.followPath(leftBargeToLeftReef, 0.0, false)
-                            .until(drivetrain.withinTargetPoseDistance(1))
-                            .andThen(new DriveToPose(drivetrain, () -> Robot.nextAutoCoralScoringPosition().getPose()).withPoseTargetType(PoseTarget.REEF))
-                    ));
+        Command leftBargeAuto = Auto.coralAuto(
+            Auto.LEFT_BARGE_CORAL_POSITIONS,            // what positions to score at
+            leftBargeToLeftReef,                        // the path to take from our starting position to the first coral position
+            new Pose2d(7.9, 5, Rotation2d.k180deg)  // the position the robot should start at in simulation
+        );
+        autoChooser.setDefaultOption("Left Barge to Left Reef", leftBargeAuto);
 
         SmartDashboard.putData("Auto Mode", autoChooser);
 

@@ -24,41 +24,22 @@ public final class Auto {
     private static final Transform2d HP_STATION_TRANSFORM = new Transform2d(0, 0, Rotation2d.fromDegrees(150));
     private static boolean coralIntaking = false;
 
+    public static final List<CoralScoringPosition> LEFT_BARGE_CORAL_POSITIONS = List.of(
+        new CoralScoringPosition(20, 4, true),
+        new CoralScoringPosition(19, 4, false),
+        new CoralScoringPosition(19, 4, true),
+        new CoralScoringPosition(18, 4, true),
+        new CoralScoringPosition(18, 4, false)
+    );
+
     private Auto() {}
     
     public static void init() {
         coralIntaking = false;
     }
 
-    public static List<CoralScoringPosition> leftAutoCoralPositions() {
-        return List.of(
-            new CoralScoringPosition(20, 4, true),
-            new CoralScoringPosition(19, 4, false),
-            new CoralScoringPosition(19, 4, true),
-            new CoralScoringPosition(18, 4, true),
-            new CoralScoringPosition(18, 4, false)
-        );
-    }
-
     public static boolean isCoralIntaking() {
         return coralIntaking;
-    }
-
-    /**
-     * Creates a command that configures variables needed for autonomous mode.
-     * The Command should be the first one to be executed at the start of autonomous.
-     * @param coralScoringPositions The list of coral scoring positions to be used in autonomous
-     * @param simAutoStart The starting pose for the robot in simulation
-     */
-    public static Command configureAuto(List<CoralScoringPosition> coralScoringPositions, Pose2d simAutoStart) {
-        return Commands.runOnce(() -> {
-            Robot.setAutoCoralScoringPositions(coralScoringPositions);
-            if (Robot.isSimulation()) {
-                Pose2d start = simAutoStart;
-                if (Robot.isRed()) start = FlippingUtil.flipFieldPose(start);
-                RobotContainer.instance.drivetrain.resetPose(start);
-            }
-        });
     }
 
     public static Command startCoralIntake() {
@@ -115,5 +96,33 @@ public final class Auto {
         return new DriveToPose(RobotContainer.instance.drivetrain, () -> Robot.nextAutoCoralScoringPosition().getPose())
                     .withPoseTargetType(PoseTarget.REEF)
                     .alongWith(Auto.stopCoralIntake());
+    }
+
+    /**
+     * Creates a command that configures variables needed for autonomous mode.
+     * The Command should be the first one to be executed at the start of autonomous.
+     * @param coralScoringPositions The list of coral scoring positions to be used in autonomous
+     * @param simAutoStart The starting pose for the robot in simulation
+     */
+    public static Command configureAuto(List<CoralScoringPosition> coralScoringPositions, Pose2d simAutoStart) {
+        return Commands.runOnce(() -> {
+            Robot.setAutoCoralScoringPositions(coralScoringPositions);
+            if (Robot.isSimulation()) {
+                Pose2d start = simAutoStart;
+                if (Robot.isRed()) start = FlippingUtil.flipFieldPose(start);
+                RobotContainer.instance.drivetrain.resetPose(start);
+            }
+        });
+    }
+
+    public static Command coralAuto(List<CoralScoringPosition> coralScoringPositions, List<Pose2d> startingPath, Pose2d simStart) {
+        DrivetrainSubsystem drivetrain = RobotContainer.instance.drivetrain;
+
+        return Commands.parallel(
+            Auto.configureAuto(coralScoringPositions, simStart),
+            drivetrain.followPath(startingPath, 0.0, false)
+                .until(drivetrain.withinTargetPoseDistance(1))
+                .andThen(new DriveToPose(drivetrain, () -> Robot.nextAutoCoralScoringPosition().getPose()).withPoseTargetType(PoseTarget.REEF))
+        );
     }
 }
