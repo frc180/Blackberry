@@ -1,6 +1,7 @@
 package frc.robot.subsystems.IntakeCoralPivot;
 
 import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.epilogue.NotLogged;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -23,7 +24,9 @@ public class IntakeCoralPivotSubsystem extends SubsystemBase {
 
     private double targetPosition = 0;
 
+    @NotLogged
     public final Trigger atTarget = new Trigger(this::isAtTarget);
+    @NotLogged
     public final Trigger atStowPosition = new Trigger(this::isAtStowPosition);
 
     public IntakeCoralPivotSubsystem() {
@@ -54,6 +57,7 @@ public class IntakeCoralPivotSubsystem extends SubsystemBase {
         return Math.abs(inputs.position - targetPosition) <= IN_POSITION_TOLERANCE;
     }
 
+    @NotLogged
     public double getTargetPosition() {
         return targetPosition;
     }

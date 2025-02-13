@@ -1,6 +1,7 @@
 package frc.robot.subsystems.elevatorArmPivot;
 
 import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.epilogue.NotLogged;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -25,9 +26,11 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
 
     private static final double IN_POSITION_TOLERANCE = Units.degreesToRotations(2);
 
-    public double targetPosition = 0;
+    private double targetPosition = 0;
 
+    @NotLogged
     public Trigger elevatorArmInPosition = new Trigger(() -> isElevatorArmInPosition());
+    @NotLogged
     public Trigger elevatorArmInScoringPosition = new Trigger (() -> isElevatorArmInScoringPosition());
 
     public ElevatorArmPivotSubsystem() {
@@ -103,6 +106,7 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
         return targetPosition == score || targetPosition == L1Score || targetPosition == netScore || targetPosition == netScoreBackwards;
     }
 
+    @NotLogged
     public double getTargetPosition() {
         return targetPosition;
     }
