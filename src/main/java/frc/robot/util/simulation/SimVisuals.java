@@ -1,7 +1,5 @@
 package frc.robot.util.simulation;
 
-import com.ctre.phoenix6.mechanisms.swerve.LegacySwerveRequest.RobotCentric;
-
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;

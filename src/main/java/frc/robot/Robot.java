@@ -5,6 +5,7 @@
 package frc.robot;
 
 import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.epilogue.NotLogged;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
@@ -40,6 +41,7 @@ public class Robot extends TimedRobot {
                                                     .getStructArrayTopic("Robot Component Poses", Pose3d.struct)
                                                     .publish();
 
+  @NotLogged
   Pose3d[] robotComponentPosesArray = new Pose3d[1];
 
   // private final boolean kUseLimelight = false;
@@ -170,6 +172,7 @@ public class Robot extends TimedRobot {
     }
   }
 
+  @NotLogged
   private final Transform3d robotAlgaeIntakeTransform = new Transform3d(0, 0.2, 0.3, Rotation3d.kZero);
 
   @Override

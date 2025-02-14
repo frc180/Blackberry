@@ -37,8 +37,10 @@ public class ElevatorSubsystem extends SubsystemBase {
 
   private double targetPosition = 0;
 
-  public Trigger elevatorInPosition = new Trigger(() -> isElevatorInPosition());
-  public Trigger elevatorInScoringPosition = new Trigger(() -> isElevatorInScoringPosition());
+  @NotLogged
+  public Trigger elevatorInPosition = new Trigger(this::isElevatorInPosition);
+  @NotLogged
+  public Trigger elevatorInScoringPosition = new Trigger(this::isElevatorInScoringPosition);
 
 
   private final SysIdRoutine sysIdRoutine = new SysIdRoutine(
@@ -122,12 +124,10 @@ public class ElevatorSubsystem extends SubsystemBase {
     return inputs.position <= 0;
   }
 
-  @NotLogged
   public boolean isElevatorInPosition() {
     return Math.abs(targetPosition - inputs.position) <= IN_POSITION_METERS;
   }
 
-  @NotLogged
   public boolean isElevatorInScoringPosition(){
     return isElevatorInPosition() && targetPosition != 0;
   }

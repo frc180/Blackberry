@@ -32,13 +32,15 @@ import frc.robot.subsystems.vision.VisionIO.VisionIOInputs;
 import frc.robot.util.ReefProximity;
 import frc.robot.util.LimelightHelpers.PoseEstimate;
 import frc.robot.util.LimelightHelpers.RawFiducial;
-import frc.robot.vision.CoralDetector;
-import frc.robot.vision.CoralDetectorReal;
-import frc.robot.vision.CoralDetectorSim;
 
 @Logged
 public class VisionSubsystem extends SubsystemBase {
 
+    /**
+     * The source of a pose estimate, used to determine the standard deviation of the pose estimate
+     * (i.e. how much we trust the pose estimate). The lower the number, the more we trust the pose estimate,
+     * and the more it'll affect the robot's position.
+     */
     enum PoseEstimateSource {
         SCORING_CAMERA(0.05),
         FRONT_CAMERA(0.3),
@@ -61,7 +63,7 @@ public class VisionSubsystem extends SubsystemBase {
     public static final List<Integer> redReefTags = List.of(6,7,8,9,10,11);
     public static final List<Integer> blueReefTags = List.of(17, 18, 19, 20, 21, 22);
 
-    public static final Transform3d ROBOT_TO_SCORING_CAMERA = new Transform3d(0.1, 0, 0.65, new Rotation3d(0, Units.degreesToRadians(35), 0));
+    public static final Transform3d ROBOT_TO_SCORING_CAMERA = new Transform3d(0.1, 0, 0.85, new Rotation3d(0, Units.degreesToRadians(40), 0));
     public static final Transform2d ROBOT_TO_INTAKE_CAMERA = new Transform2d(0.1, 0, Rotation2d.fromDegrees(0));
     public static final Transform2d INTAKE_CAMERA_TO_ROBOT = ROBOT_TO_INTAKE_CAMERA.inverse();
 
@@ -126,22 +128,22 @@ public class VisionSubsystem extends SubsystemBase {
             io = new VisionIOPhoton(aprilTagFieldLayout);
         }
 
-        //red reef tags
-        for (int i = 6; i <= 11; i++) {
+        // Pre-calculate reef poses for all reef tags
+        for (int i : redReefTags) {
             leftReefHashMap.put(i, calculateReefPose(i, true));
             rightReefHashMap.put(i, calculateReefPose(i, false));
         }
-        //left reef tags
-        for (int i = 17; i <= 22; i++) {
+        for (int i : blueReefTags) {
             leftReefHashMap.put(i, calculateReefPose(i, true));
             rightReefHashMap.put(i, calculateReefPose(i, false));
         }
+        
+        // Pre-calculate processor poses
+        redProcessorPose = calculateProcessorPose(false);
+        blueProcessorPose = calculateProcessorPose(true);
 
         reefProximity = new ReefProximity(leftReefHashMap, rightReefHashMap);
         coralDetector = Robot.isReal() ? new CoralDetectorReal() : new CoralDetectorSim(4.0, true);
-
-        redProcessorPose = calculateProcessorPose(false);
-        blueProcessorPose = calculateProcessorPose(true);
 
         double diffMeters = Inches.of(1.5).in(Meters);
         poseEstimateDiffLow = new Trigger(() -> {
@@ -160,13 +162,13 @@ public class VisionSubsystem extends SubsystemBase {
         frontCameraDisconnectedAlert.set(!inputs.frontCameraConnected);
         backCameraDisconnectedAlert.set(!inputs.backCameraConnected);
 
-        // Update odometry using Limelight in apriltag mode
+        // If the scoring camera is connected, use its pose estimate
         if (inputs.scoringCameraConnected) {
             poseEstimate = validatePoseEstimate(inputs.scoringPoseEstimate, 0);
             poseEstimateSource = PoseEstimateSource.SCORING_CAMERA;
         }
 
-        // If poseEstimate is null, then try the front camera
+        // If poseEstimate is null, then try the front camera pose estimate
         if (poseEstimate == null && inputs.frontCameraConnected) {
             poseEstimate = validatePoseEstimate(inputs.frontPoseEstimate, 0);
             poseEstimateSource = PoseEstimateSource.FRONT_CAMERA;
@@ -192,7 +194,8 @@ public class VisionSubsystem extends SubsystemBase {
         if (robotPose == null) robotPose = RobotContainer.instance.drivetrain.getPose();
 
         // calculate scoring camera in 3D space, for viewing in AdvantageScope
-        scoringCameraPosition = new Pose3d(robotPose).transformBy(ROBOT_TO_SCORING_CAMERA);
+        Pose2d cameraPosebase = Robot.isReal() ? robotPose : RobotContainer.instance.drivetrain.getSimPose();
+        scoringCameraPosition = new Pose3d(cameraPosebase).transformBy(ROBOT_TO_SCORING_CAMERA);
 
         //check if robot can see the reef
         canSeeReef = reefVisible();
@@ -254,25 +257,23 @@ public class VisionSubsystem extends SubsystemBase {
         }
     }
 
-    //calculates the pose of the robot relative to the reef tag based on whether or not we choose left or right side
-    public Pose2d calculateReefPose(int tagID, boolean left) {
+    /**
+     * Generates the scoring pose of the robot relative to a reef AprilTag. This is used to pre-calculate and store all
+     * positions to prevent duplicate object creation. To access these pre-calculated poses, use {@link #getReefPose(int, boolean)}.
+     */
+    private Pose2d calculateReefPose(int tagID, boolean left) {
         Optional<Pose3d> pose3d = aprilTagFieldLayout.getTagPose(tagID); //gets the pose of the april tag in 3d space
         if (pose3d.isEmpty()) return null;
 
-        if (left) {
-            return pose3d.get().toPose2d().transformBy(leftReefTransform);
-        } else {
-            return pose3d.get().toPose2d().transformBy(rightReefTransform);
-        }
+        return pose3d.get().toPose2d().transformBy(left ? leftReefTransform : rightReefTransform);
     }
 
-    public Pose2d calculateProcessorPose(boolean blue) {
-        int tagID;
-        if (blue) {
-            tagID = BLUE_PROCESSOR_TAG;
-        } else {
-            tagID = RED_PROCESSOR_TAG;
-        }
+    /**
+     * Generates the scoring pose of the robot relative to the processor AprilTag. This is used to pre-calculate and store all 
+     * positions to prevent duplicate object creation. To access these pre-calculated poses, use {@link #getProcessorPose(boolean)}.
+     */
+    private Pose2d calculateProcessorPose(boolean blue) {
+        int tagID = blue ? BLUE_PROCESSOR_TAG : RED_PROCESSOR_TAG;
 
         Optional<Pose3d> pose3d = aprilTagFieldLayout.getTagPose(tagID);
         if (pose3d.isEmpty()) return null;
@@ -281,23 +282,32 @@ public class VisionSubsystem extends SubsystemBase {
     }
 
     /**
-     * Returns a scoring pose for the reef based on the last reef tag seen and the alliance color
+     * Returns the scoring pose of the robot relative to the reef AprilTag that was last seen.
      * @param left whether to return the left branch or the right branch scoring pose
      */
     public Pose2d getReefPose(boolean left) {
+        return getReefPose(lastReefID, left);
+    }
+
+    /**
+     * Returns a scoring pose of the robot relative to a reef AprilTag.
+     * @param tagID the ID of the reef AprilTag
+     * @param left whether to return the left branch or the right branch scoring pose
+     */
+    public Pose2d getReefPose(int tagID, boolean left) {
         if (left) {
-            return leftReefHashMap.get(lastReefID);
+            return leftReefHashMap.get(tagID);
         } else {
-            return rightReefHashMap.get(lastReefID);
+            return rightReefHashMap.get(tagID);
         }
     }
 
+    /**
+     * Returns the scoring pose of the robot relative to the processor.
+     * @param blue whether to return the blue processor pose or the red processor pose
+     */
     public Pose2d getProcessorPose(boolean blue) {
-        if (blue) {
-            return blueProcessorPose;
-        } else {
-            return redProcessorPose;
-        }
+        return blue ? blueProcessorPose : redProcessorPose;
     }
     
     /**

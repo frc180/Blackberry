@@ -1,0 +1,201 @@
+{
+  "hubs": [
+    {
+      "x": 956,
+      "y": 117,
+      "width": 1330,
+      "height": 925,
+      "state": {
+        "sidebar": {
+          "width": 300,
+          "expanded": [
+            "/Robot/RobotContainer/Vision/inputs/scoringPoseEstimate",
+            "/Robot/RobotContainer/Vision/inputs/scoringPoseEstimate/Pose",
+            "/Robot",
+            "/Robot/RobotContainer/Vision",
+            "/Robot/robotComponentPosesArray",
+            "/Robot/RobotContainer"
+          ]
+        },
+        "tabs": {
+          "selected": 1,
+          "tabs": [
+            {
+              "type": 0,
+              "title": "",
+              "controller": null,
+              "controllerUUID": "pna0mmhmtin0n4o7pxp5yck7p87wlg39",
+              "renderer": "#/",
+              "controlsHeight": 0
+            },
+            {
+              "type": 3,
+              "title": "3D Field",
+              "controller": {
+                "sources": [
+                  {
+                    "type": "robot",
+                    "logKey": "NT:Robot/RobotContainer/Drivetrain/getSimPose",
+                    "logType": "Pose2d",
+                    "visible": true,
+                    "options": {
+                      "model": "Anenome"
+                    }
+                  },
+                  {
+                    "type": "mechanism",
+                    "logKey": "NT:/SmartDashboard/Mechanism 2D",
+                    "logType": "Mechanism2d",
+                    "visible": true,
+                    "options": {}
+                  },
+                  {
+                    "type": "component",
+                    "logKey": "NT:Robot Component Poses",
+                    "logType": "Pose3d[]",
+                    "visible": true,
+                    "options": {}
+                  },
+                  {
+                    "type": "robot",
+                    "logKey": "NT:AI Robot Poses",
+                    "logType": "Pose2d[]",
+                    "visible": true,
+                    "options": {
+                      "model": "Duck Bot"
+                    }
+                  },
+                  {
+                    "type": "gamePiece",
+                    "logKey": "NT:Algae Poses",
+                    "logType": "Pose3d[]",
+                    "visible": true,
+                    "options": {
+                      "variant": "Algae"
+                    }
+                  },
+                  {
+                    "type": "gamePiece",
+                    "logKey": "NT:Coral Poses",
+                    "logType": "Pose3d[]",
+                    "visible": true,
+                    "options": {
+                      "variant": "Coral"
+                    }
+                  },
+                  {
+                    "type": "ghostLegacy",
+                    "logKey": "NT:Robot/RobotContainer/Vision/inputs/scoringPoseEstimate/Pose",
+                    "logType": "NumberArray",
+                    "visible": true,
+                    "options": {
+                      "model": "KitBot",
+                      "color": "#ff8c00",
+                      "format": "Pose2d",
+                      "units": "radians"
+                    }
+                  },
+                  {
+                    "type": "cameraOverride",
+                    "logKey": "NT:Robot/RobotContainer/Vision/scoringCameraPosition",
+                    "logType": "Pose3d",
+                    "visible": true,
+                    "options": {}
+                  }
+                ],
+                "game": "2025 Field",
+                "origin": "blue"
+              },
+              "controllerUUID": "rkxo3u7ycplvvhpeu9wnwtnch59v2kd4",
+              "renderer": {
+                "cameraIndex": -1,
+                "orbitFov": 50,
+                "cameraPosition": [
+                  -0.43618184899419205,
+                  6.455597924071758,
+                  -8.846681620365038
+                ],
+                "cameraTarget": [
+                  -0.4194768473536259,
+                  0.6730858106094626,
+                  0.10896280134994543
+                ]
+              },
+              "controlsHeight": 200
+            },
+            {
+              "type": 2,
+              "title": "Odometry",
+              "controller": {
+                "sources": [
+                  {
+                    "type": "robot",
+                    "logKey": "NT:Robot/RobotContainer/Drivetrain/getSimPose",
+                    "logType": "Pose2d",
+                    "visible": true,
+                    "options": {}
+                  },
+                  {
+                    "type": "arrow",
+                    "logKey": "NT:Coral Poses",
+                    "logType": "Pose3d[]",
+                    "visible": true,
+                    "options": {
+                      "position": "center"
+                    }
+                  },
+                  {
+                    "type": "ghostLegacy",
+                    "logKey": "NT:Robot/RobotContainer/Vision/inputs/scoringPoseEstimate/Pose",
+                    "logType": "NumberArray",
+                    "visible": true,
+                    "options": {
+                      "color": "#ff8c00",
+                      "format": "Pose2d",
+                      "units": "radians"
+                    }
+                  }
+                ],
+                "game": "2025 Field",
+                "bumpers": "auto",
+                "origin": "blue",
+                "orientation": 0,
+                "size": 30
+              },
+              "controllerUUID": "d8ectwd5qdoi8n4lcmkpv6h8uuv29kx9",
+              "renderer": null,
+              "controlsHeight": 200
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "satellites": [
+    {
+      "x": 2957,
+      "y": 559,
+      "width": 824,
+      "height": 618,
+      "state": {
+        "type": 3,
+        "visualizer": {
+          "cameraIndex": 0,
+          "orbitFov": 50,
+          "cameraPosition": [
+            -5.5693251283639,
+            0.6500000000000002,
+            0.14682149399005187
+          ],
+          "cameraTarget": [
+            -4.750173149550224,
+            0.07642356364895408,
+            0.14649397532958366
+          ]
+        }
+      },
+      "uuid": "rkxo3u7ycplvvhpeu9wnwtnch59v2kd4"
+    }
+  ],
+  "version": "4.1.2"
+}

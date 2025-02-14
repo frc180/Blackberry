@@ -76,11 +76,11 @@ public class TunerConstants {
 
     // Every 1 rotation of the azimuth results in kCoupleRatio drive motor turns;
     // This may need to be tuned to your individual robot
-    private static final double kCoupleRatio = 0;
+    private static final double kCoupleRatio = 1; // "Looks like it'd just be 1 because the drive motor is driving the coaxial gear directly"
 
     private static final double kDriveGearRatio = 4.71;
-    private static final double kSteerGearRatio = Robot.isSimulation() ? 12.8 : 41.25; // 41.25 does not work in sim
-    private static final Distance kWheelRadius = Inches.of(1.5);
+    private static final double kSteerGearRatio = Robot.isReal() ? 41.25 : 12.8; // 41.25 does not work in sim
+    private static final Distance kWheelRadius =  Inches.of(1.5);
 
     private static final boolean kInvertLeftSide = true;
     private static final boolean kInvertRightSide = false;
