@@ -13,9 +13,11 @@ import frc.robot.subsystems.IntakeAlgaePivot.IntakeAlgaePivotIO.IntakeAlgaePivot
 @Logged
 public class IntakeAlgaePivotSubsystem extends SubsystemBase {
     
-    public static final double extend = 55;
-    public static final double stow = 90;
+    public static final double extend = Units.degreesToRotations(55);
+    public static final double stow = Units.degreesToRotations(90);
     public static final double climbReady = 0; //on the floor
+
+    private static final double IN_POSITION_TOLERANCE = Units.degreesToRotations(3);
 
     public IntakeAlgaePivotIO io;
     private IntakeAlgaePivotIOInputs inputs;
@@ -74,21 +76,31 @@ public class IntakeAlgaePivotSubsystem extends SubsystemBase {
         });
     }
 
-    public double getPositionDegrees() {
+    @NotLogged
+    public double getPosition() {
         return inputs.position;
     }
 
-    public double getTargetDegrees() {
+    @NotLogged
+    public double getTargetPosition() {
         return targetPosition;
     }
 
+    public double getDegrees() {
+        return Units.rotationsToDegrees(inputs.position);
+    }
+
+    public double getTargetDegrees() {
+        return Units.rotationsToDegrees(targetPosition);
+    }
+
     public boolean isAtTarget() {
-        return Math.abs(getPositionDegrees() - getTargetDegrees()) <= 3;
+        return Math.abs(inputs.position - targetPosition) <= IN_POSITION_TOLERANCE;
     }
 
     @NotLogged
     public Pose3d getPose() {
-        double angle = Units.degreesToRadians(inputs.position);
+        double angle = Units.rotationsToRadians(inputs.position);
         return new Pose3d(0, 0.2, 0.2, new Rotation3d(0, angle, Units.degreesToRadians(270)));
     }
 }

@@ -45,7 +45,7 @@ public class IntakeAlgaeIOSim implements IntakeAlgaeIO {
     public void update(IntakeAlgaeIOInputs inputs) {
         IntakeAlgaePivotSubsystem algaePivot = RobotContainer.instance.intakeAlgaePivot;
         ElevatorArmAlgaeSubsystem armAlgae = RobotContainer.instance.elevatorArmAlgae;
-        boolean ableToIntake = algaePivot.getTargetDegrees() == algaePivot.extend && algaePivot.isAtTarget() && rollerSpeed > 0;
+        boolean ableToIntake = algaePivot.getTargetPosition() == algaePivot.extend && algaePivot.isAtTarget() && rollerSpeed > 0;
         boolean spitting = rollerSpeed < 0;
 
         if (intakeSim != null) {

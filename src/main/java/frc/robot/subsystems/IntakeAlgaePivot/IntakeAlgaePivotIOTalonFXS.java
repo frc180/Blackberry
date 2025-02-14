@@ -40,8 +40,8 @@ public class IntakeAlgaePivotIOTalonFXS implements IntakeAlgaePivotIO {
         pivotMotors = List.of(pivotMotorA, pivotMotorB);
 
         TalonFXConfiguration configuration = new TalonFXConfiguration();
-        configuration.Feedback.SensorToMechanismRatio = intakeArmGearing / 360; // Convert to degrees
-        configuration.Slot0.kP = 0.1;
+        configuration.Feedback.SensorToMechanismRatio = intakeArmGearing;
+        configuration.Slot0.kP = 36;
         configuration.Slot0.kI = 0;
         configuration.Slot0.kD = 0;
         configuration.Slot0.kG = 0;
@@ -83,7 +83,7 @@ public class IntakeAlgaePivotIOTalonFXS implements IntakeAlgaePivotIO {
             0,
             2.0944,
             false,
-            Units.degreesToRadians(IntakeAlgaePivotSubsystem.stow)
+            Units.rotationsToRadians(IntakeAlgaePivotSubsystem.stow)
         );
     }
 
