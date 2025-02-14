@@ -114,7 +114,7 @@ public class VisionSubsystem extends SubsystemBase {
     @SuppressWarnings("unused")
     public VisionSubsystem() {
         try {
-            aprilTagFieldLayout = AprilTagFieldLayout.loadFromResource(AprilTagFields.k2025Reefscape.m_resourceFile);
+            aprilTagFieldLayout = AprilTagFieldLayout.loadFromResource(AprilTagFields.k2025ReefscapeWelded.m_resourceFile);
         } catch (Exception e) {
             aprilTagFieldLayout = null;
         }
