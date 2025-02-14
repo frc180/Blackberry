@@ -36,6 +36,7 @@ public class VisionIOLimelight implements VisionIO {
 
         inputs.scoringFiducials = LimelightHelpers.getRawFiducials(SCORING_LIMELIGHT);
         inputs.backDetections = LimelightHelpers.getRawDetections(BACK_LIMEIGHT);
+        inputs.backTimestamp = Timer.getFPGATimestamp() - getLatencySeconds(BACK_LIMEIGHT);
         
         if (Robot.isSimulation() && RobotContainer.MAPLESIM) {
             inputs.scoringPoseEstimate = simPoseEstimate;
@@ -44,6 +45,7 @@ public class VisionIOLimelight implements VisionIO {
             inputs.scoringPoseEstimate = LimelightHelpers.getBotPoseEstimate_wpiBlue(SCORING_LIMELIGHT);
             inputs.frontPoseEstimate = LimelightHelpers.getBotPoseEstimate_wpiBlue(FRONT_LIMEIGHT);
         }
+        inputs.scoringTimestamp = inputs.scoringPoseEstimate.timestampSeconds;
     }
 
     @Override
@@ -56,5 +58,10 @@ public class VisionIOLimelight implements VisionIO {
         simPoseEstimate.tagCount = 1;
         simPoseEstimate.avgTagDist = 2;
         simPoseEstimate.avgTagArea = 99;
+    }
+
+    private double getLatencySeconds(String limelightName) {
+        double latency = LimelightHelpers.getLatency_Capture(limelightName) + LimelightHelpers.getLatency_Pipeline(limelightName);
+        return latency * 0.001;
     }
 }

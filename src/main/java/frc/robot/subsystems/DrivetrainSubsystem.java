@@ -2,6 +2,7 @@ package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.*;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
@@ -32,6 +33,7 @@ import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.interpolation.TimeInterpolatableBuffer;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
@@ -116,6 +118,8 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     private int targetPoseTag = -1;
 
     private Pose2d mapleSimPose = null;
+
+    private final TimeInterpolatableBuffer<Pose2d> poseBuffer = TimeInterpolatableBuffer.createBuffer(2);
 
     @NotLogged
     private ProfiledPIDController xPidController, yPidController, driverRotationPidController;
@@ -313,6 +317,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
             Timer.delay(0.5); // Wait for simulation to update
         }
         super.resetPose(pose);
+        poseBuffer.clear();
     }
 
     @NotLogged
@@ -651,6 +656,8 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         xPidTarget = xPidController.getSetpoint().position;
         yPidTarget = yPidController.getSetpoint().position;
 
+        poseBuffer.addSample(Timer.getFPGATimestamp(), getPose());
+
         if (mapleSimSwerveDrivetrain != null) {
             mapleSimPose = mapleSimSwerveDrivetrain.mapleSimDrive.getSimulatedDriveTrainPose();
         }
@@ -734,5 +741,13 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         int lastIndex = path.size() - 1;
         List<Waypoint> waypoints = PathPlannerPath.waypointsFromPoses(path.subList(0, lastIndex));
         return followPath(waypoints, endVel, path.get(lastIndex), preventFlipping);
+    }
+
+    public Pose2d getBufferPose(double timestamp) {
+        Optional<Pose2d> pose = poseBuffer.getSample(timestamp);
+        if (pose.isPresent()) {
+            return pose.get();
+        }
+        return null;
     }
 }

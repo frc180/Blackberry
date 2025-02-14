@@ -32,6 +32,8 @@ public class CoralDetectorSim implements CoralDetector {
 
     @Override
     public Pose2d getCoralPose(Pose2d robotPose, RawDetection[] _detections) {
+        if (robotPose == null) return null;
+
         if (RobotContainer.MAPLESIM) {
             return getCoralPoseMapleSim(robotPose);
         } else {

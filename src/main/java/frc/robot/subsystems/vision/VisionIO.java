@@ -16,12 +16,14 @@ public interface VisionIO {
         boolean scoringCameraConnected = false;
         PoseEstimate scoringPoseEstimate = null;
         RawFiducial[] scoringFiducials = emptyFiducials;
+        double scoringTimestamp = 0.0;
 
         boolean frontCameraConnected = false;
         PoseEstimate frontPoseEstimate = null;
 
         boolean backCameraConnected = false;
         RawDetection[] backDetections = emptyDetections;
+        double backTimestamp = 0.0;
     }
 
     public void update(VisionIOInputs inputs);

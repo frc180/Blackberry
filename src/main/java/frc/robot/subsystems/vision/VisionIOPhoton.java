@@ -69,6 +69,11 @@ public class VisionIOPhoton implements VisionIO {
         List<PhotonTrackedTarget> targets = latestResult != null ? latestResult.getTargets() : null;
 
         inputs.scoringPoseEstimate = toPoseEstimate(latestEstimate, targets);
+        if (inputs.scoringPoseEstimate != null) {
+            inputs.scoringTimestamp = inputs.scoringPoseEstimate.timestampSeconds;
+            // We're not fully simulating the other camera, but we can use the scoring camera's timestamp
+            inputs.backTimestamp = inputs.scoringTimestamp;
+        }
         if (targets != null) {
             inputs.scoringFiducials = toRawFiducials(targets);
         } else {
@@ -107,8 +112,8 @@ public class VisionIOPhoton implements VisionIO {
 
             fiducials[i] = new RawFiducial(
                 target.getFiducialId(),
-                0,
-                0,
+                target.getYaw(),
+                target.getPitch(),
                 target.area,
                 dist,
                 dist,

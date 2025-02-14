@@ -96,4 +96,12 @@ public class Helpers {
         }
         return headingSatisfied;
     }
+
+    public static Transform2d toTransform2d(Translation2d translation) {
+        return new Transform2d(translation, new Rotation2d());
+    }
+
+    public static Transform2d toTransform2d(double x, double y) {
+        return new Transform2d(x, y, new Rotation2d());
+    }
 }

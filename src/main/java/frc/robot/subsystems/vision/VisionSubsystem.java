@@ -75,6 +75,7 @@ public class VisionSubsystem extends SubsystemBase {
 
     private final ReefProximity reefProximity;
     private final CoralDetector coralDetector;
+    private final SingleTagSolver singleTagSolver = new SingleTagSolver();
 
     private final Transform2d leftReefTransform = new Transform2d(0.55, -0.15, Rotation2d.fromDegrees(180));
     private final Transform2d rightReefTransform = new Transform2d(0.55, 0.15, Rotation2d.fromDegrees(180));
@@ -101,6 +102,8 @@ public class VisionSubsystem extends SubsystemBase {
 
     private boolean closestReefPoseValid = false;
     private Pose2d closestReefPose = Pose2d.kZero;
+
+    private Pose2d singleTagPose = Pose2d.kZero;
 
     final boolean megatag2Enabled = false;
 
@@ -209,7 +212,8 @@ public class VisionSubsystem extends SubsystemBase {
             closestReefPoseValid = true;
         }
 
-        coralPose = coralDetector.getCoralPose(robotPose, inputs.backDetections);
+        Pose2d latencyCompensatedRobotPose = RobotContainer.instance.drivetrain.getBufferPose(inputs.backTimestamp);
+        coralPose = coralDetector.getCoralPose(latencyCompensatedRobotPose, inputs.backDetections);
         if (coralPose == null) {
             coralPose = Pose2d.kZero;
             coralPoseValid = false;
@@ -230,6 +234,12 @@ public class VisionSubsystem extends SubsystemBase {
         }
 
         if (bestReefID != -1) lastReefID = bestReefID;
+
+        if (inputs.scoringFiducials.length > 0) {
+            // TODO: If this seems more accurate than global pose, we need to specifically pass in the scoring fiducial
+            // that corresponds to the tag we're actively targeting, not just the first or closest one
+            singleTagPose = singleTagSolver.getPose(inputs.scoringTimestamp, inputs.scoringFiducials[0], ROBOT_TO_SCORING_CAMERA);
+        }
     }
 
     
@@ -330,11 +340,6 @@ public class VisionSubsystem extends SubsystemBase {
             }
         }
         return -1;
-    }
-
-    // Unused
-    public boolean getLeftFromPose(Pose2d pose) {
-        return leftReefHashMap.values().contains(pose);
     }
 
     /**
