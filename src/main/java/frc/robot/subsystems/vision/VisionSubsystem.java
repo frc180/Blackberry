@@ -219,7 +219,12 @@ public class VisionSubsystem extends SubsystemBase {
             closestReefPoseValid = true;
         }
 
-        Pose2d latencyCompensatedRobotPose = RobotContainer.instance.drivetrain.getBufferPose(inputs.backTimestamp);
+        Pose2d latencyCompensatedRobotPose;
+        if (Robot.isReal()) {
+            latencyCompensatedRobotPose = RobotContainer.instance.drivetrain.getBufferPose(inputs.backTimestamp);
+        } else {
+            latencyCompensatedRobotPose = robotPose;
+        }
         coralPose = coralDetector.getCoralPose(latencyCompensatedRobotPose, inputs.backDetections);
         if (coralPose == null) {
             coralPose = Pose2d.kZero;

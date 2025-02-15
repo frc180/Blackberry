@@ -444,36 +444,48 @@ public class RobotContainer {
 
         // ====================== TEST CONTROLS ======================
         
-        testController.button(1).whileTrue(elevatorArm.setSpeed(0.5)).onFalse(elevatorArm.stop());
+        testController.button(1).whileTrue(elevatorArm.runSpeed(1));
+        testController.button(2).whileTrue(elevatorArm.runSpeed(0.5));
+        testController.button(3).whileTrue(elevatorArm.runSpeed(0.25)); // l2 & l3 speeds
 
-        testController.button(2).whileTrue(elevatorArmPivot.setSpeed(0.2)).onFalse(elevatorArmPivot.stop());
-        testController.button(3).whileTrue(elevatorArmPivot.setSpeed(-0.2)).onFalse(elevatorArmPivot.stop());
+
+        // testController.button(2).whileTrue(elevatorArmPivot.setSpeed(0.2)).onFalse(elevatorArmPivot.stop());
+        // testController.button(3).whileTrue(elevatorArmPivot.setSpeed(-0.2)).onFalse(elevatorArmPivot.stop());
         
         testController.button(4).whileTrue(elevatorArmAlgae.setSpeed(0.5)).onFalse(elevatorArmAlgae.stop());
-        testController.button(5).whileTrue(elevatorArmAlgae.setSpeed(-0.5)).onFalse(elevatorArmAlgae.stop());
+        testController.button(5).whileTrue(elevatorArmAlgae.setSpeed(0.05)).onFalse(elevatorArmAlgae.stop());
 
 
         // testController.button(6).whileTrue(intakeAlgae.setSpeed(1)).onFalse(intakeAlgae.stopIntake());
         // testController.button(7).whileTrue(intakeAlgae.setSpeed(-1)).onFalse(intakeAlgae.stopIntake());
 
-        testController.button(6).whileTrue(intakeAlgaePivot.setSpeed(0.2)).onFalse(intakeAlgaePivot.stop());
-        testController.button(7).whileTrue(intakeAlgaePivot.setSpeed(-0.2)).onFalse(intakeAlgaePivot.stop());
+        // testController.button(6).whileTrue(intakeAlgaePivot.setSpeed(0.2)).onFalse(intakeAlgaePivot.stop());
+        // testController.button(7).whileTrue(intakeAlgaePivot.setSpeed(-0.2)).onFalse(intakeAlgaePivot.stop());
 
-        // Stops on release since runSpeed automatically stops the motors
-        teleop.and(testController.button(8)).whileTrue(elevator.runSpeed(0.2));
-        teleop.and(testController.button(9)).whileTrue(elevator.runSpeed(-0.2));
+        // // Stops on release since runSpeed automatically stops the motors
+        // teleop.and(testController.button(8)).whileTrue(elevator.runSpeed(0.2));
+        // teleop.and(testController.button(9)).whileTrue(elevator.runSpeed(-0.2));
         
-        Trigger elevatorZeroed = new Trigger(elevator::hasZeroed);
-        testMode.and(elevatorZeroed).and(testController.button(8))
-            .onTrue(elevator.setPosition(ElevatorSubsystem.L2));
+        Trigger elevatorZeroed = new Trigger(() -> true);//new Trigger(elevator::hasZeroed);
+        teleop.and(elevatorZeroed).and(testController.button(6))
+        .onTrue(elevator.setPosition(ElevatorSubsystem.STOW));
+        
+        teleop.and(elevatorZeroed).and(testController.button(7))
+        .onTrue(elevator.setPosition(ElevatorSubsystem.L1));
 
-        testMode.and(elevatorZeroed).and(testController.button(9))
-            .onTrue(elevator.setPosition(ElevatorSubsystem.STOW));
+        teleop.and(elevatorZeroed).and(testController.button(8))
+        .onTrue(elevator.setPosition(ElevatorSubsystem.L2));
 
-        testMode.and(testController.button(10)).onTrue(Commands.sequence(
-            elevator.home(),
-            new RumbleCommand(0.5).withTimeout(0.5)
-        ));
+        teleop.and(elevatorZeroed).and(testController.button(9))
+            .onTrue(elevator.setPosition(ElevatorSubsystem.L3));
+
+        teleop.and(elevatorZeroed).and(testController.button(10))
+            .onTrue(elevator.setPosition(ElevatorSubsystem.L4));
+
+        // testMode.and(testController.button(10)).onTrue(Commands.sequence(
+        //     elevator.home(),
+        //     new RumbleCommand(0.5).withTimeout(0.5)
+        // ));
 
         // //coral intake
         // testController.button(1).whileTrue(intakeCoral.test()).onFalse(intakeCoral.stopIntake());

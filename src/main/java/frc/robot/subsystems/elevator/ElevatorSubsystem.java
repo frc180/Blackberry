@@ -4,6 +4,7 @@
 
 package frc.robot.subsystems.elevator;
 
+import static edu.wpi.first.units.Units.Centimeters;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Second;
@@ -24,12 +25,12 @@ import frc.robot.util.simulation.SimVisuals;
 public class ElevatorSubsystem extends SubsystemBase {
 
   // Presets in meters, with 0 being the bottom of the elevator
+  public static final double L1 = 0.269; // not real
+  public static final double L2 = 0.302; // 3 degrees pivot
+  public static final double L3 = L2 + Inches.of(16).in(Meters); // 3 degrees pivot
+  public static final double L4 = 1.4; // 14 degrees
   public static final double NET = 1.47;
-  public static final double L4 = 1.4;
-  public static final double L3 = 1;
-  public static final double L2 = 0.6;
-  public static final double L1 = 0.25;
-  public static final double STOW = 0;
+  public static final double STOW = Centimeters.of(1).in(Meters);
 
   private static final double IN_POSITION_METERS = Inches.of(1).in(Meters);
 
@@ -37,7 +38,7 @@ public class ElevatorSubsystem extends SubsystemBase {
   private ElevatorIOInputs inputs;
 
   private double targetPosition = 0;
-  private boolean hasZeroed = false;
+  private boolean hasZeroed = true;
 
   @NotLogged
   public Trigger elevatorInPosition = new Trigger(this::isElevatorInPosition);

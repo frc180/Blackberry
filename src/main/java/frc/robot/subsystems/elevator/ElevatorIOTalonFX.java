@@ -21,7 +21,7 @@ import frc.robot.Robot;
 public class ElevatorIOTalonFX implements ElevatorIO {
 
     final double elevatorGearing = 5;
-    final double metersToMotorRotations = 1 / Meters.of(0.053848).in(Meters);
+    final double metersToMotorRotations = 1 / Meters.of(0.0382524).in(Meters);
 
     TalonFX motorA, motorB;
     List<TalonFX> motors;
@@ -48,12 +48,14 @@ public class ElevatorIOTalonFX implements ElevatorIO {
         config.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
         // config.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
         if (Robot.isReal()) {
-            config.Slot0.kP = 0;
+            config.Slot0.kP = 20;
             config.Slot0.kI = 0;
             config.Slot0.kD = 0;
             config.Slot0.kG = 0;
-            config.Slot0.kV = 0;
+            config.Slot0.kV = 3;
             config.Slot0.kA = 0;
+            config.MotionMagic.MotionMagicExpo_kV = 4;
+            config.MotionMagic.MotionMagicExpo_kA = 1.5;
         } else {
             config.Slot0.kP = 0.97;
             config.Slot0.kI = 0;
@@ -61,6 +63,8 @@ public class ElevatorIOTalonFX implements ElevatorIO {
             config.Slot0.kG = 0.4031;
             config.Slot0.kV = 0.78;
             config.Slot0.kA = 0.0017552;
+            config.MotionMagic.MotionMagicExpo_kV = 0.78;
+            config.MotionMagic.MotionMagicExpo_kA = 0.5;
         }
         config.Slot0.GravityType = GravityTypeValue.Elevator_Static;
         config.MotionMagic.MotionMagicJerk = 0;
@@ -69,9 +73,6 @@ public class ElevatorIOTalonFX implements ElevatorIO {
         // config.MotionMagic.MotionMagicAcceleration = 8;
         // MotionMagicExpo config
         config.MotionMagic.MotionMagicCruiseVelocity = 0; // Unlimited cruise velocity
-        config.MotionMagic.MotionMagicExpo_kV = 0.78;
-        config.MotionMagic.MotionMagicExpo_kA = 0.5;
-
         motors.forEach(motor -> {
             motor.setNeutralMode(NeutralModeValue.Brake);
             motor.getConfigurator().apply(config);
@@ -86,8 +87,8 @@ public class ElevatorIOTalonFX implements ElevatorIO {
 
         bottomLimit = new DigitalInput(Constants.DIO_ELEVATOR_BOTTOM_LIMIT);
         
-        pidTuner = new PIDTuner(config.Slot0, motorA).withName("Elevator");
-        pidTuner.initializeValues(config.Slot0);
+        // pidTuner = new PIDTuner(config.Slot0, motorA).withName("Elevator");
+        // pidTuner.initializeValues(config.Slot0);
 
         // Everything past this point is just for simulation setup
         if (Robot.isReal()) return;
@@ -126,13 +127,14 @@ public class ElevatorIOTalonFX implements ElevatorIO {
 
     @Override
     public void update(ElevatorIOInputs inputs) {
-        if (Robot.isReal() && bottomLimit.get()) motorA.setPosition(0);
-
         inputs.position = motorA.getPosition(true).getValueAsDouble();
         inputs.velocity = motorA.getVelocity(true).getValueAsDouble();
         inputs.voltage = motorA.getMotorVoltage(true).getValueAsDouble();
         inputs.target = motorA.getClosedLoopReference(true).getValueAsDouble();
-        inputs.bottomLimit = bottomLimit.get();
+        inputs.bottomLimit = !bottomLimit.get();
+
+        // only rezero if we've lost our position
+        // if (Robot.isReal() && inputs.bottomLimit) motorA.setPosition(0);
 
         if (pidTuner != null) pidTuner.periodic();
     }

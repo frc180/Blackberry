@@ -9,15 +9,17 @@ import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 import frc.robot.Constants;
 import frc.robot.Robot;
 
 public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO{
-
+    // TODO: read manually from robot
+    final Angle FORWARD_LIMIT = Degrees.of(100);
+    final Angle REVERSE_LIMIT = Degrees.of(-75);
     final Angle HARD_STOP_OFFSET = Degrees.of(25);
+
     final double PIVOT_GEARING = 80;
     final double radToRotations = 1 / (2 * Math.PI);
 
@@ -53,12 +55,12 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO{
         config.Feedback.SensorToMechanismRatio = PIVOT_GEARING;
         config.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
         config.MotionMagic.MotionMagicJerk = 0;
-        config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = ElevatorArmPivotSubsystem.FORWARD_LIMIT.in(Rotations);
+        config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = FORWARD_LIMIT.in(Rotations);
         config.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
-        config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = ElevatorArmPivotSubsystem.REVERSE_LIMIT.in(Rotations);
+        config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = REVERSE_LIMIT.in(Rotations);
         config.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
 
-        armPivotMotor.setNeutralMode(NeutralModeValue.Brake);
+        armPivotMotor.setNeutralMode(NeutralModeValue.Coast);
         armPivotMotor.getConfigurator().apply(config);
         armPivotMotor.setPosition(HARD_STOP_OFFSET);
 
