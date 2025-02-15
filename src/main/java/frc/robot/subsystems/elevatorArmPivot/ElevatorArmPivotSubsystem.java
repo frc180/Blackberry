@@ -1,8 +1,10 @@
 package frc.robot.subsystems.elevatorArmPivot;
 
+import static edu.wpi.first.units.Units.*;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.NotLogged;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -15,6 +17,10 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
 
     private ElevatorArmPivotIO io;
     private ElevatorArmPivotIOInputs inputs;
+
+    // TODO: read manually from robot
+    public static final Angle FORWARD_LIMIT = Degrees.of(100);
+    public static final Angle REVERSE_LIMIT = Degrees.of(-75);
 
     public static final double receiving = Units.degreesToRotations(45);
     public static final double algaeReceive = Units.degreesToRotations(-70);
@@ -124,6 +130,13 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
         return this.run(() -> {
           io.setSpeed(speed);
         });
+    }
+
+    public Command runSpeed(double speed) {
+        return runEnd(
+            () -> io.setSpeed(speed),
+            () -> io.stopMotor()
+        );
     }
 
     public Command stop() {

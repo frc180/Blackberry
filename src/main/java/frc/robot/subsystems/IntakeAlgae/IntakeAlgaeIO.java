@@ -12,7 +12,7 @@ public interface IntakeAlgaeIO {
 
     public void startRollers();
 
-    public void stopRollers();
+    public void stop();
 
     public void spit();
 

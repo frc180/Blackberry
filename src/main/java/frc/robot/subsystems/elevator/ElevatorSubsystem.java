@@ -29,6 +29,7 @@ public class ElevatorSubsystem extends SubsystemBase {
   public static final double L3 = 1;
   public static final double L2 = 0.6;
   public static final double L1 = 0.25;
+  public static final double STOW = 0;
 
   private static final double IN_POSITION_METERS = Inches.of(1).in(Meters);
 
@@ -36,6 +37,7 @@ public class ElevatorSubsystem extends SubsystemBase {
   private ElevatorIOInputs inputs;
 
   private double targetPosition = 0;
+  private boolean hasZeroed = false;
 
   @NotLogged
   public Trigger elevatorInPosition = new Trigger(this::isElevatorInPosition);
@@ -60,11 +62,7 @@ public class ElevatorSubsystem extends SubsystemBase {
   public ElevatorSubsystem() {
     inputs = new ElevatorIOInputs();
     io = new ElevatorIOTalonFX();
-    // if (Robot.isReal()) {
-    //   io = new ElevatorIOSim();
-    // } else {
-    //   io = new ElevatorIOTalonFX();
-    // }
+    // io = new ElevatorIOSim();
   }
 
   @Override
@@ -89,23 +87,36 @@ public class ElevatorSubsystem extends SubsystemBase {
     return targetPosition;
   }
 
+  public void zero() {
+    hasZeroed = true;
+    io.zero();
+  }
+
+  @NotLogged
+  public boolean hasZeroed() {
+    return hasZeroed;
+  }
+
   public Command runSpeed(double speed) {
-    return this.runEnd(() -> {
+    return runEnd(() -> {
       io.setPower(speed);
     },
     () -> {
-      io.setPower(0);
+      io.stopMotor();
     });
   }
 
   public Command setPosition(double encoderPosition) {
-    return this.run(() -> {
-      setPositionDirect(encoderPosition);
-    });
+    return run(() -> setPositionDirect(encoderPosition));
   }
 
-  public Command setPower(double power) {
-    return run(() -> io.setPower(power));
+  public Command home() {
+    return runSpeed(-0.1).until(this::isAtLowerLimit)
+            .andThen(runOnce(this::zero));
+  }
+
+  public Command stop() {
+    return run(() -> io.stopMotor());
   }
 
   public Command sysidQuasi(SysIdRoutine.Direction direction) {
@@ -117,15 +128,19 @@ public class ElevatorSubsystem extends SubsystemBase {
   }
 
   public BooleanSupplier sysIdEnd(SysIdRoutine.Direction direction) {
-    return direction == SysIdRoutine.Direction.kReverse ? this::isAtLowerLimit : this::isAtUpperLimit;
+    return direction == SysIdRoutine.Direction.kReverse ? this::isAtSoftLowerLimit : this::isAtSoftUpperLimit;
   }
 
-  public boolean isAtUpperLimit() {
+  public boolean isAtSoftUpperLimit() {
     return inputs.position > NET;
   }
 
-  public boolean isAtLowerLimit() {
+  public boolean isAtSoftLowerLimit() {
     return inputs.position <= 0;
+  }
+
+  public boolean isAtLowerLimit() {
+    return inputs.bottomLimit;
   }
 
   public boolean isElevatorInPosition() {
@@ -138,18 +153,6 @@ public class ElevatorSubsystem extends SubsystemBase {
 
   public boolean isElevatorInReefAlgaePosition() {  
     return isElevatorInPosition() && (targetPosition == L2 || targetPosition == L3);
-  }
-
-  public Command test() {
-    return this.run(() -> {
-      io.runMotorTest();
-    });
-  }
-
-  public Command stop() {
-    return this.run(() -> {
-      io.stopMotor();
-    });
   }
 
   public void setPositionDirect(double encoderPosition) {

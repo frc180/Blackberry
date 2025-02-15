@@ -47,12 +47,12 @@ public class ElevatorIOSim implements ElevatorIO {
     }
 
     @Override
-    public void runMotorTest() {
-        System.out.println("elevator test");
+    public void stopMotor() {
+        speed = 0;
     }
 
     @Override
-    public void stopMotor() {
-        speed = 0;
+    public void zero() {
+        // TODO: implement
     }
 }

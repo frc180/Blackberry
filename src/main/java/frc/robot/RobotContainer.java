@@ -148,6 +148,7 @@ public class RobotContainer {
         // Robot modes
         final Trigger teleop = RobotModeTriggers.teleop();
         final Trigger autonomous = RobotModeTriggers.autonomous();
+        final Trigger testMode = RobotModeTriggers.test();
         final Trigger algaeMode = driverController.povDown();
         final Trigger coralMode = algaeMode.negate();
 
@@ -458,8 +459,21 @@ public class RobotContainer {
         testController.button(6).whileTrue(intakeAlgaePivot.setSpeed(0.2)).onFalse(intakeAlgaePivot.stop());
         testController.button(7).whileTrue(intakeAlgaePivot.setSpeed(-0.2)).onFalse(intakeAlgaePivot.stop());
 
-        testController.button(8).whileTrue(elevator.setPower(0.2)).onFalse(elevator.stop());
-        testController.button(9).whileTrue(elevator.setPower(-0.2)).onFalse(elevator.stop());
+        // Stops on release since runSpeed automatically stops the motors
+        teleop.and(testController.button(8)).whileTrue(elevator.runSpeed(0.2));
+        teleop.and(testController.button(9)).whileTrue(elevator.runSpeed(-0.2));
+        
+        Trigger elevatorZeroed = new Trigger(elevator::hasZeroed);
+        testMode.and(elevatorZeroed).and(testController.button(8))
+            .onTrue(elevator.setPosition(ElevatorSubsystem.L2));
+
+        testMode.and(elevatorZeroed).and(testController.button(9))
+            .onTrue(elevator.setPosition(ElevatorSubsystem.STOW));
+
+        testMode.and(testController.button(10)).onTrue(Commands.sequence(
+            elevator.home(),
+            new RumbleCommand(0.5).withTimeout(0.5)
+        ));
 
         // //coral intake
         // testController.button(1).whileTrue(intakeCoral.test()).onFalse(intakeCoral.stopIntake());

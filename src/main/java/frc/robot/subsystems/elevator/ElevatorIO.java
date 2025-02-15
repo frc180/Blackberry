@@ -11,6 +11,7 @@ public interface ElevatorIO {
         public double velocity;
         public double voltage;
         public double target;
+        public boolean bottomLimit = false;
     }
 
     public void update(ElevatorIOInputs inputs);
@@ -21,9 +22,10 @@ public interface ElevatorIO {
 
     public void setPosition(double encoderPosition);
 
+    public void stopMotor();
+
+    public void zero();
+
     public default void simulationPeriodic() {}
 
-    public void runMotorTest();
-
-    public void stopMotor();
 }

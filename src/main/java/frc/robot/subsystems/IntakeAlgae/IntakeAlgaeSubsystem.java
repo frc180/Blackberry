@@ -38,7 +38,7 @@ public class IntakeAlgaeSubsystem extends SubsystemBase {
 
     public Command stopIntake() {
         return this.run(() -> {
-            io.stopRollers();
+            io.stop();
         });
     }
 
@@ -50,6 +50,13 @@ public class IntakeAlgaeSubsystem extends SubsystemBase {
 
     public Command setSpeed(double speed) {
         return run(() -> io.setSpeed(speed));
+    }
+
+    public Command runSpeed(double speed) {
+        return runEnd(
+            () -> io.setSpeed(speed),
+            () -> io.stop()
+        );
     }
 
     public Command test() {

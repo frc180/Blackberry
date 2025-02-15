@@ -58,9 +58,14 @@ public class ElevatorArmAlgaeSubsystem extends SubsystemBase{
     }
 
     public Command setSpeed(double speed) {
-        return this.run(() -> {
-          io.setSpeed(speed);
-        });
+        return run(() -> io.setSpeed(speed));
+    }
+
+    public Command runSpeed(double speed) {
+        return runEnd(
+            () -> io.setSpeed(speed),
+            () -> io.stop()
+        );
     }
     
     public double getSpeed() {

@@ -32,7 +32,7 @@ public class IntakeAlgaeIOSim implements IntakeAlgaeIO {
     }
 
     @Override
-    public void stopRollers() {
+    public void stop() {
         rollerSpeed = 0;
     }
 

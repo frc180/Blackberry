@@ -69,6 +69,13 @@ public class IntakeAlgaePivotSubsystem extends SubsystemBase {
         return run(() -> io.setSpeed(speed));
     }
 
+    public Command runSpeed(double speed) {
+        return runEnd(
+            () -> io.setSpeed(speed),
+            () -> io.stopMotor()
+        );
+    }
+
     public Command test() {
         return this.run(() -> {
           io.runMotorTest();

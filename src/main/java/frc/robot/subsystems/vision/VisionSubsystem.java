@@ -63,6 +63,7 @@ public class VisionSubsystem extends SubsystemBase {
     public static final List<Integer> redReefTags = List.of(6,7,8,9,10,11);
     public static final List<Integer> blueReefTags = List.of(17, 18, 19, 20, 21, 22);
 
+    // x and y may need to be flipped
     public static final Transform3d ROBOT_TO_SCORING_CAMERA = new Transform3d(
         Inches.of(9.757).in(Meters),
         Inches.of(-7.2).in(Meters),

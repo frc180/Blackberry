@@ -36,7 +36,7 @@ public class IntakeAlgaeIOTalonFXS implements IntakeAlgaeIO {
     }
 
     @Override
-    public void stopRollers() {
+    public void stop() {
         setSpeed(0);
     }
 

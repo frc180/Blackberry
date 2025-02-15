@@ -12,7 +12,6 @@ import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 import com.spamrobotics.util.PIDTuner;
-
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.simulation.ElevatorSim;
@@ -48,7 +47,14 @@ public class ElevatorIOTalonFX implements ElevatorIO {
         // config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = -0.01;
         config.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
         // config.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
-        if (Robot.isSimulation()) {
+        if (Robot.isReal()) {
+            config.Slot0.kP = 0;
+            config.Slot0.kI = 0;
+            config.Slot0.kD = 0;
+            config.Slot0.kG = 0;
+            config.Slot0.kV = 0;
+            config.Slot0.kA = 0;
+        } else {
             config.Slot0.kP = 0.97;
             config.Slot0.kI = 0;
             config.Slot0.kD = 0;
@@ -63,7 +69,7 @@ public class ElevatorIOTalonFX implements ElevatorIO {
         // config.MotionMagic.MotionMagicAcceleration = 8;
         // MotionMagicExpo config
         config.MotionMagic.MotionMagicCruiseVelocity = 0; // Unlimited cruise velocity
-        config.MotionMagic.MotionMagicExpo_kV = 2.5;
+        config.MotionMagic.MotionMagicExpo_kV = 0.78;
         config.MotionMagic.MotionMagicExpo_kA = 0.5;
 
         motors.forEach(motor -> {
@@ -126,6 +132,7 @@ public class ElevatorIOTalonFX implements ElevatorIO {
         inputs.velocity = motorA.getVelocity(true).getValueAsDouble();
         inputs.voltage = motorA.getMotorVoltage(true).getValueAsDouble();
         inputs.target = motorA.getClosedLoopReference(true).getValueAsDouble();
+        inputs.bottomLimit = bottomLimit.get();
 
         if (pidTuner != null) pidTuner.periodic();
     }
@@ -144,14 +151,13 @@ public class ElevatorIOTalonFX implements ElevatorIO {
     }
 
     @Override
-    public void runMotorTest() {
-        System.out.println("running elevator motors");
-        motorA.set(0.25); //motorB is follower
+    public void stopMotor() {
+        motorA.stopMotor();
+        // motorB.stopMotor();
     }
 
     @Override
-    public void stopMotor() {
-        motorA.stopMotor();
-        motorB.stopMotor();
+    public void zero() {
+        motorA.setPosition(0);
     }
 }
