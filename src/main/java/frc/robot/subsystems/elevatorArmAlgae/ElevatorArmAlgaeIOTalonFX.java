@@ -3,6 +3,8 @@ package frc.robot.subsystems.elevatorArmAlgae;
 import com.ctre.phoenix6.configs.TalonFXSConfiguration;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFXS;
+import com.ctre.phoenix6.signals.MotorArrangementValue;
+
 import edu.wpi.first.wpilibj.DigitalInput;
 import frc.robot.Constants;
 
@@ -15,7 +17,8 @@ public class ElevatorArmAlgaeIOTalonFX implements ElevatorArmAlgaeIO{
     
     public ElevatorArmAlgaeIOTalonFX() {
         TalonFXSConfiguration config = new TalonFXSConfiguration();
-        motor = new TalonFXS(Constants.ELEVATOR_ARM_ALGAE);
+        config.Commutation.MotorArrangement = MotorArrangementValue.Minion_JST;
+        motor = new TalonFXS(Constants.ELEVATOR_ARM_ALGAE, Constants.CANIVORE);
         motor.getConfigurator().apply(config);
         sensor = new DigitalInput(Constants.ELEVATOR_ARM_ALGAE_SENSOR);
         voltageControl = new VoltageOut(0);
@@ -41,7 +44,8 @@ public class ElevatorArmAlgaeIOTalonFX implements ElevatorArmAlgaeIO{
         setSpeed(-1);
     }
 
-    private void setSpeed(double speed) {
+    @Override
+    public void setSpeed(double speed) {
         setVoltage(speed * 12);
     }
 

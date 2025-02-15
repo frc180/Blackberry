@@ -4,6 +4,7 @@ import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.Robot;
 import frc.robot.subsystems.elevatorArm.ElevatorArmIO.ElevatorArmIOInputs;
 
 @Logged
@@ -18,7 +19,11 @@ public class ElevatorArmSubsystem extends SubsystemBase{
 
     public ElevatorArmSubsystem() {
         inputs = new ElevatorArmIOInputs();
-        io = new ElevatorArmIOSim();
+        if (Robot.isReal()) {
+            io = new ElevatorArmIOTalonFX();
+        } else {
+            io = new ElevatorArmIOSim();
+        }
 
         hasCoral = new Trigger(() -> inputs.middleCoralSensor);
         // TODO: depending on how coral indexing works on the real robot, "hasCoral" might need to require all sensors (or 2/3)
@@ -68,7 +73,7 @@ public class ElevatorArmSubsystem extends SubsystemBase{
         return run(() -> io.stop());
     }
 
-    public Command test() {
-        return run(() -> io.runMotorTest());
+    public Command setSpeed(double speed) {
+        return run(() -> io.setSpeed(speed));
     }   
 }

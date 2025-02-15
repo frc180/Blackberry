@@ -19,5 +19,5 @@ public interface ElevatorArmAlgaeIO {
 
     public void update(ElevatorArmAlgaeInputs inputs);
     
-    public void runMotorTest();
+    public void setSpeed(double speed);
 }

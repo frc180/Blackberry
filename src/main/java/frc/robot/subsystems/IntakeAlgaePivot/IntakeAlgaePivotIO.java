@@ -21,5 +21,7 @@ public interface IntakeAlgaePivotIO {
 
     public void runMotorTest();
 
+    public void setSpeed(double speed);
+
     public void stopMotor();
 }

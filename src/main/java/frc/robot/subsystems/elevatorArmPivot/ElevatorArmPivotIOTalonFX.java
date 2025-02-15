@@ -26,15 +26,17 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO{
     SingleJointedArmSim armSim;
 
     public ElevatorArmPivotIOTalonFX() {
-        armPivotMotor = new TalonFX(Constants.ELEVATOR_ARM_PIVOT_TALON);
+        armPivotMotor = new TalonFX(Constants.ELEVATOR_ARM_PIVOT_TALON, Constants.CANIVORE);
         TalonFXConfiguration config = new TalonFXConfiguration();
         config.Feedback.SensorToMechanismRatio = elevatorArmPivotGearing;
-        config.Slot0.kP = 50;
-        config.Slot0.kI = 0;
-        config.Slot0.kD = 0;
-        config.Slot0.kG = 0.521;
-        config.Slot0.kV = 0;
-        config.Slot0.kA = 0;
+        if (Robot.isSimulation()) {
+            config.Slot0.kP = 50;
+            config.Slot0.kI = 0;
+            config.Slot0.kD = 0;
+            config.Slot0.kG = 0.521;
+            config.Slot0.kV = 0;
+            config.Slot0.kA = 0;
+        }
         config.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
         // config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         config.MotionMagic.MotionMagicCruiseVelocity = 999;
@@ -82,9 +84,8 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO{
     }
 
     @Override
-    public void runMotorTest() {
-        System.out.println("elevator arm pivot running");
-        armPivotMotor.set(0.25);
+    public void setSpeed(double speed) {
+        armPivotMotor.setControl(voltageControl.withOutput(speed * 12));
     }
 
     @Override
@@ -92,7 +93,6 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO{
         armPivotMotor.stopMotor();
     }
 
-    
     @Override
     public void setPosition(double encoderPosition) {
         armPivotMotor.setControl(motionMagic.withPosition(encoderPosition));

@@ -38,22 +38,24 @@ public class ElevatorIOTalonFX implements ElevatorIO {
     ElevatorSim elevatorSim;
 
     public ElevatorIOTalonFX() {
-        motorA = new TalonFX(Constants.ELEVATOR_TALON_A);
-        motorB = new TalonFX(Constants.ELEVATOR_TALON_B);
+        motorA = new TalonFX(Constants.ELEVATOR_REAR, Constants.CANIVORE);
+        motorB = new TalonFX(Constants.ELEVATOR_FRONT,Constants.CANIVORE);
         motors = List.of(motorA, motorB);
 
         TalonFXConfiguration config = new TalonFXConfiguration();
-        config.Feedback.SensorToMechanismRatio = elevatorGearing;
+        config.Feedback.SensorToMechanismRatio = Robot.isReal() ? metersToMotorRotations : elevatorGearing;
         config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 1.49;
         // config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = -0.01;
         config.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
         // config.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
-        config.Slot0.kP = 0.97;
-        config.Slot0.kI = 0;
-        config.Slot0.kD = 0;
-        config.Slot0.kG = 0.4031;
-        config.Slot0.kV = 0.78;
-        config.Slot0.kA = 0.0017552;
+        if (Robot.isSimulation()) {
+            config.Slot0.kP = 0.97;
+            config.Slot0.kI = 0;
+            config.Slot0.kD = 0;
+            config.Slot0.kG = 0.4031;
+            config.Slot0.kV = 0.78;
+            config.Slot0.kA = 0.0017552;
+        }
         config.Slot0.GravityType = GravityTypeValue.Elevator_Static;
         config.MotionMagic.MotionMagicJerk = 0;
         // normal MotionMagic config
@@ -72,7 +74,7 @@ public class ElevatorIOTalonFX implements ElevatorIO {
         motionMagicControl = new MotionMagicVoltage(0);
         motionMagicExpoControl = new MotionMagicExpoVoltage(0);
         voltageControl = new VoltageOut(0);
-        followerControl = new Follower(Constants.ELEVATOR_TALON_A, false);
+        followerControl = new Follower(Constants.ELEVATOR_REAR, false);
 
         motorB.setControl(followerControl);
 
@@ -102,7 +104,7 @@ public class ElevatorIOTalonFX implements ElevatorIO {
 
     @Override
     public void setPower(double power) {
-        motorA.setControl(voltageControl.withOutput(power * 12.0));
+        setVoltage(power * 12);
     }
 
     @Override

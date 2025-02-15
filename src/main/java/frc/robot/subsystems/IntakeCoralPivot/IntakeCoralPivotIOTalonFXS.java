@@ -23,7 +23,7 @@ public class IntakeCoralPivotIOTalonFXS implements IntakeCoralPivotIO {
     double simulatedPosition = Units.degreesToRotations(-90);
     
     public IntakeCoralPivotIOTalonFXS() {
-        motor = new TalonFX(Constants.INTAKE_CORAL_PIVOT_TALON);
+        motor = new TalonFX(Constants.INTAKE_CORAL_PIVOT_TALON, Constants.CANIVORE);
         motor.setNeutralMode(NeutralModeValue.Brake);
         TalonFXConfiguration config = new TalonFXConfiguration();
         config.Slot0.kP = 1440;

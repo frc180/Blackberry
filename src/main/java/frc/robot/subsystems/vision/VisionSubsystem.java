@@ -63,7 +63,13 @@ public class VisionSubsystem extends SubsystemBase {
     public static final List<Integer> redReefTags = List.of(6,7,8,9,10,11);
     public static final List<Integer> blueReefTags = List.of(17, 18, 19, 20, 21, 22);
 
-    public static final Transform3d ROBOT_TO_SCORING_CAMERA = new Transform3d(0.1, 0, 0.85, new Rotation3d(0, Units.degreesToRadians(40), 0));
+    public static final Transform3d ROBOT_TO_SCORING_CAMERA = new Transform3d(
+        Inches.of(9.757).in(Meters),
+        Inches.of(-7.2).in(Meters),
+        Inches.of(31.296).in(Meters),
+        new Rotation3d(0, Units.degreesToRadians(50), 0)
+    );
+    
     public static final Transform2d ROBOT_TO_INTAKE_CAMERA = new Transform2d(0.1, 0, Rotation2d.fromDegrees(0));
     public static final Transform2d INTAKE_CAMERA_TO_ROBOT = ROBOT_TO_INTAKE_CAMERA.inverse();
 

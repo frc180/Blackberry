@@ -36,7 +36,8 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
     public ElevatorArmPivotSubsystem() {
         inputs = new ElevatorArmPivotIOInputs();
         if (Robot.isReal()) {
-            io = new ElevatorArmPivotIOSim();
+            // io = new ElevatorArmPivotIOSim();
+            io = new ElevatorArmPivotIOTalonFX();
         } else {
             io = new ElevatorArmPivotIOTalonFX();
         }
@@ -119,9 +120,9 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
         return Units.rotationsToDegrees(targetPosition);
     }
 
-    public Command test() {
+    public Command setSpeed(double speed) {
         return this.run(() -> {
-          io.runMotorTest();
+          io.setSpeed(speed);
         });
     }
 

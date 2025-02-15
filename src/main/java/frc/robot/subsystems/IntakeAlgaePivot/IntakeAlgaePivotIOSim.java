@@ -47,4 +47,9 @@ public class IntakeAlgaePivotIOSim implements IntakeAlgaePivotIO {
     public void stopMotor() {
         speed = 0;
     }
+
+    @Override
+    public void setSpeed(double speed) {
+        this.speed = speed;
+    }
 }

@@ -3,6 +3,7 @@ package frc.robot.subsystems.elevatorArm;
 import com.ctre.phoenix6.configs.TalonFXSConfiguration;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFXS;
+import com.ctre.phoenix6.signals.MotorArrangementValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.wpilibj.DigitalInput;
 import frc.robot.Constants;
@@ -16,7 +17,8 @@ public class ElevatorArmIOTalonFX implements ElevatorArmIO {
 
     public ElevatorArmIOTalonFX() {
         TalonFXSConfiguration config = new TalonFXSConfiguration();
-        rollerMotor = new TalonFXS(Constants.ELEVATOR_ARM_TALON);
+        config.Commutation.MotorArrangement = MotorArrangementValue.Minion_JST;
+        rollerMotor = new TalonFXS(Constants.ELEVATOR_ARM_TALON, Constants.CANIVORE);
         rollerMotor.getConfigurator().apply(config);
         rollerMotor.setNeutralMode(NeutralModeValue.Brake);
 

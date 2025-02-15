@@ -16,11 +16,11 @@ public class IntakeAlgaeIOTalonFXS implements IntakeAlgaeIO {
 
     public IntakeAlgaeIOTalonFXS() {
         TalonFXConfiguration config = new TalonFXConfiguration();
-        intakeMotor = new TalonFX(Constants.INTAKE_ALGAE_TALON);
+        intakeMotor = new TalonFX(Constants.INTAKE_ALGAE_TALON, Constants.CANIVORE);
         intakeMotor.getConfigurator().apply(config);
         intakeMotor.setNeutralMode(NeutralModeValue.Brake);
 
-        sensor = new DigitalInput(Constants.INTALE_ALGAE_SENSOR);
+        sensor = new DigitalInput(Constants.INTAKE_ALGAE_SENSOR);
 
         voltageControl = new VoltageOut(0);
     }
@@ -48,7 +48,8 @@ public class IntakeAlgaeIOTalonFXS implements IntakeAlgaeIO {
     /**
      * Sets the speed (-1 to 1) of the intake
      */
-    private void setSpeed(double speed) {
+    @Override
+    public void setSpeed(double speed) {
         setVoltage(speed * 12);
     }
 

@@ -72,7 +72,7 @@ public class ElevatorArmAlgaeIOSim implements ElevatorArmAlgaeIO{
     }
 
     @Override
-    public void runMotorTest() {
+    public void setSpeed(double speed) {
         System.out.println("elevator arm algae test");
 
     }

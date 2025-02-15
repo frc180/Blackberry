@@ -16,6 +16,8 @@ public interface IntakeAlgaeIO {
 
     public void spit();
 
+    public void setSpeed(double speed);
+
     public void update(IntakeAlgaeIOInputs inputs);
 
     public void runMotorTest();

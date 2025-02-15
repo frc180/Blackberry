@@ -15,7 +15,7 @@ public class IntakeCoralIOTalonFXS implements IntakeCoralIO{
 
     public IntakeCoralIOTalonFXS() {
         TalonFXConfiguration config = new TalonFXConfiguration();
-        intakeMotor = new TalonFX(Constants.INTAKE_CORAL_TALON);
+        intakeMotor = new TalonFX(Constants.INTAKE_CORAL_TALON, Constants.CANIVORE);
         intakeMotor.getConfigurator().apply(config);
         intakeMotor.setNeutralMode(NeutralModeValue.Brake);
         

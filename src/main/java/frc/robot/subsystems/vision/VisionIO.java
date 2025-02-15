@@ -17,6 +17,8 @@ public interface VisionIO {
         PoseEstimate scoringPoseEstimate = null;
         RawFiducial[] scoringFiducials = emptyFiducials;
         double scoringTimestamp = 0.0;
+        double scoringCPUTemp = 0;
+        double scoringTemp = 0;
 
         boolean frontCameraConnected = false;
         PoseEstimate frontPoseEstimate = null;

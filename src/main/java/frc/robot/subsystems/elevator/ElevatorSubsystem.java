@@ -59,12 +59,12 @@ public class ElevatorSubsystem extends SubsystemBase {
 
   public ElevatorSubsystem() {
     inputs = new ElevatorIOInputs();
-
-    if (Robot.isReal()) {
-      io = new ElevatorIOSim();
-    } else {
-      io = new ElevatorIOTalonFX();
-    }
+    io = new ElevatorIOTalonFX();
+    // if (Robot.isReal()) {
+    //   io = new ElevatorIOSim();
+    // } else {
+    //   io = new ElevatorIOTalonFX();
+    // }
   }
 
   @Override
@@ -102,6 +102,10 @@ public class ElevatorSubsystem extends SubsystemBase {
     return this.run(() -> {
       setPositionDirect(encoderPosition);
     });
+  }
+
+  public Command setPower(double power) {
+    return run(() -> io.setPower(power));
   }
 
   public Command sysidQuasi(SysIdRoutine.Direction direction) {

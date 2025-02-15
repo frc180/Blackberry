@@ -19,7 +19,8 @@ public class ElevatorArmAlgaeSubsystem extends SubsystemBase{
         inputs = new 
         ElevatorArmAlgaeInputs();
         if (Robot.isReal()) {
-            io = new ElevatorArmAlgaeIOSim();
+            io = new ElevatorArmAlgaeIOTalonFX();
+            // io = new ElevatorArmAlgaeIOSim();
         } else {
             io = new ElevatorArmAlgaeIOSim();
         }
@@ -56,9 +57,9 @@ public class ElevatorArmAlgaeSubsystem extends SubsystemBase{
         io.reverse();
     }
 
-    public Command test() {
+    public Command setSpeed(double speed) {
         return this.run(() -> {
-          io.runMotorTest();
+          io.setSpeed(speed);
         });
     }
     

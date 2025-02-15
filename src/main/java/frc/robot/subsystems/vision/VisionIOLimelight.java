@@ -45,7 +45,19 @@ public class VisionIOLimelight implements VisionIO {
             inputs.scoringPoseEstimate = LimelightHelpers.getBotPoseEstimate_wpiBlue(SCORING_LIMELIGHT);
             inputs.frontPoseEstimate = LimelightHelpers.getBotPoseEstimate_wpiBlue(FRONT_LIMEIGHT);
         }
-        inputs.scoringTimestamp = inputs.scoringPoseEstimate.timestampSeconds;
+        if (inputs.scoringPoseEstimate != null) {
+            inputs.scoringTimestamp = inputs.scoringPoseEstimate.timestampSeconds;
+        }
+
+        // fps, cpu temp, ram usage, temp
+        double[] hw = LimelightHelpers.getLimelightNTDoubleArray(SCORING_LIMELIGHT, "hw");
+        if (hw.length > 3) {
+            inputs.scoringCPUTemp = hw[1];
+            inputs.scoringTemp = hw[3];
+        } else {
+            inputs.scoringCPUTemp = - 1;
+            inputs.scoringTemp = -1;
+        }
     }
 
     @Override

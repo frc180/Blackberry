@@ -18,6 +18,7 @@ public class IntakeAlgaeSubsystem extends SubsystemBase {
     public IntakeAlgaeSubsystem() {
         inputs = new IntakeAlgaeIOInputs();
         if (Robot.isReal()) {
+           //  io = new IntakeAlgaeIOTalonFXS();
             io = new IntakeAlgaeIOSim();
         } else {
             io = new IntakeAlgaeIOSim();
@@ -45,6 +46,10 @@ public class IntakeAlgaeSubsystem extends SubsystemBase {
         return this.run (() -> {
             io.spit();
         });
+    }
+
+    public Command setSpeed(double speed) {
+        return run(() -> io.setSpeed(speed));
     }
 
     public Command test() {

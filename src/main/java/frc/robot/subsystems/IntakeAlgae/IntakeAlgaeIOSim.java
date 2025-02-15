@@ -42,6 +42,11 @@ public class IntakeAlgaeIOSim implements IntakeAlgaeIO {
     }
 
     @Override
+    public void setSpeed(double speed) {
+        rollerSpeed = speed;
+    }
+
+    @Override
     public void update(IntakeAlgaeIOInputs inputs) {
         IntakeAlgaePivotSubsystem algaePivot = RobotContainer.instance.intakeAlgaePivot;
         ElevatorArmAlgaeSubsystem armAlgae = RobotContainer.instance.elevatorArmAlgae;

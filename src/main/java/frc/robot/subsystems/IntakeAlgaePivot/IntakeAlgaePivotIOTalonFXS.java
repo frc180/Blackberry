@@ -34,19 +34,20 @@ public class IntakeAlgaePivotIOTalonFXS implements IntakeAlgaePivotIO {
     SingleJointedArmSim intakeSim;
 
     public IntakeAlgaePivotIOTalonFXS() {
-
-        pivotMotorA = new TalonFX(Constants.INTAKE_ALGAE_PIVOT_TALON_A);
-        pivotMotorB = new TalonFX(Constants.INTAKE_ALGAE_PIVOT_TALON_B);
+        pivotMotorA = new TalonFX(Constants.INTAKE_ALGAE_PIVOT_TALON_A, Constants.CANIVORE);
+        pivotMotorB = new TalonFX(Constants.INTAKE_ALGAE_PIVOT_TALON_B, Constants.CANIVORE);
         pivotMotors = List.of(pivotMotorA, pivotMotorB);
 
         TalonFXConfiguration configuration = new TalonFXConfiguration();
         configuration.Feedback.SensorToMechanismRatio = intakeArmGearing;
-        configuration.Slot0.kP = 36;
-        configuration.Slot0.kI = 0;
-        configuration.Slot0.kD = 0;
-        configuration.Slot0.kG = 0;
-        configuration.Slot0.kV = 0;
-        configuration.Slot0.kA = 0;
+        if (Robot.isSimulation()) {
+            configuration.Slot0.kP = 36;
+            configuration.Slot0.kI = 0;
+            configuration.Slot0.kD = 0;
+            configuration.Slot0.kG = 0;
+            configuration.Slot0.kV = 0;
+            configuration.Slot0.kA = 0;
+        }
         configuration.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
         // configuration.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         configuration.MotionMagic.MotionMagicCruiseVelocity = 999;
@@ -114,6 +115,11 @@ public class IntakeAlgaePivotIOTalonFXS implements IntakeAlgaePivotIO {
         pivotMotorA.setControl(motionMagicControl.withPosition(encoderPosition));
     }
 
+    @Override
+    public void setSpeed(double speed) {
+        pivotMotorA.setControl(voltageControl.withOutput(speed * 12));
+    }
+
     public void runMotorTest() {
         System.out.println("algae intake pivot running");
         pivotMotorA.set(0.25); //pivotMotorB is follower
@@ -122,6 +128,6 @@ public class IntakeAlgaePivotIOTalonFXS implements IntakeAlgaePivotIO {
     @Override
     public void stopMotor() {
         pivotMotorA.stopMotor();
-        pivotMotorB.stopMotor();
+        // pivotMotorB.stopMotor();
     }
 }

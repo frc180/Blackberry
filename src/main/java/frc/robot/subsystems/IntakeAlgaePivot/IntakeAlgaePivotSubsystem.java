@@ -28,7 +28,8 @@ public class IntakeAlgaePivotSubsystem extends SubsystemBase {
         inputs = new IntakeAlgaePivotIOInputs();
 
         if (Robot.isReal()) {
-            io = new IntakeAlgaePivotIOSim();
+            io = new IntakeAlgaePivotIOTalonFXS();
+            // io = new IntakeAlgaePivotIOSim();
         } else {
             io = new IntakeAlgaePivotIOTalonFXS();
         }
@@ -62,6 +63,10 @@ public class IntakeAlgaePivotSubsystem extends SubsystemBase {
             io.setPosition(position);
             targetPosition = position;
         });
+    }
+
+    public Command setSpeed(double speed) {
+        return run(() -> io.setSpeed(speed));
     }
 
     public Command test() {

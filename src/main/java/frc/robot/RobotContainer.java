@@ -102,11 +102,11 @@ public class RobotContainer {
 
     private final SendableChooser<Command> autoChooser = new SendableChooser<Command>();
 
-    public Trigger robotHasCoral = null;
-    public Trigger robotHasAlgae = null;
-    public Trigger coralIntakeTrigger = null;
-    public Trigger driverRightReef = null;
-    public Trigger driverLeftReef = null;
+    public Trigger robotHasCoral = new Trigger(() -> false);;
+    public Trigger robotHasAlgae = new Trigger(() -> false);;
+    public Trigger coralIntakeTrigger = new Trigger(() -> false);
+    public Trigger driverRightReef = new Trigger(() -> false);;
+    public Trigger driverLeftReef = new Trigger(() -> false);;
 
     public static RobotContainer instance;
 
@@ -202,6 +202,8 @@ public class RobotContainer {
     
         drivetrain.setDefaultCommand(new DefaultDriveCommand(drivetrain, joystickInputsSupplier, rotationSupplier));
         driverController.back().onTrue(Commands.runOnce(drivetrain::zeroGyroscope));
+
+        if (Robot.isSimulation()) {
 
         // driverController.back().whileTrue(drivetrain.wheelRadiusCharacterization(-1));
         // driverController.start().whileTrue(drivetrain.wheelRadiusCharacterization(1));
@@ -391,11 +393,12 @@ public class RobotContainer {
         driverNet.and(elevatorArmAlgae.hasAlgae).whileTrue(
             Commands.parallel(
                 elevator.setPosition(ElevatorSubsystem.NET),
-                Commands.either(
-                    elevatorArmPivot.netScorePosition().alongWith(drivetrain.targetHeadingContinuous(0.0, HeadingTarget.GYRO)),
-                    elevatorArmPivot.netScoreBackwardsPosition().alongWith(drivetrain.targetHeadingContinuous(180.0, HeadingTarget.GYRO)),
-                    () -> Math.abs(drivetrain.getGyroscopeDegreesWrapped()) <= 90
-                )
+                elevatorArmPivot.netScorePosition().alongWith(drivetrain.targetHeadingContinuous(0.0, HeadingTarget.GYRO))
+                // Commands.either(
+                //     elevatorArmPivot.netScorePosition().alongWith(drivetrain.targetHeadingContinuous(0.0, HeadingTarget.GYRO)),
+                //     elevatorArmPivot.netScoreBackwardsPosition().alongWith(drivetrain.targetHeadingContinuous(180.0, HeadingTarget.GYRO)),
+                //     () -> Math.abs(drivetrain.getGyroscopeDegreesWrapped()) <= 90
+                // )
             )
         ).onFalse(
             elevator.setPosition(0)
@@ -436,20 +439,40 @@ public class RobotContainer {
             ).alongWith(Commands.runOnce(() -> Robot.justScoredCoral = false))
         );
 
-        // ====================== TEST CONTROLS ======================
+        }
 
-        //coral intake
-        testController.button(1).onTrue(intakeCoral.test()).onFalse(intakeCoral.stopIntake());
-        testController.button(2).onTrue(intakeCoralPivot.test()).onFalse(intakeCoralPivot.stop());
-        //algae intake
-        testController.button(3).onTrue(intakeAlgae.test()).onFalse(intakeAlgae.stopIntake());
-        testController.button(4).onTrue(intakeAlgaePivot.test()).onFalse(intakeAlgaePivot.stop());
-        //elevator arm
-        testController.button(5).onTrue(elevatorArm.test()).onFalse(elevatorArm.stop());
-        testController.button(6).onTrue(elevatorArmAlgae.test()).onFalse(elevatorArmAlgae.stop());
-        testController.button(7).onTrue(elevatorArmPivot.test()).onFalse(elevatorArmPivot.stop());
-        //elevator
-        testController.button(8).onTrue(elevator.test()).onFalse(elevator.stop());
+        // ====================== TEST CONTROLS ======================
+        
+        testController.button(1).whileTrue(elevatorArm.setSpeed(0.5)).onFalse(elevatorArm.stop());
+
+        testController.button(2).whileTrue(elevatorArmPivot.setSpeed(0.2)).onFalse(elevatorArmPivot.stop());
+        testController.button(3).whileTrue(elevatorArmPivot.setSpeed(-0.2)).onFalse(elevatorArmPivot.stop());
+        
+        testController.button(4).whileTrue(elevatorArmAlgae.setSpeed(0.5)).onFalse(elevatorArmAlgae.stop());
+        testController.button(5).whileTrue(elevatorArmAlgae.setSpeed(-0.5)).onFalse(elevatorArmAlgae.stop());
+
+
+        // testController.button(6).whileTrue(intakeAlgae.setSpeed(1)).onFalse(intakeAlgae.stopIntake());
+        // testController.button(7).whileTrue(intakeAlgae.setSpeed(-1)).onFalse(intakeAlgae.stopIntake());
+
+        testController.button(6).whileTrue(intakeAlgaePivot.setSpeed(0.2)).onFalse(intakeAlgaePivot.stop());
+        testController.button(7).whileTrue(intakeAlgaePivot.setSpeed(-0.2)).onFalse(intakeAlgaePivot.stop());
+
+        testController.button(8).whileTrue(elevator.setPower(0.2)).onFalse(elevator.stop());
+        testController.button(9).whileTrue(elevator.setPower(-0.2)).onFalse(elevator.stop());
+
+        // //coral intake
+        // testController.button(1).whileTrue(intakeCoral.test()).onFalse(intakeCoral.stopIntake());
+        // testController.button(2).whileTrue(intakeCoralPivot.test()).onFalse(intakeCoralPivot.stop());
+        // //algae intake
+        // testController.button(3).whileTrue(intakeAlgae.test()).onFalse(intakeAlgae.stopIntake());
+        // testController.button(4).onTrue(intakeAlgaePivot.test()).onFalse(intakeAlgaePivot.stop());
+        // //elevator arm
+        // testController.button(5).whileTrue(elevatorArm.test()).onFalse(elevatorArm.stop());
+        // testController.button(6).whileTrue(elevatorArmAlgae.test()).onFalse(elevatorArmAlgae.stop());
+        // testController.button(7).whileTrue(elevatorArmPivot.test()).onFalse(elevatorArmPivot.stop());
+        // //elevator
+        // testController.button(8).whileTrue(elevator.test()).onFalse(elevator.stop());
 
         // Example of using DriveToPose command + allowing the position to be influenced by the driver
         // Supplier<ChassisSpeeds> additionalSpeedsSupplier = () -> {
