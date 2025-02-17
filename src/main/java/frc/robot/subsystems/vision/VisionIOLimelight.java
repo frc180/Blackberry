@@ -37,16 +37,8 @@ public class VisionIOLimelight implements VisionIO {
         inputs.backCameraConnected = backLimelightStatus.isConnected();
 
         // TODO: Test how this works when this is also set in the dashboard, and see if we need to call this every loop
-        Transform3d scoring = VisionSubsystem.ROBOT_TO_SCORING_CAMERA;
-        LimelightHelpers.setCameraPose_RobotSpace(
-            SCORING_LIMELIGHT,
-            scoring.getX(), // forward
-            scoring.getY(), // side
-            scoring.getZ(), // up
-            scoring.getRotation().getX(), // roll
-            scoring.getRotation().getY(), // pitch
-            scoring.getRotation().getZ() // yaw
-        );
+        setLimelightPosition(SCORING_LIMELIGHT, VisionSubsystem.ROBOT_TO_SCORING_CAMERA);
+        setLimelightPosition(FRONT_LIMEIGHT, VisionSubsystem.ROBOT_TO_FRONT_CAMERA);
 
         inputs.scoringFiducials = LimelightHelpers.getRawFiducials(SCORING_LIMELIGHT);
         inputs.backDetections = LimelightHelpers.getRawDetections(BACK_LIMEIGHT);
@@ -59,6 +51,7 @@ public class VisionIOLimelight implements VisionIO {
             inputs.scoringPoseEstimate = LimelightHelpers.getBotPoseEstimate_wpiBlue(SCORING_LIMELIGHT);
             inputs.frontPoseEstimate = LimelightHelpers.getBotPoseEstimate_wpiBlue(FRONT_LIMEIGHT);
         }
+
         if (inputs.scoringPoseEstimate != null) {
             inputs.scoringTimestamp = inputs.scoringPoseEstimate.timestampSeconds;
         }
@@ -89,5 +82,17 @@ public class VisionIOLimelight implements VisionIO {
     private double getLatencySeconds(String limelightName) {
         double latency = LimelightHelpers.getLatency_Capture(limelightName) + LimelightHelpers.getLatency_Pipeline(limelightName);
         return latency * 0.001;
+    }
+
+    private void setLimelightPosition(String limelightName, Transform3d transform) {
+        LimelightHelpers.setCameraPose_RobotSpace(
+            limelightName,
+            transform.getX(), // forward
+            transform.getY(), // side
+            transform.getZ(), // up
+            transform.getRotation().getX(), // roll
+            transform.getRotation().getY(), // pitch
+            transform.getRotation().getZ() // yaw
+        );
     }
 }

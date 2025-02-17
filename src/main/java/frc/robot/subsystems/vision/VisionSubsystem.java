@@ -71,12 +71,17 @@ public class VisionSubsystem extends SubsystemBase {
         Inches.of(31.296).in(Meters),
         new Rotation3d(0, Units.degreesToRadians(50), 0)
     );
+
+    // TODO: set real values
+    public static final Transform3d ROBOT_TO_FRONT_CAMERA = new Transform3d();
     
+    // TODO: set real values
     public static final Transform2d ROBOT_TO_INTAKE_CAMERA = new Transform2d(0.1, 0, Rotation2d.fromDegrees(0));
     public static final Transform2d INTAKE_CAMERA_TO_ROBOT = ROBOT_TO_INTAKE_CAMERA.inverse();
 
     private static final int RED_PROCESSOR_TAG = 3;
     private static final int BLUE_PROCESSOR_TAG = 16;
+    private static final double BAD_CAMERA_TEMP = 60;
 
     private final VisionIO io;
     private final VisionIOInputs inputs;
@@ -123,6 +128,8 @@ public class VisionSubsystem extends SubsystemBase {
     private Alert scoringCameraDisconnectedAlert = new Alert("Scoring Camera disconnected!", AlertType.kError);
     private Alert frontCameraDisconnectedAlert = new Alert("Front Camera disconnected!", AlertType.kError);
     private Alert backCameraDisconnectedAlert = new Alert("Back Camera disconnected!", AlertType.kError);
+
+    private Alert scoringCameraTempAlert = new Alert("Scoring Camera temperature >= " + BAD_CAMERA_TEMP, AlertType.kWarning);
 
     @SuppressWarnings("unused")
     public VisionSubsystem() {
@@ -172,6 +179,8 @@ public class VisionSubsystem extends SubsystemBase {
         scoringCameraDisconnectedAlert.set(!inputs.scoringCameraConnected);
         frontCameraDisconnectedAlert.set(!inputs.frontCameraConnected);
         backCameraDisconnectedAlert.set(!inputs.backCameraConnected);
+
+        scoringCameraTempAlert.set(inputs.scoringTemp >= BAD_CAMERA_TEMP || inputs.scoringCPUTemp >= BAD_CAMERA_TEMP);
 
         // If the scoring camera is connected, use its pose estimate
         if (inputs.scoringCameraConnected) {
