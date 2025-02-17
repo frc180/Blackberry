@@ -21,7 +21,6 @@ import frc.robot.util.simulation.SimVisuals;
 
 @Logged
 public class ElevatorSubsystem extends SubsystemBase {
-
   // Distance presets, with 0 being the bottom of the elevator
   public static final Distance L1 = Meters.of(0.269);       // not real
   public static final Distance L2 = Meters.of(0.302);       // 3 degrees arm pivot
@@ -31,6 +30,8 @@ public class ElevatorSubsystem extends SubsystemBase {
   public static final Distance STOW = Centimeters.of(1);
   public static final Distance ZERO = Meters.of(0);
 
+  protected static final double SOFT_UPPER_LIMIT = Meters.of(1.48).in(Meters);
+  protected static final double SOFT_LOWER_LIMIT = 0;
   private static final double IN_POSITION_METERS = Inches.of(1).in(Meters);
 
   private ElevatorIO io;
@@ -125,24 +126,26 @@ public class ElevatorSubsystem extends SubsystemBase {
     return run(() -> io.stopMotor());
   }
 
-  public Command sysidQuasi(SysIdRoutine.Direction direction) {
-    return sysIdRoutine.quasistatic(direction).until(sysIdEnd(direction));
+  public Command sysIdQuasi(SysIdRoutine.Direction direction) {
+    return sysIdRoutine.quasistatic(direction)
+                        .until(sysIdEnd(direction));
   }
 
-  public Command sysidDynamic(SysIdRoutine.Direction direction) {
-    return sysIdRoutine.dynamic(direction).until(sysIdEnd(direction));
+  public Command sysIdDynamic(SysIdRoutine.Direction direction) {
+    return sysIdRoutine.dynamic(direction)
+                        .until(sysIdEnd(direction));
   }
 
-  public BooleanSupplier sysIdEnd(SysIdRoutine.Direction direction) {
+  private BooleanSupplier sysIdEnd(SysIdRoutine.Direction direction) {
     return direction == SysIdRoutine.Direction.kReverse ? this::isAtSoftLowerLimit : this::isAtSoftUpperLimit;
   }
 
   public boolean isAtSoftUpperLimit() {
-    return inputs.position > NET.in(Meters);
+    return inputs.position >= SOFT_UPPER_LIMIT;
   }
 
   public boolean isAtSoftLowerLimit() {
-    return inputs.position <= 0;
+    return inputs.position <= SOFT_LOWER_LIMIT;
   }
 
   public boolean isAtLowerLimit() {

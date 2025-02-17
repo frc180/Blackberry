@@ -295,8 +295,8 @@ public class RobotContainer {
             }, HeadingTarget.POSE));
 
         Trigger nearReef = drivetrain.targetingReef().and(drivetrain.withinTargetPoseTolerance(         
-                                Meters.of(1),
-                                Meters.of(1),
+                                Meters.of(0.75),
+                                Meters.of(0.75),
                                 Degrees.of(90)
                             ))
                             .debounce(0.5, DebounceType.kFalling); 

@@ -80,6 +80,7 @@ public class VisionSubsystem extends SubsystemBase {
 
     private static final int RED_PROCESSOR_TAG = 3;
     private static final int BLUE_PROCESSOR_TAG = 16;
+
     private static final double BAD_CAMERA_TEMP = 60;
 
     private final VisionIO io;
@@ -128,7 +129,7 @@ public class VisionSubsystem extends SubsystemBase {
     private Alert frontCameraDisconnectedAlert = new Alert("Front Camera disconnected!", AlertType.kError);
     private Alert backCameraDisconnectedAlert = new Alert("Back Camera disconnected!", AlertType.kError);
 
-    private Alert scoringCameraTempAlert = new Alert("Scoring Camera temperature >= " + BAD_CAMERA_TEMP, AlertType.kWarning);
+    private Alert scoringCameraTempAlert = new Alert("", AlertType.kWarning);
 
     @SuppressWarnings("unused")
     public VisionSubsystem() {
@@ -179,14 +180,7 @@ public class VisionSubsystem extends SubsystemBase {
         frontCameraDisconnectedAlert.set(!inputs.frontCameraConnected);
         backCameraDisconnectedAlert.set(!inputs.backCameraConnected);
 
-        double scoringCameraMaxTemp = Math.max(inputs.scoringTemp, inputs.scoringCPUTemp);
-        if (scoringCameraMaxTemp >= BAD_CAMERA_TEMP) {
-            int temp = (int) Math.round(scoringCameraMaxTemp);
-            scoringCameraTempAlert.setText("Scoring Camera temp high (" + temp + "°F)");
-            scoringCameraTempAlert.set(true);
-        } else {
-            scoringCameraTempAlert.set(false);
-        }
+        cameraTemperatureAlert(scoringCameraTempAlert, "Scoring", Math.max(inputs.scoringTemp, inputs.scoringCPUTemp));
 
         // If the scoring camera is connected, use its pose estimate
         if (inputs.scoringCameraConnected) {
@@ -424,5 +418,15 @@ public class VisionSubsystem extends SubsystemBase {
 
         }
         return isReefVisible;
+    }
+
+    private void cameraTemperatureAlert(Alert alert, String cameraName, double temperature) {
+        if (temperature >= BAD_CAMERA_TEMP) {
+            int roundedtemp = (int) Math.round(temperature);
+            alert.setText(cameraName + " Camera temp high (" + roundedtemp + "°F)");
+            alert.set(true);
+        } else {
+            alert.set(false);
+        }
     }
 }

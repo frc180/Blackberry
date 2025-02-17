@@ -55,7 +55,7 @@ public class ElevatorIOTalonFX implements ElevatorIO {
 
         TalonFXConfiguration config = new TalonFXConfiguration();
         config.Feedback.SensorToMechanismRatio = Robot.isReal() ? metersToMotorRotations : elevatorGearing;
-        config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 1.49;
+        config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = ElevatorSubsystem.SOFT_UPPER_LIMIT;
         // config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = -0.01;
         config.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
         // config.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
