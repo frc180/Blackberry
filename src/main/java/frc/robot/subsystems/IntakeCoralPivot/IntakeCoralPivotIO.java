@@ -1,5 +1,7 @@
 package frc.robot.subsystems.IntakeCoralPivot;
 
+import com.ctre.phoenix6.StatusCode;
+
 import edu.wpi.first.epilogue.Logged;
 
 @Logged
@@ -7,9 +9,10 @@ public interface IntakeCoralPivotIO {
 
     @Logged
     public class IntakeCoralPivotIOInputs {
-        public double position;
-        public double voltage;
-        public double target;
+        StatusCode signalStatus;
+        double position;
+        double voltage;
+        double target;
     }
     
     //to stow and extend

@@ -1,6 +1,9 @@
 package frc.robot.subsystems.elevatorArmPivot;
 
 import static edu.wpi.first.units.Units.*;
+
+import com.ctre.phoenix6.BaseStatusSignal;
+import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
@@ -10,6 +13,8 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 import frc.robot.Constants;
 import frc.robot.Robot;
@@ -27,6 +32,12 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO{
     MotionMagicVoltage motionMagic;
     VoltageOut voltageControl;
 
+    // Status signals
+    StatusSignal<Angle> positionSignal;
+    StatusSignal<Voltage> voltageSignal;
+    StatusSignal<Double> targetSignal;
+
+    // Simulation-only variables
     TalonFXSimState armPivotMotorSim;
     SingleJointedArmSim armSim;
 
@@ -67,6 +78,10 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO{
         motionMagic = new MotionMagicVoltage(0);
         voltageControl = new VoltageOut(0);
 
+        positionSignal = armPivotMotor.getPosition();
+        voltageSignal = armPivotMotor.getMotorVoltage();
+        targetSignal = armPivotMotor.getClosedLoopReference();
+
         // Everything below this line is for simulation only
         if (Robot.isReal()) return;
 
@@ -86,9 +101,10 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO{
 
     @Override
     public void update(ElevatorArmPivotIOInputs inputs) {
-        inputs.position = armPivotMotor.getPosition(true).getValueAsDouble();
-        inputs.voltage = armPivotMotor.getMotorVoltage(true).getValueAsDouble();
-        inputs.target = armPivotMotor.getClosedLoopReference(true).getValueAsDouble();
+        inputs.signalStatus = BaseStatusSignal.refreshAll(positionSignal, voltageSignal, targetSignal);
+        inputs.position = positionSignal.getValueAsDouble();
+        inputs.voltage = voltageSignal.getValueAsDouble();
+        inputs.target = targetSignal.getValueAsDouble();
     }
 
     @Override

@@ -1,6 +1,9 @@
 package frc.robot.subsystems.IntakeAlgaePivot;
 
 import java.util.List;
+
+import com.ctre.phoenix6.BaseStatusSignal;
+import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
@@ -11,6 +14,8 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 import frc.robot.Constants;
@@ -28,7 +33,12 @@ public class IntakeAlgaePivotIOTalonFXS implements IntakeAlgaePivotIO {
     Follower followerControl;
     DutyCycleEncoder encoder;
 
-    // Simulation objects
+    // Status signals
+    StatusSignal<Angle> positionSignal;
+    StatusSignal<Voltage> voltageSignal;
+    StatusSignal<Double> targetSignal;
+
+    // Simulation-only variables
     TalonFXSimState pivotMotorASim, pivotMotorBSim;
     List<TalonFXSimState> pivotMotorSims;
     SingleJointedArmSim intakeSim;
@@ -69,6 +79,10 @@ public class IntakeAlgaePivotIOTalonFXS implements IntakeAlgaePivotIO {
 
         encoder = new DutyCycleEncoder(Constants.DIO_INTAKE_ALGAE_ENCODER);
 
+        positionSignal = pivotMotorA.getPosition();
+        voltageSignal = pivotMotorA.getMotorVoltage();
+        targetSignal = pivotMotorA.getClosedLoopReference();
+
         //for simulation
         if (Robot.isReal()) return;
 
@@ -91,9 +105,10 @@ public class IntakeAlgaePivotIOTalonFXS implements IntakeAlgaePivotIO {
 
     @Override
     public void update(IntakeAlgaePivotIOInputs inputs){ 
-        inputs.position = pivotMotorA.getPosition(true).getValueAsDouble();
-        inputs.voltage = pivotMotorA.getMotorVoltage(true).getValueAsDouble();
-        inputs.target = pivotMotorA.getClosedLoopReference(true).getValueAsDouble();
+        inputs.signalStatus = BaseStatusSignal.refreshAll(positionSignal, voltageSignal, targetSignal);
+        inputs.position = positionSignal.getValueAsDouble();
+        inputs.voltage = voltageSignal.getValueAsDouble();
+        inputs.target = targetSignal.getValueAsDouble();
         inputs.encoderPosition = encoder.get();
     }
 

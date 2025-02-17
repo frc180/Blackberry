@@ -1,5 +1,6 @@
 package frc.robot.subsystems.elevatorArmPivot;
 
+import com.ctre.phoenix6.StatusCode;
 import edu.wpi.first.epilogue.Logged;
 
 @Logged
@@ -7,9 +8,10 @@ public interface ElevatorArmPivotIO {
     
     @Logged
     public class ElevatorArmPivotIOInputs {
-        public double position;
-        public double voltage;
-        public double target;
+        StatusCode signalStatus;
+        double position;
+        double voltage;
+        double target;
     }
     
     public void setPosition(double encoderPosition);

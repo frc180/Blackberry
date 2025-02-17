@@ -8,7 +8,7 @@ public interface ElevatorIO {
 
     @Logged
     public class ElevatorIOInputs {
-        StatusCode signalStatus = StatusCode.OK;
+        StatusCode signalStatus;
         double position;
         double velocity;
         double voltage;

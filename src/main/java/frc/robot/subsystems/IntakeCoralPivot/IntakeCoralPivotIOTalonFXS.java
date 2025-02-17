@@ -1,5 +1,7 @@
 package frc.robot.subsystems.IntakeCoralPivot;
 
+import com.ctre.phoenix6.BaseStatusSignal;
+import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicExpoVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
@@ -9,6 +11,8 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
 import frc.robot.Robot;
 
@@ -17,6 +21,11 @@ public class IntakeCoralPivotIOTalonFXS implements IntakeCoralPivotIO {
     TalonFX motor;
     MotionMagicExpoVoltage motionMagicControl;
     VoltageOut voltageControl;
+
+    // Status signals
+    StatusSignal<Angle> positionSignal;
+    StatusSignal<Voltage> voltageSignal;
+    StatusSignal<Double> targetSignal;
 
     // Simulation-only variables
     TalonFXSimState motorSim = null;
@@ -42,6 +51,10 @@ public class IntakeCoralPivotIOTalonFXS implements IntakeCoralPivotIO {
 
         motionMagicControl = new MotionMagicExpoVoltage(0);
 
+        positionSignal = motor.getPosition();
+        voltageSignal = motor.getMotorVoltage();
+        targetSignal = motor.getClosedLoopReference();
+
         if (Robot.isReal()) return;
 
         motorSim = motor.getSimState();
@@ -60,9 +73,10 @@ public class IntakeCoralPivotIOTalonFXS implements IntakeCoralPivotIO {
 
     @Override
     public void update(IntakeCoralPivotIOInputs inputs) {
-        inputs.position = motor.getPosition().getValueAsDouble();
-        inputs.target = motor.getClosedLoopReference().getValueAsDouble();
-        inputs.voltage = motor.getMotorVoltage().getValueAsDouble();
+        inputs.signalStatus = BaseStatusSignal.refreshAll(positionSignal, voltageSignal, targetSignal);
+        inputs.position = positionSignal.getValueAsDouble();
+        inputs.voltage = voltageSignal.getValueAsDouble();
+        inputs.target = targetSignal.getValueAsDouble();
     }
 
     public void stopMotor() {

@@ -1,5 +1,6 @@
 package frc.robot.subsystems.IntakeAlgaePivot;
 
+import com.ctre.phoenix6.StatusCode;
 import edu.wpi.first.epilogue.Logged;
 
 @Logged
@@ -7,10 +8,11 @@ public interface IntakeAlgaePivotIO {
 
     @Logged
     public class IntakeAlgaePivotIOInputs {
-        public double position;
-        public double voltage;
-        public double target;
-        public double encoderPosition;
+        StatusCode signalStatus;
+        double position;
+        double voltage;
+        double target;
+        double encoderPosition;
     }
 
     public void update(IntakeAlgaePivotIOInputs inputs);
