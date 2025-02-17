@@ -38,10 +38,12 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
     public ElevatorArmPivotSubsystem() {
         inputs = new ElevatorArmPivotIOInputs();
         if (Robot.isReal()) {
-            // io = new ElevatorArmPivotIOSim();
-            io = new ElevatorArmPivotIOTalonFX();
+            io = new ElevatorArmPivotIOSim();
+            // io = new ElevatorArmPivotIOTalonFX();
         } else {
-            io = new ElevatorArmPivotIOTalonFX();
+            // io = new ElevatorArmPivotIOTalonFX();
+            io = new ElevatorArmPivotIOSim();
+
         }
     }
 
