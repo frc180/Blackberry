@@ -312,7 +312,7 @@ public class RobotContainer {
             if (RobotState.isAutonomous()) {
                 CoralScoringPosition next = Auto.nextCoralScoringPosition();
                 if (next == null) {
-                    elevator.setPositionDirect(0);
+                    elevator.setPositionDirect(ElevatorSubsystem.STOW);
                     return;
                 }
                 elevator.setPositionDirect(elevator.levelToPosition(next.level));
@@ -332,12 +332,12 @@ public class RobotContainer {
                 elevator.setPositionDirect(ElevatorSubsystem.L4);
 
             } else {
-                elevator.setPositionDirect(0);
+                elevator.setPositionDirect(ElevatorSubsystem.STOW);
             }
         });
 
         nearReef//.and(elevatorArm.hasCoral)
-            .whileTrue(chosenElevatorHeight).onFalse(elevator.setPosition(0));
+            .whileTrue(chosenElevatorHeight).onFalse(elevator.setPosition(ElevatorSubsystem.STOW));
 
         intakeCoral.hasCoral.whileTrue(Commands.print("Coral detected!"));
         intakeCoral.doneIntaking.whileTrue(Commands.print("Done intaking!"));
@@ -404,7 +404,7 @@ public class RobotContainer {
                 // )
             )
         ).onFalse(
-            elevator.setPosition(0)
+            elevator.setPosition(ElevatorSubsystem.STOW)
                 .alongWith(elevatorArmPivot.stowPosition(), elevatorArmAlgae.stop())
         );
 

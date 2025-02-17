@@ -4,15 +4,12 @@
 
 package frc.robot.subsystems.elevator;
 
-import static edu.wpi.first.units.Units.Centimeters;
-import static edu.wpi.first.units.Units.Inches;
-import static edu.wpi.first.units.Units.Meters;
-import static edu.wpi.first.units.Units.Second;
-import static edu.wpi.first.units.Units.Volts;
+import static edu.wpi.first.units.Units.*;
 import java.util.function.BooleanSupplier;
 import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.NotLogged;
+import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -25,13 +22,14 @@ import frc.robot.util.simulation.SimVisuals;
 @Logged
 public class ElevatorSubsystem extends SubsystemBase {
 
-  // Presets in meters, with 0 being the bottom of the elevator
-  public static final double L1 = 0.269; // not real
-  public static final double L2 = 0.302; // 3 degrees pivot
-  public static final double L3 = L2 + Inches.of(16).in(Meters); // 3 degrees pivot
-  public static final double L4 = 1.4; // 14 degrees pivot
-  public static final double NET = 1.47; // may be able to just be L4
-  public static final double STOW = Centimeters.of(1).in(Meters);
+  // Distance presets, with 0 being the bottom of the elevator
+  public static final Distance L1 = Meters.of(0.269);       // not real
+  public static final Distance L2 = Meters.of(0.302);       // 3 degrees arm pivot
+  public static final Distance L3 = L2.plus(Inches.of(16)); // 3 degrees arm pivot
+  public static final Distance L4 = Meters.of(1.4);         // 14 degrees pivot
+  public static final Distance NET = Meters.of(1.47);       // may be able to just be L4
+  public static final Distance STOW = Centimeters.of(1);
+  public static final Distance ZERO = Meters.of(0);
 
   private static final double IN_POSITION_METERS = Inches.of(1).in(Meters);
 
@@ -39,7 +37,7 @@ public class ElevatorSubsystem extends SubsystemBase {
   private ElevatorIOInputs inputs;
   private Alert notZeroedAlert = new Alert("Elevator not zeroed!", AlertType.kWarning);
 
-  private double targetPosition = 0;
+  private Distance targetPosition = ZERO;
   private boolean hasZeroed = false;
 
   @NotLogged
@@ -88,11 +86,13 @@ public class ElevatorSubsystem extends SubsystemBase {
     io.simulationPeriodic();
   }
 
+  @NotLogged
   public double getPositionMeters() {
     return inputs.position;
   }
 
-  public double getTargetPosition() {
+  @NotLogged
+  public Distance getTargetPosition() {
     return targetPosition;
   }
 
@@ -112,8 +112,8 @@ public class ElevatorSubsystem extends SubsystemBase {
     );
   }
 
-  public Command setPosition(double encoderPosition) {
-    return run(() -> setPositionDirect(encoderPosition));
+  public Command setPosition(Distance position) {
+    return run(() -> setPositionDirect(position));
   }
 
   public Command home() {
@@ -138,7 +138,7 @@ public class ElevatorSubsystem extends SubsystemBase {
   }
 
   public boolean isAtSoftUpperLimit() {
-    return inputs.position > NET;
+    return inputs.position > NET.in(Meters);
   }
 
   public boolean isAtSoftLowerLimit() {
@@ -150,26 +150,26 @@ public class ElevatorSubsystem extends SubsystemBase {
   }
 
   public boolean isElevatorInPosition() {
-    return Math.abs(targetPosition - inputs.position) <= IN_POSITION_METERS;
+    return Math.abs(targetPosition.in(Meters) - inputs.position) <= IN_POSITION_METERS;
   }
 
   public boolean isElevatorInScoringPosition(){
-    return isElevatorInPosition() && targetPosition != 0 && targetPosition != STOW;
+    return isElevatorInPosition() && targetPosition != ZERO && targetPosition != STOW;
   }
 
   public boolean isElevatorInReefAlgaePosition() {  
     return isElevatorInPosition() && (targetPosition == L2 || targetPosition == L3);
   }
 
-  public void setPositionDirect(double encoderPosition) {
-    io.setPosition(encoderPosition);
-    targetPosition = encoderPosition;
+  public void setPositionDirect(Distance position) {
+    io.setPosition(position.in(Meters));
+    targetPosition = position;
   }
   
-  public double levelToPosition(int level) {
+  public Distance levelToPosition(int level) {
     switch (level) {
       case 0:
-        return 0;
+        return STOW;
       case 1:
         return L1;
       case 2:
@@ -181,7 +181,7 @@ public class ElevatorSubsystem extends SubsystemBase {
       case 5:
         return NET;
       default:
-        return 0;
+        return STOW;
     }
   }
 }

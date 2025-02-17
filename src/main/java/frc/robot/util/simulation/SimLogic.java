@@ -129,7 +129,7 @@ public abstract class SimLogic {
             new Translation2d(0, 0), // scoring mechanism position on the robot
             swerveSim.getDriveTrainSimulatedChassisSpeedsFieldRelative(),
             simRobotPose.getRotation().rotateBy(forwards ? Rotation2d.kZero : Rotation2d.k180deg),
-            Meters.of(ElevatorSubsystem.NET), // outtake height
+            ElevatorSubsystem.NET, // outtake height
             MetersPerSecond.of(6), // outtake speed
             Degrees.of(75))
         );
