@@ -206,6 +206,8 @@ public class RobotContainer {
 
         if (Robot.isSimulation()) {
 
+        // teleop.and(new Trigger(elevator::hasZeroed).negate()).onTrue(elevator.home());
+
         // driverController.back().whileTrue(drivetrain.wheelRadiusCharacterization(-1));
         // driverController.start().whileTrue(drivetrain.wheelRadiusCharacterization(1));
         

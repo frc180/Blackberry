@@ -13,11 +13,12 @@ import java.util.function.BooleanSupplier;
 import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.NotLogged;
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.robot.Robot;
 import frc.robot.subsystems.elevator.ElevatorIO.ElevatorIOInputs;
 import frc.robot.util.simulation.SimVisuals;
 
@@ -28,17 +29,18 @@ public class ElevatorSubsystem extends SubsystemBase {
   public static final double L1 = 0.269; // not real
   public static final double L2 = 0.302; // 3 degrees pivot
   public static final double L3 = L2 + Inches.of(16).in(Meters); // 3 degrees pivot
-  public static final double L4 = 1.4; // 14 degrees
-  public static final double NET = 1.47;
+  public static final double L4 = 1.4; // 14 degrees pivot
+  public static final double NET = 1.47; // may be able to just be L4
   public static final double STOW = Centimeters.of(1).in(Meters);
 
   private static final double IN_POSITION_METERS = Inches.of(1).in(Meters);
 
   private ElevatorIO io;
   private ElevatorIOInputs inputs;
+  private Alert notZeroedAlert = new Alert("Elevator not zeroed!", AlertType.kWarning);
 
   private double targetPosition = 0;
-  private boolean hasZeroed = true;
+  private boolean hasZeroed = false;
 
   @NotLogged
   public Trigger elevatorInPosition = new Trigger(this::isElevatorInPosition);
@@ -71,6 +73,12 @@ public class ElevatorSubsystem extends SubsystemBase {
     // This method will be called once per scheduler run
     io.update(inputs);
     SimVisuals.setElevatorHeight(inputs.position);
+
+    // To be considered zeroed, the elevator must be at the lower limit and the motor position must be within 0.01 meters of 0
+    if (isAtLowerLimit() && Math.abs(inputs.position) <= 0.01) {
+      hasZeroed = true;
+    }
+    notZeroedAlert.set(!hasZeroed);
   }
 
   @Override
@@ -89,7 +97,6 @@ public class ElevatorSubsystem extends SubsystemBase {
   }
 
   public void zero() {
-    hasZeroed = true;
     io.zero();
   }
 
@@ -99,12 +106,10 @@ public class ElevatorSubsystem extends SubsystemBase {
   }
 
   public Command runSpeed(double speed) {
-    return runEnd(() -> {
-      io.setPower(speed);
-    },
-    () -> {
-      io.stopMotor();
-    });
+    return runEnd(
+        () -> io.setPower(speed),
+        () -> io.stopMotor()
+    );
   }
 
   public Command setPosition(double encoderPosition) {
@@ -149,7 +154,7 @@ public class ElevatorSubsystem extends SubsystemBase {
   }
 
   public boolean isElevatorInScoringPosition(){
-    return isElevatorInPosition() && targetPosition != 0;
+    return isElevatorInPosition() && targetPosition != 0 && targetPosition != STOW;
   }
 
   public boolean isElevatorInReefAlgaePosition() {  

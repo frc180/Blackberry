@@ -1,6 +1,8 @@
 package frc.robot.subsystems.vision;
 
 import com.spamrobotics.vision.LimelightStatus;
+
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.wpilibj.Timer;
 import frc.robot.Robot;
 import frc.robot.RobotContainer;
@@ -33,6 +35,18 @@ public class VisionIOLimelight implements VisionIO {
         inputs.scoringCameraConnected = scoringLimelightStatus.isConnected();
         inputs.frontCameraConnected = frontLimelightStatus.isConnected();
         inputs.backCameraConnected = backLimelightStatus.isConnected();
+
+        // TODO: Test how this works when this is also set in the dashboard, and see if we need to call this every loop
+        Transform3d scoring = VisionSubsystem.ROBOT_TO_SCORING_CAMERA;
+        LimelightHelpers.setCameraPose_RobotSpace(
+            SCORING_LIMELIGHT,
+            scoring.getX(), // forward
+            scoring.getY(), // side
+            scoring.getZ(), // up
+            scoring.getRotation().getX(), // roll
+            scoring.getRotation().getY(), // pitch
+            scoring.getRotation().getZ() // yaw
+        );
 
         inputs.scoringFiducials = LimelightHelpers.getRawFiducials(SCORING_LIMELIGHT);
         inputs.backDetections = LimelightHelpers.getRawDetections(BACK_LIMEIGHT);
