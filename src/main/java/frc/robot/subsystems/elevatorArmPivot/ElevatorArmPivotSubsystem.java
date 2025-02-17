@@ -18,6 +18,11 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
     private ElevatorArmPivotIO io;
     private ElevatorArmPivotIOInputs inputs;
 
+    // TODO: read manually from robot
+    protected static final Angle FORWARD_LIMIT = Degrees.of(100);
+    protected static final Angle REVERSE_LIMIT = Degrees.of(-75);
+    protected static final Angle HARD_STOP_OFFSET = Degrees.of(25);
+
     public static final double receiving = Units.degreesToRotations(45);
     public static final double algaeReceive = Units.degreesToRotations(-70);
     public static final double horizontal = 0;

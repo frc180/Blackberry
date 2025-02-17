@@ -20,11 +20,6 @@ import frc.robot.Constants;
 import frc.robot.Robot;
 
 public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO{
-    // TODO: read manually from robot
-    final Angle FORWARD_LIMIT = Degrees.of(100);
-    final Angle REVERSE_LIMIT = Degrees.of(-75);
-    final Angle HARD_STOP_OFFSET = Degrees.of(25);
-
     final double PIVOT_GEARING = 80;
     final double radToRotations = 1 / (2 * Math.PI);
 
@@ -66,14 +61,14 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO{
         config.Feedback.SensorToMechanismRatio = PIVOT_GEARING;
         config.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
         config.MotionMagic.MotionMagicJerk = 0;
-        config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = FORWARD_LIMIT.in(Rotations);
+        config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = ElevatorArmPivotSubsystem.FORWARD_LIMIT.in(Rotations);
         config.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
-        config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = REVERSE_LIMIT.in(Rotations);
+        config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = ElevatorArmPivotSubsystem.REVERSE_LIMIT.in(Rotations);
         config.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
 
-        armPivotMotor.setNeutralMode(NeutralModeValue.Coast);
         armPivotMotor.getConfigurator().apply(config);
-        armPivotMotor.setPosition(HARD_STOP_OFFSET);
+        armPivotMotor.setNeutralMode(NeutralModeValue.Brake);
+        armPivotMotor.setPosition(ElevatorArmPivotSubsystem.HARD_STOP_OFFSET);
 
         motionMagic = new MotionMagicVoltage(0);
         voltageControl = new VoltageOut(0);
@@ -95,7 +90,7 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO{
             -Math.PI,
             Math.PI,
             true,
-            HARD_STOP_OFFSET.in(Radians)
+            ElevatorArmPivotSubsystem.HARD_STOP_OFFSET.in(Radians)
         );
     }
 
