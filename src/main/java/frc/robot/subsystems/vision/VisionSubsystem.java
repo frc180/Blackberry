@@ -179,7 +179,14 @@ public class VisionSubsystem extends SubsystemBase {
         frontCameraDisconnectedAlert.set(!inputs.frontCameraConnected);
         backCameraDisconnectedAlert.set(!inputs.backCameraConnected);
 
-        scoringCameraTempAlert.set(inputs.scoringTemp >= BAD_CAMERA_TEMP || inputs.scoringCPUTemp >= BAD_CAMERA_TEMP);
+        double scoringCameraMaxTemp = Math.max(inputs.scoringTemp, inputs.scoringCPUTemp);
+        if (scoringCameraMaxTemp >= BAD_CAMERA_TEMP) {
+            int temp = (int) Math.round(scoringCameraMaxTemp);
+            scoringCameraTempAlert.setText("Scoring Camera temp high (" + temp + "°F)");
+            scoringCameraTempAlert.set(true);
+        } else {
+            scoringCameraTempAlert.set(false);
+        }
 
         // If the scoring camera is connected, use its pose estimate
         if (inputs.scoringCameraConnected) {

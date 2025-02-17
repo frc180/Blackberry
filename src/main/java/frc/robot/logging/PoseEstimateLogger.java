@@ -3,12 +3,11 @@ package frc.robot.logging;
 import edu.wpi.first.epilogue.CustomLoggerFor;
 import edu.wpi.first.epilogue.logging.ClassSpecificLogger;
 import edu.wpi.first.epilogue.logging.EpilogueBackend;
+import edu.wpi.first.math.geometry.Pose2d;
 import frc.robot.util.LimelightHelpers.PoseEstimate;
 
 @CustomLoggerFor(PoseEstimate.class)
 public class PoseEstimateLogger extends ClassSpecificLogger<PoseEstimate> {
-
-    private double[] poseArray = new double[3];
 
     public PoseEstimateLogger() {
         super(PoseEstimate.class);
@@ -24,10 +23,6 @@ public class PoseEstimateLogger extends ClassSpecificLogger<PoseEstimate> {
         backend.log("Tag Count", estimate.tagCount);
         backend.log("Avg Tag Area", estimate.avgTagArea);
         backend.log("Avg Tag Dist", estimate.avgTagDist);
-
-        poseArray[0] = estimate.pose.getX();
-        poseArray[1] = estimate.pose.getY();
-        poseArray[2] = estimate.pose.getRotation().getRadians();
-        backend.log("Pose", poseArray);
+        backend.log("Pose", estimate.pose, Pose2d.struct);
     }
 }
