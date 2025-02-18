@@ -24,8 +24,6 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO {
     final double PIVOT_GEARING = 128;
     final double radToRotations = 1 / (2 * Math.PI);
 
-    final double gearingFix = 128 / PIVOT_GEARING; // old gearing to new gearing
-
     TalonFX armPivotMotor;
     MotionMagicVoltage motionMagic;
     VoltageOut voltageControl;
@@ -45,27 +43,25 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO {
         armPivotMotor = new TalonFX(Constants.ELEVATOR_ARM_PIVOT_TALON, Constants.CANIVORE);
         TalonFXConfiguration config = new TalonFXConfiguration();
         if (Robot.isReal()) {
-            config.Slot0.kP = 150 * gearingFix;
+            config.Slot0.kP = 150;
             config.Slot0.kI = 0;
             config.Slot0.kD = 0;
             config.Slot0.kG = 0;
-            config.Slot0.kV = 20 * gearingFix;
+            config.Slot0.kV = 20;
             config.Slot0.kA = 0;
-            config.MotionMagic.MotionMagicCruiseVelocity = 2.6 * gearingFix;
-            config.MotionMagic.MotionMagicAcceleration = 2 * gearingFix;
         } else {
-            config.Slot0.kP = 50 * gearingFix;
+            config.Slot0.kP = 100;
             config.Slot0.kI = 0;
             config.Slot0.kD = 0;
-            config.Slot0.kG = 0.521 * gearingFix;
-            config.Slot0.kV = 10 * gearingFix;
+            config.Slot0.kG = 0;
+            config.Slot0.kV = 17;
             config.Slot0.kA = 0;
-            config.MotionMagic.MotionMagicCruiseVelocity = 999;
-            config.MotionMagic.MotionMagicAcceleration = 3 * gearingFix;
         }
-        config.Feedback.SensorToMechanismRatio = PIVOT_GEARING;
-        config.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
+        config.MotionMagic.MotionMagicCruiseVelocity = 2.6;
+        config.MotionMagic.MotionMagicAcceleration = 2;
         config.MotionMagic.MotionMagicJerk = 0;
+        config.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
+        config.Feedback.SensorToMechanismRatio = PIVOT_GEARING;
         config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = ElevatorArmPivotSubsystem.FORWARD_LIMIT.in(Rotations);
         config.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
         config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = ElevatorArmPivotSubsystem.REVERSE_LIMIT.in(Rotations);
@@ -73,7 +69,6 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO {
 
         armPivotMotor.getConfigurator().apply(config);
         armPivotMotor.setNeutralMode(NeutralModeValue.Brake);
-        armPivotMotor.setPosition(ElevatorArmPivotSubsystem.HARD_STOP_OFFSET);
 
         motionMagic = new MotionMagicVoltage(0);
         voltageControl = new VoltageOut(0);
@@ -87,6 +82,7 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO {
         // Everything below this line is for simulation only
         if (Robot.isReal()) return;
 
+        armPivotMotor.setPosition(ElevatorArmPivotSubsystem.HARD_STOP_OFFSET);
         armPivotMotorSim = armPivotMotor.getSimState();
 
         armSim = new SingleJointedArmSim(

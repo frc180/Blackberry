@@ -1,9 +1,6 @@
 package frc.robot.subsystems.elevatorArmPivot;
 
 import static edu.wpi.first.units.Units.*;
-
-import com.ctre.phoenix6.mechanisms.swerve.LegacySwerveRequest.RobotCentric;
-
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.NotLogged;
 import edu.wpi.first.math.util.Units;
@@ -208,5 +205,10 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
 
     public boolean isStalling() {
         return Math.abs(inputs.voltage) >= 0.3 && Math.abs(inputs.velocity) <= 0.004;
+    }
+
+    @NotLogged
+    public boolean isHomed() {
+        return homed;
     }
 }

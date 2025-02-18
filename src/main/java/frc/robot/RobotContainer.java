@@ -238,7 +238,7 @@ public class RobotContainer {
         // intakeCoral.doneIntaking.and(elevatorArmPivot.elevatorArmInPosition).onTrue(intakeCoral.intake().alongWith(elevatorArm.runArm()));
         
         //create a trigger to check if the elevatorArm has a coral in it so that way it can stop running and go to a score/stow position
-        elevatorArm.hasCoral.onTrue(intakeCoral.stopIntake().alongWith(elevatorArm.stop(), elevatorArmPivot.stowPosition()));
+        elevatorArm.hasCoral.onTrue(intakeCoral.stopIntake().alongWith(elevatorArm.stop()));
         //elevatorArm.doneIntaking.onTrue(elevatorArmPivot.stowPosition());
 
         //Algae Intake (using left paddle + right trigger)
@@ -337,7 +337,7 @@ public class RobotContainer {
         });
 
         nearReef//.and(elevatorArm.hasCoral)
-            .whileTrue(chosenElevatorHeight).onFalse(elevator.setPosition(ElevatorSubsystem.STOW));
+            .whileTrue(chosenElevatorHeight.alongWith(elevatorArmPivot.matchElevatorPreset())).onFalse(elevator.setPosition(ElevatorSubsystem.STOW));
 
         intakeCoral.hasCoral.whileTrue(Commands.print("Coral detected!"));
         intakeCoral.doneIntaking.whileTrue(Commands.print("Done intaking!"));
@@ -359,6 +359,7 @@ public class RobotContainer {
                 drivetrain.runOnce(() -> drivetrain.drive(new ChassisSpeeds())),
                 elevatorArmEject,
                 Commands.runOnce(() -> {
+                    elevatorArmPivot.setArmPositionDirect(ElevatorArmPivotSubsystem.receiving);
                     if (RobotState.isAutonomous()) {
                         if (!Auto.coralScoringPositions.isEmpty()) {
                             Auto.previousCoralScoringPosition = Auto.coralScoringPositions.get(0);
@@ -446,6 +447,8 @@ public class RobotContainer {
 
         // ====================== TEST CONTROLS ======================
         
+        Trigger armPivotHomed = new Trigger(elevatorArmPivot::isHomed);
+
         // testController.button(1).whileTrue(elevatorArm.runSpeed(1));
         // testController.button(2).whileTrue(elevatorArm.runSpeed(0.5));
         // testController.button(3).whileTrue(elevatorArm.runSpeed(0.25)); // l2 & l3 speeds
@@ -464,7 +467,14 @@ public class RobotContainer {
         // testController.button(4).whileTrue(intakeAlgaePivot.setSpeed(-0.2)).onFalse(intakeAlgaePivot.stop());
  
         testController.button(4).onTrue(elevatorArmPivot.zero(0));
-        testController.button(5).onTrue(elevatorArmPivot.home());
+        testController.button(5).onTrue(
+            elevatorArmPivot.home()
+                .andThen(new RumbleCommand(0.5).withTimeout(0.5))
+                .andThen(elevatorArmPivot.setPosition(elevatorArmPivot.horizontal))
+        );
+
+        testController.button(6).and(armPivotHomed).onTrue(elevatorArmPivot.setPosition(elevatorArmPivot.horizontal));
+        testController.button(7).and(armPivotHomed).onTrue(elevatorArmPivot.setPosition(elevatorArmPivot.receiving));
 
         // // Stops on release since runSpeed automatically stops the motors
         // teleop.and(testController.button(8)).whileTrue(elevator.runSpeed(0.2));
@@ -483,8 +493,6 @@ public class RobotContainer {
         .onTrue(elevator.setPosition(ElevatorSubsystem.L1));
         */
 
-        testController.button(6).whileTrue(elevatorArmPivot.setPosition(elevatorArmPivot.horizontal));
-        testController.button(7).whileTrue(elevatorArmPivot.setPosition(elevatorArmPivot.receiving));
 
         teleop.and(elevatorZeroed).and(testController.button(8))
         .onTrue(elevator.setPosition(ElevatorSubsystem.L2));
