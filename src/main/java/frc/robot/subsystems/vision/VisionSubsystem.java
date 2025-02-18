@@ -193,13 +193,13 @@ public class VisionSubsystem extends SubsystemBase {
 
         // If the scoring camera is connected, use its pose estimate
         if (inputs.scoringCameraConnected) {
-            poseEstimate = validatePoseEstimate(inputs.scoringPoseEstimate, 0);
+            poseEstimate = validatePoseEstimate(inputs.scoringPoseEstimate);
             poseEstimateSource = PoseEstimateSource.SCORING_CAMERA;
         }
 
-        // If poseEstimate is null, then try the front camera pose estimate
-        if (poseEstimate == null && inputs.frontCameraConnected) {
-            poseEstimate = validatePoseEstimate(inputs.frontPoseEstimate, 0);
+        // If we didn't get a pose estimate (valid or not) from the scoring camera, use the front camera's pose estimate
+        if (poseEstimate == null && inputs.scoringPoseEstimate == null && inputs.frontCameraConnected) {
+            poseEstimate = validatePoseEstimate(inputs.frontPoseEstimate);
             poseEstimateSource = PoseEstimateSource.FRONT_CAMERA;
         }
      
@@ -222,9 +222,11 @@ public class VisionSubsystem extends SubsystemBase {
 
         if (robotPose == null) robotPose = RobotContainer.instance.drivetrain.getPose();
 
-        // calculate scoring camera in 3D space, for viewing in AdvantageScope
-        Pose2d cameraPosebase = Robot.isReal() ? robotPose : RobotContainer.instance.drivetrain.getSimPose();
-        scoringCameraPosition = new Pose3d(cameraPosebase).transformBy(ROBOT_TO_SCORING_CAMERA);
+        // calculate scoring camera in 3D space, for previewing in AdvantageScope
+        if (Robot.isSimulation()) {
+            Pose2d cameraPosebase = RobotContainer.instance.drivetrain.getSimPose();
+            scoringCameraPosition = new Pose3d(cameraPosebase).transformBy(ROBOT_TO_SCORING_CAMERA);
+        }
 
         //check if robot can see the reef
         canSeeReef = reefVisible();
@@ -388,7 +390,7 @@ public class VisionSubsystem extends SubsystemBase {
         return new Pose3d(coralPose);
     }
 
-    public PoseEstimate validatePoseEstimate(PoseEstimate poseEstimate, double deltaSeconds) {
+    public PoseEstimate validatePoseEstimate(PoseEstimate poseEstimate) {
         if (poseEstimate == null) return null;
 
         if (megatag2Enabled) {

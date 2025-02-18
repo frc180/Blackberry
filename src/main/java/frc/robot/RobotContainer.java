@@ -177,6 +177,8 @@ public class RobotContainer {
         final Trigger justScoredCoral = new Trigger(() -> Robot.justScoredCoral);
         final Trigger drivetrainAvailable = new Trigger(() -> drivetrain.getCurrentCommand() == drivetrain.getDefaultCommand());
 
+        final Trigger scoringCameraDisconnected = vision.scoringCameraConnected.negate();
+
         // Auto triggers
         final Trigger autoCoralIntake = autonomous.and(Auto::isCoralIntaking);
 
@@ -206,10 +208,11 @@ public class RobotContainer {
 
         if (Robot.isSimulation()) {
 
+        // experimental auto-home for elevator
         // teleop.and(new Trigger(elevator::hasZeroed).negate()).onTrue(elevator.home());
 
         // driverController.back().whileTrue(drivetrain.wheelRadiusCharacterization(-1));
-        // driverController.start().whileTrue(drivetrain.wheelRadiusCharacterization(1));
+        driverController.start().whileTrue(drivetrain.wheelRadiusCharacterization(1));
         
         // test outtaking coral
         driverSpitAlgae.and(intakeAlgae.hasAlgae).onTrue(Commands.parallel(
@@ -234,15 +237,11 @@ public class RobotContainer {
         // Notify driver we've intaken a coral
         driverIntake.and(intakeCoral.hasCoral)
             .onTrue(new RumbleCommand(1).withTimeout(0.5));
-        
-        // intakeCoral.doneIntaking.and(elevatorArmPivot.elevatorArmInPosition).onTrue(intakeCoral.intake().alongWith(elevatorArm.runArm()));
-        
+                
         //create a trigger to check if the elevatorArm has a coral in it so that way it can stop running and go to a score/stow position
         elevatorArm.hasCoral.onTrue(intakeCoral.stopIntake().alongWith(elevatorArm.stop()));
-        //elevatorArm.doneIntaking.onTrue(elevatorArmPivot.stowPosition());
 
         //Algae Intake (using left paddle + right trigger)
-        //algaeMode.and(driverIntake)
         driverIntakeAlgae.whileTrue(intakeAlgaePivot.extend().alongWith(intakeAlgae.intake()))
                             .onFalse(intakeAlgaePivot.stow().alongWith(intakeAlgae.stopIntake()));
 
@@ -294,6 +293,8 @@ public class RobotContainer {
                 return reefPose != null ? reefPose.getRotation().getDegrees() : null;
             }, HeadingTarget.POSE));
 
+
+        // TODO: probably change these triggers to also return true if the scoring camera is disconnected
         Trigger nearReef = drivetrain.targetingReef().and(drivetrain.withinTargetPoseTolerance(         
                                 Meters.of(0.75),
                                 Meters.of(0.75),
@@ -336,25 +337,28 @@ public class RobotContainer {
             }
         });
 
-        nearReef//.and(elevatorArm.hasCoral)
-            .whileTrue(chosenElevatorHeight.alongWith(elevatorArmPivot.matchElevatorPreset())).onFalse(elevator.setPosition(ElevatorSubsystem.STOW));
-
-        intakeCoral.hasCoral.whileTrue(Commands.print("Coral detected!"));
-        intakeCoral.doneIntaking.whileTrue(Commands.print("Done intaking!"));
-
-        //testing the trigger - might use this to decide whether or not to score (is elevator at 0?)
-        elevator.elevatorInPosition.whileTrue(Commands.print("ELEVETOR IN POSITINONNN!!!!"));
-        elevator.elevatorInScoringPosition.and(elevator.elevatorInPosition).whileTrue(Commands.print("EELVATOR IS IN SCROIGN POSITITIONSS"));
+        // TODO: temporarily allow driver to access scoring presets without using auto-align for now
+        if (Robot.isReal()) {
+            driverL1.or(driverL2).or(driverL3).or(driverL4)
+                .whileTrue(chosenElevatorHeight.alongWith(elevatorArmPivot.matchElevatorPreset()))
+                .onFalse(elevator.setPosition(ElevatorSubsystem.STOW).alongWith(elevatorArmPivot.receivePosition()));
+        } else {
+            nearReef//.and(elevatorArm.hasCoral)
+                .whileTrue(chosenElevatorHeight.alongWith(elevatorArmPivot.matchElevatorPreset()))
+                .onFalse(elevator.setPosition(ElevatorSubsystem.STOW).alongWith(elevatorArmPivot.receivePosition()));
+        }
 
         Command elevatorArmEject = elevatorArm.runRollers().until(elevatorArm.hasNoCoral);
         if (Robot.isSimulation()) {
             elevatorArmEject = elevatorArmEject.withDeadline(Commands.waitSeconds(0.2));
         }
 
+        Trigger visionScoreReady = vision.poseEstimateDiffLow.or(scoringCameraDisconnected);
+
         // Coral scoring sequence - kCancelIncoming means nothing else will be able to stop this command until it finishes
         atReef.and(elevator.elevatorInScoringPosition)
               .and(elevatorArmPivot.elevatorArmInScoringPosition)
-              .and(vision.poseEstimateDiffLow).onTrue(
+              .and(visionScoreReady).onTrue(
             Commands.sequence(
                 drivetrain.runOnce(() -> drivetrain.drive(new ChassisSpeeds())),
                 elevatorArmEject,
