@@ -18,8 +18,8 @@ public class IntakeAlgaeSubsystem extends SubsystemBase {
     public IntakeAlgaeSubsystem() {
         inputs = new IntakeAlgaeIOInputs();
         if (Robot.isReal()) {
-           //  io = new IntakeAlgaeIOTalonFXS();
-            io = new IntakeAlgaeIOSim();
+            io = new IntakeAlgaeIOTalonFXS();
+            // io = new IntakeAlgaeIOSim();
         } else {
             io = new IntakeAlgaeIOSim();
         }
