@@ -20,9 +20,12 @@ import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 import frc.robot.Constants;
 import frc.robot.Robot;
 
-public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO{
+public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO {
     final double PIVOT_GEARING = 128;
     final double radToRotations = 1 / (2 * Math.PI);
+
+    // temporary
+    final double gearingFix = 128 / PIVOT_GEARING; // old gearing / new gearing
 
     TalonFX armPivotMotor;
     MotionMagicVoltage motionMagic;
@@ -43,23 +46,23 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO{
         armPivotMotor = new TalonFX(Constants.ELEVATOR_ARM_PIVOT_TALON, Constants.CANIVORE);
         TalonFXConfiguration config = new TalonFXConfiguration();
         if (Robot.isReal()) {
-            config.Slot0.kP = 150;
+            config.Slot0.kP = 150 * gearingFix;
             config.Slot0.kI = 0;
             config.Slot0.kD = 0;
             config.Slot0.kG = 0;
-            config.Slot0.kV = 20;
+            config.Slot0.kV = 20 * gearingFix;
             config.Slot0.kA = 0;
-            config.MotionMagic.MotionMagicCruiseVelocity = 2.6;
-            config.MotionMagic.MotionMagicAcceleration = 2;
+            config.MotionMagic.MotionMagicCruiseVelocity = 2.6 * gearingFix;
+            config.MotionMagic.MotionMagicAcceleration = 2 * gearingFix;
         } else {
-            config.Slot0.kP = 50;
+            config.Slot0.kP = 50 * gearingFix;
             config.Slot0.kI = 0;
             config.Slot0.kD = 0;
-            config.Slot0.kG = 0.521;
-            config.Slot0.kV = 10;
+            config.Slot0.kG = 0.521 * gearingFix;
+            config.Slot0.kV = 10 * gearingFix;
             config.Slot0.kA = 0;
             config.MotionMagic.MotionMagicCruiseVelocity = 999;
-            config.MotionMagic.MotionMagicAcceleration = 3;
+            config.MotionMagic.MotionMagicAcceleration = 3 * gearingFix;
         }
         config.Feedback.SensorToMechanismRatio = PIVOT_GEARING;
         config.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
