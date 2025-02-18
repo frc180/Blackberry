@@ -12,6 +12,8 @@ public interface ElevatorArmPivotIO {
         double position;
         double voltage;
         double target;
+        double velocity;
+        double current;
     }
     
     public void setPosition(double encoderPosition);
@@ -24,5 +26,6 @@ public interface ElevatorArmPivotIO {
 
     public void stopMotor();
 
+    public void zero(double offset);
     
 }

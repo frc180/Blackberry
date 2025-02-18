@@ -53,4 +53,9 @@ public class ElevatorArmPivotIOSim implements ElevatorArmPivotIO{
         speed = 0;
     }
 
+    @Override
+    public void zero(double offset) {
+        // do nothing
+    }
+
 }

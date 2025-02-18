@@ -97,6 +97,7 @@ public class VisionSubsystem extends SubsystemBase {
     private final Pose2d redProcessorPose;
     private final Pose2d blueProcessorPose;
 
+    public final HashMap<Integer, Pose2d> tagPoses2d = new HashMap<>();
     public final HashMap<Integer, Pose2d> leftReefHashMap = new HashMap<>();
     public final HashMap<Integer, Pose2d> rightReefHashMap = new HashMap<>();
 
@@ -144,6 +145,15 @@ public class VisionSubsystem extends SubsystemBase {
             io = new VisionIOLimelight();
         } else {
             io = new VisionIOPhoton(aprilTagFieldLayout);
+        }
+
+        for (var allianceTags : List.of(redTags, blueTags)) {
+            for (int tagID : allianceTags) {
+                Optional<Pose3d> pose3d = aprilTagFieldLayout.getTagPose(tagID);
+                if (pose3d.isPresent()) {
+                    tagPoses2d.put(tagID, pose3d.get().toPose2d());
+                }
+            }
         }
 
         // Pre-calculate reef poses for all reef tags

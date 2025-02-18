@@ -14,6 +14,7 @@ import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 import frc.robot.Constants;
@@ -31,6 +32,8 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO{
     StatusSignal<Angle> positionSignal;
     StatusSignal<Voltage> voltageSignal;
     StatusSignal<Double> targetSignal;
+    StatusSignal<AngularVelocity> velocitySignal;
+    StatusSignal<Current> currentSignal;
 
     // Simulation-only variables
     TalonFXSimState armPivotMotorSim;
@@ -76,6 +79,8 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO{
         positionSignal = armPivotMotor.getPosition();
         voltageSignal = armPivotMotor.getMotorVoltage();
         targetSignal = armPivotMotor.getClosedLoopReference();
+        velocitySignal = armPivotMotor.getVelocity();
+        currentSignal = armPivotMotor.getTorqueCurrent();
 
         // Everything below this line is for simulation only
         if (Robot.isReal()) return;
@@ -96,10 +101,12 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO{
 
     @Override
     public void update(ElevatorArmPivotIOInputs inputs) {
-        inputs.signalStatus = BaseStatusSignal.refreshAll(positionSignal, voltageSignal, targetSignal);
+        inputs.signalStatus = BaseStatusSignal.refreshAll(positionSignal, voltageSignal, targetSignal, velocitySignal, currentSignal);
         inputs.position = positionSignal.getValueAsDouble();
         inputs.voltage = voltageSignal.getValueAsDouble();
         inputs.target = targetSignal.getValueAsDouble();
+        inputs.velocity = velocitySignal.getValueAsDouble();
+        inputs.current = currentSignal.getValueAsDouble();
     }
 
     @Override
@@ -125,5 +132,10 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO{
     @Override
     public void setPosition(double encoderPosition) {
         armPivotMotor.setControl(motionMagic.withPosition(encoderPosition));
+    }
+
+    @Override
+    public void zero(double rotations) {
+        armPivotMotor.setPosition(rotations);
     }
 }

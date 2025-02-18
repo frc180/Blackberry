@@ -26,15 +26,19 @@ public class SingleTagSolver {
     
     // https://github.com/Mechanical-Advantage/RobotCode2025Public/blob/114304798667f01c27888443c8a2be61d25f3706/src/main/java/org/littletonrobotics/frc2025/RobotState.java#L121
     public Pose2d getPose(double timestamp, RawFiducial tag, Transform3d robotToCamera) {
-        AprilTagFieldLayout fieldLayout = RobotContainer.instance.vision.aprilTagFieldLayout;
+        // AprilTagFieldLayout fieldLayout = RobotContainer.instance.vision.aprilTagFieldLayout;
         // TODO: Optimization - we should pre-cache all 2D tag poses
-        Optional<Pose3d> optionalTagPose = fieldLayout.getTagPose(tag.id);
-        if (optionalTagPose.isEmpty()) {
+        // Optional<Pose3d> optionalTagPose = fieldLayout.getTagPose(tag.id);
+        // if (optionalTagPose.isEmpty()) {
+        //     return null;
+        // }
+
+        // Pose3d tagPose = optionalTagPose.get();
+        // Pose2d tagPose2d = tagPose.toPose2d();
+        Pose2d tagPose2d = RobotContainer.instance.vision.tagPoses2d.get(tag.id);
+        if (tagPose2d == null) {
             return null;
         }
-
-        Pose3d tagPose = optionalTagPose.get();
-        Pose2d tagPose2d = tagPose.toPose2d();
         double tx = Units.degreesToRadians(tag.txnc); 
         double ty = Units.degreesToRadians(-tag.tync);
         
