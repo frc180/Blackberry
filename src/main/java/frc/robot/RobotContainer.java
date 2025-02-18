@@ -454,8 +454,8 @@ public class RobotContainer {
         // testController.button(2).whileTrue(elevatorArmPivot.setSpeed(0.2)).onFalse(elevatorArmPivot.stop());
         // testController.button(3).whileTrue(elevatorArmPivot.setSpeed(-0.2)).onFalse(elevatorArmPivot.stop());
         
-        testController.button(4).whileTrue(elevatorArmAlgae.setSpeed(0.5)).onFalse(elevatorArmAlgae.stop());
-        testController.button(5).whileTrue(elevatorArmAlgae.setSpeed(0.05)).onFalse(elevatorArmAlgae.stop());
+        // testController.button(4).whileTrue(elevatorArmAlgae.setSpeed(0.5)).onFalse(elevatorArmAlgae.stop());
+        // testController.button(5).whileTrue(elevatorArmAlgae.setSpeed(0.05)).onFalse(elevatorArmAlgae.stop());
 
         testController.button(1).whileTrue(intakeAlgae.setSpeed(1)).onFalse(intakeAlgae.stopIntake());
         testController.button(2).whileTrue(intakeAlgae.setSpeed(-1)).onFalse(intakeAlgae.stopIntake());
@@ -463,8 +463,8 @@ public class RobotContainer {
         testController.button(3).whileTrue(intakeAlgaePivot.setSpeed(0.2)).onFalse(intakeAlgaePivot.stop());
         // testController.button(4).whileTrue(intakeAlgaePivot.setSpeed(-0.2)).onFalse(intakeAlgaePivot.stop());
  
-        // testController.button(4).whileTrue(elevatorArmPivot.zero(0));
-        // testController.button(5).whileTrue(elevatorArmPivot.home());
+        testController.button(4).onTrue(elevatorArmPivot.zero(0));
+        testController.button(5).onTrue(elevatorArmPivot.home());
 
         // // Stops on release since runSpeed automatically stops the motors
         // teleop.and(testController.button(8)).whileTrue(elevator.runSpeed(0.2));

@@ -8,7 +8,9 @@ import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.NotLogged;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Robot;
@@ -31,13 +33,12 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
     public static final double L4_SCORE = Units.degreesToRotations(-14);
     public static final double L3_SCORE = Units.degreesToRotations(-3);
     public static final double L2_SCORE = L3_SCORE;
-    public static final double L1_SCORE = Units.degreesToRotations(0);
+    public static final double L1_SCORE = Units.degreesToRotations(-1);
 
     public static final double receiving = Units.degreesToRotations(45);
     public static final double algaeReceive = Units.degreesToRotations(-70);
     public static final double horizontal = 0;
-    public static final double score = 0;
-    public static final double L1Score = Units.degreesToRotations(-60);
+
     public static final double netScore = Units.degreesToRotations(80);
     public static final double netScoreBackwards = Units.degreesToRotations(100);
 
@@ -48,6 +49,7 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
 
     private double targetPosition = 0;
     private boolean pidMode = false;
+    private boolean homed = false;
 
     @NotLogged
     public Trigger elevatorArmInPosition = new Trigger(() -> isElevatorArmInPosition());
@@ -88,14 +90,6 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
         return setPosition(horizontal);
     }
 
-    public Command scorePosition() {
-        return setPosition(score);
-    }
-
-    public Command lowScorePosition() {
-        return setPosition(L1Score);
-    }
-
     public Command netScorePosition() {
         return setPosition(netScore);
     }
@@ -109,8 +103,10 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
     }
 
     public Command home() {
-        return runSpeed(0.03).until(stalling)
-                .andThen(zero(HARD_STOP_OFFSET)).andThen(stop());
+        return Commands.sequence(
+            runSpeed(0.03).until(stalling),
+            zero(HARD_STOP_OFFSET).alongWith(Commands.runOnce(() -> homed = true))
+        );
     }
 
     public Command zero(Angle angle) {
@@ -123,15 +119,15 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
 
     // untested
     public Command matchElevatorPreset() {
-        ElevatorSubsystem elevator = RobotContainer.instance.elevator;
         return run(() -> {
-            if (elevator.getTargetPosition() == ElevatorSubsystem.L4) {
+            Distance elevatorTarget = RobotContainer.instance.elevator.getTargetPosition();
+            if (elevatorTarget == ElevatorSubsystem.L4) {
                 setArmPositionDirect(L4_SCORE);
-            } else if (elevator.getTargetPosition() == ElevatorSubsystem.L3) {
+            } else if (elevatorTarget == ElevatorSubsystem.L3) {
                 setArmPositionDirect(L3_SCORE);
-            } else if (elevator.getTargetPosition() == ElevatorSubsystem.L2) {
+            } else if (elevatorTarget == ElevatorSubsystem.L2) {
                 setArmPositionDirect(L2_SCORE);
-            } else if (elevator.getTargetPosition() == ElevatorSubsystem.L1) {
+            } else if (elevatorTarget == ElevatorSubsystem.L1) {
                 setArmPositionDirect(L1_SCORE);
             } else {
                 setArmPositionDirect(receiving);
@@ -193,7 +189,8 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
     public boolean isElevatorArmInScoringPosition() {
         if (!isElevatorArmInPosition()) return false;
 
-        return targetPosition == score || targetPosition == L1Score || targetPosition == netScore || targetPosition == netScoreBackwards;
+        return targetPosition == L1_SCORE || targetPosition == L2_SCORE || targetPosition == L3_SCORE || 
+               targetPosition == L4_SCORE || targetPosition == netScore || targetPosition == netScoreBackwards;
     }
 
     @NotLogged

@@ -24,8 +24,7 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO {
     final double PIVOT_GEARING = 128;
     final double radToRotations = 1 / (2 * Math.PI);
 
-    // temporary
-    final double gearingFix = 128 / PIVOT_GEARING; // old gearing / new gearing
+    final double gearingFix = 128 / PIVOT_GEARING; // old gearing to new gearing
 
     TalonFX armPivotMotor;
     MotionMagicVoltage motionMagic;
@@ -115,7 +114,7 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO {
     @Override
     public void simulationPeriodic() {
         armSim.setInput(armPivotMotorSim.getMotorVoltage());
-        armSim.update(0.020);
+        armSim.update(Constants.LOOP_TIME);
 
         armPivotMotorSim.setRawRotorPosition(armSim.getAngleRads() * radToRotations * PIVOT_GEARING);
         armPivotMotorSim.setRotorVelocity(armSim.getVelocityRadPerSec() * radToRotations * PIVOT_GEARING);
