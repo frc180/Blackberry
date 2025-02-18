@@ -20,8 +20,8 @@ public class ElevatorArmSubsystem extends SubsystemBase{
     public ElevatorArmSubsystem() {
         inputs = new ElevatorArmIOInputs();
         if (Robot.isReal()) {
-            // io = new ElevatorArmIOTalonFX();
-            io = new ElevatorArmIOSim();
+            io = new ElevatorArmIOTalonFX();
+            // io = new ElevatorArmIOSim();
         } else {
             io = new ElevatorArmIOSim();
         }

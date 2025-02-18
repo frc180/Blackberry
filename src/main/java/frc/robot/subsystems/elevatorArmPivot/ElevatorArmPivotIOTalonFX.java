@@ -21,7 +21,7 @@ import frc.robot.Constants;
 import frc.robot.Robot;
 
 public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO{
-    final double PIVOT_GEARING = 80;
+    final double PIVOT_GEARING = 128;
     final double radToRotations = 1 / (2 * Math.PI);
 
     TalonFX armPivotMotor;
@@ -43,14 +43,14 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO{
         armPivotMotor = new TalonFX(Constants.ELEVATOR_ARM_PIVOT_TALON, Constants.CANIVORE);
         TalonFXConfiguration config = new TalonFXConfiguration();
         if (Robot.isReal()) {
-            config.Slot0.kP = 0;
+            config.Slot0.kP = 150;
             config.Slot0.kI = 0;
             config.Slot0.kD = 0;
             config.Slot0.kG = 0;
-            config.Slot0.kV = 0;
+            config.Slot0.kV = 20;
             config.Slot0.kA = 0;
-            config.MotionMagic.MotionMagicCruiseVelocity = 999;
-            config.MotionMagic.MotionMagicAcceleration = 3;
+            config.MotionMagic.MotionMagicCruiseVelocity = 2.6;
+            config.MotionMagic.MotionMagicAcceleration = 2;
         } else {
             config.Slot0.kP = 50;
             config.Slot0.kI = 0;
@@ -80,7 +80,7 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO{
         voltageSignal = armPivotMotor.getMotorVoltage();
         targetSignal = armPivotMotor.getClosedLoopReference();
         velocitySignal = armPivotMotor.getVelocity();
-        currentSignal = armPivotMotor.getTorqueCurrent();
+        currentSignal = armPivotMotor.getSupplyCurrent();
 
         // Everything below this line is for simulation only
         if (Robot.isReal()) return;

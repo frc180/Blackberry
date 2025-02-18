@@ -24,9 +24,9 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
     private ElevatorArmPivotIOInputs inputs;
 
     // TODO: read manually from robot
-    protected static final Angle FORWARD_LIMIT = Degrees.of(100);
-    protected static final Angle REVERSE_LIMIT = Degrees.of(-75);
-    protected static final Angle HARD_STOP_OFFSET = Degrees.of(25);
+    protected static final Angle FORWARD_LIMIT = Degrees.of(60.7);
+    protected static final Angle REVERSE_LIMIT = Degrees.of(-20);
+    protected static final Angle HARD_STOP_OFFSET = Degrees.of(60.46875);
 
     public static final double L4_SCORE = Units.degreesToRotations(-14);
     public static final double L3_SCORE = Units.degreesToRotations(-3);
@@ -53,17 +53,15 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
     public Trigger elevatorArmInPosition = new Trigger(() -> isElevatorArmInPosition());
     @NotLogged
     public Trigger elevatorArmInScoringPosition = new Trigger (() -> isElevatorArmInScoringPosition());
-    public Trigger stalling = new Trigger(this::isStalling).debounce(1);
+    public Trigger stalling = new Trigger(this::isStalling).debounce(0.25);
 
     public ElevatorArmPivotSubsystem() {
         inputs = new ElevatorArmPivotIOInputs();
         if (Robot.isReal()) {
-            io = new ElevatorArmPivotIOSim();
-            // io = new ElevatorArmPivotIOTalonFX();
+            // io = new ElevatorArmPivotIOSim();
+            io = new ElevatorArmPivotIOTalonFX();
         } else {
-            // io = new ElevatorArmPivotIOTalonFX();
-            io = new ElevatorArmPivotIOSim();
-
+            io = new ElevatorArmPivotIOTalonFX();
         }
     }
 
@@ -72,9 +70,9 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
         io.update(inputs);
         SimVisuals.setElevatorArmPivotDegrees(getDegrees());
 
-        if (pidMode) {
-            setArmPositionDirect(targetPosition);
-        }
+        // if (pidMode) {
+        //     setArmPositionDirect(targetPosition);
+        // }
     }
 
     @Override
@@ -111,8 +109,8 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
     }
 
     public Command home() {
-        return runSpeed(-0.1).until(stalling)
-                .andThen(zero(HARD_STOP_OFFSET));
+        return runSpeed(0.03).until(stalling)
+                .andThen(zero(HARD_STOP_OFFSET)).andThen(stop());
     }
 
     public Command zero(Angle angle) {
@@ -212,6 +210,6 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
     }
 
     public boolean isStalling() {
-        return Math.abs(inputs.current) >= 40 && Math.abs(inputs.velocity) <= 0.01;
+        return Math.abs(inputs.voltage) >= 0.3 && Math.abs(inputs.velocity) <= 0.004;
     }
 }

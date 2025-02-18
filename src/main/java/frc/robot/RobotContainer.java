@@ -454,20 +454,18 @@ public class RobotContainer {
         // testController.button(2).whileTrue(elevatorArmPivot.setSpeed(0.2)).onFalse(elevatorArmPivot.stop());
         // testController.button(3).whileTrue(elevatorArmPivot.setSpeed(-0.2)).onFalse(elevatorArmPivot.stop());
         
-        // testController.button(4).whileTrue(elevatorArmAlgae.setSpeed(0.5)).onFalse(elevatorArmAlgae.stop());
-        // testController.button(5).whileTrue(elevatorArmAlgae.setSpeed(0.05)).onFalse(elevatorArmAlgae.stop());
-
-        testController.button(4).whileTrue(elevatorArmPivot.zero(0));
-        testController.button(5).whileTrue(elevatorArmPivot.home());
+        testController.button(4).whileTrue(elevatorArmAlgae.setSpeed(0.5)).onFalse(elevatorArmAlgae.stop());
+        testController.button(5).whileTrue(elevatorArmAlgae.setSpeed(0.05)).onFalse(elevatorArmAlgae.stop());
 
         testController.button(1).whileTrue(intakeAlgae.setSpeed(1)).onFalse(intakeAlgae.stopIntake());
-        // testController.button(1).whileTrue(Commands.print("running intake"));
         testController.button(2).whileTrue(intakeAlgae.setSpeed(-1)).onFalse(intakeAlgae.stopIntake());
-        // testController.button(2).whileTrue(Commands.print("reversingIntake"));
 
         testController.button(3).whileTrue(intakeAlgaePivot.setSpeed(0.2)).onFalse(intakeAlgaePivot.stop());
-        testController.button(4).whileTrue(intakeAlgaePivot.setSpeed(-0.2)).onFalse(intakeAlgaePivot.stop());
+        // testController.button(4).whileTrue(intakeAlgaePivot.setSpeed(-0.2)).onFalse(intakeAlgaePivot.stop());
  
+        // testController.button(4).whileTrue(elevatorArmPivot.zero(0));
+        // testController.button(5).whileTrue(elevatorArmPivot.home());
+
         // // Stops on release since runSpeed automatically stops the motors
         // teleop.and(testController.button(8)).whileTrue(elevator.runSpeed(0.2));
         // teleop.and(testController.button(9)).whileTrue(elevator.runSpeed(-0.2));
@@ -475,11 +473,18 @@ public class RobotContainer {
 
         //disabled some elevator stuff to do the algae intake
         Trigger elevatorZeroed = new Trigger(() -> true);//new Trigger(elevator::hasZeroed);
+        /*
         teleop.and(elevatorZeroed).and(testController.button(6))
         .onTrue(elevator.setPosition(ElevatorSubsystem.STOW));
+        */
         
+        /*
         teleop.and(elevatorZeroed).and(testController.button(7))
         .onTrue(elevator.setPosition(ElevatorSubsystem.L1));
+        */
+
+        testController.button(6).whileTrue(elevatorArmPivot.setPosition(elevatorArmPivot.horizontal));
+        testController.button(7).whileTrue(elevatorArmPivot.setPosition(elevatorArmPivot.receiving));
 
         teleop.and(elevatorZeroed).and(testController.button(8))
         .onTrue(elevator.setPosition(ElevatorSubsystem.L2));

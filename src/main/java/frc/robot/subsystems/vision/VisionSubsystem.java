@@ -63,10 +63,9 @@ public class VisionSubsystem extends SubsystemBase {
     public static final List<Integer> redReefTags = List.of(6,7,8,9,10,11);
     public static final List<Integer> blueReefTags = List.of(17, 18, 19, 20, 21, 22);
 
-    // x and y may need to be flipped
     public static final Transform3d ROBOT_TO_SCORING_CAMERA = new Transform3d(
-        Inches.of(9.757).in(Meters),
-        Inches.of(-7.2).in(Meters),
+        Inches.of(9.757).in(Meters), // forward
+        Inches.of(-7.2).in(Meters), // right
         Inches.of(31.296).in(Meters),
         new Rotation3d(0, Units.degreesToRadians(50), 0)
     );
@@ -81,7 +80,7 @@ public class VisionSubsystem extends SubsystemBase {
     private static final int RED_PROCESSOR_TAG = 3;
     private static final int BLUE_PROCESSOR_TAG = 16;
 
-    private static final double BAD_CAMERA_TEMP = 60;
+    private static final double BAD_CAMERA_TEMP = 70;
 
     private final VisionIO io;
     private final VisionIOInputs inputs;
