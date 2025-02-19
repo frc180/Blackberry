@@ -33,7 +33,6 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO {
     StatusSignal<Voltage> voltageSignal;
     StatusSignal<Double> targetSignal;
     StatusSignal<AngularVelocity> velocitySignal;
-    StatusSignal<Current> currentSignal;
 
     // Simulation-only variables
     TalonFXSimState armPivotMotorSim;
@@ -63,9 +62,11 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO {
         config.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
         config.Feedback.SensorToMechanismRatio = PIVOT_GEARING;
         config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = ElevatorArmPivotSubsystem.FORWARD_LIMIT.in(Rotations);
-        config.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
         config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = ElevatorArmPivotSubsystem.REVERSE_LIMIT.in(Rotations);
-        config.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
+        if (Robot.isReal()) {
+            config.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+            config.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
+        }
 
         armPivotMotor.getConfigurator().apply(config);
         armPivotMotor.setNeutralMode(NeutralModeValue.Brake);
@@ -77,7 +78,6 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO {
         voltageSignal = armPivotMotor.getMotorVoltage();
         targetSignal = armPivotMotor.getClosedLoopReference();
         velocitySignal = armPivotMotor.getVelocity();
-        currentSignal = armPivotMotor.getSupplyCurrent();
 
         // Everything below this line is for simulation only
         if (Robot.isReal()) return;
@@ -99,12 +99,11 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO {
 
     @Override
     public void update(ElevatorArmPivotIOInputs inputs) {
-        inputs.signalStatus = BaseStatusSignal.refreshAll(positionSignal, voltageSignal, targetSignal, velocitySignal, currentSignal);
+        inputs.signalStatus = BaseStatusSignal.refreshAll(positionSignal, voltageSignal, targetSignal, velocitySignal);
         inputs.position = positionSignal.getValueAsDouble();
         inputs.voltage = voltageSignal.getValueAsDouble();
         inputs.target = targetSignal.getValueAsDouble();
         inputs.velocity = velocitySignal.getValueAsDouble();
-        inputs.current = currentSignal.getValueAsDouble();
     }
 
     @Override

@@ -468,8 +468,8 @@ public class RobotContainer {
         // testController.button(2).whileTrue(elevatorArmPivot.setSpeed(0.2)).onFalse(elevatorArmPivot.stop());
         // testController.button(3).whileTrue(elevatorArmPivot.setSpeed(-0.2)).onFalse(elevatorArmPivot.stop());
         
-        testController.button(4).whileTrue(elevatorArmAlgae.setSpeed(0.5)).onFalse(elevatorArmAlgae.stop());
-        testController.button(5).whileTrue(elevatorArmAlgae.setSpeed(0.05)).onFalse(elevatorArmAlgae.stop());
+        // testController.button(4).whileTrue(elevatorArmAlgae.setSpeed(0.5)).onFalse(elevatorArmAlgae.stop());
+        // testController.button(5).whileTrue(elevatorArmAlgae.setSpeed(0.05)).onFalse(elevatorArmAlgae.stop());
 
         // testController.button(1).whileTrue(intakeAlgae.setSpeed(1)).onFalse(intakeAlgae.stopIntake());
         // testController.button(2).whileTrue(intakeAlgae.setSpeed(-1)).onFalse(intakeAlgae.stopIntake());
@@ -478,11 +478,11 @@ public class RobotContainer {
         // testController.button(4).whileTrue(intakeAlgaePivot.setSpeed(-0.2)).onFalse(intakeAlgaePivot.stop());
  
         // testController.button(4).onTrue(elevatorArmPivot.zero(0).ignoringDisable(true));
-        // testController.button(5).onTrue(
-        //     elevatorArmPivot.home()
-        //         .andThen(new RumbleCommand(0.5).withTimeout(0.5))
-        //         .andThen(elevatorArmPivot.setPosition(elevatorArmPivot.horizontal))
-        // );
+        testController.button(5).onTrue(
+            elevatorArmPivot.home()
+                .andThen(new RumbleCommand(0.5).withTimeout(0.5))
+                .andThen(elevatorArmPivot.setPosition(elevatorArmPivot.horizontal))
+        );
 
         testController.button(6).onTrue(elevatorArmPivot.setPosition(elevatorArmPivot.horizontal));
         testController.button(7).onTrue(elevatorArmPivot.setPosition(elevatorArmPivot.receiving));

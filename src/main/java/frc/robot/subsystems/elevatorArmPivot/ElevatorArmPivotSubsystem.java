@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Robot;
 import frc.robot.RobotContainer;
@@ -50,13 +51,14 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
 
     private double targetPosition = 0;
     private boolean pidMode = false;
+    private boolean isHoming = false;
     private boolean homed = false;
 
     @NotLogged
     public Trigger elevatorArmInPosition = new Trigger(() -> isElevatorArmInPosition());
     @NotLogged
     public Trigger elevatorArmInScoringPosition = new Trigger (() -> isElevatorArmInScoringPosition());
-    public Trigger stalling = new Trigger(this::isStalling).debounce(0.25);
+    private Trigger atHomingHardstop = new Trigger(this::isAtHomingHardstop).debounce(0.25);
 
     public ElevatorArmPivotSubsystem() {
         inputs = new ElevatorArmPivotIOInputs();
@@ -106,9 +108,13 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
 
     public Command home() {
         return Commands.sequence(
-            setSpeed(0.06).until(stalling),
-            zero(HARD_STOP_OFFSET).alongWith(Commands.runOnce(() -> homed = true)).andThen(stop())
-        );
+            runOnce(() -> isHoming = true),
+            runSpeed(0.06).until(atHomingHardstop),
+            zero(HARD_STOP_OFFSET).alongWith(Commands.runOnce(() -> {
+                homed = true;
+                isHoming = true;
+            }))
+        ).withInterruptBehavior(InterruptionBehavior.kCancelIncoming);
     }
 
     public Command zero(Angle angle) {
@@ -208,8 +214,8 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
         return Units.rotationsToDegrees(targetPosition);
     }
 
-    public boolean isStalling() {
-        return Math.abs(inputs.voltage) >= 0.3 && Math.abs(inputs.velocity) <= 0.004;
+    public boolean isAtHomingHardstop() {
+        return Math.abs(inputs.velocity) <= 0.004 && isHoming;
     }
 
     @NotLogged

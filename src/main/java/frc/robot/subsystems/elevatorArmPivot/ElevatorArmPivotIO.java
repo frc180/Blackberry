@@ -13,7 +13,6 @@ public interface ElevatorArmPivotIO {
         double voltage;
         double target;
         double velocity;
-        double current;
     }
     
     public void setPosition(double encoderPosition);
