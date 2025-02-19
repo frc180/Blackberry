@@ -6,6 +6,8 @@ import edu.wpi.first.epilogue.NotLogged;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -41,6 +43,8 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
 
     private static final double IN_POSITION_TOLERANCE = Units.degreesToRotations(2);
 
+    private final Alert notHomedAlert = new Alert("Arm Pivot is not homed!", AlertType.kWarning);
+
     private Double targetPositionMax = null;
     private Double targetPositionMin = null;
 
@@ -69,6 +73,7 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
         io.update(inputs);
         SimVisuals.setElevatorArmPivotDegrees(getDegrees());
 
+        notHomedAlert.set(!homed);
         // if (pidMode) {
         //     setArmPositionDirect(targetPosition);
         // }
@@ -101,8 +106,8 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
 
     public Command home() {
         return Commands.sequence(
-            runSpeed(0.03).until(stalling),
-            zero(HARD_STOP_OFFSET).alongWith(Commands.runOnce(() -> homed = true))
+            setSpeed(0.06).until(stalling),
+            zero(HARD_STOP_OFFSET).alongWith(Commands.runOnce(() -> homed = true)).andThen(stop())
         );
     }
 

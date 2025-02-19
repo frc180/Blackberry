@@ -9,7 +9,7 @@ public interface IntakeCoralPivotIO {
 
     @Logged
     public class IntakeCoralPivotIOInputs {
-        StatusCode signalStatus;
+        StatusCode signalStatus = StatusCode.OK;
         double position;
         double voltage;
         double target;

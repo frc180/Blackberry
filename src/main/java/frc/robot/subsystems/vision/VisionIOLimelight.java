@@ -3,6 +3,7 @@ package frc.robot.subsystems.vision;
 import com.spamrobotics.vision.LimelightStatus;
 
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
 import frc.robot.Robot;
 import frc.robot.RobotContainer;
@@ -88,11 +89,11 @@ public class VisionIOLimelight implements VisionIO {
         LimelightHelpers.setCameraPose_RobotSpace(
             limelightName,
             transform.getX(), // forward
-            transform.getY(), // side
+            -transform.getY(), // side
             transform.getZ(), // up
-            transform.getRotation().getX(), // roll
-            transform.getRotation().getY(), // pitch
-            transform.getRotation().getZ() // yaw
+            -Units.radiansToDegrees(transform.getRotation().getX()), // roll
+            -Units.radiansToDegrees(transform.getRotation().getY()), // pitch
+            -Units.radiansToDegrees(transform.getRotation().getZ()) // yaw
         );
     }
 }

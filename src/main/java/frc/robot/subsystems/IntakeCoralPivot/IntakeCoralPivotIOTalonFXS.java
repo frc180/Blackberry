@@ -33,7 +33,6 @@ public class IntakeCoralPivotIOTalonFXS implements IntakeCoralPivotIO {
     
     public IntakeCoralPivotIOTalonFXS() {
         motor = new TalonFX(Constants.INTAKE_CORAL_PIVOT_TALON, Constants.CANIVORE);
-        motor.setNeutralMode(NeutralModeValue.Brake);
         TalonFXConfiguration config = new TalonFXConfiguration();
         config.Slot0.kP = 1440;
         config.Slot0.kI = 0;
@@ -48,6 +47,7 @@ public class IntakeCoralPivotIOTalonFXS implements IntakeCoralPivotIO {
         config.MotionMagic.MotionMagicExpo_kA = 0;
         config.MotionMagic.MotionMagicJerk = 0;
         motor.getConfigurator().apply(config);
+        motor.setNeutralMode(NeutralModeValue.Brake);
 
         motionMagicControl = new MotionMagicExpoVoltage(0);
 

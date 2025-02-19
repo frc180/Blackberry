@@ -23,15 +23,16 @@ import frc.robot.Robot;
 
 public class IntakeAlgaePivotIOTalonFXS implements IntakeAlgaePivotIO {
     
-    final double intakeArmGearing = 100;
+    final double intakeArmGearing = 200;
     final double radToRotations = 1 / (2 * Math.PI);
+    final double absoluteEncoderResolution = 2048;
 
     TalonFX pivotMotorA, pivotMotorB;
     List<TalonFX> pivotMotors;
     MotionMagicVoltage motionMagicControl;
     VoltageOut voltageControl;
     Follower followerControl;
-    DutyCycleEncoder encoder;
+    DutyCycleEncoder absoluteEncoder;
 
     // Status signals
     StatusSignal<Angle> positionSignal;
@@ -68,8 +69,8 @@ public class IntakeAlgaePivotIOTalonFXS implements IntakeAlgaePivotIO {
         //pivotMotor.setNeutralMode(NeutralModeValue.Brake);
         //pivotMotor.getConfigurator().apply(configuration);
         pivotMotors.forEach(motor -> {
-            motor.setNeutralMode(NeutralModeValue.Brake);
             motor.getConfigurator().apply(configuration);
+            motor.setNeutralMode(NeutralModeValue.Coast);
         });
 
         motionMagicControl = new MotionMagicVoltage(0);
@@ -77,7 +78,7 @@ public class IntakeAlgaePivotIOTalonFXS implements IntakeAlgaePivotIO {
         followerControl = new Follower(Constants.INTAKE_ALGAE_PIVOT_TALON_A, true);
         pivotMotorB.setControl(followerControl);
 
-        encoder = new DutyCycleEncoder(Constants.DIO_INTAKE_ALGAE_ENCODER);
+        absoluteEncoder = new DutyCycleEncoder(Constants.DIO_INTAKE_ALGAE_ENCODER);
 
         positionSignal = pivotMotorA.getPosition();
         voltageSignal = pivotMotorA.getMotorVoltage();
@@ -109,7 +110,7 @@ public class IntakeAlgaePivotIOTalonFXS implements IntakeAlgaePivotIO {
         inputs.position = positionSignal.getValueAsDouble();
         inputs.voltage = voltageSignal.getValueAsDouble();
         inputs.target = targetSignal.getValueAsDouble();
-        inputs.encoderPosition = encoder.get();
+        inputs.absoluteEncoderPosition = absoluteEncoder.get() / absoluteEncoderResolution;
     }
 
     // Simulation only

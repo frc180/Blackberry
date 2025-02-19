@@ -206,6 +206,13 @@ public class RobotContainer {
         drivetrain.setDefaultCommand(new DefaultDriveCommand(drivetrain, joystickInputsSupplier, rotationSupplier));
         driverController.back().onTrue(Commands.runOnce(drivetrain::zeroGyroscope));
 
+        driverLeftReef.whileTrue(new DriveToPose(drivetrain, () -> vision.getReefPose(true))
+        .withPoseTargetType(PoseTarget.REEF));
+
+
+       driverRightReef.whileTrue(new DriveToPose(drivetrain, () -> vision.getReefPose(false))
+        .withPoseTargetType(PoseTarget.REEF));
+
         if (Robot.isSimulation()) {
 
         // experimental auto-home for elevator
@@ -252,12 +259,12 @@ public class RobotContainer {
         driverStartClimb.whileTrue(intakeAlgaePivot.stow()); //didnt put any onFalse commands because once we climb we physically cannot un-climb
 
         //left and right alignment for the reef (x is left and b is right)
-        driverLeftReef.whileTrue(new DriveToPose(drivetrain, () -> vision.getReefPose(true))
-                                        .withPoseTargetType(PoseTarget.REEF));
+        // driverLeftReef.whileTrue(new DriveToPose(drivetrain, () -> vision.getReefPose(true))
+        //                                 .withPoseTargetType(PoseTarget.REEF));
 
 
-        driverRightReef.whileTrue(new DriveToPose(drivetrain, () -> vision.getReefPose(false))
-                                        .withPoseTargetType(PoseTarget.REEF));
+        // driverRightReef.whileTrue(new DriveToPose(drivetrain, () -> vision.getReefPose(false))
+        //                                 .withPoseTargetType(PoseTarget.REEF));
 
         //processor alignment
         driverProcessor.whileTrue(new DriveToPose(drivetrain, () -> vision.getProcessorPose(Robot.isBlue()))
@@ -461,24 +468,24 @@ public class RobotContainer {
         // testController.button(2).whileTrue(elevatorArmPivot.setSpeed(0.2)).onFalse(elevatorArmPivot.stop());
         // testController.button(3).whileTrue(elevatorArmPivot.setSpeed(-0.2)).onFalse(elevatorArmPivot.stop());
         
-        // testController.button(4).whileTrue(elevatorArmAlgae.setSpeed(0.5)).onFalse(elevatorArmAlgae.stop());
-        // testController.button(5).whileTrue(elevatorArmAlgae.setSpeed(0.05)).onFalse(elevatorArmAlgae.stop());
+        testController.button(4).whileTrue(elevatorArmAlgae.setSpeed(0.5)).onFalse(elevatorArmAlgae.stop());
+        testController.button(5).whileTrue(elevatorArmAlgae.setSpeed(0.05)).onFalse(elevatorArmAlgae.stop());
 
-        testController.button(1).whileTrue(intakeAlgae.setSpeed(1)).onFalse(intakeAlgae.stopIntake());
-        testController.button(2).whileTrue(intakeAlgae.setSpeed(-1)).onFalse(intakeAlgae.stopIntake());
+        // testController.button(1).whileTrue(intakeAlgae.setSpeed(1)).onFalse(intakeAlgae.stopIntake());
+        // testController.button(2).whileTrue(intakeAlgae.setSpeed(-1)).onFalse(intakeAlgae.stopIntake());
 
         testController.button(3).whileTrue(intakeAlgaePivot.setSpeed(0.2)).onFalse(intakeAlgaePivot.stop());
         // testController.button(4).whileTrue(intakeAlgaePivot.setSpeed(-0.2)).onFalse(intakeAlgaePivot.stop());
  
-        testController.button(4).onTrue(elevatorArmPivot.zero(0));
-        testController.button(5).onTrue(
-            elevatorArmPivot.home()
-                .andThen(new RumbleCommand(0.5).withTimeout(0.5))
-                .andThen(elevatorArmPivot.setPosition(elevatorArmPivot.horizontal))
-        );
+        // testController.button(4).onTrue(elevatorArmPivot.zero(0).ignoringDisable(true));
+        // testController.button(5).onTrue(
+        //     elevatorArmPivot.home()
+        //         .andThen(new RumbleCommand(0.5).withTimeout(0.5))
+        //         .andThen(elevatorArmPivot.setPosition(elevatorArmPivot.horizontal))
+        // );
 
-        testController.button(6).and(armPivotHomed).onTrue(elevatorArmPivot.setPosition(elevatorArmPivot.horizontal));
-        testController.button(7).and(armPivotHomed).onTrue(elevatorArmPivot.setPosition(elevatorArmPivot.receiving));
+        testController.button(6).onTrue(elevatorArmPivot.setPosition(elevatorArmPivot.horizontal));
+        testController.button(7).onTrue(elevatorArmPivot.setPosition(elevatorArmPivot.receiving));
 
         // // Stops on release since runSpeed automatically stops the motors
         // teleop.and(testController.button(8)).whileTrue(elevator.runSpeed(0.2));
