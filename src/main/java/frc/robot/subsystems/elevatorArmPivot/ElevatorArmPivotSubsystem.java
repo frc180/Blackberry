@@ -125,10 +125,21 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
         return runOnce(() -> io.zero(rotations));
     }
 
-    // untested
+    private final double MAX_ERROR_THRESHOLD = Inches.of(20).in(Meters);
+
     public Command matchElevatorPreset() {
+        ElevatorSubsystem elevator = RobotContainer.instance.elevator;
         return run(() -> {
-            Distance elevatorTarget = RobotContainer.instance.elevator.getTargetPosition();
+            Distance elevatorTarget = elevator.getTargetPosition();
+            double targetError = elevator.getTargetErrorMeters();
+
+            // Experimental - prevent arm from sticking out until we're past any levels that may
+            // contain algae that'd collide with the arm
+            if (targetError > MAX_ERROR_THRESHOLD) {
+                setArmPositionDirect(receiving);
+                return;
+            }
+
             if (elevatorTarget == ElevatorSubsystem.L4) {
                 setArmPositionDirect(L4_SCORE);
             } else if (elevatorTarget == ElevatorSubsystem.L3) {

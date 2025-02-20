@@ -3,6 +3,9 @@ package frc.robot;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.function.Supplier;
+
 import com.pathplanner.lib.util.FlippingUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -13,6 +16,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.commands.DriveToPose;
 import frc.robot.subsystems.DrivetrainSubsystem;
 import frc.robot.subsystems.DrivetrainSubsystem.PoseTarget;
+import frc.robot.subsystems.elevator.ElevatorSubsystem;
 import frc.robot.subsystems.vision.VisionSubsystem;
 import frc.robot.util.CoralScoringPosition;
 import frc.robot.util.simulation.SimLogic;
@@ -104,9 +108,35 @@ public final class Auto {
         }).withDynamicTarget(true);
     }
 
+    // WIP nicer pathing to prevent arm collisions with reef or algae
+    public static Function<Pose2d, Pose2d> intermediateScoringPoseSupplier = (Pose2d target) -> {
+        ElevatorSubsystem elevator = RobotContainer.instance.elevator;
+        Pose2d robotPose = RobotContainer.instance.drivetrain.getPose();
+
+        // double dist = Math.abs(robotPose.getTranslation().getDistance(target.getTranslation()));
+        double offset = 0;
+
+        // if (dist > 1.1) {
+        //     offset = -0.7;
+        // }
+
+        if (!elevator.isElevatorInScoringPosition()) {
+            offset = -0.1;
+        }
+
+        if (offset != 0) {
+            target = target.transformBy(new Transform2d(offset, 0, Rotation2d.kZero));
+        }
+
+        return target;
+    };
+
+
     public static Command driveToReefWithCoral() {
         return new DriveToPose(RobotContainer.instance.drivetrain, () -> nextCoralScoringPosition().getPose())
                     .withPoseTargetType(PoseTarget.REEF)
+                    .withTargetPoseTag(() -> nextCoralScoringPosition().tag)
+                    .withIntermediatePoses(intermediateScoringPoseSupplier)
                     .alongWith(Auto.stopCoralIntake());
     }
 
@@ -133,8 +163,11 @@ public final class Auto {
         return Commands.parallel(
             Auto.configureAuto(coralScoringPositions, simStart),
             drivetrain.followPath(startingPath, 0.0, false)
-                .until(drivetrain.withinTargetPoseDistance(1))
-                .andThen(new DriveToPose(drivetrain, () -> nextCoralScoringPosition().getPose()).withPoseTargetType(PoseTarget.REEF))
+                .until(drivetrain.withinTargetPoseDistance(1.2))
+                .andThen(new DriveToPose(drivetrain, ()-> nextCoralScoringPosition().getPose())
+                            .withPoseTargetType(PoseTarget.REEF)
+                            .withTargetPoseTag(() -> nextCoralScoringPosition().tag)
+                            .withIntermediatePoses(intermediateScoringPoseSupplier))
         );
     }
 

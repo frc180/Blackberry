@@ -102,11 +102,15 @@ public class RobotContainer {
 
     private final SendableChooser<Command> autoChooser = new SendableChooser<Command>();
 
-    public Trigger robotHasCoral = new Trigger(() -> false);;
+    public Trigger robotHasCoral = new Trigger(() -> false);
     public Trigger robotHasAlgae = new Trigger(() -> false);;
     public Trigger coralIntakeTrigger = new Trigger(() -> false);
-    public Trigger driverRightReef = new Trigger(() -> false);;
-    public Trigger driverLeftReef = new Trigger(() -> false);;
+    public Trigger driverRightReef = new Trigger(() -> false);
+    public Trigger driverLeftReef = new Trigger(() -> false);
+    @Logged(name = "Reef - Near")
+    public Trigger nearReef = new Trigger(() -> false);
+    @Logged(name = "Reef - At")
+    public Trigger atReef = new Trigger(() -> false);
 
     public static RobotContainer instance;
 
@@ -176,13 +180,26 @@ public class RobotContainer {
         robotHasAlgae = intakeAlgae.hasAlgae.or(elevatorArmAlgae.hasAlgae);
         final Trigger justScoredCoral = new Trigger(() -> Robot.justScoredCoral);
         final Trigger drivetrainAvailable = new Trigger(() -> drivetrain.getCurrentCommand() == drivetrain.getDefaultCommand());
-
         final Trigger scoringCameraDisconnected = vision.scoringCameraConnected.negate();
+
+        // TODO: probably change these triggers to also return true if the scoring camera is disconnected
+        nearReef = drivetrain.targetingReef().and(drivetrain.withinTargetPoseTolerance(         
+                        Meters.of(0.75),
+                        Meters.of(0.75),
+                        Degrees.of(90)
+        )).debounce(0.5, DebounceType.kFalling); 
+
+        atReef = drivetrain.targetingReef().and(drivetrain.withinTargetPoseTolerance(
+                        Inches.of(1),
+                        Inches.of(1),
+                        Degrees.of(2)
+        ));
 
         // Auto triggers
         final Trigger autoCoralIntake = autonomous.and(Auto::isCoralIntaking);
 
 
+        // Teleop driving
         final Function<Double, Double> axisToLinearSpeed = (axis) -> {
             axis *= DrivetrainSubsystem.MAX_SPEED;
             // Temporary slowdown logic for net scoring, until we add real driver acceleration limiting that is tied
@@ -206,12 +223,18 @@ public class RobotContainer {
         drivetrain.setDefaultCommand(new DefaultDriveCommand(drivetrain, joystickInputsSupplier, rotationSupplier));
         driverController.back().onTrue(Commands.runOnce(drivetrain::zeroGyroscope));
 
+        // Reef auto-aligns
         driverLeftReef.whileTrue(new DriveToPose(drivetrain, () -> vision.getReefPose(true))
-        .withPoseTargetType(PoseTarget.REEF));
-
+            .withPoseTargetType(PoseTarget.REEF)
+            .withTargetPoseTag(() -> vision.lastReefID)
+            //.withIntermediatePoses(Auto.intermediateScoringPoseSupplier)
+        );
 
        driverRightReef.whileTrue(new DriveToPose(drivetrain, () -> vision.getReefPose(false))
-        .withPoseTargetType(PoseTarget.REEF));
+            .withPoseTargetType(PoseTarget.REEF)
+            .withTargetPoseTag(() -> vision.lastReefID)
+            //.withIntermediatePoses(Auto.intermediateScoringPoseSupplier)
+        );
 
         if (Robot.isSimulation()) {
 
@@ -258,14 +281,6 @@ public class RobotContainer {
         driverReadyClimb.whileTrue(intakeAlgaePivot.readyClimb());
         driverStartClimb.whileTrue(intakeAlgaePivot.stow()); //didnt put any onFalse commands because once we climb we physically cannot un-climb
 
-        //left and right alignment for the reef (x is left and b is right)
-        // driverLeftReef.whileTrue(new DriveToPose(drivetrain, () -> vision.getReefPose(true))
-        //                                 .withPoseTargetType(PoseTarget.REEF));
-
-
-        // driverRightReef.whileTrue(new DriveToPose(drivetrain, () -> vision.getReefPose(false))
-        //                                 .withPoseTargetType(PoseTarget.REEF));
-
         //processor alignment
         driverProcessor.whileTrue(new DriveToPose(drivetrain, () -> vision.getProcessorPose(Robot.isBlue()))
                                         .withPoseTargetType(PoseTarget.PROCESSOR));
@@ -300,20 +315,6 @@ public class RobotContainer {
                 return reefPose != null ? reefPose.getRotation().getDegrees() : null;
             }, HeadingTarget.POSE));
 
-
-        // TODO: probably change these triggers to also return true if the scoring camera is disconnected
-        Trigger nearReef = drivetrain.targetingReef().and(drivetrain.withinTargetPoseTolerance(         
-                                Meters.of(0.75),
-                                Meters.of(0.75),
-                                Degrees.of(90)
-                            ))
-                            .debounce(0.5, DebounceType.kFalling); 
-
-        Trigger atReef = drivetrain.targetingReef().and(drivetrain.withinTargetPoseTolerance(
-                                Inches.of(1),
-                                Inches.of(1),
-                                Degrees.of(2)
-                            ));
 
         Command chosenElevatorHeight = elevator.run(() -> {
             // In autonomous, read the next coral scoring position from the list to determine the elevator height

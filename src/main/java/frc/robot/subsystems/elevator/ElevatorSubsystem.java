@@ -153,7 +153,7 @@ public class ElevatorSubsystem extends SubsystemBase {
   }
 
   public boolean isElevatorInPosition() {
-    return Math.abs(targetPosition.in(Meters) - inputs.position) <= IN_POSITION_METERS;
+    return Math.abs(getTargetErrorMeters()) <= IN_POSITION_METERS;
   }
 
   public boolean isElevatorInScoringPosition(){
@@ -162,6 +162,10 @@ public class ElevatorSubsystem extends SubsystemBase {
 
   public boolean isElevatorInReefAlgaePosition() {  
     return isElevatorInPosition() && (targetPosition == L2 || targetPosition == L3);
+  }
+
+  public double getTargetErrorMeters() {
+    return targetPosition.in(Meters) - inputs.position;
   }
 
   public void setPositionDirect(Distance position) {

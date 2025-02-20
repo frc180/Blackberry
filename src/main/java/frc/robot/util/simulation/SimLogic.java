@@ -80,7 +80,7 @@ public abstract class SimLogic {
             positionOffset = 0.6;
         } else {
             coralAngle = -35;
-            positionOffset = 0.3;
+            positionOffset = 0.6;
         }
         Distance coralHeight = Meters.of(rc.elevator.getPositionMeters() + positionOffset);
     
