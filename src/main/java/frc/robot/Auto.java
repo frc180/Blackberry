@@ -13,6 +13,7 @@ import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import frc.robot.commands.DriveToCoralPose;
 import frc.robot.commands.DriveToPose;
 import frc.robot.subsystems.DrivetrainSubsystem;
 import frc.robot.subsystems.DrivetrainSubsystem.PoseTarget;
@@ -108,36 +109,8 @@ public final class Auto {
         }).withDynamicTarget(true);
     }
 
-    // WIP nicer pathing to prevent arm collisions with reef or algae
-    public static Function<Pose2d, Pose2d> intermediateScoringPoseSupplier = (Pose2d target) -> {
-        ElevatorSubsystem elevator = RobotContainer.instance.elevator;
-        Pose2d robotPose = RobotContainer.instance.drivetrain.getPose();
-
-        // double dist = Math.abs(robotPose.getTranslation().getDistance(target.getTranslation()));
-        double offset = 0;
-
-        // if (dist > 1.1) {
-        //     offset = -0.7;
-        // }
-
-        if (!elevator.isElevatorInScoringPosition()) {
-            offset = -0.1;
-        }
-
-        if (offset != 0) {
-            target = target.transformBy(new Transform2d(offset, 0, Rotation2d.kZero));
-        }
-
-        return target;
-    };
-
-
     public static Command driveToReefWithCoral() {
-        return new DriveToPose(RobotContainer.instance.drivetrain, () -> nextCoralScoringPosition().getPose())
-                    .withPoseTargetType(PoseTarget.REEF)
-                    .withTargetPoseTag(() -> nextCoralScoringPosition().tag)
-                    .withIntermediatePoses(intermediateScoringPoseSupplier)
-                    .alongWith(Auto.stopCoralIntake());
+        return driveToNextCoralPose().alongWith(Auto.stopCoralIntake());
     }
 
     /**
@@ -164,10 +137,7 @@ public final class Auto {
             Auto.configureAuto(coralScoringPositions, simStart),
             drivetrain.followPath(startingPath, 0.0, false)
                 .until(drivetrain.withinTargetPoseDistance(1.2))
-                .andThen(new DriveToPose(drivetrain, ()-> nextCoralScoringPosition().getPose())
-                            .withPoseTargetType(PoseTarget.REEF)
-                            .withTargetPoseTag(() -> nextCoralScoringPosition().tag)
-                            .withIntermediatePoses(intermediateScoringPoseSupplier))
+                .andThen(driveToNextCoralPose())
         );
     }
 
@@ -187,4 +157,14 @@ public final class Auto {
         coralScoringPositions.clear();
         positions.forEach(position -> coralScoringPositions.add(position.getFlippedIfNeeded()));
     }
+
+    // =========== Helper Methods ===========
+
+    private static DriveToPose driveToNextCoralPose() {
+        return new DriveToCoralPose(
+            () -> nextCoralScoringPosition().tag,
+            (tag) -> nextCoralScoringPosition().getPose()
+        );
+    }
+
 }

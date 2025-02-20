@@ -43,6 +43,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.commands.DefaultDriveCommand;
+import frc.robot.commands.DriveToCoralPose;
 import frc.robot.commands.DriveToPose;
 import frc.robot.commands.RumbleCommand;
 import frc.robot.generated.TunerConstants;
@@ -223,18 +224,16 @@ public class RobotContainer {
         drivetrain.setDefaultCommand(new DefaultDriveCommand(drivetrain, joystickInputsSupplier, rotationSupplier));
         driverController.back().onTrue(Commands.runOnce(drivetrain::zeroGyroscope));
 
-        // Reef auto-aligns
-        driverLeftReef.whileTrue(new DriveToPose(drivetrain, () -> vision.getReefPose(true))
-            .withPoseTargetType(PoseTarget.REEF)
-            .withTargetPoseTag(() -> vision.lastReefID)
-            //.withIntermediatePoses(Auto.intermediateScoringPoseSupplier)
-        );
+        // Coral reef auto-aligns
+        driverLeftReef.whileTrue(new DriveToCoralPose(
+            () -> vision.lastReefID,
+            (tagID) -> vision.getReefPose(tagID, true)
+        ));
 
-       driverRightReef.whileTrue(new DriveToPose(drivetrain, () -> vision.getReefPose(false))
-            .withPoseTargetType(PoseTarget.REEF)
-            .withTargetPoseTag(() -> vision.lastReefID)
-            //.withIntermediatePoses(Auto.intermediateScoringPoseSupplier)
-        );
+        driverRightReef.whileTrue(new DriveToCoralPose(
+            () -> vision.lastReefID,
+            (tagID) -> vision.getReefPose(tagID, false)
+        ));
 
         if (Robot.isSimulation()) {
 
