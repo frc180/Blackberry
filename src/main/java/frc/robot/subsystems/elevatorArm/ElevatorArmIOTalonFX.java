@@ -1,6 +1,6 @@
 package frc.robot.subsystems.elevatorArm;
 
-import com.ctre.phoenix6.BaseStatusSignal;
+import static frc.robot.util.StatusSignals.trackSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANdiConfiguration;
 import com.ctre.phoenix6.configs.TalonFXSConfiguration;
@@ -13,6 +13,7 @@ import com.ctre.phoenix6.signals.S1CloseStateValue;
 import com.ctre.phoenix6.signals.S1FloatStateValue;
 import com.ctre.phoenix6.signals.S2CloseStateValue;
 import com.ctre.phoenix6.signals.S2FloatStateValue;
+import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
 
 public class ElevatorArmIOTalonFX implements ElevatorArmIO {
@@ -22,6 +23,7 @@ public class ElevatorArmIOTalonFX implements ElevatorArmIO {
     VoltageOut voltageControl;
 
     StatusSignal<Boolean> frontSensorSignal, middleSensorSignal, backSensorSignal;
+    StatusSignal<Voltage> voltageSignal;
 
     public ElevatorArmIOTalonFX() {
         TalonFXSConfiguration config = new TalonFXSConfiguration();
@@ -42,18 +44,18 @@ public class ElevatorArmIOTalonFX implements ElevatorArmIO {
         candiA.getConfigurator().apply(candiConfig);
         candiB.getConfigurator().apply(candiConfig);
 
-        frontSensorSignal = candiA.getS2Closed();
-        middleSensorSignal = candiA.getS1Closed();
-        backSensorSignal = candiB.getS1Closed();
+        frontSensorSignal = trackSignal(candiA.getS2Closed());
+        middleSensorSignal = trackSignal(candiA.getS1Closed());
+        backSensorSignal = trackSignal(candiB.getS1Closed());
+        voltageSignal = trackSignal(rollerMotor.getMotorVoltage());
     }
 
     @Override
     public void update(ElevatorArmIOInputs inputs) {
-        BaseStatusSignal.refreshAll(frontSensorSignal, middleSensorSignal, backSensorSignal);
         inputs.frontCoralSensor = frontSensorSignal.getValueAsDouble() == 1;
         inputs.middleCoralSensor = middleSensorSignal.getValueAsDouble() == 1;
         inputs.backCoralSensor = backSensorSignal.getValueAsDouble() == 1;
-        inputs.voltage = rollerMotor.getMotorVoltage(true).getValueAsDouble();
+        inputs.voltage = voltageSignal.getValueAsDouble();
     }
 
     @Override

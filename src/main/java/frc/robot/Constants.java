@@ -33,9 +33,6 @@ public class Constants {
     public static final int DIO_ELEVATOR_BOTTOM_LIMIT = 9;
 
     public static final int INTAKE_CORAL_SENSOR = 2;
-    public static final int ELEVATOR_ARM_FRONT_SENSOR = 3;
-    public static final int ELEVATOR_ARM_MIDDLE_SENSOR = 4;
-    public static final int ELEVATOR_ARM_BACK_SENSOR = 5;
     public static final int ELEVATOR_ARM_ALGAE_SENSOR = 6;
     public static final int INTAKE_ALGAE_SENSOR = 7;
     

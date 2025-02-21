@@ -1,6 +1,6 @@
 package frc.robot.subsystems.IntakeCoralPivot;
 
-import com.ctre.phoenix6.BaseStatusSignal;
+import static frc.robot.util.StatusSignals.trackSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicExpoVoltage;
@@ -51,9 +51,9 @@ public class IntakeCoralPivotIOTalonFXS implements IntakeCoralPivotIO {
 
         motionMagicControl = new MotionMagicExpoVoltage(0);
 
-        positionSignal = motor.getPosition();
-        voltageSignal = motor.getMotorVoltage();
-        targetSignal = motor.getClosedLoopReference();
+        positionSignal = trackSignal(motor.getPosition());
+        voltageSignal = trackSignal(motor.getMotorVoltage());
+        targetSignal = trackSignal(motor.getClosedLoopReference());
 
         if (Robot.isReal()) return;
 
@@ -73,7 +73,6 @@ public class IntakeCoralPivotIOTalonFXS implements IntakeCoralPivotIO {
 
     @Override
     public void update(IntakeCoralPivotIOInputs inputs) {
-        inputs.signalStatus = BaseStatusSignal.refreshAll(positionSignal, voltageSignal, targetSignal);
         inputs.position = positionSignal.getValueAsDouble();
         inputs.voltage = voltageSignal.getValueAsDouble();
         inputs.target = targetSignal.getValueAsDouble();

@@ -1,8 +1,8 @@
 package frc.robot.subsystems.elevator;
 
 import static edu.wpi.first.units.Units.Meters;
+import static frc.robot.util.StatusSignals.trackSignal;
 import java.util.List;
-import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
@@ -101,10 +101,10 @@ public class ElevatorIOTalonFX implements ElevatorIO {
         // pidTuner = new PIDTuner(config.Slot0, motorA).withName("Elevator");
         // pidTuner.initializeValues(config.Slot0);
 
-        positionSignal = motorA.getPosition();
-        velocitySignal = motorA.getVelocity();
-        voltageSignal = motorA.getMotorVoltage();
-        targetSignal = motorA.getClosedLoopReference();
+        positionSignal = trackSignal(motorA.getPosition());
+        velocitySignal = trackSignal(motorA.getVelocity());
+        voltageSignal = trackSignal(motorA.getMotorVoltage());
+        targetSignal = trackSignal(motorA.getClosedLoopReference());
 
         // Everything past this point is just for simulation setup
         if (Robot.isReal()) return;
@@ -143,7 +143,6 @@ public class ElevatorIOTalonFX implements ElevatorIO {
 
     @Override
     public void update(ElevatorIOInputs inputs) {
-        inputs.signalStatus = BaseStatusSignal.refreshAll(positionSignal, velocitySignal, voltageSignal, targetSignal);
         inputs.position = positionSignal.getValueAsDouble();
         inputs.velocity = velocitySignal.getValueAsDouble();
         inputs.voltage = voltageSignal.getValueAsDouble();

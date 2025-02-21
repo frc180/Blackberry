@@ -1,8 +1,7 @@
 package frc.robot.subsystems.elevatorArmPivot;
 
 import static edu.wpi.first.units.Units.*;
-
-import com.ctre.phoenix6.BaseStatusSignal;
+import static frc.robot.util.StatusSignals.trackSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
@@ -14,7 +13,6 @@ import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 import frc.robot.Constants;
@@ -63,10 +61,10 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO {
         config.Feedback.SensorToMechanismRatio = PIVOT_GEARING;
         config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = ElevatorArmPivotSubsystem.FORWARD_LIMIT.in(Rotations);
         config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = ElevatorArmPivotSubsystem.REVERSE_LIMIT.in(Rotations);
-        if (false && Robot.isReal()) {
-            config.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
-            config.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
-        }
+        // if (Robot.isReal()) {
+        //     config.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+        //     config.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
+        // }
 
         armPivotMotor.getConfigurator().apply(config);
         armPivotMotor.setNeutralMode(NeutralModeValue.Brake);
@@ -74,10 +72,10 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO {
         motionMagic = new MotionMagicVoltage(0);
         voltageControl = new VoltageOut(0);
 
-        positionSignal = armPivotMotor.getPosition();
-        voltageSignal = armPivotMotor.getMotorVoltage();
-        targetSignal = armPivotMotor.getClosedLoopReference();
-        velocitySignal = armPivotMotor.getVelocity();
+        positionSignal = trackSignal(armPivotMotor.getPosition());
+        voltageSignal = trackSignal(armPivotMotor.getMotorVoltage());
+        targetSignal = trackSignal(armPivotMotor.getClosedLoopReference());
+        velocitySignal = trackSignal(armPivotMotor.getVelocity());
 
         // Everything below this line is for simulation only
         if (Robot.isReal()) return;
@@ -99,7 +97,6 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO {
 
     @Override
     public void update(ElevatorArmPivotIOInputs inputs) {
-        inputs.signalStatus = BaseStatusSignal.refreshAll(positionSignal, voltageSignal, targetSignal, velocitySignal);
         inputs.position = positionSignal.getValueAsDouble();
         inputs.voltage = voltageSignal.getValueAsDouble();
         inputs.target = targetSignal.getValueAsDouble();

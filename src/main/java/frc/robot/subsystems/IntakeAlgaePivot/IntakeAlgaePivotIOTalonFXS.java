@@ -1,8 +1,7 @@
 package frc.robot.subsystems.IntakeAlgaePivot;
 
+import static frc.robot.util.StatusSignals.trackSignal;
 import java.util.List;
-
-import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
@@ -80,9 +79,9 @@ public class IntakeAlgaePivotIOTalonFXS implements IntakeAlgaePivotIO {
 
         absoluteEncoder = new DutyCycleEncoder(Constants.DIO_INTAKE_ALGAE_ENCODER);
 
-        positionSignal = pivotMotorA.getPosition();
-        voltageSignal = pivotMotorA.getMotorVoltage();
-        targetSignal = pivotMotorA.getClosedLoopReference();
+        positionSignal = trackSignal(pivotMotorA.getPosition());
+        voltageSignal = trackSignal(pivotMotorA.getMotorVoltage());
+        targetSignal = trackSignal(pivotMotorA.getClosedLoopReference());
 
         //for simulation
         if (Robot.isReal()) return;
@@ -106,7 +105,6 @@ public class IntakeAlgaePivotIOTalonFXS implements IntakeAlgaePivotIO {
 
     @Override
     public void update(IntakeAlgaePivotIOInputs inputs){ 
-        inputs.signalStatus = BaseStatusSignal.refreshAll(positionSignal, voltageSignal, targetSignal);
         inputs.position = positionSignal.getValueAsDouble();
         inputs.voltage = voltageSignal.getValueAsDouble();
         inputs.target = targetSignal.getValueAsDouble();

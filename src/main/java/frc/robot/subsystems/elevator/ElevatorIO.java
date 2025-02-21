@@ -1,6 +1,5 @@
 package frc.robot.subsystems.elevator;
 
-import com.ctre.phoenix6.StatusCode;
 import edu.wpi.first.epilogue.Logged;
 
 @Logged
@@ -8,7 +7,6 @@ public interface ElevatorIO {
 
     @Logged
     public class ElevatorIOInputs {
-        StatusCode signalStatus;
         double position;
         double velocity;
         double voltage;
