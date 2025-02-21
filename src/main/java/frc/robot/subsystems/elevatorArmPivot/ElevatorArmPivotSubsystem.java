@@ -58,7 +58,7 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
     public Trigger elevatorArmInPosition = new Trigger(() -> isElevatorArmInPosition());
     @NotLogged
     public Trigger elevatorArmInScoringPosition = new Trigger (() -> isElevatorArmInScoringPosition());
-    private Trigger atHomingHardstop = new Trigger(this::isAtHomingHardstop).debounce(0.25);
+    private Trigger atHomingHardstop = new Trigger(this::isAtHomingHardstop).debounce(0.1);
 
     public ElevatorArmPivotSubsystem() {
         inputs = new ElevatorArmPivotIOInputs();
@@ -108,11 +108,14 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
 
     public Command home() {
         return Commands.sequence(
-            runOnce(() -> isHoming = true),
+            runOnce(() -> {
+                homed = false;
+                isHoming = true;
+            }),
             runSpeed(0.06).until(atHomingHardstop),
             zero(HARD_STOP_OFFSET).alongWith(Commands.runOnce(() -> {
                 homed = true;
-                isHoming = true;
+                isHoming = false;
             }))
         ).withInterruptBehavior(InterruptionBehavior.kCancelIncoming);
     }

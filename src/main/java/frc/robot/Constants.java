@@ -23,8 +23,8 @@ public class Constants {
 
     public static final int ELEVATOR_ARM_ALGAE = 20;
 
-    public static final int ELEVATOR_ARM_CANDI_A = 22;
-    public static final int ELEVATOR_ARM_CANDI_B = 23;
+    public static final int ELEVATOR_ARM_CANDI_A = 21;
+    public static final int ELEVATOR_ARM_CANDI_B = 22;
 
 
 

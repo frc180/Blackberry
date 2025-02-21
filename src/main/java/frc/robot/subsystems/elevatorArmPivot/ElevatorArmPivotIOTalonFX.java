@@ -63,7 +63,7 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO {
         config.Feedback.SensorToMechanismRatio = PIVOT_GEARING;
         config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = ElevatorArmPivotSubsystem.FORWARD_LIMIT.in(Rotations);
         config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = ElevatorArmPivotSubsystem.REVERSE_LIMIT.in(Rotations);
-        if (Robot.isReal()) {
+        if (false && Robot.isReal()) {
             config.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
             config.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
         }

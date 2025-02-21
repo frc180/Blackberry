@@ -1,5 +1,7 @@
 package frc.robot.subsystems.elevatorArm;
 
+import com.ctre.phoenix6.BaseStatusSignal;
+import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANdiConfiguration;
 import com.ctre.phoenix6.configs.TalonFXSConfiguration;
 import com.ctre.phoenix6.controls.VoltageOut;
@@ -11,17 +13,15 @@ import com.ctre.phoenix6.signals.S1CloseStateValue;
 import com.ctre.phoenix6.signals.S1FloatStateValue;
 import com.ctre.phoenix6.signals.S2CloseStateValue;
 import com.ctre.phoenix6.signals.S2FloatStateValue;
-
-import edu.wpi.first.wpilibj.DigitalInput;
 import frc.robot.Constants;
 
 public class ElevatorArmIOTalonFX implements ElevatorArmIO {
 
     TalonFXS rollerMotor;
-    DigitalInput frontSensor, middleSensor, backSensor;
     CANdi candiA, candiB;
-
     VoltageOut voltageControl;
+
+    StatusSignal<Boolean> frontSensorSignal, middleSensorSignal, backSensorSignal;
 
     public ElevatorArmIOTalonFX() {
         TalonFXSConfiguration config = new TalonFXSConfiguration();
@@ -30,9 +30,7 @@ public class ElevatorArmIOTalonFX implements ElevatorArmIO {
         rollerMotor.getConfigurator().apply(config);
         rollerMotor.setNeutralMode(NeutralModeValue.Brake);
 
-        frontSensor = new DigitalInput(Constants.ELEVATOR_ARM_FRONT_SENSOR);
-        middleSensor = new DigitalInput(Constants.ELEVATOR_ARM_MIDDLE_SENSOR);
-        backSensor = new DigitalInput(Constants.ELEVATOR_ARM_BACK_SENSOR);
+        voltageControl = new VoltageOut(0);
 
         CANdiConfiguration candiConfig = new CANdiConfiguration();
         candiConfig.DigitalInputs.S1CloseState = S1CloseStateValue.CloseWhenNotHigh;
@@ -44,14 +42,17 @@ public class ElevatorArmIOTalonFX implements ElevatorArmIO {
         candiA.getConfigurator().apply(candiConfig);
         candiB.getConfigurator().apply(candiConfig);
 
-        voltageControl = new VoltageOut(0);
+        frontSensorSignal = candiA.getS2Closed();
+        middleSensorSignal = candiA.getS1Closed();
+        backSensorSignal = candiB.getS1Closed();
     }
 
     @Override
     public void update(ElevatorArmIOInputs inputs) {
-        inputs.middleCoralSensor = candiA.getS1Closed(true).getValueAsDouble() == 1;
-        inputs.backCoralSensor = candiA.getS2Closed(true).getValueAsDouble() == 1;
-        inputs.frontCoralSensor = candiB.getS1Closed(true).getValueAsDouble() == 1;
+        BaseStatusSignal.refreshAll(frontSensorSignal, middleSensorSignal, backSensorSignal);
+        inputs.frontCoralSensor = frontSensorSignal.getValueAsDouble() == 1;
+        inputs.middleCoralSensor = middleSensorSignal.getValueAsDouble() == 1;
+        inputs.backCoralSensor = backSensorSignal.getValueAsDouble() == 1;
         inputs.voltage = rollerMotor.getMotorVoltage(true).getValueAsDouble();
     }
 

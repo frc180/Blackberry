@@ -39,27 +39,29 @@ public class ElevatorArmSubsystem extends SubsystemBase{
     }
 
     public Command intakeAndIndex() {
-        return run(() -> {
-            // All the sensors are triggered means coral is perfectly positioned
-            if (inputs.frontCoralSensor && inputs.middleCoralSensor && inputs.backCoralSensor) {
+        final double highLoad = 0.3;
+        final double slowLoad = 0.05;
+        return runEnd(() -> {
+            // Middle sensor only means centered
+            if (!inputs.backCoralSensor && inputs.middleCoralSensor && !inputs.frontCoralSensor) {
                 io.setSpeed(0);
                 return;
             }
 
-            // Middle or back sensor without front sensor means we overshot
-            if (!inputs.frontCoralSensor && (inputs.middleCoralSensor || inputs.backCoralSensor)) {
-                io.setSpeed(-0.25);
+            // Front sensor means we've overshot
+            if (inputs.frontCoralSensor) {
+                io.setSpeed(-slowLoad);
                 return;
             }
 
-            // Middle sensor without back sensor means we need to move forward still
-            if (inputs.middleCoralSensor && !inputs.backCoralSensor) {
-                io.setSpeed(0.25);
+            if (inputs.backCoralSensor && inputs.middleCoralSensor) {
+                io.setSpeed(slowLoad);
                 return;
             }
 
-            io.setSpeed(1);
-        });
+            io.setSpeed(highLoad);
+        },
+        () -> io.setSpeed(0));
     }
 
     public Command runRollers() {
