@@ -484,7 +484,6 @@ public class RobotContainer {
         // testController.button(4).onTrue(elevatorArmPivot.zero(0).ignoringDisable(true));
         // testController.button(5).onTrue(
         //     elevatorArmPivot.home()
-        //         .andThen(new RumbleCommand(0.5).withTimeout(0.5))
         //         .andThen(elevatorArmPivot.setPosition(elevatorArmPivot.horizontal))
         // );
 

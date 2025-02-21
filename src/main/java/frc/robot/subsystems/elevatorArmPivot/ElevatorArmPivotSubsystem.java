@@ -229,7 +229,7 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
     }
 
     public boolean isAtHomingHardstop() {
-        return Math.abs(inputs.velocity) <= 0.004 && isHoming;
+        return isHoming && inputs.hardStop;
     }
 
     @NotLogged

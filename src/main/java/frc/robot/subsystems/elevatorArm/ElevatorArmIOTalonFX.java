@@ -18,6 +18,9 @@ import frc.robot.Constants;
 
 public class ElevatorArmIOTalonFX implements ElevatorArmIO {
 
+    // Special case - this signal needs to be read by a different subsystem (ElevatorArmPivot)
+    public static StatusSignal<Boolean> HARD_STOP_SIGNAL = null;
+
     TalonFXS rollerMotor;
     CANdi candiA, candiB;
     VoltageOut voltageControl;
@@ -48,6 +51,10 @@ public class ElevatorArmIOTalonFX implements ElevatorArmIO {
         middleSensorSignal = trackSignal(candiA.getS1Closed());
         backSensorSignal = trackSignal(candiB.getS1Closed());
         voltageSignal = trackSignal(rollerMotor.getMotorVoltage());
+
+        // ElevatorArmPivotSubsystem uses this signal, but it's read from the same CANdi as one of our sensors -
+        // so we expose it as a static variable here since we can't have two instances of the same CANdi
+        HARD_STOP_SIGNAL = trackSignal(candiB.getS2Closed());
     }
 
     @Override
