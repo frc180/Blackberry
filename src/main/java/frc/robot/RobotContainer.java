@@ -191,10 +191,10 @@ public class RobotContainer {
 
         // TODO: probably change these triggers to also return true if the scoring camera is disconnected
         nearReef = drivetrain.targetingReef().and(drivetrain.withinTargetPoseTolerance(         
-                        Meters.of(0.75),
-                        Meters.of(0.75),
+                        Meters.of(1),
+                        Meters.of(1),
                         Degrees.of(90)
-        )).debounce(0.5, DebounceType.kFalling); 
+        )).debounce(0.2, DebounceType.kFalling); 
 
         atReef = drivetrain.targetingReef().and(drivetrain.withinTargetPoseTolerance(
                         Inches.of(1),
@@ -364,11 +364,11 @@ public class RobotContainer {
                 if (elevator.getTargetPosition() == ElevatorSubsystem.L4) {
                     return elevatorArm.runSpeed(0.5);
                 } else {
-                    return elevatorArm.runSpeed(0.25);
+                    return elevatorArm.runSpeed(0.35);
                 }
             },
             Set.of(elevatorArm)
-        ).until(elevatorArm.hasNoCoral);
+        ).until(elevatorArm.hasStagedCoral.negate());
 
         if (Robot.isSimulation()) {
             elevatorArmEject = elevatorArmEject.withDeadline(Commands.waitSeconds(0.2));

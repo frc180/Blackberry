@@ -225,21 +225,29 @@ public class VisionSubsystem extends SubsystemBase {
             // Calculate the difference between the updated robot pose and the scoring pose estimate, to get an idea
             // of how closely we are tracking the robot's actual position
             robotPose = RobotContainer.instance.drivetrain.getPose();
-            poseEstimateDiffX = robotPose.getX() - poseEstimate.pose.getX();
-            poseEstimateDiffY = robotPose.getY() - poseEstimate.pose.getY();
-            poseEstimateDiffTheta = robotPose.getRotation().getDegrees() - poseEstimate.pose.getRotation().getDegrees();
-            lastPoseEstimateTime = Timer.getFPGATimestamp();
+            // Note - goal of this is to stop "bad" data from non-scoring cameras from allowing
+            // a coral to be scored. Unknown if this is working as intended
+            if (poseEstimateSource == PoseEstimateSource.SCORING_CAMERA) {
+                poseEstimateDiffX = robotPose.getX() - poseEstimate.pose.getX();
+                poseEstimateDiffY = robotPose.getY() - poseEstimate.pose.getY();
+                poseEstimateDiffTheta = robotPose.getRotation().getDegrees() - poseEstimate.pose.getRotation().getDegrees();
+                lastPoseEstimateTime = Timer.getFPGATimestamp();
+            } else {
+                poseEstimateDiffX = 99;
+                poseEstimateDiffY = 99;
+                poseEstimateDiffTheta = 99;
+            }
         } else {
             poseEstimateSource = PoseEstimateSource.NONE;
         }
 
         // To test - zero out pose diffs if we haven't been getting data, to fix cases
         // where the tag is barely obscured
-        if (Math.abs(Timer.getFPGATimestamp() - lastPoseEstimateTime) >= 1) {
-            poseEstimateDiffX = 0;
-            poseEstimateDiffY = 0;
-            poseEstimateDiffTheta = 0;
-        }
+        // if (Math.abs(Timer.getFPGATimestamp() - lastPoseEstimateTime) >= 1) {
+        //     poseEstimateDiffX = 0;
+        //     poseEstimateDiffY = 0;
+        //     poseEstimateDiffTheta = 0;
+        // }
 
         if (robotPose == null) robotPose = RobotContainer.instance.drivetrain.getPose();
 
@@ -329,7 +337,7 @@ public class VisionSubsystem extends SubsystemBase {
         Optional<Pose3d> pose3d = aprilTagFieldLayout.getTagPose(tagID); //gets the pose of the april tag in 3d space
         if (pose3d.isEmpty()) return null;
 
-        return pose3d.get().toPose2d().transformBy(left ? leftReefTransform : rightReefTransform).transformBy(algaeReefTransform);
+        return pose3d.get().toPose2d().transformBy(left ? leftReefTransform : rightReefTransform);//.transformBy(algaeReefTransform);
     }
 
     /**

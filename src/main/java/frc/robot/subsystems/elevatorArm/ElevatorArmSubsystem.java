@@ -16,6 +16,7 @@ public class ElevatorArmSubsystem extends SubsystemBase{
     public final Trigger hasCoral;
     public final Trigger hasPartialCoral;
     public final Trigger hasNoCoral;
+    public final Trigger hasStagedCoral;
 
     public ElevatorArmSubsystem() {
         inputs = new ElevatorArmIOInputs();
@@ -31,6 +32,7 @@ public class ElevatorArmSubsystem extends SubsystemBase{
         // hasCoral = new Trigger(() -> inputs.frontCoralSensor && inputs.middleCoralSensor && inputs.backCoralSensor);
         hasPartialCoral = new Trigger(() -> inputs.frontCoralSensor || inputs.middleCoralSensor || inputs.backCoralSensor);
         hasNoCoral = hasPartialCoral.negate();
+        hasStagedCoral = new Trigger(() -> inputs.middleCoralSensor || inputs.frontCoralSensor);
     }
 
     @Override
