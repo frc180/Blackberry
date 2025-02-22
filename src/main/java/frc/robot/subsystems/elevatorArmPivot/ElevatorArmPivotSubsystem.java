@@ -28,10 +28,10 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
     // TODO: read manually from robot
     protected static final Angle FORWARD_LIMIT = Degrees.of(60.7);
     protected static final Angle REVERSE_LIMIT = Degrees.of(-20);
-    protected static final Angle HARD_STOP_OFFSET = Degrees.of(60.46875);
+    protected static final Angle HARD_STOP_OFFSET = Degrees.of(60.46875 + 3.955078125);
 
     public static final double L4_SCORE = Units.degreesToRotations(-14);
-    public static final double L3_SCORE = Units.degreesToRotations(-3);
+    public static final double L3_SCORE = Units.degreesToRotations(-6);
     public static final double L2_SCORE = L3_SCORE;
     public static final double L1_SCORE = Units.degreesToRotations(-1);
 
@@ -112,7 +112,8 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
                 homed = false;
                 isHoming = true;
             }),
-            runSpeed(0.06).until(atHomingHardstop),
+            runSpeed(0.04).until(atHomingHardstop),
+            // runSpeed(0.06).until(atHomingHardstop),
             zero(HARD_STOP_OFFSET).alongWith(Commands.runOnce(() -> {
                 homed = true;
                 isHoming = false;
@@ -138,10 +139,10 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
 
             // Experimental - prevent arm from sticking out until we're past any levels that may
             // contain algae that'd collide with the arm
-            if (targetError > MAX_ERROR_THRESHOLD) {
-                setArmPositionDirect(receiving);
-                return;
-            }
+            // if (targetError > MAX_ERROR_THRESHOLD) {
+            //     setArmPositionDirect(receiving);
+            //     return;
+            // }
 
             if (elevatorTarget == ElevatorSubsystem.L4) {
                 setArmPositionDirect(L4_SCORE);
@@ -229,7 +230,8 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
     }
 
     public boolean isAtHomingHardstop() {
-        return isHoming && inputs.hardStop;
+        return Math.abs(inputs.velocity) <= 0.004 && isHoming;
+        // return isHoming && inputs.hardStop;
     }
 
     @NotLogged

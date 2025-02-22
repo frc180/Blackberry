@@ -1,5 +1,6 @@
 package frc.robot.commands;
 
+import static edu.wpi.first.units.Units.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -23,23 +24,16 @@ public class DriveToCoralPose extends DriveToPose {
         super(RobotContainer.instance.drivetrain, () -> tagToPoseFunction.apply(tagSupplier.get()));
         withPoseTargetType(PoseTarget.REEF);
         withTargetPoseTag(tagSupplier);
-        // withIntermediatePoses(CORAL_INTERMEDIATE);
+        // withIntermediatePoses(ALGAE_INTERMEDIATE);
     }
 
     // WIP nicer pathing to prevent arm collisions with reef or algae
-    private static Function<Pose2d, Pose2d> CORAL_INTERMEDIATE = (Pose2d target) -> {
+    private static Function<Pose2d, Pose2d> ALGAE_INTERMEDIATE = (Pose2d target) -> {
         ElevatorSubsystem elevator = RobotContainer.instance.elevator;
-        Pose2d robotPose = RobotContainer.instance.drivetrain.getPose();
 
-        // double dist = Math.abs(robotPose.getTranslation().getDistance(target.getTranslation()));
         double offset = 0;
-
-        // if (dist > 1.1) {
-        //     offset = -0.7;
-        // }
-
         if (!elevator.isElevatorInScoringPosition()) {
-            offset = -0.1;
+            offset = -Inches.of(6).in(Meters);
         }
 
         if (offset != 0) {

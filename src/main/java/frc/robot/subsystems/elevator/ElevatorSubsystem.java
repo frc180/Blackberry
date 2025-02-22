@@ -160,8 +160,12 @@ public class ElevatorSubsystem extends SubsystemBase {
     return isElevatorInPosition() && targetPosition != ZERO && targetPosition != STOW;
   }
 
+  public boolean isTargetingReefAlgaePosition() {
+    return targetPosition == L2 || targetPosition == L3;
+  }
+
   public boolean isElevatorInReefAlgaePosition() {  
-    return isElevatorInPosition() && (targetPosition == L2 || targetPosition == L3);
+    return isElevatorInPosition() && isTargetingReefAlgaePosition();
   }
 
   public double getTargetErrorMeters() {

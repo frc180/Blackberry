@@ -26,7 +26,7 @@ public class Constants {
     public static final int ELEVATOR_ARM_CANDI_A = 21;
     public static final int ELEVATOR_ARM_CANDI_B = 22;
 
-
+    public static final int CORAL_INDEXER = 23;
 
     //sensor channels
     public static final int DIO_INTAKE_ALGAE_ENCODER = 0;

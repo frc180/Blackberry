@@ -13,8 +13,8 @@ import frc.robot.util.LimelightHelpers.PoseEstimate;
 public class VisionIOLimelight implements VisionIO {
 
     private static final String SCORING_LIMELIGHT = "limelight";
-    private static final String FRONT_LIMEIGHT = "front-limelight";
-    private static final String BACK_LIMEIGHT = "back-limelight";
+    private static final String FRONT_LIMEIGHT = "limelight-front";
+    private static final String BACK_LIMEIGHT = "limelight-back";
     private final LimelightStatus scoringLimelightStatus;
     private final LimelightStatus frontLimelightStatus;
     private final LimelightStatus backLimelightStatus;
@@ -65,6 +65,13 @@ public class VisionIOLimelight implements VisionIO {
         } else {
             inputs.scoringCPUTemp = - 1;
             inputs.scoringTemp = -1;
+        }
+
+        hw = LimelightHelpers.getLimelightNTDoubleArray(FRONT_LIMEIGHT, "hw");
+        if (hw.length > 3) {
+            inputs.frontTemp = hw[3];
+        } else {
+            inputs.frontTemp = -1;
         }
     }
 

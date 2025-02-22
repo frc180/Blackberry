@@ -5,6 +5,8 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Robot;
+import frc.robot.RobotContainer;
+import frc.robot.subsystems.elevator.ElevatorSubsystem;
 import frc.robot.subsystems.elevatorArmAlgae.ElevatorArmAlgaeIO.ElevatorArmAlgaeInputs;
 
 @Logged
@@ -55,6 +57,18 @@ public class ElevatorArmAlgaeSubsystem extends SubsystemBase{
 
     public void reverseDirect() {
         io.reverse();
+    }
+
+    public Command intakeBasedOnElevator() {
+        ElevatorSubsystem elevator = RobotContainer.instance.elevator;
+        return runEnd(() -> {
+            if (elevator.isTargetingReefAlgaePosition()) {
+                io.setSpeed(0.5);
+            } else {
+                io.setSpeed(0);
+            }
+        },
+        () -> io.setSpeed(0));
     }
 
     public Command setSpeed(double speed) {

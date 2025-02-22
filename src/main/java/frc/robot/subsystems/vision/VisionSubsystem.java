@@ -23,6 +23,7 @@ import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -67,11 +68,15 @@ public class VisionSubsystem extends SubsystemBase {
         Inches.of(9.757).in(Meters), // forward
         Inches.of(-7.2).in(Meters), // right
         Inches.of(31.296).in(Meters),
-        new Rotation3d(0, Units.degreesToRadians(50), 0)
+        new Rotation3d(0, Units.degreesToRadians(50), 0) // downward tilt
     );
 
-    // TODO: set real values
-    public static final Transform3d ROBOT_TO_FRONT_CAMERA = new Transform3d();
+    public static final Transform3d ROBOT_TO_FRONT_CAMERA = new Transform3d(
+        Inches.of(13.998).in(Meters), // forward
+        Inches.of(-7).in(Meters), // right
+        Inches.of(6.767).in(Meters),
+        new Rotation3d(0, Units.degreesToRadians(-18.1), 0) // upward tilt
+    );
     
     // TODO: set real values
     public static final Transform2d ROBOT_TO_INTAKE_CAMERA = new Transform2d(0.1, 0, Rotation2d.fromDegrees(0));
@@ -80,7 +85,7 @@ public class VisionSubsystem extends SubsystemBase {
     private static final int RED_PROCESSOR_TAG = 3;
     private static final int BLUE_PROCESSOR_TAG = 16;
 
-    private static final double BAD_CAMERA_TEMP = 70;
+    private static final double BAD_CAMERA_TEMP = 55;
 
     private final VisionIO io;
     private final VisionIOInputs inputs;
@@ -92,6 +97,9 @@ public class VisionSubsystem extends SubsystemBase {
     private final Transform2d leftReefTransform = new Transform2d(0.55, -0.15, Rotation2d.fromDegrees(180));
     private final Transform2d rightReefTransform = new Transform2d(0.55, 0.15, Rotation2d.fromDegrees(180));
     private final Transform2d processorTransform = new Transform2d(0.55, 0.0, Rotation2d.fromDegrees(90));
+
+    // 3 inches closer (forward) than standard
+    private final Transform2d algaeReefTransform = new Transform2d(Inches.of(3).in(Meters), 0, Rotation2d.kZero);
 
     private final Pose2d redProcessorPose;
     private final Pose2d blueProcessorPose;
@@ -124,12 +132,14 @@ public class VisionSubsystem extends SubsystemBase {
     private PoseEstimateSource poseEstimateSource = PoseEstimateSource.NONE;
     private Pose3d scoringCameraPosition = Pose3d.kZero;
     private double poseEstimateDiffX, poseEstimateDiffY, poseEstimateDiffTheta;
+    private double lastPoseEstimateTime = 0;
     
     private Alert scoringCameraDisconnectedAlert = new Alert("Scoring Camera disconnected!", AlertType.kError);
     private Alert frontCameraDisconnectedAlert = new Alert("Front Camera disconnected!", AlertType.kError);
     private Alert backCameraDisconnectedAlert = new Alert("Back Camera disconnected!", AlertType.kError);
 
     private Alert scoringCameraTempAlert = new Alert("", AlertType.kWarning);
+    private Alert frontCameraTempAlert = new Alert("", AlertType.kWarning);
 
     @SuppressWarnings("unused")
     public VisionSubsystem() {
@@ -189,7 +199,9 @@ public class VisionSubsystem extends SubsystemBase {
         frontCameraDisconnectedAlert.set(!inputs.frontCameraConnected);
         backCameraDisconnectedAlert.set(!inputs.backCameraConnected);
 
-        cameraTemperatureAlert(scoringCameraTempAlert, "Scoring", Math.max(inputs.scoringTemp, inputs.scoringCPUTemp));
+        cameraTemperatureAlert(scoringCameraTempAlert, "Scoring", inputs.scoringTemp);
+        cameraTemperatureAlert(frontCameraTempAlert, "Front", inputs.frontTemp);
+
 
         // If the scoring camera is connected, use its pose estimate
         if (inputs.scoringCameraConnected) {
@@ -216,8 +228,17 @@ public class VisionSubsystem extends SubsystemBase {
             poseEstimateDiffX = robotPose.getX() - poseEstimate.pose.getX();
             poseEstimateDiffY = robotPose.getY() - poseEstimate.pose.getY();
             poseEstimateDiffTheta = robotPose.getRotation().getDegrees() - poseEstimate.pose.getRotation().getDegrees();
+            lastPoseEstimateTime = Timer.getFPGATimestamp();
         } else {
             poseEstimateSource = PoseEstimateSource.NONE;
+        }
+
+        // To test - zero out pose diffs if we haven't been getting data, to fix cases
+        // where the tag is barely obscured
+        if (Math.abs(Timer.getFPGATimestamp() - lastPoseEstimateTime) >= 1) {
+            poseEstimateDiffX = 0;
+            poseEstimateDiffY = 0;
+            poseEstimateDiffTheta = 0;
         }
 
         if (robotPose == null) robotPose = RobotContainer.instance.drivetrain.getPose();
@@ -308,7 +329,7 @@ public class VisionSubsystem extends SubsystemBase {
         Optional<Pose3d> pose3d = aprilTagFieldLayout.getTagPose(tagID); //gets the pose of the april tag in 3d space
         if (pose3d.isEmpty()) return null;
 
-        return pose3d.get().toPose2d().transformBy(left ? leftReefTransform : rightReefTransform);
+        return pose3d.get().toPose2d().transformBy(left ? leftReefTransform : rightReefTransform).transformBy(algaeReefTransform);
     }
 
     /**

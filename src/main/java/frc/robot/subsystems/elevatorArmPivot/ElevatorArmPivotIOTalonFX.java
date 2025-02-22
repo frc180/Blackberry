@@ -42,7 +42,7 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO {
         armPivotMotor = new TalonFX(Constants.ELEVATOR_ARM_PIVOT_TALON, Constants.CANIVORE);
         TalonFXConfiguration config = new TalonFXConfiguration();
         if (Robot.isReal()) {
-            config.Slot0.kP = 200;
+            config.Slot0.kP = 220; // was 200
             config.Slot0.kI = 0;
             config.Slot0.kD = 0;
             config.Slot0.kG = 0.23;
