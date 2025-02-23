@@ -229,6 +229,7 @@ public class RobotContainer {
     
         drivetrain.setDefaultCommand(new DefaultDriveCommand(drivetrain, joystickInputsSupplier, rotationSupplier));
         driverController.back().onTrue(Commands.runOnce(drivetrain::zeroGyroscope));
+        driverController.start().whileTrue(drivetrain.wheelRadiusCharacterization(1));
 
         // Coral reef auto-aligns
         driverLeftReef.whileTrue(new DriveToCoralPose(
@@ -246,10 +247,6 @@ public class RobotContainer {
                 }
             }
         ).withDynamicTarget(true));
-
-
-        // driverController.back().whileTrue(drivetrain.wheelRadiusCharacterization(-1));
-        driverController.start().whileTrue(drivetrain.wheelRadiusCharacterization(1));
         
         // test outtaking coral
         driverSpitAlgae.and(intakeAlgae.hasAlgae).onTrue(Commands.parallel(
@@ -380,7 +377,7 @@ public class RobotContainer {
 
         nearReef//.and(elevatorArm.hasCoral)
             .whileTrue(chosenElevatorHeight.alongWith(elevatorArmPivot.matchElevatorPreset(), elevatorArmAlgae.intakeBasedOnElevator()))
-            .onFalse(elevator.setPosition(ElevatorSubsystem.STOW).alongWith(elevatorArmPivot.receivePosition()));
+            .onFalse(elevator.stow().alongWith(elevatorArmPivot.receivePosition()));
 
         Command elevatorArmEject = Commands.defer(
             () -> {
@@ -453,8 +450,7 @@ public class RobotContainer {
                 // )
             )
         ).onFalse(
-            elevator.setPosition(ElevatorSubsystem.STOW)
-                .alongWith(elevatorArmPivot.stowPosition(), elevatorArmAlgae.stop())
+            elevator.stow().alongWith(elevatorArmPivot.stowPosition(), elevatorArmAlgae.stop())
         );
 
         // Scoring algae in the net from arm
