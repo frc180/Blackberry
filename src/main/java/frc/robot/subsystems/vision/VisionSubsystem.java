@@ -107,6 +107,7 @@ public class VisionSubsystem extends SubsystemBase {
     public final HashMap<Integer, Pose2d> tagPoses2d = new HashMap<>();
     public final HashMap<Integer, Pose2d> leftReefHashMap = new HashMap<>();
     public final HashMap<Integer, Pose2d> rightReefHashMap = new HashMap<>();
+    private final HashMap<Integer, Pose2d> reefAlgaePoses = new HashMap<>();
 
     public AprilTagFieldLayout aprilTagFieldLayout;
     public final Trigger poseEstimateDiffLow;
@@ -174,6 +175,8 @@ public class VisionSubsystem extends SubsystemBase {
             leftReefHashMap.put(i, calculateReefPose(i, true));
             rightReefHashMap.put(i, calculateReefPose(i, false));
         }
+
+        rightReefHashMap.keySet().forEach(i -> reefAlgaePoses.put(i, calculateReefAlgaePose(i)));
         
         // Pre-calculate processor poses
         redProcessorPose = calculateProcessorPose(false);
@@ -337,7 +340,7 @@ public class VisionSubsystem extends SubsystemBase {
         Optional<Pose3d> pose3d = aprilTagFieldLayout.getTagPose(tagID); //gets the pose of the april tag in 3d space
         if (pose3d.isEmpty()) return null;
 
-        return pose3d.get().toPose2d().transformBy(left ? leftReefTransform : rightReefTransform);//.transformBy(algaeReefTransform);
+        return pose3d.get().toPose2d().transformBy(left ? leftReefTransform : rightReefTransform);
     }
 
     /**
@@ -353,6 +356,10 @@ public class VisionSubsystem extends SubsystemBase {
         return pose3d.get().toPose2d().transformBy(processorTransform);
     }
 
+    private Pose2d calculateReefAlgaePose(int tagID) {
+        return getReefPose(tagID, false).transformBy(algaeReefTransform);
+    }
+
     /**
      * Returns the scoring pose of the robot relative to the reef AprilTag that was last seen.
      * @param left whether to return the left branch or the right branch scoring pose
@@ -362,6 +369,7 @@ public class VisionSubsystem extends SubsystemBase {
     }
 
     /**
+     * 
      * Returns a scoring pose of the robot relative to a reef AprilTag.
      * @param tagID the ID of the reef AprilTag
      * @param left whether to return the left branch or the right branch scoring pose
@@ -372,6 +380,15 @@ public class VisionSubsystem extends SubsystemBase {
         } else {
             return rightReefHashMap.get(tagID);
         }
+    }
+
+    /**
+     * Returns a right branch scoring pose of the robot relative to a reef AprilTag, closer than 
+     * the standard reef pose in order to faciliate grabbing an algae.
+     * @param tagID the ID of the reef AprilTag
+     */
+    public Pose2d getReefAlgaePose(int tagID) {
+        return reefAlgaePoses.get(tagID);
     }
 
     /**

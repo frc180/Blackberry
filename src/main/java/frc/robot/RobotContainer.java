@@ -238,8 +238,14 @@ public class RobotContainer {
 
         driverRightReef.whileTrue(new DriveToCoralPose(
             () -> vision.lastReefID,
-            (tagID) -> vision.getReefPose(tagID, false)
-        ));
+            (tagID) -> {
+                if (elevator.isTargetingReefAlgaePosition()) {
+                    return vision.getReefAlgaePose(tagID);
+                } else {
+                    return vision.getReefPose(tagID, false);
+                }
+            }
+        ).withDynamicTarget(true));
 
 
         // driverController.back().whileTrue(drivetrain.wheelRadiusCharacterization(-1));
@@ -335,11 +341,13 @@ public class RobotContainer {
 
 
         // Make the robot point towards the closest side of the reef
-        // teleop.and(coralMode).and(driverController.a().or(robotHasCoral))
-        //     .whileTrue(drivetrain.targetHeadingContinuous(() -> {
-        //         Pose2d reefPose = vision.getClosestReefPose();
-        //         return reefPose != null ? reefPose.getRotation().getDegrees() : null;
-        //     }, HeadingTarget.POSE));
+        if (Robot.isSimulation()) {
+            teleop.and(coralMode).and(driverController.a().or(robotHasCoral))
+                .whileTrue(drivetrain.targetHeadingContinuous(() -> {
+                    Pose2d reefPose = vision.getClosestReefPose();
+                    return reefPose != null ? reefPose.getRotation().getDegrees() : null;
+                }, HeadingTarget.POSE));
+        }
 
         Command chosenElevatorHeight = elevator.run(() -> {
             // In autonomous, read the next coral scoring position from the list to determine the elevator height

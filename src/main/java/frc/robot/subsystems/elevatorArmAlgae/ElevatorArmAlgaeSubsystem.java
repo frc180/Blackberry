@@ -59,6 +59,7 @@ public class ElevatorArmAlgaeSubsystem extends SubsystemBase{
         io.reverse();
     }
 
+    // TODO: Minor fix - prevent this from running when doing left-aligned L2 and L3 (since we only get algae from the right side)
     public Command intakeBasedOnElevator() {
         ElevatorSubsystem elevator = RobotContainer.instance.elevator;
         return runEnd(
