@@ -234,21 +234,29 @@ public class RobotContainer {
         // Coral reef auto-aligns
         driverLeftReef.whileTrue(new DriveToCoralPose(
             () -> vision.lastReefID,
-            (tagID) -> vision.getReefPose(tagID, true)
-        ));
+            (tagID) -> {
+                if (elevator.getTargetPosition() == ElevatorSubsystem.L1) {
+                    return vision.getL1ReefPose(tagID, true);
+                } else {
+                    return vision.getReefPose(tagID, true);
+                }
+            }
+        ).withDynamicTarget(true));
 
         driverRightReef.whileTrue(new DriveToCoralPose(
             () -> vision.lastReefID,
             (tagID) -> {
                 if (elevator.isTargetingReefAlgaePosition()) {
                     return vision.getReefAlgaePose(tagID);
+                } else if (elevator.getTargetPosition() == ElevatorSubsystem.L1) {
+                    return vision.getL1ReefPose(tagID, false);
                 } else {
                     return vision.getReefPose(tagID, false);
                 }
             }
         ).withDynamicTarget(true));
         
-        // test outtaking coral
+        // test outtaking algae
         driverSpitAlgae.and(intakeAlgae.hasAlgae).onTrue(Commands.parallel(
             intakeAlgae.spit(),
             Commands.runOnce(() -> {

@@ -98,7 +98,13 @@ public class VisionSubsystem extends SubsystemBase {
     private final Transform2d rightReefTransform = new Transform2d(0.55, 0.15, Rotation2d.fromDegrees(180));
     private final Transform2d processorTransform = new Transform2d(0.55, 0.0, Rotation2d.fromDegrees(90));
 
-    // 3 inches closer (forward) than standard
+    // Apply a position transform, then a rotation transform
+    private final Transform2d leftL1ReefTransform = new Transform2d(0.55, 0, Rotation2d.k180deg);
+    private final Transform2d rightL1ReefTransform = leftL1ReefTransform;
+    private final Transform2d leftL1ReefRotation = new Transform2d(0, 0, Rotation2d.fromDegrees(25));
+    private final Transform2d rightL1ReefRotation = new Transform2d(0, 0, Rotation2d.fromDegrees(-25));
+
+    // 3 inches closer (forward) than standard, applied on top of left/right reef transforms
     private final Transform2d algaeReefTransform = new Transform2d(Inches.of(3).in(Meters), 0, Rotation2d.kZero);
 
     private final Pose2d redProcessorPose;
@@ -107,7 +113,10 @@ public class VisionSubsystem extends SubsystemBase {
     public final HashMap<Integer, Pose2d> tagPoses2d = new HashMap<>();
     public final HashMap<Integer, Pose2d> leftReefHashMap = new HashMap<>();
     public final HashMap<Integer, Pose2d> rightReefHashMap = new HashMap<>();
+    private final HashMap<Integer, Pose2d> leftL1ReefHashMap = new HashMap<>();
+    private final HashMap<Integer, Pose2d> rightL1ReefHashMap = new HashMap<>();
     private final HashMap<Integer, Pose2d> reefAlgaePoses = new HashMap<>();
+
 
     public AprilTagFieldLayout aprilTagFieldLayout;
     public final Trigger poseEstimateDiffLow;
@@ -170,10 +179,16 @@ public class VisionSubsystem extends SubsystemBase {
         for (int i : redReefTags) {
             leftReefHashMap.put(i, calculateReefPose(i, true));
             rightReefHashMap.put(i, calculateReefPose(i, false));
+
+            leftL1ReefHashMap.put(i, calculateL1ReefPose(i, true));
+            rightL1ReefHashMap.put(i, calculateL1ReefPose(i, false));
         }
         for (int i : blueReefTags) {
             leftReefHashMap.put(i, calculateReefPose(i, true));
             rightReefHashMap.put(i, calculateReefPose(i, false));
+
+            leftL1ReefHashMap.put(i, calculateL1ReefPose(i, true));
+            rightL1ReefHashMap.put(i, calculateL1ReefPose(i, false));
         }
 
         // Pre-calculate reef algae poses
@@ -345,6 +360,27 @@ public class VisionSubsystem extends SubsystemBase {
     }
 
     /**
+     * Generates the L1 scoring pose of the robot relative to a reef AprilTag. This is used to pre-calculate and store all
+     * positions to prevent duplicate object creation. To access these pre-calculated poses, use {@link #getL1ReefPose(int, boolean)}.
+     */
+    private Pose2d calculateL1ReefPose(int tagID, boolean left) {
+        Optional<Pose3d> pose3d = aprilTagFieldLayout.getTagPose(tagID);
+        if (pose3d.isEmpty()) return null;
+
+        return pose3d.get().toPose2d().transformBy(left ? leftL1ReefTransform : rightL1ReefTransform)
+                                      .transformBy(left ? leftL1ReefRotation : rightL1ReefRotation);
+    }
+
+    /**
+     * Generates the right branch scoring pose of the robot relative to a reef AprilTag, closer than
+     * the standard reef pose in order to faciliate grabbing an algae. This is used to pre-calculate and store all
+     * positions to prevent duplicate object creation. To access these pre-calculated poses, use {@link #getReefAlgaePose(int)}.
+     */
+    private Pose2d calculateReefAlgaePose(int tagID) {
+        return getReefPose(tagID, false).transformBy(algaeReefTransform);
+    }
+
+    /**
      * Generates the scoring pose of the robot relative to the processor AprilTag. This is used to pre-calculate and store all 
      * positions to prevent duplicate object creation. To access these pre-calculated poses, use {@link #getProcessorPose(boolean)}.
      */
@@ -355,15 +391,6 @@ public class VisionSubsystem extends SubsystemBase {
         if (pose3d.isEmpty()) return null;
 
         return pose3d.get().toPose2d().transformBy(processorTransform);
-    }
-
-    /**
-     * Generates the right branch scoring pose of the robot relative to a reef AprilTag, closer than
-     * the standard reef pose in order to faciliate grabbing an algae. This is used to pre-calculate and store all
-     * positions to prevent duplicate object creation. To access these pre-calculated poses, use {@link #getReefAlgaePose(int)}.
-     */
-    private Pose2d calculateReefAlgaePose(int tagID) {
-        return getReefPose(tagID, false).transformBy(algaeReefTransform);
     }
 
     /**
@@ -388,6 +415,19 @@ public class VisionSubsystem extends SubsystemBase {
     }
 
     /**
+     * Returns the L1 scoring pose of the robot relative to a reef AprilTag.
+     * @param tagID the ID of the reef AprilTag
+     * @param left whether to return the left  or the right L1 scoring pose
+     */
+    public Pose2d getL1ReefPose(int tagID, boolean left) {
+        if (left) {
+            return leftL1ReefHashMap.get(tagID);
+        } else {
+            return rightL1ReefHashMap.get(tagID);
+        }
+    }
+
+        /**
      * Returns a right branch scoring pose of the robot relative to a reef AprilTag, closer than 
      * the standard reef pose in order to faciliate grabbing an algae.
      * @param tagID the ID of the reef AprilTag
