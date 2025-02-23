@@ -176,6 +176,7 @@ public class VisionSubsystem extends SubsystemBase {
             rightReefHashMap.put(i, calculateReefPose(i, false));
         }
 
+        // Pre-calculate reef algae poses
         rightReefHashMap.keySet().forEach(i -> reefAlgaePoses.put(i, calculateReefAlgaePose(i)));
         
         // Pre-calculate processor poses
@@ -228,7 +229,7 @@ public class VisionSubsystem extends SubsystemBase {
             // Calculate the difference between the updated robot pose and the scoring pose estimate, to get an idea
             // of how closely we are tracking the robot's actual position
             robotPose = RobotContainer.instance.drivetrain.getPose();
-            // Note - goal of this is to stop "bad" data from non-scoring cameras from allowing
+            // Note - the goal of this if statement is to stop "bad" data from non-scoring cameras from allowing
             // a coral to be scored. Unknown if this is working as intended
             if (poseEstimateSource == PoseEstimateSource.SCORING_CAMERA) {
                 poseEstimateDiffX = robotPose.getX() - poseEstimate.pose.getX();
@@ -356,6 +357,11 @@ public class VisionSubsystem extends SubsystemBase {
         return pose3d.get().toPose2d().transformBy(processorTransform);
     }
 
+    /**
+     * Generates the right branch scoring pose of the robot relative to a reef AprilTag, closer than
+     * the standard reef pose in order to faciliate grabbing an algae. This is used to pre-calculate and store all
+     * positions to prevent duplicate object creation. To access these pre-calculated poses, use {@link #getReefAlgaePose(int)}.
+     */
     private Pose2d calculateReefAlgaePose(int tagID) {
         return getReefPose(tagID, false).transformBy(algaeReefTransform);
     }
@@ -369,7 +375,6 @@ public class VisionSubsystem extends SubsystemBase {
     }
 
     /**
-     * 
      * Returns a scoring pose of the robot relative to a reef AprilTag.
      * @param tagID the ID of the reef AprilTag
      * @param left whether to return the left branch or the right branch scoring pose
