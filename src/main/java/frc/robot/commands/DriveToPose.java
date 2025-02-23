@@ -116,11 +116,8 @@ public class DriveToPose extends Command {
 
     @Override
     public void initialize() {
-        if (targetPoseTagSupplier != null) {
-            targetPoseTag = targetPoseTagSupplier.get();
-        } else {
-            targetPoseTag = -1;
-        }
+        targetPoseTag = targetPoseTagSupplier != null ? targetPoseTagSupplier.get() : -1;
+
         drivetrain.setTargetPoseTag(targetPoseTag);
         drivetrain.setPoseTargetType(poseTargetType);
         drivetrain.resetPIDs(HeadingTarget.POSE);
@@ -138,11 +135,9 @@ public class DriveToPose extends Command {
     public void execute() {
         currentPose = drivetrain.getPose();
 
-        if (dynamicTarget && targetPoseSupplier != null) {
-            targetPose = targetPoseSupplier.get();
-        }
-        if (dynamicTarget && tagToPoseFunction != null) {
-            targetPose = tagToPoseFunction.apply(targetPoseTag);
+        if (dynamicTarget) {
+            if (targetPoseSupplier != null) targetPose = targetPoseSupplier.get();
+            if (tagToPoseFunction != null) targetPose = tagToPoseFunction.apply(targetPoseTag);  
         }
         drivetrain.setTargetPose(targetPose);
         Pose2d iterationTarget = targetPose;
