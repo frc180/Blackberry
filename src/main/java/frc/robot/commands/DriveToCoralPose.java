@@ -21,7 +21,7 @@ public class DriveToCoralPose extends DriveToPose {
      * @param tagToPoseFunction Function to convert an AprilTag ID to a Pose2d.
      */
     public DriveToCoralPose(Supplier<Integer> tagSupplier, Function<Integer, Pose2d> tagToPoseFunction) {
-        super(RobotContainer.instance.drivetrain, () -> tagToPoseFunction.apply(tagSupplier.get()));
+        super(RobotContainer.instance.drivetrain, tagToPoseFunction);
         withPoseTargetType(PoseTarget.REEF);
         withTargetPoseTag(tagSupplier);
         // withIntermediatePoses(ALGAE_INTERMEDIATE);

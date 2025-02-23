@@ -20,6 +20,7 @@ public class DriveToPose extends Command {
     private final ChassisSpeeds noneSpeeds = new ChassisSpeeds(0, 0, 0);
 
     private Supplier<Pose2d> targetPoseSupplier = null;
+    private Function<Integer, Pose2d> tagToPoseFunction = null;
     private Pose2d currentPose = null;
     private Pose2d targetPose = null;
     private Supplier<ChassisSpeeds> additionalSpeedsSupplier = null;
@@ -33,6 +34,14 @@ public class DriveToPose extends Command {
     private double maxSpeed = 1.0;
     private Supplier<Integer> targetPoseTagSupplier = null;
     private Function<Pose2d, Pose2d> intermediatePoses = null;
+
+    private int targetPoseTag = -1;
+
+    public DriveToPose(DrivetrainSubsystem drivetrainSubsystem, Function<Integer, Pose2d> tagToPoseFunction) {
+        drivetrain = drivetrainSubsystem;
+        this.tagToPoseFunction = tagToPoseFunction;
+        addRequirements(drivetrainSubsystem);
+    }
 
     public DriveToPose(DrivetrainSubsystem drivetrainSubsystem, Supplier<Pose2d> targetPoseSupplier) {
         drivetrain = drivetrainSubsystem;
@@ -107,25 +116,22 @@ public class DriveToPose extends Command {
 
     @Override
     public void initialize() {
+        if (targetPoseTagSupplier != null) {
+            targetPoseTag = targetPoseTagSupplier.get();
+        } else {
+            targetPoseTag = -1;
+        }
+        drivetrain.setTargetPoseTag(targetPoseTag);
+        drivetrain.setPoseTargetType(poseTargetType);
         drivetrain.resetPIDs(HeadingTarget.POSE);
-        if (!dynamicTarget && targetPoseSupplier != null) {
+
+        if (targetPoseSupplier != null) {
             targetPose = targetPoseSupplier.get();
         }
-        drivetrain.setPoseTargetType(poseTargetType);
-        drivetrain.setTargetPose(targetPose);
-
-        // New tag data tracking
-        if (targetPoseTagSupplier != null) {
-            drivetrain.setTargetPoseTag(targetPoseTagSupplier.get());
-        } else {
-            drivetrain.setTargetPoseTag(-1);
+        if (tagToPoseFunction != null) {
+            targetPose = tagToPoseFunction.apply(targetPoseTag);
         }
-        // Old tag data tracking
-        // if (poseTargetType == PoseTarget.REEF) {
-        //     drivetrain.setTargetPoseTag(RobotContainer.instance.vision.getReefTagFromPose(targetPose));
-        // } else {
-        //     drivetrain.setTargetPoseTag(-1);
-        // }
+        drivetrain.setTargetPose(targetPose);
     }
 
     @Override
@@ -134,6 +140,9 @@ public class DriveToPose extends Command {
 
         if (dynamicTarget && targetPoseSupplier != null) {
             targetPose = targetPoseSupplier.get();
+        }
+        if (dynamicTarget && tagToPoseFunction != null) {
+            targetPose = tagToPoseFunction.apply(targetPoseTag);
         }
         drivetrain.setTargetPose(targetPose);
         Pose2d iterationTarget = targetPose;
