@@ -1,6 +1,7 @@
 package frc.robot.subsystems.elevatorArm;
 
 import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.epilogue.NotLogged;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -16,7 +17,9 @@ public class ElevatorArmSubsystem extends SubsystemBase{
     public final Trigger hasCoral;
     public final Trigger hasPartialCoral;
     public final Trigger hasNoCoral;
-    public final Trigger hasStagedCoral;
+
+    @NotLogged
+    final double slowIndexSpeed = 0.05;
 
     public ElevatorArmSubsystem() {
         inputs = new ElevatorArmIOInputs();
@@ -28,11 +31,8 @@ public class ElevatorArmSubsystem extends SubsystemBase{
         }
 
         hasCoral = new Trigger(() -> inputs.middleCoralSensor);
-        // TODO: depending on how coral indexing works on the real robot, "hasCoral" might need to require all sensors (or 2/3)
-        // hasCoral = new Trigger(() -> inputs.frontCoralSensor && inputs.middleCoralSensor && inputs.backCoralSensor);
         hasPartialCoral = new Trigger(() -> inputs.frontCoralSensor || inputs.middleCoralSensor || inputs.backCoralSensor);
         hasNoCoral = hasPartialCoral.negate();
-        hasStagedCoral = new Trigger(() -> inputs.middleCoralSensor || inputs.frontCoralSensor);
     }
 
     @Override
@@ -41,27 +41,34 @@ public class ElevatorArmSubsystem extends SubsystemBase{
     }
 
     public Command intakeAndIndex() {
-        final double highLoad = 0.3;
-        final double slowLoad = 0.05;
+        return indexCommand(0.3);
+    }
+
+    public Command passiveIndex() {
+        return indexCommand(0);
+    }
+
+    private Command indexCommand(double idleSpeed) {
         return runEnd(() -> {
-            // Middle sensor only means centered
+            // Middle sensor only means we're centered, so stop
             if (!inputs.backCoralSensor && inputs.middleCoralSensor && !inputs.frontCoralSensor) {
                 io.setSpeed(0);
                 return;
             }
 
-            // Front sensor means we've overshot
+            // Front sensor means we've overshot, so reverse
             if (inputs.frontCoralSensor) {
-                io.setSpeed(-slowLoad);
+                io.setSpeed(-slowIndexSpeed);
                 return;
             }
 
+            // Back and middle sensors means we're approaching the sweet spot, so move forward slowly
             if (inputs.backCoralSensor && inputs.middleCoralSensor) {
-                io.setSpeed(slowLoad);
+                io.setSpeed(slowIndexSpeed);
                 return;
             }
 
-            io.setSpeed(highLoad);
+            io.setSpeed(idleSpeed);
         },
         () -> io.setSpeed(0));
     }

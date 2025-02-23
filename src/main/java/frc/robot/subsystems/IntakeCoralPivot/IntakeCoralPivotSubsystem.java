@@ -70,6 +70,14 @@ public class IntakeCoralPivotSubsystem extends SubsystemBase {
         return Units.rotationsToDegrees(targetPosition);
     }
 
+    public Command stow() {
+        return setPosition(stow);
+    }
+
+    public Command extend() {
+        return setPosition(extend);
+    }
+
     public Command setPosition(double encoderPosition) {
         return this.run(() -> {
             io.setIntakePosition(encoderPosition);

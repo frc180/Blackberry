@@ -61,14 +61,16 @@ public class ElevatorArmAlgaeSubsystem extends SubsystemBase{
 
     public Command intakeBasedOnElevator() {
         ElevatorSubsystem elevator = RobotContainer.instance.elevator;
-        return runEnd(() -> {
-            if (elevator.isTargetingReefAlgaePosition()) {
-                io.setSpeed(0.5);
-            } else {
-                io.setSpeed(0);
-            }
-        },
-        () -> io.setSpeed(0));
+        return runEnd(
+            () -> {
+                if (elevator.isTargetingReefAlgaePosition()) {
+                    io.setSpeed(0.5);
+                } else {
+                    io.setSpeed(0);
+                }
+            },
+            () -> io.setSpeed(0)
+        );
     }
 
     public Command setSpeed(double speed) {

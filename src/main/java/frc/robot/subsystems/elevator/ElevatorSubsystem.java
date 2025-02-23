@@ -36,10 +36,10 @@ public class ElevatorSubsystem extends SubsystemBase {
 
   private ElevatorIO io;
   private ElevatorIOInputs inputs;
-  private Alert notZeroedAlert = new Alert("Elevator not zeroed!", AlertType.kWarning);
+  private Alert notHomedAlert = new Alert("Elevator not homed!", AlertType.kWarning);
 
   private Distance targetPosition = ZERO;
-  private boolean hasZeroed = false;
+  private boolean hasHomed = false;
 
   @NotLogged
   public Trigger elevatorInPosition = new Trigger(this::isElevatorInPosition);
@@ -69,21 +69,18 @@ public class ElevatorSubsystem extends SubsystemBase {
 
   @Override
   public void periodic() {
-    // This method will be called once per scheduler run
     io.update(inputs);
     SimVisuals.setElevatorHeight(inputs.position);
 
-    // To be considered zeroed, the elevator must be at the lower limit and the motor position must be within 0.01 meters of 0
+    // To be considered homed, the elevator must be at the lower limit and the motor position must be within 0.01 meters of 0
     if (isAtLowerLimit() && Math.abs(inputs.position) <= 0.01) {
-      hasZeroed = true;
+      hasHomed = true;
     }
-    notZeroedAlert.set(!hasZeroed);
+    notHomedAlert.set(!hasHomed);
   }
 
   @Override
   public void simulationPeriodic() {
-    // This method will be called once per scheduler run during simulation.
-    // Runs before periodic()
     io.simulationPeriodic();
   }
 
@@ -97,13 +94,22 @@ public class ElevatorSubsystem extends SubsystemBase {
     return targetPosition;
   }
 
-  public void zero() {
-    io.zero();
+  @NotLogged
+  public boolean isHomed() {
+    return hasHomed;
   }
 
-  @NotLogged
-  public boolean hasZeroed() {
-    return hasZeroed;
+  public Command home() {
+    return runSpeed(-0.05).until(this::isAtLowerLimit)
+            .andThen(runOnce(() -> io.zero()));
+  }
+
+  public Command stow() {
+    return setPosition(STOW);
+  }
+
+  public Command setPosition(Distance position) {
+    return run(() -> setPositionDirect(position));
   }
 
   public Command runSpeed(double speed) {
@@ -113,14 +119,6 @@ public class ElevatorSubsystem extends SubsystemBase {
     );
   }
 
-  public Command setPosition(Distance position) {
-    return run(() -> setPositionDirect(position));
-  }
-
-  public Command home() {
-    return runSpeed(-0.1).until(this::isAtLowerLimit)
-            .andThen(runOnce(this::zero));
-  }
 
   public Command stop() {
     return run(() -> io.stopMotor());

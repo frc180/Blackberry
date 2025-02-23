@@ -58,6 +58,7 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
     public Trigger elevatorArmInPosition = new Trigger(() -> isElevatorArmInPosition());
     @NotLogged
     public Trigger elevatorArmInScoringPosition = new Trigger (() -> isElevatorArmInScoringPosition());
+    
     private Trigger atHomingHardstop = new Trigger(this::isAtHomingHardstop).debounce(0.1);
 
     public ElevatorArmPivotSubsystem() {
@@ -91,6 +92,10 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
     }
 
     public Command stowPosition() {
+        return setPosition(receiving);
+    }
+
+    public Command horizontalPosition() {
         return setPosition(horizontal);
     }
 
