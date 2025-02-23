@@ -22,6 +22,7 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.*;
 import java.util.List;
+import java.util.Set;
 import java.util.function.DoubleSupplier;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -43,6 +44,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.commands.DefaultDriveCommand;
+import frc.robot.commands.DriveToCoralPose;
 import frc.robot.commands.DriveToPose;
 import frc.robot.commands.RumbleCommand;
 import frc.robot.generated.TunerConstants;
@@ -53,6 +55,7 @@ import frc.robot.subsystems.IntakeAlgae.IntakeAlgaeSubsystem;
 import frc.robot.subsystems.IntakeAlgaePivot.IntakeAlgaePivotSubsystem;
 import frc.robot.subsystems.IntakeCoral.IntakeCoralSubsystem;
 import frc.robot.subsystems.IntakeCoralPivot.IntakeCoralPivotSubsystem;
+import frc.robot.subsystems.coralIndexer.CoralIndexerSubsystem;
 import frc.robot.subsystems.elevator.ElevatorSubsystem;
 import frc.robot.subsystems.vision.VisionSubsystem;
 import frc.robot.util.CoralScoringPosition;
@@ -99,14 +102,20 @@ public class RobotContainer {
     public final ElevatorArmSubsystem elevatorArm;
     @Logged(name = "Elevator Arm Algae")
     public final ElevatorArmAlgaeSubsystem elevatorArmAlgae;
+    @Logged(name = "Coral Indexer")
+    public final CoralIndexerSubsystem coralIndexer;
 
     private final SendableChooser<Command> autoChooser = new SendableChooser<Command>();
 
-    public Trigger robotHasCoral = new Trigger(() -> false);;
+    public Trigger robotHasCoral = new Trigger(() -> false);
     public Trigger robotHasAlgae = new Trigger(() -> false);;
     public Trigger coralIntakeTrigger = new Trigger(() -> false);
-    public Trigger driverRightReef = new Trigger(() -> false);;
-    public Trigger driverLeftReef = new Trigger(() -> false);;
+    public Trigger driverRightReef = new Trigger(() -> false);
+    public Trigger driverLeftReef = new Trigger(() -> false);
+    @Logged(name = "Reef - Near")
+    public Trigger nearReef = new Trigger(() -> false);
+    @Logged(name = "Reef - At")
+    public Trigger atReef = new Trigger(() -> false);
 
     public static RobotContainer instance;
 
@@ -124,6 +133,8 @@ public class RobotContainer {
         elevatorArmPivot = new ElevatorArmPivotSubsystem();
         elevatorArm = new ElevatorArmSubsystem();
         elevatorArmAlgae = new ElevatorArmAlgaeSubsystem();
+        coralIndexer = null;
+        // coralIndexer = new CoralIndexerSubsystem();
 
         Pose2d firstCoralPose = Auto.LEFT_BARGE_CORAL_POSITIONS.get(0).getPose();
         List<Pose2d> leftBargeToLeftReef = List.of(
@@ -176,11 +187,26 @@ public class RobotContainer {
         robotHasAlgae = intakeAlgae.hasAlgae.or(elevatorArmAlgae.hasAlgae);
         final Trigger justScoredCoral = new Trigger(() -> Robot.justScoredCoral);
         final Trigger drivetrainAvailable = new Trigger(() -> drivetrain.getCurrentCommand() == drivetrain.getDefaultCommand());
+        final Trigger scoringCameraDisconnected = vision.scoringCameraConnected.negate();
+
+        // TODO: probably change these triggers to also return true if the scoring camera is disconnected
+        nearReef = drivetrain.targetingReef().and(drivetrain.withinTargetPoseTolerance(         
+                        Meters.of(1),
+                        Meters.of(1),
+                        Degrees.of(90)
+        )).debounce(0.2, DebounceType.kFalling); 
+
+        atReef = drivetrain.targetingReef().and(drivetrain.withinTargetPoseTolerance(
+                        Inches.of(1),
+                        Inches.of(1),
+                        Degrees.of(2)
+        ));
 
         // Auto triggers
         final Trigger autoCoralIntake = autonomous.and(Auto::isCoralIntaking);
 
 
+        // Teleop driving
         final Function<Double, Double> axisToLinearSpeed = (axis) -> {
             axis *= DrivetrainSubsystem.MAX_SPEED;
             // Temporary slowdown logic for net scoring, until we add real driver acceleration limiting that is tied
@@ -204,10 +230,23 @@ public class RobotContainer {
         drivetrain.setDefaultCommand(new DefaultDriveCommand(drivetrain, joystickInputsSupplier, rotationSupplier));
         driverController.back().onTrue(Commands.runOnce(drivetrain::zeroGyroscope));
 
-        if (Robot.isSimulation()) {
+        // Coral reef auto-aligns
+        driverLeftReef.whileTrue(new DriveToCoralPose(
+            () -> vision.lastReefID,
+            (tagID) -> vision.getReefPose(tagID, true)
+        ));
+
+        driverRightReef.whileTrue(new DriveToCoralPose(
+            () -> vision.lastReefID,
+            (tagID) -> vision.getReefPose(tagID, false)
+        ));
+
+
+        // experimental auto-home for elevator
+        // teleop.and(new Trigger(elevator::hasZeroed).negate()).onTrue(elevator.home());
 
         // driverController.back().whileTrue(drivetrain.wheelRadiusCharacterization(-1));
-        // driverController.start().whileTrue(drivetrain.wheelRadiusCharacterization(1));
+        driverController.start().whileTrue(drivetrain.wheelRadiusCharacterization(1));
         
         // test outtaking coral
         driverSpitAlgae.and(intakeAlgae.hasAlgae).onTrue(Commands.parallel(
@@ -221,26 +260,28 @@ public class RobotContainer {
 
         // Driver Coral Intake
         coralIntakeTrigger = driverIntake.or(autoCoralIntake).and(robotHasCoral.negate());
-        coralIntakeTrigger
-            .whileTrue(intakeCoralPivot.setPosition(IntakeCoralPivotSubsystem.extend).alongWith(intakeCoral.intake(), elevatorArmPivot.receivePosition()))
-            .onFalse(intakeCoralPivot.setPosition(IntakeCoralPivotSubsystem.stow));
+        // coralIntakeTrigger
+        //     .whileTrue(intakeCoralPivot.setPosition(IntakeCoralPivotSubsystem.extend).alongWith(intakeCoral.intake(), elevatorArmPivot.receivePosition()))
+        //     .onFalse(intakeCoralPivot.setPosition(IntakeCoralPivotSubsystem.stow));
+
+        driverIntake
+            .whileTrue(
+                elevatorArm.intakeAndIndex().alongWith(elevator.setPosition(ElevatorSubsystem.L3), elevatorArmPivot.setPosition(elevatorArmPivot.horizontal))
+            )
+            .onFalse(elevator.setPosition(ElevatorSubsystem.STOW).alongWith(elevatorArmPivot.setPosition(elevatorArmPivot.receiving)));
         
         //noticed that sometimes when we have a coral the intake doesnt go back to the stow position to tansfer to the arm
-        intakeCoral.hasCoral.and(elevatorArmPivot.elevatorArmInPosition).and(intakeCoralPivot.atStowPosition)
-            .onTrue(intakeCoral.intake().alongWith(elevatorArm.runRollers()));
+        // intakeCoral.hasCoral.and(elevatorArmPivot.elevatorArmInPosition).and(intakeCoralPivot.atStowPosition)
+        //     .onTrue(intakeCoral.intake().alongWith(elevatorArm.intakeAndIndex()));
         
         // Notify driver we've intaken a coral
-        driverIntake.and(intakeCoral.hasCoral)
+        driverIntake.and(robotHasCoral)//(intakeCoral.hasCoral)
             .onTrue(new RumbleCommand(1).withTimeout(0.5));
-        
-        // intakeCoral.doneIntaking.and(elevatorArmPivot.elevatorArmInPosition).onTrue(intakeCoral.intake().alongWith(elevatorArm.runArm()));
-        
+                
         //create a trigger to check if the elevatorArm has a coral in it so that way it can stop running and go to a score/stow position
-        elevatorArm.hasCoral.onTrue(intakeCoral.stopIntake().alongWith(elevatorArm.stop(), elevatorArmPivot.stowPosition()));
-        //elevatorArm.doneIntaking.onTrue(elevatorArmPivot.stowPosition());
+        elevatorArm.hasCoral.onTrue(intakeCoral.stopIntake().alongWith(elevatorArm.stop()));
 
         //Algae Intake (using left paddle + right trigger)
-        //algaeMode.and(driverIntake)
         driverIntakeAlgae.whileTrue(intakeAlgaePivot.extend().alongWith(intakeAlgae.intake()))
                             .onFalse(intakeAlgaePivot.stow().alongWith(intakeAlgae.stopIntake()));
 
@@ -249,14 +290,6 @@ public class RobotContainer {
         //climbing sequence
         driverReadyClimb.whileTrue(intakeAlgaePivot.readyClimb());
         driverStartClimb.whileTrue(intakeAlgaePivot.stow()); //didnt put any onFalse commands because once we climb we physically cannot un-climb
-
-        //left and right alignment for the reef (x is left and b is right)
-        driverLeftReef.whileTrue(new DriveToPose(drivetrain, () -> vision.getReefPose(true))
-                                        .withPoseTargetType(PoseTarget.REEF));
-
-
-        driverRightReef.whileTrue(new DriveToPose(drivetrain, () -> vision.getReefPose(false))
-                                        .withPoseTargetType(PoseTarget.REEF));
 
         //processor alignment
         driverProcessor.whileTrue(new DriveToPose(drivetrain, () -> vision.getProcessorPose(Robot.isBlue()))
@@ -286,31 +319,18 @@ public class RobotContainer {
 
 
         // Example of using the targetHeadingContinuous to make the robot point towards the closest side of the reef
-        teleop.and(coralMode).and(driverController.a().or(robotHasCoral))
-            .whileTrue(drivetrain.targetHeadingContinuous(() -> {
-                Pose2d reefPose = vision.getClosestReefPose();
-                return reefPose != null ? reefPose.getRotation().getDegrees() : null;
-            }, HeadingTarget.POSE));
-
-        Trigger nearReef = drivetrain.targetingReef().and(drivetrain.withinTargetPoseTolerance(         
-                                Meters.of(1),
-                                Meters.of(1),
-                                Degrees.of(90)
-                            ))
-                            .debounce(0.5, DebounceType.kFalling); 
-
-        Trigger atReef = drivetrain.targetingReef().and(drivetrain.withinTargetPoseTolerance(
-                                Inches.of(1),
-                                Inches.of(1),
-                                Degrees.of(2)
-                            ));
+        // teleop.and(coralMode).and(driverController.a().or(robotHasCoral))
+        //     .whileTrue(drivetrain.targetHeadingContinuous(() -> {
+        //         Pose2d reefPose = vision.getClosestReefPose();
+        //         return reefPose != null ? reefPose.getRotation().getDegrees() : null;
+        //     }, HeadingTarget.POSE));
 
         Command chosenElevatorHeight = elevator.run(() -> {
             // In autonomous, read the next coral scoring position from the list to determine the elevator height
             if (RobotState.isAutonomous()) {
                 CoralScoringPosition next = Auto.nextCoralScoringPosition();
                 if (next == null) {
-                    elevator.setPositionDirect(0);
+                    elevator.setPositionDirect(ElevatorSubsystem.STOW);
                     return;
                 }
                 elevator.setPositionDirect(elevator.levelToPosition(next.level));
@@ -330,33 +350,41 @@ public class RobotContainer {
                 elevator.setPositionDirect(ElevatorSubsystem.L4);
 
             } else {
-                elevator.setPositionDirect(0);
+                elevator.setPositionDirect(ElevatorSubsystem.STOW);
             }
         });
 
         nearReef//.and(elevatorArm.hasCoral)
-            .whileTrue(chosenElevatorHeight).onFalse(elevator.setPosition(0));
+            .whileTrue(chosenElevatorHeight.alongWith(elevatorArmPivot.matchElevatorPreset(), elevatorArmAlgae.intakeBasedOnElevator()))
+            .onFalse(elevator.setPosition(ElevatorSubsystem.STOW).alongWith(elevatorArmPivot.receivePosition()));
 
-        intakeCoral.hasCoral.whileTrue(Commands.print("Coral detected!"));
-        intakeCoral.doneIntaking.whileTrue(Commands.print("Done intaking!"));
+        // Command elevatorArmEject = elevatorArm.runSpeed(0.25).until(elevatorArm.hasNoCoral);
+        Command elevatorArmEject = Commands.defer(
+            () -> {
+                if (elevator.getTargetPosition() == ElevatorSubsystem.L4) {
+                    return elevatorArm.runSpeed(0.5);
+                } else {
+                    return elevatorArm.runSpeed(0.35);
+                }
+            },
+            Set.of(elevatorArm)
+        ).until(elevatorArm.hasStagedCoral.negate());
 
-        //testing the trigger - might use this to decide whether or not to score (is elevator at 0?)
-        elevator.elevatorInPosition.whileTrue(Commands.print("ELEVETOR IN POSITINONNN!!!!"));
-        elevator.elevatorInScoringPosition.and(elevator.elevatorInPosition).whileTrue(Commands.print("EELVATOR IS IN SCROIGN POSITITIONSS"));
-
-        Command elevatorArmEject = elevatorArm.runRollers().until(elevatorArm.hasNoCoral);
         if (Robot.isSimulation()) {
             elevatorArmEject = elevatorArmEject.withDeadline(Commands.waitSeconds(0.2));
         }
 
+        Trigger visionScoreReady = vision.poseEstimateDiffLow.or(scoringCameraDisconnected);
+
         // Coral scoring sequence - kCancelIncoming means nothing else will be able to stop this command until it finishes
         atReef.and(elevator.elevatorInScoringPosition)
               .and(elevatorArmPivot.elevatorArmInScoringPosition)
-              .and(vision.poseEstimateDiffLow).onTrue(
+              .and(visionScoreReady).onTrue(
             Commands.sequence(
                 drivetrain.runOnce(() -> drivetrain.drive(new ChassisSpeeds())),
                 elevatorArmEject,
                 Commands.runOnce(() -> {
+                    elevatorArmPivot.setArmPositionDirect(ElevatorArmPivotSubsystem.receiving);
                     if (RobotState.isAutonomous()) {
                         if (!Auto.coralScoringPositions.isEmpty()) {
                             Auto.previousCoralScoringPosition = Auto.coralScoringPositions.get(0);
@@ -402,7 +430,7 @@ public class RobotContainer {
                 // )
             )
         ).onFalse(
-            elevator.setPosition(0)
+            elevator.setPosition(ElevatorSubsystem.STOW)
                 .alongWith(elevatorArmPivot.stowPosition(), elevatorArmAlgae.stop())
         );
 
@@ -440,10 +468,10 @@ public class RobotContainer {
             ).alongWith(Commands.runOnce(() -> Robot.justScoredCoral = false))
         );
 
-        }
-
         // ====================== TEST CONTROLS ======================
         
+        Trigger armPivotHomed = new Trigger(elevatorArmPivot::isHomed);
+
         // testController.button(1).whileTrue(elevatorArm.runSpeed(1));
         // testController.button(2).whileTrue(elevatorArm.runSpeed(0.5));
         // testController.button(3).whileTrue(elevatorArm.runSpeed(0.25)); // l2 & l3 speeds
@@ -452,18 +480,28 @@ public class RobotContainer {
         // testController.button(2).whileTrue(elevatorArmPivot.setSpeed(0.2)).onFalse(elevatorArmPivot.stop());
         // testController.button(3).whileTrue(elevatorArmPivot.setSpeed(-0.2)).onFalse(elevatorArmPivot.stop());
         
-        // testController.button(4).whileTrue(elevatorArmAlgae.setSpeed(0.5)).onFalse(elevatorArmAlgae.stop());
-        // testController.button(5).whileTrue(elevatorArmAlgae.setSpeed(0.05)).onFalse(elevatorArmAlgae.stop());
+        // testController.button(1).whileTrue(elevatorArmAlgae.setSpeed(0.5)).onFalse(elevatorArmAlgae.stop());
+        // testController.button(2).whileTrue(elevatorArmAlgae.setSpeed(0.05)).onFalse(elevatorArmAlgae.stop());
 
+        // testController.button(1).whileTrue(elevatorArm.intakeAndIndex());
+        // testController.button(2).whileTrue(elevatorArm.runSpeed(0.05));
+        // testController.button(3).whileTrue(elevatorArm.runSpeed(-0.05));
 
-        testController.button(1).whileTrue(intakeAlgae.setSpeed(1)).onFalse(intakeAlgae.stopIntake());
-        // testController.button(1).whileTrue(Commands.print("running intake"));
-        testController.button(2).whileTrue(intakeAlgae.setSpeed(-1)).onFalse(intakeAlgae.stopIntake());
-        // testController.button(2).whileTrue(Commands.print("reversingIntake"));
+        // testController.button(1).whileTrue(intakeAlgae.setSpeed(1)).onFalse(intakeAlgae.stopIntake());
+        // testController.button(2).whileTrue(intakeAlgae.setSpeed(-1)).onFalse(intakeAlgae.stopIntake());
 
-        testController.button(3).whileTrue(intakeAlgaePivot.setSpeed(0.2)).onFalse(intakeAlgaePivot.stop());
-        testController.button(4).whileTrue(intakeAlgaePivot.setSpeed(-0.2)).onFalse(intakeAlgaePivot.stop());
+        // testController.button(3).whileTrue(intakeAlgaePivot.setSpeed(0.2)).onFalse(intakeAlgaePivot.stop());
+        // testController.button(4).whileTrue(intakeAlgaePivot.setSpeed(-0.2)).onFalse(intakeAlgaePivot.stop());
  
+        testController.button(4).onTrue(elevatorArmPivot.zero(0).ignoringDisable(true));
+        teleop.onTrue(
+            elevatorArmPivot.home()
+                .andThen(elevatorArmPivot.setPosition(elevatorArmPivot.horizontal))
+        );
+
+        testController.button(6).onTrue(elevatorArmPivot.setPosition(elevatorArmPivot.horizontal));
+        testController.button(7).onTrue(elevatorArmPivot.setPosition(elevatorArmPivot.receiving));
+
         // // Stops on release since runSpeed automatically stops the motors
         // teleop.and(testController.button(8)).whileTrue(elevator.runSpeed(0.2));
         // teleop.and(testController.button(9)).whileTrue(elevator.runSpeed(-0.2));
@@ -471,20 +509,22 @@ public class RobotContainer {
 
         //disabled some elevator stuff to do the algae intake
         Trigger elevatorZeroed = new Trigger(() -> true);//new Trigger(elevator::hasZeroed);
-        teleop.and(elevatorZeroed).and(testController.button(6))
-        .onTrue(elevator.setPosition(ElevatorSubsystem.STOW));
         
-        teleop.and(elevatorZeroed).and(testController.button(7))
-        .onTrue(elevator.setPosition(ElevatorSubsystem.L1));
-
         teleop.and(elevatorZeroed).and(testController.button(8))
-        .onTrue(elevator.setPosition(ElevatorSubsystem.L2));
+            .whileTrue(elevator.setPosition(ElevatorSubsystem.L3).alongWith(elevatorArmPivot.setPosition(elevatorArmPivot.horizontal)))
+            .onFalse(elevator.setPosition(ElevatorSubsystem.STOW).alongWith(elevatorArmPivot.setPosition(elevatorArmPivot.receiving)));
+        
+        // teleop.and(elevatorZeroed).and(testController.button(7))
+        // .onTrue(elevator.setPosition(ElevatorSubsystem.L1));
 
-        teleop.and(elevatorZeroed).and(testController.button(9))
-            .onTrue(elevator.setPosition(ElevatorSubsystem.L3));
+        // teleop.and(elevatorZeroed).and(testController.button(8))
+        // .onTrue(elevator.setPosition(ElevatorSubsystem.L2));
 
-        teleop.and(elevatorZeroed).and(testController.button(10))
-            .onTrue(elevator.setPosition(ElevatorSubsystem.L4));
+        // teleop.and(elevatorZeroed).and(testController.button(9))
+        //     .onTrue(elevator.setPosition(ElevatorSubsystem.L3));
+
+        // teleop.and(elevatorZeroed).and(testController.button(10))
+        //     .onTrue(elevator.setPosition(ElevatorSubsystem.L4));
 
         // testMode.and(testController.button(10)).onTrue(Commands.sequence(
         //     elevator.home(),

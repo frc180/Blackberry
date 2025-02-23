@@ -1,6 +1,9 @@
 package frc.robot.subsystems.vision;
 
 import com.spamrobotics.vision.LimelightStatus;
+
+import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
 import frc.robot.Robot;
 import frc.robot.RobotContainer;
@@ -10,8 +13,8 @@ import frc.robot.util.LimelightHelpers.PoseEstimate;
 public class VisionIOLimelight implements VisionIO {
 
     private static final String SCORING_LIMELIGHT = "limelight";
-    private static final String FRONT_LIMEIGHT = "front-limelight";
-    private static final String BACK_LIMEIGHT = "back-limelight";
+    private static final String FRONT_LIMEIGHT = "limelight-front";
+    private static final String BACK_LIMEIGHT = "limelight-back";
     private final LimelightStatus scoringLimelightStatus;
     private final LimelightStatus frontLimelightStatus;
     private final LimelightStatus backLimelightStatus;
@@ -34,6 +37,10 @@ public class VisionIOLimelight implements VisionIO {
         inputs.frontCameraConnected = frontLimelightStatus.isConnected();
         inputs.backCameraConnected = backLimelightStatus.isConnected();
 
+        // TODO: Test how this works when this is also set in the dashboard, and see if we need to call this every loop
+        setLimelightPosition(SCORING_LIMELIGHT, VisionSubsystem.ROBOT_TO_SCORING_CAMERA);
+        setLimelightPosition(FRONT_LIMEIGHT, VisionSubsystem.ROBOT_TO_FRONT_CAMERA);
+
         inputs.scoringFiducials = LimelightHelpers.getRawFiducials(SCORING_LIMELIGHT);
         inputs.backDetections = LimelightHelpers.getRawDetections(BACK_LIMEIGHT);
         inputs.backTimestamp = Timer.getFPGATimestamp() - getLatencySeconds(BACK_LIMEIGHT);
@@ -45,6 +52,7 @@ public class VisionIOLimelight implements VisionIO {
             inputs.scoringPoseEstimate = LimelightHelpers.getBotPoseEstimate_wpiBlue(SCORING_LIMELIGHT);
             inputs.frontPoseEstimate = LimelightHelpers.getBotPoseEstimate_wpiBlue(FRONT_LIMEIGHT);
         }
+
         if (inputs.scoringPoseEstimate != null) {
             inputs.scoringTimestamp = inputs.scoringPoseEstimate.timestampSeconds;
         }
@@ -57,6 +65,13 @@ public class VisionIOLimelight implements VisionIO {
         } else {
             inputs.scoringCPUTemp = - 1;
             inputs.scoringTemp = -1;
+        }
+
+        hw = LimelightHelpers.getLimelightNTDoubleArray(FRONT_LIMEIGHT, "hw");
+        if (hw.length > 3) {
+            inputs.frontTemp = hw[3];
+        } else {
+            inputs.frontTemp = -1;
         }
     }
 
@@ -75,5 +90,17 @@ public class VisionIOLimelight implements VisionIO {
     private double getLatencySeconds(String limelightName) {
         double latency = LimelightHelpers.getLatency_Capture(limelightName) + LimelightHelpers.getLatency_Pipeline(limelightName);
         return latency * 0.001;
+    }
+
+    private void setLimelightPosition(String limelightName, Transform3d transform) {
+        LimelightHelpers.setCameraPose_RobotSpace(
+            limelightName,
+            transform.getX(), // forward
+            -transform.getY(), // side
+            transform.getZ(), // up
+            -Units.radiansToDegrees(transform.getRotation().getX()), // roll
+            -Units.radiansToDegrees(transform.getRotation().getY()), // pitch
+            -Units.radiansToDegrees(transform.getRotation().getZ()) // yaw
+        );
     }
 }

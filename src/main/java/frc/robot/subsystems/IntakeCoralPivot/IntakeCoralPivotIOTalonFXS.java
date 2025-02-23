@@ -1,5 +1,7 @@
 package frc.robot.subsystems.IntakeCoralPivot;
 
+import static frc.robot.util.StatusSignals.trackSignal;
+import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicExpoVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
@@ -9,6 +11,8 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
 import frc.robot.Robot;
 
@@ -18,13 +22,17 @@ public class IntakeCoralPivotIOTalonFXS implements IntakeCoralPivotIO {
     MotionMagicExpoVoltage motionMagicControl;
     VoltageOut voltageControl;
 
+    // Status signals
+    StatusSignal<Angle> positionSignal;
+    StatusSignal<Voltage> voltageSignal;
+    StatusSignal<Double> targetSignal;
+
     // Simulation-only variables
     TalonFXSimState motorSim = null;
     double simulatedPosition = Units.degreesToRotations(-90);
     
     public IntakeCoralPivotIOTalonFXS() {
         motor = new TalonFX(Constants.INTAKE_CORAL_PIVOT_TALON, Constants.CANIVORE);
-        motor.setNeutralMode(NeutralModeValue.Brake);
         TalonFXConfiguration config = new TalonFXConfiguration();
         config.Slot0.kP = 1440;
         config.Slot0.kI = 0;
@@ -39,8 +47,13 @@ public class IntakeCoralPivotIOTalonFXS implements IntakeCoralPivotIO {
         config.MotionMagic.MotionMagicExpo_kA = 0;
         config.MotionMagic.MotionMagicJerk = 0;
         motor.getConfigurator().apply(config);
+        motor.setNeutralMode(NeutralModeValue.Brake);
 
         motionMagicControl = new MotionMagicExpoVoltage(0);
+
+        positionSignal = trackSignal(motor.getPosition());
+        voltageSignal = trackSignal(motor.getMotorVoltage());
+        targetSignal = trackSignal(motor.getClosedLoopReference());
 
         if (Robot.isReal()) return;
 
@@ -60,9 +73,9 @@ public class IntakeCoralPivotIOTalonFXS implements IntakeCoralPivotIO {
 
     @Override
     public void update(IntakeCoralPivotIOInputs inputs) {
-        inputs.position = motor.getPosition().getValueAsDouble();
-        inputs.target = motor.getClosedLoopReference().getValueAsDouble();
-        inputs.voltage = motor.getMotorVoltage().getValueAsDouble();
+        inputs.position = positionSignal.getValueAsDouble();
+        inputs.voltage = voltageSignal.getValueAsDouble();
+        inputs.target = targetSignal.getValueAsDouble();
     }
 
     public void stopMotor() {

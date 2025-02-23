@@ -54,9 +54,9 @@ public abstract class SimLogic {
                 coralPose = coralPose.transformBy(new Transform2d(0, 5, new Rotation2d()));
             }
 
-            // generate a random physical offset between -0.6 and 0.6 meters and a random rotation
-            double xOffset = randomNumberPlusMinus(0.6);
-            double yOffset = randomNumberPlusMinus(0.6);
+            // generate a random physical offset between -0.3 and 0.3 meters and a random rotation
+            double xOffset = randomNumberPlusMinus(0.3);
+            double yOffset = randomNumberPlusMinus(0.3);
             double rotationOffset = Math.random() * 360;
             Transform2d randomTransform = new Transform2d(xOffset, yOffset, Rotation2d.fromDegrees(rotationOffset));
 
@@ -80,7 +80,7 @@ public abstract class SimLogic {
             positionOffset = 0.6;
         } else {
             coralAngle = -35;
-            positionOffset = 0.3;
+            positionOffset = 0.6;
         }
         Distance coralHeight = Meters.of(rc.elevator.getPositionMeters() + positionOffset);
     
@@ -129,7 +129,7 @@ public abstract class SimLogic {
             new Translation2d(0, 0), // scoring mechanism position on the robot
             swerveSim.getDriveTrainSimulatedChassisSpeedsFieldRelative(),
             simRobotPose.getRotation().rotateBy(forwards ? Rotation2d.kZero : Rotation2d.k180deg),
-            Meters.of(ElevatorSubsystem.NET), // outtake height
+            ElevatorSubsystem.NET, // outtake height
             MetersPerSecond.of(6), // outtake speed
             Degrees.of(75))
         );

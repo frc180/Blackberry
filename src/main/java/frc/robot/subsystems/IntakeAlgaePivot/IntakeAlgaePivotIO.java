@@ -7,10 +7,10 @@ public interface IntakeAlgaePivotIO {
 
     @Logged
     public class IntakeAlgaePivotIOInputs {
-        public double position;
-        public double voltage;
-        public double target;
-        public double encoderPosition;
+        double position;
+        double voltage;
+        double target;
+        double absoluteEncoderPosition;
     }
 
     public void update(IntakeAlgaePivotIOInputs inputs);

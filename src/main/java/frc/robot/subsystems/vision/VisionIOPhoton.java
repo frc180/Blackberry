@@ -38,7 +38,7 @@ public class VisionIOPhoton implements VisionIO {
 
         SimCameraProperties cameraProp = new SimCameraProperties();
         // TODO: set LL4 diagonal FOV instead of horizontal (82)
-        cameraProp.setCalibration(1280, 960, Rotation2d.fromDegrees(82));
+        cameraProp.setCalibration(1280, 960, Rotation2d.fromDegrees(90));
         cameraProp.setCalibError(0.35, 0.10);
         cameraProp.setFPS(45);
         cameraProp.setAvgLatencyMs(50);

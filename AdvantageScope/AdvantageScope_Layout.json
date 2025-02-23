@@ -1,20 +1,23 @@
 {
   "hubs": [
     {
-      "x": 956,
-      "y": 117,
+      "x": 856,
+      "y": 162,
       "width": 1330,
       "height": 925,
       "state": {
         "sidebar": {
-          "width": 300,
+          "width": 409,
           "expanded": [
-            "/Robot/RobotContainer/Vision/inputs/scoringPoseEstimate",
             "/Robot/RobotContainer/Vision/inputs/scoringPoseEstimate/Pose",
-            "/Robot",
-            "/Robot/RobotContainer/Vision",
             "/Robot/robotComponentPosesArray",
-            "/Robot/RobotContainer"
+            "/Robot/RobotContainer",
+            "/Robot/RobotContainer/Algae Intake Pivot/inputs",
+            "/Robot/RobotContainer/Vision/inputs",
+            "/Robot",
+            "/Robot/RobotContainer/Elevator Arm Pivot/inputs",
+            "/Robot/RobotContainer/Vision",
+            "/Robot/RobotContainer/Vision/inputs/scoringPoseEstimate"
           ]
         },
         "tabs": {
@@ -84,26 +87,34 @@
                     }
                   },
                   {
-                    "type": "ghostLegacy",
-                    "logKey": "NT:Robot/RobotContainer/Vision/inputs/scoringPoseEstimate/Pose",
-                    "logType": "NumberArray",
-                    "visible": true,
-                    "options": {
-                      "model": "KitBot",
-                      "color": "#ff8c00",
-                      "format": "Pose2d",
-                      "units": "radians"
-                    }
-                  },
-                  {
                     "type": "cameraOverride",
                     "logKey": "NT:Robot/RobotContainer/Vision/scoringCameraPosition",
                     "logType": "Pose3d",
                     "visible": true,
                     "options": {}
+                  },
+                  {
+                    "type": "ghost",
+                    "logKey": "NT:Robot/RobotContainer/Vision/singleTagPose",
+                    "logType": "Pose2d",
+                    "visible": true,
+                    "options": {
+                      "model": "Anenome",
+                      "color": "#00ff00"
+                    }
+                  },
+                  {
+                    "type": "ghost",
+                    "logKey": "NT:Robot/RobotContainer/Vision/inputs/scoringPoseEstimate/Pose",
+                    "logType": "Pose2d",
+                    "visible": true,
+                    "options": {
+                      "model": "Anenome",
+                      "color": "#ff8c00"
+                    }
                   }
                 ],
-                "game": "2025 Field",
+                "game": "2025 Field (Welded)",
                 "origin": "blue"
               },
               "controllerUUID": "rkxo3u7ycplvvhpeu9wnwtnch59v2kd4",
@@ -111,14 +122,14 @@
                 "cameraIndex": -1,
                 "orbitFov": 50,
                 "cameraPosition": [
-                  -0.43618184899419205,
-                  6.455597924071758,
-                  -8.846681620365038
+                  -12.916814712348064,
+                  5.15010300875823,
+                  0.08839735856993707
                 ],
                 "cameraTarget": [
-                  -0.4194768473536259,
-                  0.6730858106094626,
-                  0.10896280134994543
+                  -2.5891925524063204,
+                  1.0120016441492607,
+                  0.0951650578875966
                 ]
               },
               "controlsHeight": 200
@@ -156,7 +167,7 @@
                     }
                   }
                 ],
-                "game": "2025 Field",
+                "game": "2025 Field (Welded)",
                 "bumpers": "auto",
                 "origin": "blue",
                 "orientation": 0,
@@ -171,31 +182,6 @@
       }
     }
   ],
-  "satellites": [
-    {
-      "x": 2957,
-      "y": 559,
-      "width": 824,
-      "height": 618,
-      "state": {
-        "type": 3,
-        "visualizer": {
-          "cameraIndex": 0,
-          "orbitFov": 50,
-          "cameraPosition": [
-            -5.5693251283639,
-            0.6500000000000002,
-            0.14682149399005187
-          ],
-          "cameraTarget": [
-            -4.750173149550224,
-            0.07642356364895408,
-            0.14649397532958366
-          ]
-        }
-      },
-      "uuid": "rkxo3u7ycplvvhpeu9wnwtnch59v2kd4"
-    }
-  ],
+  "satellites": [],
   "version": "4.1.2"
 }

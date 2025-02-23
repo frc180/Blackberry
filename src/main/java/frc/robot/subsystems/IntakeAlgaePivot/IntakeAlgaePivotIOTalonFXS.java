@@ -1,6 +1,8 @@
 package frc.robot.subsystems.IntakeAlgaePivot;
 
+import static frc.robot.util.StatusSignals.trackSignal;
 import java.util.List;
+import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
@@ -11,6 +13,8 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 import frc.robot.Constants;
@@ -18,17 +22,23 @@ import frc.robot.Robot;
 
 public class IntakeAlgaePivotIOTalonFXS implements IntakeAlgaePivotIO {
     
-    final double intakeArmGearing = 100;
+    final double intakeArmGearing = 200;
     final double radToRotations = 1 / (2 * Math.PI);
+    final double absoluteEncoderResolution = 2048;
 
     TalonFX pivotMotorA, pivotMotorB;
     List<TalonFX> pivotMotors;
     MotionMagicVoltage motionMagicControl;
     VoltageOut voltageControl;
     Follower followerControl;
-    DutyCycleEncoder encoder;
+    DutyCycleEncoder absoluteEncoder;
 
-    // Simulation objects
+    // Status signals
+    StatusSignal<Angle> positionSignal;
+    StatusSignal<Voltage> voltageSignal;
+    StatusSignal<Double> targetSignal;
+
+    // Simulation-only variables
     TalonFXSimState pivotMotorASim, pivotMotorBSim;
     List<TalonFXSimState> pivotMotorSims;
     SingleJointedArmSim intakeSim;
@@ -58,8 +68,8 @@ public class IntakeAlgaePivotIOTalonFXS implements IntakeAlgaePivotIO {
         //pivotMotor.setNeutralMode(NeutralModeValue.Brake);
         //pivotMotor.getConfigurator().apply(configuration);
         pivotMotors.forEach(motor -> {
-            motor.setNeutralMode(NeutralModeValue.Brake);
             motor.getConfigurator().apply(configuration);
+            motor.setNeutralMode(NeutralModeValue.Coast);
         });
 
         motionMagicControl = new MotionMagicVoltage(0);
@@ -67,7 +77,11 @@ public class IntakeAlgaePivotIOTalonFXS implements IntakeAlgaePivotIO {
         followerControl = new Follower(Constants.INTAKE_ALGAE_PIVOT_TALON_A, true);
         pivotMotorB.setControl(followerControl);
 
-        encoder = new DutyCycleEncoder(Constants.DIO_INTAKE_ALGAE_ENCODER);
+        absoluteEncoder = new DutyCycleEncoder(Constants.DIO_INTAKE_ALGAE_ENCODER);
+
+        positionSignal = trackSignal(pivotMotorA.getPosition());
+        voltageSignal = trackSignal(pivotMotorA.getMotorVoltage());
+        targetSignal = trackSignal(pivotMotorA.getClosedLoopReference());
 
         //for simulation
         if (Robot.isReal()) return;
@@ -91,10 +105,10 @@ public class IntakeAlgaePivotIOTalonFXS implements IntakeAlgaePivotIO {
 
     @Override
     public void update(IntakeAlgaePivotIOInputs inputs){ 
-        inputs.position = pivotMotorA.getPosition(true).getValueAsDouble();
-        inputs.voltage = pivotMotorA.getMotorVoltage(true).getValueAsDouble();
-        inputs.target = pivotMotorA.getClosedLoopReference(true).getValueAsDouble();
-        inputs.encoderPosition = encoder.get();
+        inputs.position = positionSignal.getValueAsDouble();
+        inputs.voltage = voltageSignal.getValueAsDouble();
+        inputs.target = targetSignal.getValueAsDouble();
+        inputs.absoluteEncoderPosition = absoluteEncoder.get() / absoluteEncoderResolution;
     }
 
     // Simulation only

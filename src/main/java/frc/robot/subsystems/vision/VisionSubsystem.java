@@ -23,6 +23,7 @@ import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -63,19 +64,28 @@ public class VisionSubsystem extends SubsystemBase {
     public static final List<Integer> redReefTags = List.of(6,7,8,9,10,11);
     public static final List<Integer> blueReefTags = List.of(17, 18, 19, 20, 21, 22);
 
-    // x and y may need to be flipped
     public static final Transform3d ROBOT_TO_SCORING_CAMERA = new Transform3d(
-        Inches.of(9.757).in(Meters),
-        Inches.of(-7.2).in(Meters),
+        Inches.of(9.757).in(Meters), // forward
+        Inches.of(-7.2).in(Meters), // right
         Inches.of(31.296).in(Meters),
-        new Rotation3d(0, Units.degreesToRadians(50), 0)
+        new Rotation3d(0, Units.degreesToRadians(50), 0) // downward tilt
+    );
+
+    public static final Transform3d ROBOT_TO_FRONT_CAMERA = new Transform3d(
+        Inches.of(13.998).in(Meters), // forward
+        Inches.of(-7).in(Meters), // right
+        Inches.of(6.767).in(Meters),
+        new Rotation3d(0, Units.degreesToRadians(-18.1), 0) // upward tilt
     );
     
+    // TODO: set real values
     public static final Transform2d ROBOT_TO_INTAKE_CAMERA = new Transform2d(0.1, 0, Rotation2d.fromDegrees(0));
     public static final Transform2d INTAKE_CAMERA_TO_ROBOT = ROBOT_TO_INTAKE_CAMERA.inverse();
 
     private static final int RED_PROCESSOR_TAG = 3;
     private static final int BLUE_PROCESSOR_TAG = 16;
+
+    private static final double BAD_CAMERA_TEMP = 55;
 
     private final VisionIO io;
     private final VisionIOInputs inputs;
@@ -88,9 +98,13 @@ public class VisionSubsystem extends SubsystemBase {
     private final Transform2d rightReefTransform = new Transform2d(0.55, 0.15, Rotation2d.fromDegrees(180));
     private final Transform2d processorTransform = new Transform2d(0.55, 0.0, Rotation2d.fromDegrees(90));
 
+    // 3 inches closer (forward) than standard
+    private final Transform2d algaeReefTransform = new Transform2d(Inches.of(3).in(Meters), 0, Rotation2d.kZero);
+
     private final Pose2d redProcessorPose;
     private final Pose2d blueProcessorPose;
 
+    public final HashMap<Integer, Pose2d> tagPoses2d = new HashMap<>();
     public final HashMap<Integer, Pose2d> leftReefHashMap = new HashMap<>();
     public final HashMap<Integer, Pose2d> rightReefHashMap = new HashMap<>();
 
@@ -118,10 +132,14 @@ public class VisionSubsystem extends SubsystemBase {
     private PoseEstimateSource poseEstimateSource = PoseEstimateSource.NONE;
     private Pose3d scoringCameraPosition = Pose3d.kZero;
     private double poseEstimateDiffX, poseEstimateDiffY, poseEstimateDiffTheta;
+    private double lastPoseEstimateTime = 0;
     
     private Alert scoringCameraDisconnectedAlert = new Alert("Scoring Camera disconnected!", AlertType.kError);
     private Alert frontCameraDisconnectedAlert = new Alert("Front Camera disconnected!", AlertType.kError);
     private Alert backCameraDisconnectedAlert = new Alert("Back Camera disconnected!", AlertType.kError);
+
+    private Alert scoringCameraTempAlert = new Alert("", AlertType.kWarning);
+    private Alert frontCameraTempAlert = new Alert("", AlertType.kWarning);
 
     @SuppressWarnings("unused")
     public VisionSubsystem() {
@@ -136,6 +154,15 @@ public class VisionSubsystem extends SubsystemBase {
             io = new VisionIOLimelight();
         } else {
             io = new VisionIOPhoton(aprilTagFieldLayout);
+        }
+
+        for (var allianceTags : List.of(redTags, blueTags)) {
+            for (int tagID : allianceTags) {
+                Optional<Pose3d> pose3d = aprilTagFieldLayout.getTagPose(tagID);
+                if (pose3d.isPresent()) {
+                    tagPoses2d.put(tagID, pose3d.get().toPose2d());
+                }
+            }
         }
 
         // Pre-calculate reef poses for all reef tags
@@ -172,15 +199,19 @@ public class VisionSubsystem extends SubsystemBase {
         frontCameraDisconnectedAlert.set(!inputs.frontCameraConnected);
         backCameraDisconnectedAlert.set(!inputs.backCameraConnected);
 
+        cameraTemperatureAlert(scoringCameraTempAlert, "Scoring", inputs.scoringTemp);
+        cameraTemperatureAlert(frontCameraTempAlert, "Front", inputs.frontTemp);
+
+
         // If the scoring camera is connected, use its pose estimate
         if (inputs.scoringCameraConnected) {
-            poseEstimate = validatePoseEstimate(inputs.scoringPoseEstimate, 0);
+            poseEstimate = validatePoseEstimate(inputs.scoringPoseEstimate);
             poseEstimateSource = PoseEstimateSource.SCORING_CAMERA;
         }
 
-        // If poseEstimate is null, then try the front camera pose estimate
-        if (poseEstimate == null && inputs.frontCameraConnected) {
-            poseEstimate = validatePoseEstimate(inputs.frontPoseEstimate, 0);
+        // If we didn't get a pose estimate (valid or not) from the scoring camera, use the front camera's pose estimate
+        if (poseEstimate == null && inputs.scoringPoseEstimate == null && inputs.frontCameraConnected) {
+            poseEstimate = validatePoseEstimate(inputs.frontPoseEstimate);
             poseEstimateSource = PoseEstimateSource.FRONT_CAMERA;
         }
      
@@ -194,18 +225,37 @@ public class VisionSubsystem extends SubsystemBase {
             // Calculate the difference between the updated robot pose and the scoring pose estimate, to get an idea
             // of how closely we are tracking the robot's actual position
             robotPose = RobotContainer.instance.drivetrain.getPose();
-            poseEstimateDiffX = robotPose.getX() - poseEstimate.pose.getX();
-            poseEstimateDiffY = robotPose.getY() - poseEstimate.pose.getY();
-            poseEstimateDiffTheta = robotPose.getRotation().getDegrees() - poseEstimate.pose.getRotation().getDegrees();
+            // Note - goal of this is to stop "bad" data from non-scoring cameras from allowing
+            // a coral to be scored. Unknown if this is working as intended
+            if (poseEstimateSource == PoseEstimateSource.SCORING_CAMERA) {
+                poseEstimateDiffX = robotPose.getX() - poseEstimate.pose.getX();
+                poseEstimateDiffY = robotPose.getY() - poseEstimate.pose.getY();
+                poseEstimateDiffTheta = robotPose.getRotation().getDegrees() - poseEstimate.pose.getRotation().getDegrees();
+                lastPoseEstimateTime = Timer.getFPGATimestamp();
+            } else {
+                poseEstimateDiffX = 99;
+                poseEstimateDiffY = 99;
+                poseEstimateDiffTheta = 99;
+            }
         } else {
             poseEstimateSource = PoseEstimateSource.NONE;
         }
 
+        // To test - zero out pose diffs if we haven't been getting data, to fix cases
+        // where the tag is barely obscured
+        // if (Math.abs(Timer.getFPGATimestamp() - lastPoseEstimateTime) >= 1) {
+        //     poseEstimateDiffX = 0;
+        //     poseEstimateDiffY = 0;
+        //     poseEstimateDiffTheta = 0;
+        // }
+
         if (robotPose == null) robotPose = RobotContainer.instance.drivetrain.getPose();
 
-        // calculate scoring camera in 3D space, for viewing in AdvantageScope
-        Pose2d cameraPosebase = Robot.isReal() ? robotPose : RobotContainer.instance.drivetrain.getSimPose();
-        scoringCameraPosition = new Pose3d(cameraPosebase).transformBy(ROBOT_TO_SCORING_CAMERA);
+        // calculate scoring camera in 3D space, for previewing in AdvantageScope
+        if (Robot.isSimulation()) {
+            Pose2d cameraPosebase = RobotContainer.instance.drivetrain.getSimPose();
+            scoringCameraPosition = new Pose3d(cameraPosebase).transformBy(ROBOT_TO_SCORING_CAMERA);
+        }
 
         //check if robot can see the reef
         canSeeReef = reefVisible();
@@ -287,7 +337,7 @@ public class VisionSubsystem extends SubsystemBase {
         Optional<Pose3d> pose3d = aprilTagFieldLayout.getTagPose(tagID); //gets the pose of the april tag in 3d space
         if (pose3d.isEmpty()) return null;
 
-        return pose3d.get().toPose2d().transformBy(left ? leftReefTransform : rightReefTransform);
+        return pose3d.get().toPose2d().transformBy(left ? leftReefTransform : rightReefTransform);//.transformBy(algaeReefTransform);
     }
 
     /**
@@ -369,7 +419,7 @@ public class VisionSubsystem extends SubsystemBase {
         return new Pose3d(coralPose);
     }
 
-    public PoseEstimate validatePoseEstimate(PoseEstimate poseEstimate, double deltaSeconds) {
+    public PoseEstimate validatePoseEstimate(PoseEstimate poseEstimate) {
         if (poseEstimate == null) return null;
 
         if (megatag2Enabled) {
@@ -408,5 +458,15 @@ public class VisionSubsystem extends SubsystemBase {
 
         }
         return isReefVisible;
+    }
+
+    private void cameraTemperatureAlert(Alert alert, String cameraName, double temperature) {
+        if (temperature >= BAD_CAMERA_TEMP) {
+            int roundedtemp = (int) Math.round(temperature);
+            alert.setText(cameraName + " Camera temp high (" + roundedtemp + "°F)");
+            alert.set(true);
+        } else {
+            alert.set(false);
+        }
     }
 }

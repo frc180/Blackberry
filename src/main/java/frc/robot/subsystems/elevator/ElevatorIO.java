@@ -7,11 +7,11 @@ public interface ElevatorIO {
 
     @Logged
     public class ElevatorIOInputs {
-        public double position;
-        public double velocity;
-        public double voltage;
-        public double target;
-        public boolean bottomLimit = false;
+        double position;
+        double velocity;
+        double voltage;
+        double target;
+        boolean bottomLimit = false;
     }
 
     public void update(ElevatorIOInputs inputs);

@@ -7,9 +7,9 @@ public interface IntakeCoralPivotIO {
 
     @Logged
     public class IntakeCoralPivotIOInputs {
-        public double position;
-        public double voltage;
-        public double target;
+        double position;
+        double voltage;
+        double target;
     }
     
     //to stow and extend

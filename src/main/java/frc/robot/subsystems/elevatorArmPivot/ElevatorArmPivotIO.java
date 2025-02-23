@@ -7,9 +7,11 @@ public interface ElevatorArmPivotIO {
     
     @Logged
     public class ElevatorArmPivotIOInputs {
-        public double position;
-        public double voltage;
-        public double target;
+        double position;
+        double voltage;
+        double target;
+        double velocity;
+        boolean hardStop;
     }
     
     public void setPosition(double encoderPosition);
@@ -22,5 +24,6 @@ public interface ElevatorArmPivotIO {
 
     public void stopMotor();
 
+    public void zero(double offset);
     
 }

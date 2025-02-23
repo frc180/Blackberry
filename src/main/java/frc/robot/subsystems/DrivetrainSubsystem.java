@@ -237,7 +237,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         }
         configureAutoBuilder();
 
-        double translationP = 3.5; // 3.5 almost stable //3.2 good
+        double translationP = 4; // 3.5 almost stable //3.2 good
         double translationI = 0.0;
         double translationD = 0.05;
 

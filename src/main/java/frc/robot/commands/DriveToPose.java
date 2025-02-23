@@ -1,5 +1,6 @@
 package frc.robot.commands;
 
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import com.spamrobotics.util.Helpers;
@@ -30,6 +31,8 @@ public class DriveToPose extends Command {
     private Supplier<Boolean> finishCriteria = null;
     private PoseTarget poseTargetType = PoseTarget.STANDARD;
     private double maxSpeed = 1.0;
+    private Supplier<Integer> targetPoseTagSupplier = null;
+    private Function<Pose2d, Pose2d> intermediatePoses = null;
 
     public DriveToPose(DrivetrainSubsystem drivetrainSubsystem, Supplier<Pose2d> targetPoseSupplier) {
         drivetrain = drivetrainSubsystem;
@@ -92,6 +95,16 @@ public class DriveToPose extends Command {
         return this;
     }
 
+    public DriveToPose withTargetPoseTag(Supplier<Integer> targetPoseTagSupplier) {
+        this.targetPoseTagSupplier = targetPoseTagSupplier;
+        return this;
+    }
+
+    public DriveToPose withIntermediatePoses(Function<Pose2d, Pose2d> intermediatePoses) {
+        this.intermediatePoses = intermediatePoses;
+        return this;
+    }
+
     @Override
     public void initialize() {
         drivetrain.resetPIDs(HeadingTarget.POSE);
@@ -100,32 +113,44 @@ public class DriveToPose extends Command {
         }
         drivetrain.setPoseTargetType(poseTargetType);
         drivetrain.setTargetPose(targetPose);
-        if (poseTargetType == PoseTarget.REEF) {
-            drivetrain.setTargetPoseTag(RobotContainer.instance.vision.getReefTagFromPose(targetPose));
+
+        // New tag data tracking
+        if (targetPoseTagSupplier != null) {
+            drivetrain.setTargetPoseTag(targetPoseTagSupplier.get());
         } else {
             drivetrain.setTargetPoseTag(-1);
         }
+        // Old tag data tracking
+        // if (poseTargetType == PoseTarget.REEF) {
+        //     drivetrain.setTargetPoseTag(RobotContainer.instance.vision.getReefTagFromPose(targetPose));
+        // } else {
+        //     drivetrain.setTargetPoseTag(-1);
+        // }
     }
 
     @Override
     public void execute() {
         currentPose = drivetrain.getPose();
-        //this is using the current pose as the one from the drivetrain, not the one that is estimated by the limelight
 
         if (dynamicTarget && targetPoseSupplier != null) {
             targetPose = targetPoseSupplier.get();
         }
         drivetrain.setTargetPose(targetPose);
+        Pose2d iterationTarget = targetPose;
+        
+        if (intermediatePoses != null) {
+            iterationTarget = intermediatePoses.apply(targetPose);
+        }
 
         if (holdWithinTolerance) {
-            boolean inTolerances = Helpers.withinTolerance(currentPose, targetPose, xEndTolerance, yEndTolerance, headingEndTolerance);
+            boolean inTolerances = Helpers.withinTolerance(currentPose, iterationTarget, xEndTolerance, yEndTolerance, headingEndTolerance);
             if (inTolerances) {
                 drivetrain.drive(noneSpeeds);
                 return;
             }
         }
 
-        ChassisSpeeds speeds = drivetrain.calculateChassisSpeeds(currentPose, targetPose);
+        ChassisSpeeds speeds = drivetrain.calculateChassisSpeeds(currentPose, iterationTarget);
         if (additionalSpeedsSupplier != null) {
             Helpers.addChassisSpeedsOverwrite(speeds, additionalSpeedsSupplier.get());
         }
