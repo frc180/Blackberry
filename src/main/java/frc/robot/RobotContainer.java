@@ -389,16 +389,15 @@ public class RobotContainer {
             .whileTrue(chosenElevatorHeight.alongWith(elevatorArmPivot.matchElevatorPreset(), elevatorArmAlgae.intakeBasedOnElevator()))
             .onFalse(elevator.stow().alongWith(elevatorArmPivot.receivePosition()));
 
-        Command elevatorArmEject = Commands.defer(
-            () -> {
-                if (elevator.getTargetPosition() == ElevatorSubsystem.L4) {
-                    return elevatorArm.runSpeed(0.5).until(elevatorArm.hasNoCoral);
-                } else {
-                    return elevatorArm.runSpeed(0.35).until(elevatorArm.hasNoCoral)
+
+        Command l4CoralEject = elevatorArm.runSpeed(0.5).until(elevatorArm.hasNoCoral);
+        Command coralEject = elevatorArm.runSpeed(0.35).until(elevatorArm.hasNoCoral)
                                         .andThen(Commands.waitSeconds(0.2));
-                }
-            },
-            Set.of(elevatorArm)
+
+        Command elevatorArmEject = Commands.either(
+            l4CoralEject,
+            coralEject,
+            () -> elevator.getTargetPosition() == ElevatorSubsystem.L4
         );
 
         if (Robot.isSimulation()) {
