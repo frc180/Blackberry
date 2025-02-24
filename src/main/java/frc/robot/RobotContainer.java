@@ -400,10 +400,6 @@ public class RobotContainer {
             () -> elevator.getTargetPosition() == ElevatorSubsystem.L4
         );
 
-        if (Robot.isSimulation()) {
-            elevatorArmEject = elevatorArmEject.withDeadline(Commands.waitSeconds(0.2));
-        }
-
         Trigger visionScoreReady = vision.poseEstimateDiffLow.or(scoringCameraDisconnected);
 
         // Coral scoring sequence - kCancelIncoming means nothing else will be able to stop this command until it finishes

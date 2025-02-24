@@ -37,11 +37,12 @@ public class VisionIOLimelight implements VisionIO {
         inputs.frontCameraConnected = frontLimelightStatus.isConnected();
         inputs.backCameraConnected = backLimelightStatus.isConnected();
 
-        // TODO: Test how this works when this is also set in the dashboard, and see if we need to call this every loop
+        // TODO: See if we need to call this every loop
         setLimelightPosition(SCORING_LIMELIGHT, VisionSubsystem.ROBOT_TO_SCORING_CAMERA);
         setLimelightPosition(FRONT_LIMEIGHT, VisionSubsystem.ROBOT_TO_FRONT_CAMERA);
 
         inputs.scoringFiducials = LimelightHelpers.getRawFiducials(SCORING_LIMELIGHT);
+        inputs.frontFiducials = LimelightHelpers.getRawFiducials(FRONT_LIMEIGHT);
         inputs.backDetections = LimelightHelpers.getRawDetections(BACK_LIMEIGHT);
         inputs.backTimestamp = Timer.getFPGATimestamp() - getLatencySeconds(BACK_LIMEIGHT);
         

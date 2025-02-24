@@ -1,5 +1,7 @@
 package frc.robot.util.simulation;
 
+import static edu.wpi.first.units.Units.Centimeter;
+import static edu.wpi.first.units.Units.Centimeters;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
@@ -24,11 +26,14 @@ public abstract class SimLogic {
 
     public static final Pose2d redHPCoralPose = new Pose2d(16.17, 1.33, new Rotation2d());
     public static final Pose2d blueHPCoralPose = FlippingUtil.flipFieldPose(redHPCoralPose);
+    public static final double CORAL_LENGTH = Centimeters.of(30).in(Meters);
 
     public static boolean intakeHasCoral = false;
     public static boolean armHasCoral = false;
     public static boolean intakeHasAlgae = false;
     public static boolean armHasAlgae = false;
+
+    public static double armCoralPosition = -1;
 
     public static boolean robotHasCoral() {
         return intakeHasCoral || armHasCoral;
