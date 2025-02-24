@@ -14,6 +14,7 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.subsystems.elevator.ElevatorIO.ElevatorIOInputs;
@@ -23,9 +24,9 @@ import frc.robot.util.simulation.SimVisuals;
 public class ElevatorSubsystem extends SubsystemBase {
   // Distance presets, with 0 being the bottom of the elevator
   public static final Distance L1 = Meters.of(0.269);       // not real
-  public static final Distance L2 = Meters.of(0.302);       // 3 degrees arm pivot
-  public static final Distance L3 = L2.plus(Inches.of(16)); // 3 degrees arm pivot
-  public static final Distance L4 = Meters.of(1.4);         // 14 degrees pivot
+  public static final Distance L2 = Meters.of(0.302);
+  public static final Distance L3 = L2.plus(Inches.of(16));
+  public static final Distance L4 = Meters.of(1.4);
   public static final Distance NET = Meters.of(1.47);       // may be able to just be L4
   public static final Distance STOW = Centimeters.of(1);
   public static final Distance ZERO = Meters.of(0);
@@ -101,7 +102,8 @@ public class ElevatorSubsystem extends SubsystemBase {
 
   public Command home() {
     return runSpeed(-0.05).until(this::isAtLowerLimit)
-            .andThen(runOnce(() -> io.zero()));
+            .andThen(runOnce(() -> io.zero()))
+            .withInterruptBehavior(InterruptionBehavior.kCancelIncoming);
   }
 
   public Command stow() {
