@@ -122,7 +122,8 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     private final TimeInterpolatableBuffer<Pose2d> poseBuffer = TimeInterpolatableBuffer.createBuffer(2);
 
     @NotLogged
-    private ProfiledPIDController xPidController, yPidController, driverRotationPidController;
+    private final ProfiledPIDController xPidController, yPidController, driverRotationPidController;
+    private double translationKV = 0;
     private State xPidGoalState = new State();
     private State yPidGoalState = new State();
     private double xPosition = 0;
@@ -240,11 +241,13 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         double translationP = 4; // 3.5 almost stable //3.2 good
         double translationI = 0.0;
         double translationD = 0.05;
+        translationKV = 0;
 
         if (Robot.isSimulation()) {
             translationP = 10;
             translationI = 0.0;
             translationD = 1.6;
+            translationKV = 0.5;
         }
 
         xPidController = new ProfiledPIDController(translationP, translationI, translationD,
@@ -394,6 +397,11 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         double xFeedback = xPidController.calculate(currentPose.getX(), xPidGoalState);
         double yFeedback = yPidController.calculate(currentPose.getY(), yPidGoalState);
         double thetaFeedback = calculateHeadingPID(currentPose.getRotation(), pidPose.getRotation().getDegrees());
+
+        double xVelocity = xPidController.getSetpoint().velocity;
+        double yVelocity = yPidController.getSetpoint().velocity;
+        xFeedback += xVelocity * translationKV;
+        yFeedback += yVelocity * translationKV;
 
         return ChassisSpeeds.fromFieldRelativeSpeeds(xFeedback, yFeedback, thetaFeedback, currentPose.getRotation());
     }
