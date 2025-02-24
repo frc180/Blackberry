@@ -189,12 +189,12 @@ public class RobotContainer {
         final Trigger drivetrainAvailable = new Trigger(() -> drivetrain.getCurrentCommand() == drivetrain.getDefaultCommand());
         final Trigger scoringCameraDisconnected = vision.scoringCameraConnected.negate();
 
-        // TODO: probably change these triggers to also return true if the scoring camera is disconnected
+        // TODO: probably change these triggers (or where they're used) to also return true if the scoring camera is disconnected
         nearReef = drivetrain.targetingReef().and(drivetrain.withinTargetPoseTolerance(         
                         Meters.of(1),
                         Meters.of(1),
                         Degrees.of(90)
-        )).debounce(0.2, DebounceType.kFalling); 
+        ));//.debounce(0.2, DebounceType.kFalling); 
 
         atReef = drivetrain.targetingReef().and(drivetrain.withinTargetPoseTolerance(
                         Inches.of(1),
@@ -383,20 +383,23 @@ public class RobotContainer {
             }
         });
 
-        nearReef//.and(elevatorArm.hasCoral)
+        Trigger isScoringCoral = new Trigger(() -> Robot.currentlyScoringCoral);
+
+        nearReef.or(isScoringCoral)//.and(elevatorArm.hasCoral)
             .whileTrue(chosenElevatorHeight.alongWith(elevatorArmPivot.matchElevatorPreset(), elevatorArmAlgae.intakeBasedOnElevator()))
             .onFalse(elevator.stow().alongWith(elevatorArmPivot.receivePosition()));
 
         Command elevatorArmEject = Commands.defer(
             () -> {
                 if (elevator.getTargetPosition() == ElevatorSubsystem.L4) {
-                    return elevatorArm.runSpeed(0.5);
+                    return elevatorArm.runSpeed(0.5).until(elevatorArm.hasNoCoral);
                 } else {
-                    return elevatorArm.runSpeed(0.35);
+                    return elevatorArm.runSpeed(0.35).until(elevatorArm.hasNoCoral)
+                                        .andThen(Commands.waitSeconds(0.2));
                 }
             },
             Set.of(elevatorArm)
-        ).until(elevatorArm.hasNoCoral);
+        );
 
         if (Robot.isSimulation()) {
             elevatorArmEject = elevatorArmEject.withDeadline(Commands.waitSeconds(0.2));
@@ -409,18 +412,21 @@ public class RobotContainer {
               .and(elevatorArmPivot.elevatorArmInScoringPosition)
               .and(visionScoreReady).onTrue(
             Commands.sequence(
-                drivetrain.runOnce(() -> drivetrain.drive(new ChassisSpeeds())),
-                elevatorArmEject,
+                Commands.runOnce(() -> Robot.currentlyScoringCoral = true)
+                        .alongWith(drivetrain.runOnce(() -> drivetrain.drive(new ChassisSpeeds())))
+                        .alongWith(elevatorArmEject),
+                // elevatorArmEject,
                 Commands.runOnce(() -> {
                     elevatorArmPivot.setArmPositionDirect(ElevatorArmPivotSubsystem.receiving);
+                    Robot.currentlyScoringCoral = false;
+                    Robot.justScoredCoral = true;
+
                     if (RobotState.isAutonomous()) {
                         if (!Auto.coralScoringPositions.isEmpty()) {
                             Auto.previousCoralScoringPosition = Auto.coralScoringPositions.get(0);
                             Auto.coralScoringPositions.remove(0);
                         }
                     }
-                    Robot.justScoredCoral = true;
-
                     if (Robot.isSimulation()) {
                         if (SimLogic.armHasCoral) SimLogic.scoreCoral();
                         SimLogic.spawnHumanPlayerCoral();

@@ -30,6 +30,7 @@ import frc.robot.util.simulation.SimulatedAIRobot;
 @Logged
 public class Robot extends TimedRobot {
 
+  public static boolean currentlyScoringCoral = false;
   public static boolean justScoredCoral = false;
 
   private Command m_autonomousCommand;
