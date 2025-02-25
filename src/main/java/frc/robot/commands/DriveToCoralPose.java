@@ -6,6 +6,8 @@ import java.util.function.Supplier;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.units.measure.Distance;
 import frc.robot.RobotContainer;
 import frc.robot.subsystems.DrivetrainSubsystem.PoseTarget;
 import frc.robot.subsystems.elevator.ElevatorSubsystem;
@@ -24,7 +26,6 @@ public class DriveToCoralPose extends DriveToPose {
         super(RobotContainer.instance.drivetrain, tagToPoseFunction);
         withPoseTargetType(PoseTarget.REEF);
         withTargetPoseTag(tagSupplier);
-        // withIntermediatePoses(ALGAE_INTERMEDIATE);
     }
 
     // WIP nicer pathing to prevent arm collisions with reef or algae
@@ -38,6 +39,27 @@ public class DriveToCoralPose extends DriveToPose {
 
         if (offset != 0) {
             target = target.transformBy(new Transform2d(offset, 0, Rotation2d.kZero));
+        }
+
+        return target;
+    };
+
+    private static final double Y_DIAGONAL_THRESHOLD = Inches.of(6).in(Meters);
+    private static final double X_DIAGONAL_THRESHOLD = Meters.of(1.6).in(Meters);
+
+    public static Function<Pose2d, Pose2d> AVOID_BIG_DIAGONAL = (Pose2d target) -> {
+        double frontOffset = 0;
+        double sideOffset = 0;
+        
+        Pose2d robotPose = RobotContainer.instance.drivetrain.getPose();
+        double xDiff = robotPose.getX() - target.getX();
+        double yDiff = robotPose.getY() - target.getY();
+        if (Math.abs(yDiff) > Y_DIAGONAL_THRESHOLD && Math.abs(xDiff) > X_DIAGONAL_THRESHOLD) {
+            sideOffset = yDiff;
+        }
+
+        if (frontOffset != 0 || sideOffset != 0) {
+            target = new Pose2d(new Translation2d(target.getX() + frontOffset, target.getY() + sideOffset), target.getRotation());
         }
 
         return target;

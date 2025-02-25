@@ -164,7 +164,7 @@ public final class Auto {
         return new DriveToCoralPose(
             () -> nextCoralScoringPosition().tag,
             (tag) -> nextCoralScoringPosition().getPose()
-        );
+        ).withIntermediatePoses(DriveToCoralPose.AVOID_BIG_DIAGONAL);
     }
 
 }

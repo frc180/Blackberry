@@ -30,6 +30,7 @@ import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.NotLogged;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -79,7 +80,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
 
     // STOLEN FROM SONIC, NOT CORRECT
     public static final double MAX_SPEED = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // Meters per second desired top speed
-    public static final double MAX_SPEED_ACCEL = 7; // Meters per second squared max acceleration, was 8 -> 7, should try 6
+    public static final double MAX_SPEED_ACCEL = Robot.isReal() ? 7 : 6; // Meters per second squared max acceleration, was 8 -> 7, should try 6
     public static final double MAX_ANGULAR_RATE = 3 * Math.PI; // 3/4 of a rotation per second max angular velocity (1.5 * Math.PI)
     public static final double MAX_ANGULAR_ACCEL = MAX_ANGULAR_RATE * 8; // was * 4
 
@@ -96,7 +97,8 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
 
     /** Swerve request to apply during robot-centric path following */
     private final SwerveRequest.ApplyRobotSpeeds m_pathApplyRobotSpeeds = new SwerveRequest.ApplyRobotSpeeds();
-    private final SwerveRequest.ApplyRobotSpeeds autoApplyRobotSpeeds = new SwerveRequest.ApplyRobotSpeeds();
+    private final SwerveRequest.ApplyRobotSpeeds applyClosedLoopSpeeds = new SwerveRequest.ApplyRobotSpeeds().withDriveRequestType(DriveRequestType.Velocity);
+
     private final SwerveModuleStateRequest moduleStateRequest = new SwerveModuleStateRequest();
 
     /* Swerve requests to apply during SysId characterization */
@@ -116,6 +118,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     private PoseTarget poseTargetType = PoseTarget.STANDARD;
     private Pose2d targetPose = null;
     private int targetPoseTag = -1;
+    private Pose2d intermediatePose = null;
 
     private Pose2d mapleSimPose = null;
 
@@ -123,6 +126,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
 
     @NotLogged
     private final ProfiledPIDController xPidController, yPidController, driverRotationPidController;
+    private final SimpleMotorFeedforward xyFeedforward;
     private double translationKV = 0;
     private State xPidGoalState = new State();
     private State yPidGoalState = new State();
@@ -238,22 +242,26 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         }
         configureAutoBuilder();
 
-        double translationP = 4; // 3.5 almost stable //3.2 good
+        double translationMaxSpeed = MAX_SPEED;
+        double translationP = 4;
         double translationI = 0.0;
         double translationD = 0.05;
-        translationKV = 0;
+        double translationKV = 0;
 
         if (Robot.isSimulation()) {
-            translationP = 10;
+            translationMaxSpeed = MAX_SPEED * 0.8;
+            translationP = 8;
             translationI = 0.0;
             translationD = 1.6;
-            translationKV = 0.5;
+            translationKV = 0.8;
         }
 
+        xyFeedforward = new SimpleMotorFeedforward(0, translationKV, 0);
+
         xPidController = new ProfiledPIDController(translationP, translationI, translationD,
-                                        new TrapezoidProfile.Constraints(MAX_SPEED, MAX_SPEED_ACCEL));
+                                        new TrapezoidProfile.Constraints(translationMaxSpeed, MAX_SPEED_ACCEL));
         yPidController = new ProfiledPIDController(translationP, translationI, translationD,
-                                        new TrapezoidProfile.Constraints(MAX_SPEED, MAX_SPEED_ACCEL));
+                                        new TrapezoidProfile.Constraints(translationMaxSpeed, MAX_SPEED_ACCEL));
 
         driverRotationPidController = new ProfiledPIDController(5, 0., 0, // was 10 // was 5
                                         new TrapezoidProfile.Constraints(MAX_ANGULAR_RATE, MAX_ANGULAR_ACCEL)); // formerly 9999
@@ -283,6 +291,11 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         // Helpers.discretizeOverwrite(speeds, Constants.LOOP_TIME);
         speeds = ChassisSpeeds.discretize(speeds, Constants.LOOP_TIME);
         setControl(m_pathApplyRobotSpeeds.withSpeeds(speeds));
+    }
+
+    public void driveClosedLoop(ChassisSpeeds speeds) {
+        speeds = ChassisSpeeds.discretize(speeds, Constants.LOOP_TIME);
+        setControl(applyClosedLoopSpeeds.withSpeeds(speeds));
     }
 
     // Allegedly results in smoother driving that causes less wheel slip due to never commanding
@@ -390,6 +403,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     }
     
     public ChassisSpeeds calculateChassisSpeeds(Pose2d currentPose, Pose2d pidPose, double xGoalVelocity, double yGoalVelocity) {
+        intermediatePose = pidPose;
         xPidGoalState.position = pidPose.getX();
         xPidGoalState.velocity = xGoalVelocity;
         yPidGoalState.position = pidPose.getY();
@@ -398,10 +412,8 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         double yFeedback = yPidController.calculate(currentPose.getY(), yPidGoalState);
         double thetaFeedback = calculateHeadingPID(currentPose.getRotation(), pidPose.getRotation().getDegrees());
 
-        double xVelocity = xPidController.getSetpoint().velocity;
-        double yVelocity = yPidController.getSetpoint().velocity;
-        xFeedback += xVelocity * translationKV;
-        yFeedback += yVelocity * translationKV;
+        xFeedback += xyFeedforward.calculate(xPidController.getSetpoint().velocity);
+        yFeedback += xyFeedforward.calculate(yPidController.getSetpoint().velocity);
 
         return ChassisSpeeds.fromFieldRelativeSpeeds(xFeedback, yFeedback, thetaFeedback, currentPose.getRotation());
     }
@@ -659,10 +671,12 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         pigeonConnected = getPigeon2().isConnected();
         pigeonDisconnectedAlert.set(!pigeonConnected);
 
+        State xSetpoint = xPidController.getSetpoint();
+        State ySetpoint = yPidController.getSetpoint();
         xPosition = getPose().getX();
         yPosition = getPose().getY();
-        xPidTarget = xPidController.getSetpoint().position;
-        yPidTarget = yPidController.getSetpoint().position;
+        xPidTarget = xSetpoint.position;
+        yPidTarget = ySetpoint.position;
 
         poseBuffer.addSample(Timer.getFPGATimestamp(), getPose());
 
