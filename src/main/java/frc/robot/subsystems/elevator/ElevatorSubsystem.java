@@ -23,12 +23,12 @@ import frc.robot.util.simulation.SimVisuals;
 @Logged
 public class ElevatorSubsystem extends SubsystemBase {
   // Distance presets, with 0 being the bottom of the elevator
-  public static final Distance L1 = Meters.of(0.269);       // not real
+  public static final Distance L1 = Inches.of(2.5);
   public static final Distance L2 = Meters.of(0.302);
   public static final Distance L3 = L2.plus(Inches.of(16));
   public static final Distance L4 = Meters.of(1.4);
   public static final Distance NET = Meters.of(1.47);       // may be able to just be L4
-  public static final Distance STOW = Centimeters.of(1);
+  public static final Distance STOW = Centimeters.of(0);
   public static final Distance ZERO = Meters.of(0);
 
   protected static final double SOFT_UPPER_LIMIT = Meters.of(1.48).in(Meters);
@@ -65,7 +65,7 @@ public class ElevatorSubsystem extends SubsystemBase {
   public ElevatorSubsystem() {
     inputs = new ElevatorIOInputs();
     io = new ElevatorIOTalonFX();
-    // io = new ElevatorIOSim();
+    io.zero();
   }
 
   @Override
@@ -101,7 +101,8 @@ public class ElevatorSubsystem extends SubsystemBase {
   }
 
   public Command home() {
-    return runSpeed(-0.05).until(this::isAtLowerLimit)
+    return runOnce(() -> hasHomed = false)
+            .andThen(runSpeed(-0.05).until(this::isAtLowerLimit))
             .andThen(runOnce(() -> io.zero()))
             .withInterruptBehavior(InterruptionBehavior.kCancelIncoming);
   }

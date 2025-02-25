@@ -30,7 +30,7 @@ public class ElevatorArmSubsystem extends SubsystemBase{
             io = new ElevatorArmIOSim();
         }
 
-        hasCoral = new Trigger(() -> inputs.middleCoralSensor);
+        hasCoral = new Trigger(() -> inputs.middleCoralSensor && !inputs.backCoralSensor);
         hasPartialCoral = new Trigger(() -> inputs.frontCoralSensor || inputs.middleCoralSensor || inputs.backCoralSensor);
         hasNoCoral = hasPartialCoral.negate();
     }

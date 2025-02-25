@@ -25,5 +25,9 @@ public interface ElevatorArmPivotIO {
     public void stopMotor();
 
     public void zero(double offset);
+
+    public void brakeMode();
+
+    public void coastMode();
     
 }

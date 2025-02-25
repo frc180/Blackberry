@@ -69,7 +69,7 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO {
         // }
 
         armPivotMotor.getConfigurator().apply(config);
-        armPivotMotor.setNeutralMode(NeutralModeValue.Brake);
+        armPivotMotor.setNeutralMode(NeutralModeValue.Coast);
 
         motionMagic = new MotionMagicVoltage(0);
         voltageControl = new VoltageOut(0);
@@ -143,5 +143,15 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO {
     @Override
     public void zero(double rotations) {
         armPivotMotor.setPosition(rotations);
+    }
+
+    @Override
+    public void brakeMode() {
+        armPivotMotor.setNeutralMode(NeutralModeValue.Brake);
+    }
+
+    @Override
+    public void coastMode() {
+        armPivotMotor.setNeutralMode(NeutralModeValue.Coast);
     }
 }

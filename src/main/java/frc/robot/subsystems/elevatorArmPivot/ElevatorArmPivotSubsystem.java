@@ -28,14 +28,14 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
     // TODO: read manually from robot
     protected static final Angle FORWARD_LIMIT = Degrees.of(60.7);
     protected static final Angle REVERSE_LIMIT = Degrees.of(-20);
-    protected static final Angle HARD_STOP_OFFSET = Degrees.of(60.46875 + 3.955078125);
+    protected static final Angle HARD_STOP_OFFSET = Degrees.of(60.46875 + 3.955078125 + 2.109375);
 
     public static final double L4_SCORE = Units.degreesToRotations(-14);
     public static final double L3_SCORE = Units.degreesToRotations(-6);
     public static final double L2_SCORE = L3_SCORE;
     public static final double L1_SCORE = Units.degreesToRotations(-1);
 
-    public static final double receiving = Units.degreesToRotations(45);
+    public static final double receiving = Units.degreesToRotations(45 - 3);
     public static final double algaeReceive = Units.degreesToRotations(-70);
     public static final double horizontal = 0;
 
@@ -58,8 +58,9 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
     public Trigger elevatorArmInPosition = new Trigger(() -> isElevatorArmInPosition());
     @NotLogged
     public Trigger elevatorArmInScoringPosition = new Trigger (() -> isElevatorArmInScoringPosition());
-    
-    private Trigger atHomingHardstop = new Trigger(this::isAtHomingHardstop).debounce(0.1);
+    @NotLogged
+    public Trigger atHardstop = new Trigger(() -> inputs.hardStop).debounce(0.2);
+    private Trigger atHomingHardstop = new Trigger(this::isAtHomingHardstop).debounce(0.2);
 
     public ElevatorArmPivotSubsystem() {
         inputs = new ElevatorArmPivotIOInputs();
@@ -191,6 +192,14 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
         });
     }
 
+    public Command brakeMode() {
+        return Commands.runOnce(io::brakeMode);
+    }
+
+    public Command coastMode() {
+        return Commands.runOnce(io::coastMode);
+    }
+
     public void setPositionLimits(Double min, Double max) {
         targetPositionMin = min;
         targetPositionMax = max;
@@ -235,8 +244,8 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
     }
 
     public boolean isAtHomingHardstop() {
-        return Math.abs(inputs.velocity) <= 0.004 && isHoming;
-        // return isHoming && inputs.hardStop;
+        // return Math.abs(inputs.velocity) <= 0.004 && isHoming;
+        return isHoming && inputs.hardStop;
     }
 
     @NotLogged

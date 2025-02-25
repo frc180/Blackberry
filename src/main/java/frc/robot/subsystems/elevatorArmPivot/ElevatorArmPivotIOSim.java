@@ -58,4 +58,9 @@ public class ElevatorArmPivotIOSim implements ElevatorArmPivotIO{
         // do nothing
     }
 
+    @Override
+    public void brakeMode() {}
+
+    @Override
+    public void coastMode() {}
 }
