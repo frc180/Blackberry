@@ -45,6 +45,7 @@ import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Timer;
@@ -266,6 +267,10 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         driverRotationPidController = new ProfiledPIDController(5, 0., 0, // was 10 // was 5
                                         new TrapezoidProfile.Constraints(MAX_ANGULAR_RATE, MAX_ANGULAR_ACCEL)); // formerly 9999
         driverRotationPidController.enableContinuousInput(-Math.PI, Math.PI);
+
+        SmartDashboard.putData("Drivetrain X PID", xPidController);
+        SmartDashboard.putData("Drivetrain Y PID", yPidController);
+        SmartDashboard.putNumber("Drivetrain XY Feedforward", translationKV);
 
         setpointGenerator = new SwerveSetpointGenerator(
             config, // The robot configuration. This is the same config used for generating trajectories and running path following commands.
@@ -670,6 +675,9 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
 
         pigeonConnected = getPigeon2().isConnected();
         pigeonDisconnectedAlert.set(!pigeonConnected);
+
+        double kV = SmartDashboard.getNumber("Drivetrain XY Feedforward", 0);
+        xyFeedforward.setKv(kV);
 
         State xSetpoint = xPidController.getSetpoint();
         State ySetpoint = yPidController.getSetpoint();
