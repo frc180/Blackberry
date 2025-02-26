@@ -154,7 +154,8 @@ public class DriveToPose extends Command {
             }
         }
 
-        ChassisSpeeds speeds = drivetrain.calculateChassisSpeeds(currentPose, iterationTarget);
+        // ChassisSpeeds speeds = drivetrain.calculateChassisSpeeds(currentPose, iterationTarget);
+        ChassisSpeeds speeds = drivetrain.experimentalCalculateSpeeds(currentPose, iterationTarget);
         if (additionalSpeedsSupplier != null) {
             Helpers.addChassisSpeedsOverwrite(speeds, additionalSpeedsSupplier.get());
         }

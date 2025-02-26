@@ -104,4 +104,21 @@ public class Helpers {
     public static Transform2d toTransform2d(double x, double y) {
         return new Transform2d(x, y, new Rotation2d());
     }
+
+    // Helper methods from https://github.com/frc6995/Robot-2025/blob/main/src/main/java/frc/robot/subsystems/drive/Pathing.java#L18
+    public static double velocityTowards(
+        Pose2d currentPose, ChassisSpeeds fieldRelativeSpeeds, Translation2d targetTranslation) {
+      return pointRelativeSpeeds(currentPose, fieldRelativeSpeeds, targetTranslation)
+          .vxMetersPerSecond;
+    }
+
+    public static ChassisSpeeds pointRelativeSpeeds(
+        Pose2d currentPose, ChassisSpeeds fieldRelativeSpeeds, Translation2d targetTranslation) {
+      return ChassisSpeeds.fromFieldRelativeSpeeds(
+          fieldRelativeSpeeds, headingTo(currentPose, targetTranslation));
+    }
+
+    public static Rotation2d headingTo(Pose2d currentPose, Translation2d target) {
+        return target.minus(currentPose.getTranslation()).getAngle().minus(new Rotation2d(Math.PI));
+      }
 }

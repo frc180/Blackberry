@@ -161,6 +161,12 @@ public class RobotContainer {
             new DriveToPose(drivetrain, () -> new Pose2d(2, 7, Rotation2d.kZero))
         ));
 
+        autoChooser.addOption("Drive 6 meters", Commands.sequence(
+            Commands.runOnce(() -> drivetrain.resetPose(new Pose2d(2,7, Rotation2d.kZero))),
+            new DriveToPose(drivetrain, () -> new Pose2d(8, 6, Rotation2d.kZero)).until(drivetrain.withinTargetPoseDistance(0.02)),
+            new DriveToPose(drivetrain, () -> new Pose2d(2, 7, Rotation2d.kZero))
+        ));
+
         SmartDashboard.putData("Auto Mode", autoChooser);
 
         configureBindings();

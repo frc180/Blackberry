@@ -39,6 +39,7 @@ import edu.wpi.first.math.interpolation.TimeInterpolatableBuffer;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.State;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
@@ -129,6 +130,8 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     @NotLogged
     private final ProfiledPIDController xPidController, yPidController, driverRotationPidController;
     private final SimpleMotorFeedforward xyFeedforward;
+    private final TrapezoidProfile.Constraints driveToPoseConstraints;
+    private final TrapezoidProfile driveToPoseProfile;
     private double translationKV = 0;
     private State xPidGoalState = new State();
     private State yPidGoalState = new State();
@@ -260,13 +263,13 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
 
         xyFeedforward = new SimpleMotorFeedforward(0, translationKV, 0);
 
-        xPidController = new ProfiledPIDController(translationP, translationI, translationD,
-                                        new TrapezoidProfile.Constraints(translationMaxSpeed, MAX_SPEED_ACCEL));
-        yPidController = new ProfiledPIDController(translationP, translationI, translationD,
-                                        new TrapezoidProfile.Constraints(translationMaxSpeed, MAX_SPEED_ACCEL));
+        driveToPoseConstraints = new TrapezoidProfile.Constraints(translationMaxSpeed, MAX_SPEED_ACCEL);
+        xPidController = new ProfiledPIDController(translationP, translationI, translationD, driveToPoseConstraints);
+        yPidController = new ProfiledPIDController(translationP, translationI, translationD, driveToPoseConstraints);
+        driveToPoseProfile = new TrapezoidProfile(driveToPoseConstraints);
 
-        driverRotationPidController = new ProfiledPIDController(5, 0., 0, // was 10 // was 5
-                                        new TrapezoidProfile.Constraints(MAX_ANGULAR_RATE, MAX_ANGULAR_ACCEL)); // formerly 9999
+        driverRotationPidController = new ProfiledPIDController(5, 0., 0,
+                                        new TrapezoidProfile.Constraints(MAX_ANGULAR_RATE, MAX_ANGULAR_ACCEL));
         driverRotationPidController.enableContinuousInput(-Math.PI, Math.PI);
 
         SmartDashboard.putData("Drivetrain X PID", xPidController);
@@ -372,12 +375,17 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         }
     }
 
+    final Timer time = new Timer();
+
     public void resetPIDs(HeadingTarget type) {
         SwerveDriveState state = getState();
         ChassisSpeeds speeds = ChassisSpeeds.fromRobotRelativeSpeeds(state.Speeds, state.Pose.getRotation());
         xPidController.reset(state.Pose.getX(), speeds.vxMetersPerSecond);
         yPidController.reset(state.Pose.getY(), speeds.vyMetersPerSecond);
         resetHeadingPID(type);
+        // experimental
+        time.reset();
+        time.start();
     }
 
     public void resetHeadingPID(HeadingTarget type) {
@@ -424,38 +432,53 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         return ChassisSpeeds.fromFieldRelativeSpeeds(xFeedback, yFeedback, thetaFeedback, currentPose.getRotation());
     }
 
-    // public ChassisSpeeds experimentalCalculateSpeeds(Pose2d currentPose, Pose2d pidPose) {
-    //     TrapezoidProfile.State state = new State(0, 0);
-    //     double dist = 1;
-    //     Translation2d normDirStartToEnd = Translation2d.kZero;
-    //     Pose2d start = currentPose;
-    //     Pose2d end = pidPose;
+    @NotLogged
+    public ChassisSpeeds getFieldRelativeLinearSpeedsMPS() {
+      return getState().Speeds;
+    }
 
-    //     normDirStartToEnd = end.getTranslation().minus(start.getTranslation());
-    //     dist = normDirStartToEnd.getNorm();
-    //     normDirStartToEnd = normDirStartToEnd.div(dist + 0.001);
+    final TrapezoidProfile.State driveToPoseState = new State(0, 0);
 
-    //     state.position = dist;
-    //     // Pathing.velocityTowards is negative if approaching the target
-    //     state.velocity = 
-    //     MathUtil.clamp(
-    //         Pathing.velocityTowards(
-    //             start,
-    //             getFieldRelativeLinearSpeedsMPS(),
-    //             end.getTranslation()), -driveToPoseConstraints.maxVelocity, 0);
+    public ChassisSpeeds experimentalCalculateSpeeds(Pose2d currentPose, Pose2d pidPose) {
+        TrapezoidProfile.State state = new State(0, 0);
+        double dist = 1;
+        Translation2d normDirStartToEnd = Translation2d.kZero;
+        Pose2d start = currentPose;
+        Pose2d end = pidPose;
+
+        normDirStartToEnd = end.getTranslation().minus(start.getTranslation());
+        dist = normDirStartToEnd.getNorm();
+        normDirStartToEnd = normDirStartToEnd.div(dist + 0.001);
+
+        state.position = dist;
+        // Pathing.velocityTowards is negative if approaching the target
+        state.velocity = 
+        MathUtil.clamp(
+            Helpers.velocityTowards(
+                start,
+                getFieldRelativeLinearSpeedsMPS(),
+                end.getTranslation()), -driveToPoseConstraints.maxVelocity, 0);
+
+        // init over
+
+        var setpoint = driveToPoseProfile.calculate(time.get(), state, driveToPoseState);
+
+        // https://github.com/frc6995/Robot-2025/blob/a9871f804924f71e47eb576578ac69bbe7b9249f/src/main/java/frc/robot/subsystems/DriveBaseS.java#L493
+
+        var interpTrans = end.getTranslation().interpolate(start.getTranslation(), setpoint.position / dist);
+
+        
+        double vX = normDirStartToEnd.getX() * -setpoint.velocity;
+        double vY = normDirStartToEnd.getY() * -setpoint.velocity;
+
+        double xFeedback = -(currentPose.getX() - interpTrans.getX()) * 5;
+        double yFeedback = -(currentPose.getY() - interpTrans.getY()) * 5;
 
 
-    //     var setpoint = driveToPoseProfile.calculate(0.02, state, driveToPoseGoal);
+        double thetaFeedback = calculateHeadingPID(currentPose.getRotation(), pidPose.getRotation().getDegrees());
 
-    //     // https://github.com/frc6995/Robot-2025/blob/a9871f804924f71e47eb576578ac69bbe7b9249f/src/main/java/frc/robot/subsystems/DriveBaseS.java#L493
-
-    //     double vX = normDirStartToEnd.getX() * -setpoint.velocity;
-    //     double vY = normDirStartToEnd.getY() * -setpoint.velocity;
-
-    //     double omega = 0; //todo
-
-    //     return new ChassisSpeeds(vX, vY, omega);
-    // }
+        return new ChassisSpeeds(xFeedback, yFeedback, thetaFeedback);
+    }
 
     /**
      * Returns if the drivetrain is currently targeting a pose that is for Reef scoring.
