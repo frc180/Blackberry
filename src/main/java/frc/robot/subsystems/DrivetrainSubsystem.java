@@ -278,8 +278,10 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
                                         new TrapezoidProfile.Constraints(MAX_ANGULAR_RATE, MAX_ANGULAR_ACCEL));
         rotationProfiledPid.enableContinuousInput(-Math.PI, Math.PI);
 
-        SmartDashboard.putData("Drivetrain X PID", xProfiledPid);
-        SmartDashboard.putData("Drivetrain Y PID", yProfiledPid);
+        SmartDashboard.putData("Drivetrain X Profiled PID", xProfiledPid);
+        SmartDashboard.putData("Drivetrain Y Profiled PID", yProfiledPid);
+        SmartDashboard.putData("Drivetrain X PID", xPid);
+        SmartDashboard.putData("Drivetrain Y PID", yPid);
         SmartDashboard.putNumber("Drivetrain XY Feedforward", translationKV);
 
         setpointGenerator = new SwerveSetpointGenerator(
