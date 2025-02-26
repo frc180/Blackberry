@@ -79,15 +79,15 @@ public abstract class SimLogic {
         SwerveDriveSimulation swerveSim = rc.drivetrain.getDriveSim();
         Pose2d simRobotPose = swerveSim.getSimulatedDriveTrainPose();
         double coralAngle;
-        double positionOffset;
+        double heightOffset;
         if (rc.elevator.getTargetPosition() == ElevatorSubsystem.L4) {
             coralAngle = -90;
-            positionOffset = 0.6;
+            heightOffset = 0.6;
         } else {
             coralAngle = -35;
-            positionOffset = 0.6;
+            heightOffset = 0.6;
         }
-        Distance coralHeight = Meters.of(rc.elevator.getPositionMeters() + positionOffset);
+        Distance coralHeight = Meters.of(rc.elevator.getPositionMeters() + heightOffset);
     
         SimulatedArena.getInstance().addGamePieceProjectile(new ReefscapeCoralOnFly(
             simRobotPose.getTranslation(),

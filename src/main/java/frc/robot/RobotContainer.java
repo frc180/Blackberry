@@ -438,7 +438,6 @@ public class RobotContainer {
 
         Trigger visionScoreReady = vision.poseEstimateDiffLow.or(scoringCameraDisconnected)
                                                              .or(() -> elevator.getTargetPosition() == ElevatorSubsystem.L1);
-                                                             //.or(Robot::isSimulation);
 
         // Coral scoring sequence - kCancelIncoming means nothing else will be able to stop this command until it finishes
         atReef.and(elevator.elevatorInScoringPosition)
@@ -461,10 +460,8 @@ public class RobotContainer {
                         }
                     }
                     if (Robot.isSimulation()) {
-                        if (SimLogic.armHasCoral) SimLogic.scoreCoral();
                         SimLogic.spawnHumanPlayerCoral();
                         SimLogic.intakeHasCoral = false;
-                        SimLogic.armHasCoral = false;
                     }
                 })
             ).withInterruptBehavior(InterruptionBehavior.kCancelIncoming)
@@ -514,9 +511,8 @@ public class RobotContainer {
             .onTrue(Auto.driveToReefWithCoral());
 
         Command autoHPDrive = Auto.driveToHPStation().withDeadline(
-            Commands.waitSeconds(0.25).andThen(
-                Commands.waitUntil(() -> vision.getCoralPose() != null)
-            )
+            Commands.waitSeconds(0.25)
+                    .andThen(Commands.waitUntil(() -> vision.getCoralPose() != null))
         );
 
         Command autoIntakeCoral = Commands.sequence(

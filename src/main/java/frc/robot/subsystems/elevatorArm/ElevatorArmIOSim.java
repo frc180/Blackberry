@@ -42,10 +42,20 @@ public class ElevatorArmIOSim implements ElevatorArmIO{
             }
         }
 
+        boolean backCoral = coralAtSensor(0);
+        boolean middleCoral = coralAtSensor(SimLogic.CORAL_LENGTH * .7);
+        boolean frontCoral = coralAtSensor((SimLogic.CORAL_LENGTH * .7) * 2);
+
+        // Coral has passed through the entire arm, score it
+        if (SimLogic.armHasCoral && !backCoral && !middleCoral && !frontCoral) {
+            SimLogic.armHasCoral = false;
+            SimLogic.scoreCoral();
+        }
+
         inputs.voltage = Math.abs(rollerSpeed) * 12;
-        inputs.backCoralSensor = coralAtSensor(0);
-        inputs.middleCoralSensor = coralAtSensor(SimLogic.CORAL_LENGTH * .7);
-        inputs.frontCoralSensor = coralAtSensor((SimLogic.CORAL_LENGTH * .7) * 2);
+        inputs.backCoralSensor = backCoral;
+        inputs.middleCoralSensor = middleCoral;
+        inputs.frontCoralSensor = frontCoral;
     }
 
     @Override
