@@ -119,7 +119,6 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
                 isHoming = true;
             }),
             runSpeed(0.04).until(atHomingHardstop),
-            // runSpeed(0.06).until(atHomingHardstop),
             zero(HARD_STOP_OFFSET).alongWith(Commands.runOnce(() -> {
                 homed = true;
                 isHoming = false;
@@ -141,7 +140,7 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
         ElevatorSubsystem elevator = RobotContainer.instance.elevator;
         return run(() -> {
             Distance elevatorTarget = elevator.getTargetPosition();
-            double targetError = elevator.getTargetErrorMeters();
+            // double targetError = elevator.getTargetErrorMeters();
 
             // Experimental - prevent arm from sticking out until we're past any levels that may
             // contain algae that'd collide with the arm
