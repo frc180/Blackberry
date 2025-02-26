@@ -164,6 +164,7 @@ public class RobotContainer {
         autoChooser.addOption("Drive 6 meters", Commands.sequence(
             Commands.runOnce(() -> drivetrain.resetPose(new Pose2d(2,7, Rotation2d.kZero))),
             new DriveToPose(drivetrain, () -> new Pose2d(8, 6, Rotation2d.kZero)).until(drivetrain.withinTargetPoseDistance(0.02)),
+            new DriveToPose(drivetrain, () -> new Pose2d(7, 5, Rotation2d.kCW_90deg)).until(drivetrain.withinTargetPoseDistance(0.02)),
             new DriveToPose(drivetrain, () -> new Pose2d(2, 7, Rotation2d.kZero))
         ));
 
@@ -443,6 +444,7 @@ public class RobotContainer {
 
         Trigger visionScoreReady = vision.poseEstimateDiffLow.or(scoringCameraDisconnected)
                                                              .or(() -> elevator.getTargetPosition() == ElevatorSubsystem.L1);
+                                                             //.or(Robot::isSimulation);
 
         // Coral scoring sequence - kCancelIncoming means nothing else will be able to stop this command until it finishes
         atReef.and(elevator.elevatorInScoringPosition)
