@@ -45,7 +45,7 @@ public class DriveToCoralPose extends DriveToPose {
     };
 
     private static final double Y_DIAGONAL_THRESHOLD = Inches.of(6).in(Meters);
-    private static final double X_DIAGONAL_THRESHOLD = Meters.of(1.6).in(Meters);
+    private static final double X_DIAGONAL_THRESHOLD = Meters.of(1.3).in(Meters);
 
     public static Function<Pose2d, Pose2d> AVOID_BIG_DIAGONAL = (Pose2d target) -> {
         double frontOffset = 0;
