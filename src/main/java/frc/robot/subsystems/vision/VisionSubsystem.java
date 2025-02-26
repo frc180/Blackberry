@@ -236,11 +236,11 @@ public class VisionSubsystem extends SubsystemBase {
      
         Pose2d robotPose = null;
         if (poseEstimate != null) {
-            RobotContainer.instance.drivetrain.addVisionMeasurement(
-                poseEstimate.pose,
-                Utils.fpgaToCurrentTime(poseEstimate.timestampSeconds),
-                poseEstimateSource.stdDev
-            );
+            // RobotContainer.instance.drivetrain.addVisionMeasurement(
+            //     poseEstimate.pose,
+            //     Utils.fpgaToCurrentTime(poseEstimate.timestampSeconds),
+            //     poseEstimateSource.stdDev
+            // );
             // Calculate the difference between the updated robot pose and the scoring pose estimate, to get an idea
             // of how closely we are tracking the robot's actual position
             robotPose = RobotContainer.instance.drivetrain.getPose();

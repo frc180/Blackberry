@@ -34,6 +34,7 @@ import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.interpolation.TimeInterpolatableBuffer;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.system.plant.DCMotor;
@@ -422,6 +423,39 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
 
         return ChassisSpeeds.fromFieldRelativeSpeeds(xFeedback, yFeedback, thetaFeedback, currentPose.getRotation());
     }
+
+    // public ChassisSpeeds experimentalCalculateSpeeds(Pose2d currentPose, Pose2d pidPose) {
+    //     TrapezoidProfile.State state = new State(0, 0);
+    //     double dist = 1;
+    //     Translation2d normDirStartToEnd = Translation2d.kZero;
+    //     Pose2d start = currentPose;
+    //     Pose2d end = pidPose;
+
+    //     normDirStartToEnd = end.getTranslation().minus(start.getTranslation());
+    //     dist = normDirStartToEnd.getNorm();
+    //     normDirStartToEnd = normDirStartToEnd.div(dist + 0.001);
+
+    //     state.position = dist;
+    //     // Pathing.velocityTowards is negative if approaching the target
+    //     state.velocity = 
+    //     MathUtil.clamp(
+    //         Pathing.velocityTowards(
+    //             start,
+    //             getFieldRelativeLinearSpeedsMPS(),
+    //             end.getTranslation()), -driveToPoseConstraints.maxVelocity, 0);
+
+
+    //     var setpoint = driveToPoseProfile.calculate(0.02, state, driveToPoseGoal);
+
+    //     // https://github.com/frc6995/Robot-2025/blob/a9871f804924f71e47eb576578ac69bbe7b9249f/src/main/java/frc/robot/subsystems/DriveBaseS.java#L493
+
+    //     double vX = normDirStartToEnd.getX() * -setpoint.velocity;
+    //     double vY = normDirStartToEnd.getY() * -setpoint.velocity;
+
+    //     double omega = 0; //todo
+
+    //     return new ChassisSpeeds(vX, vY, omega);
+    // }
 
     /**
      * Returns if the drivetrain is currently targeting a pose that is for Reef scoring.

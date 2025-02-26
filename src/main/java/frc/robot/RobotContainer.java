@@ -147,11 +147,17 @@ public class RobotContainer {
             leftBargeToLeftReef,                        // the path to take from our starting position to the first coral position
             new Pose2d(7.9, 5, Rotation2d.k180deg)  // the position the robot should start at in simulation
         );
-        autoChooser.setDefaultOption("Left Barge to Left Reef", leftBargeAuto);
+        if (Robot.isReal()) {
+            autoChooser.setDefaultOption("Do Nothing", Commands.none());
+        } else {
+            autoChooser.setDefaultOption("Left Barge to Left Reef", leftBargeAuto);
+        }
 
-        autoChooser.addOption("Drive 6 meters", Commands.sequence(
+        double offset = Inches.of(203).in(Meters);
+
+        autoChooser.addOption("Drive 203 inches", Commands.sequence(
             Commands.runOnce(() -> drivetrain.resetPose(new Pose2d(2,7, Rotation2d.kZero))),
-            new DriveToPose(drivetrain, () -> new Pose2d(8, 6, Rotation2d.kZero)).until(drivetrain.withinTargetPoseDistance(0.02)),
+            new DriveToPose(drivetrain, () -> new Pose2d(2 + offset, 7, Rotation2d.kZero)).until(drivetrain.withinTargetPoseDistance(0.02)),
             new DriveToPose(drivetrain, () -> new Pose2d(2, 7, Rotation2d.kZero))
         ));
 
@@ -312,7 +318,7 @@ public class RobotContainer {
         
 
         //climbing sequence
-        driverReadyClimb.whileTrue(intakeAlgaePivot.readyClimb());
+        // driverReadyClimb.whileTrue(intakeAlgaePivot.readyClimb());
         driverStartClimb.whileTrue(intakeAlgaePivot.stow()); //didnt put any onFalse commands because once we climb we physically cannot un-climb
 
         //processor alignment
@@ -352,6 +358,11 @@ public class RobotContainer {
                 () -> true // elevator::isHomed // Disabled for now
             ),
             elevatorArmPivot.home().andThen(elevatorArmPivot.horizontalPosition()),
+            Commands.either(
+                Commands.none(),
+                elevatorArmPivot.home(),
+                elevatorArmPivot::isHomed
+            ).andThen(elevatorArmPivot.horizontalPosition()),
             Commands.runOnce(() -> {
                 Commands.sequence(
                     new RumbleCommand(0.5).withTimeout(0.3),
@@ -476,7 +487,7 @@ public class RobotContainer {
         driverNet.and(elevatorArmAlgae.hasAlgae).whileTrue(
             Commands.parallel(
                 elevator.setPosition(ElevatorSubsystem.NET),
-                elevatorArmPivot.netScorePosition().alongWith(drivetrain.targetHeadingContinuous(0.0, HeadingTarget.GYRO))
+                elevatorArmPivot.netScorePosition()//.alongWith(drivetrain.targetHeadingContinuous(0.0, HeadingTarget.GYRO))
                 // Commands.either(
                 //     elevatorArmPivot.netScorePosition().alongWith(drivetrain.targetHeadingContinuous(0.0, HeadingTarget.GYRO)),
                 //     elevatorArmPivot.netScoreBackwardsPosition().alongWith(drivetrain.targetHeadingContinuous(180.0, HeadingTarget.GYRO)),
@@ -533,8 +544,13 @@ public class RobotContainer {
         // testController.button(2).whileTrue(elevatorArmPivot.setSpeed(0.2)).onFalse(elevatorArmPivot.stop());
         // testController.button(3).whileTrue(elevatorArmPivot.setSpeed(-0.2)).onFalse(elevatorArmPivot.stop());
         
-        // testController.button(1).whileTrue(elevatorArmAlgae.setSpeed(0.5)).onFalse(elevatorArmAlgae.stop());
-        // testController.button(2).whileTrue(elevatorArmAlgae.setSpeed(0.05)).onFalse(elevatorArmAlgae.stop());
+        driverController.leftStick().whileTrue(elevatorArmAlgae.runSpeed(0.5));
+        driverController.rightStick().whileTrue(
+            Commands.sequence(
+                elevatorArmAlgae.runSpeed(0.05).withTimeout(0.5),
+                Commands.waitSeconds(0.5)
+            ).repeatedly()
+        );
 
         // testController.button(1).whileTrue(elevatorArm.intakeAndIndex());
         // testController.button(2).whileTrue(elevatorArm.runSpeed(0.05));
