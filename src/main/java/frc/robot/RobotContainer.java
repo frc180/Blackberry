@@ -316,7 +316,7 @@ public class RobotContainer {
             .onTrue(new RumbleCommand(1).withTimeout(0.5));
                 
         //create a trigger to check if the elevatorArm has a coral in it so that way it can stop running and go to a score/stow position
-        elevatorArm.hasCoral.onTrue(intakeCoral.stopIntake().alongWith(elevatorArm.stop()));
+        // elevatorArm.hasCoral.onTrue(intakeCoral.stopIntake().alongWith(elevatorArm.stop()));
 
         //Algae Intake (using left paddle + right trigger)
         driverIntakeAlgae.whileTrue(intakeAlgaePivot.extend().alongWith(intakeAlgae.intake()))
@@ -359,30 +359,24 @@ public class RobotContainer {
         // );
 
         teleop.onTrue(Commands.sequence(
+            // Commands.either(
+            //     Commands.none(),
+            //     elevator.home(),
+            //     elevator::isHomed 
+            // ),
+            // elevatorArmPivot.home().andThen(elevatorArmPivot.horizontalPosition()),
             Commands.either(
                 Commands.none(),
-                elevator.home(),
-                () -> true // elevator::isHomed // Disabled for now
-            ),
-            elevatorArmPivot.home().andThen(elevatorArmPivot.horizontalPosition()),
-            Commands.either(
-                Commands.none(),
-                elevatorArmPivot.home(),
+                elevatorArmPivot.home().andThen(elevatorArmPivot.horizontalPosition()),
                 elevatorArmPivot::isHomed
-            ).andThen(elevatorArmPivot.horizontalPosition()),
-            Commands.runOnce(() -> {
-                Commands.sequence(
-                    new RumbleCommand(0.5).withTimeout(0.3),
-                    Commands.waitSeconds(0.2),
-                    new RumbleCommand(0.5).withTimeout(0.3)
-                ).schedule();
-            })
+            ),
+            new RumbleCommand(0.5).withTimeout(0.3)
         ));
 
 
         // Make the robot point towards the closest side of the reef
         if (Robot.isSimulation()) {
-            teleop.and(coralMode).and(driverController.a().or(robotHasCoral))
+            teleop.and(coralMode).and(robotHasCoral)
                 .whileTrue(drivetrain.targetHeadingContinuous(() -> {
                     Pose2d reefPose = vision.getClosestReefPose();
                     return reefPose != null ? reefPose.getRotation().getDegrees() : null;
