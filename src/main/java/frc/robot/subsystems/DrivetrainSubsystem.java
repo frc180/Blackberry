@@ -396,13 +396,10 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         yProfiledPid.reset(state.Pose.getY(), speeds.vyMetersPerSecond);
         resetHeadingPID(type);
 
-        // experimental
+        // Reset variables for experimental pose following too
         driveToPoseStart = null;
         xPid.reset();
         yPid.reset();
-
-        driveToPoseTimer.reset();
-        driveToPoseTimer.start();
     }
 
     public void resetHeadingPID(HeadingTarget type) {
@@ -456,44 +453,54 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     final Timer driveToPoseTimer = new Timer();
     Pose2d driveToPoseStart = null;
 
-    // https://github.com/frc6995/Robot-2025/blob/a9871f804924f71e47eb576578ac69bbe7b9249f/src/main/java/frc/robot/subsystems/DriveBaseS.java#L493
-    public ChassisSpeeds experimentalCalculateSpeeds(Pose2d currentPose, Pose2d pidPose) {
-        intermediatePose = pidPose;
+    /**
+     * Experimental method for driving to a pose using a trapezoidal profile, treating the drivetrain as a one-dimensional
+     * mechanism instead of applying the profile to the X and Y axes separately.
+     * Derived from this code from team 6995: https://github.com/frc6995/Robot-2025/blob/a9871f804924f71e47eb576578ac69bbe7b9249f/src/main/java/frc/robot/subsystems/DriveBaseS.java#L444
+     */
+    public ChassisSpeeds experimentalCalculateSpeeds(Pose2d currentPose, Pose2d endPose) {
+        intermediatePose = endPose;
         
-        boolean init = driveToPoseStart == null;
-        if (init) driveToPoseStart = currentPose;
-        Pose2d end = pidPose;
+        boolean initializing = driveToPoseStart == null;
+        if (initializing) {
+            driveToPoseStart = currentPose;
+            driveToPoseTimer.restart();
+        }
 
-        Translation2d normDirStartToEnd = end.getTranslation().minus(driveToPoseStart.getTranslation());
-        double dist = normDirStartToEnd.getNorm();
-        normDirStartToEnd = normDirStartToEnd.div(dist + 0.001);
+        Translation2d normDirStartToEnd = endPose.getTranslation().minus(driveToPoseStart.getTranslation());
+        double distance = normDirStartToEnd.getNorm();
+        normDirStartToEnd = normDirStartToEnd.div(distance + 0.001);
 
-        if (init) {        
-            driveToPoseStartState.position = dist;
+        if (initializing) {        
+            driveToPoseStartState.position = distance;
             driveToPoseStartState.velocity = MathUtil.clamp(
-                Helpers.velocityTowards(driveToPoseStart, getFieldRelativeSpeeds(), end.getTranslation()),
+                Helpers.velocityTowards(driveToPoseStart, getFieldRelativeSpeeds(), endPose.getTranslation()),
                 -driveToPoseConstraints.maxVelocity, 
                 0
             );
         }
 
-        var setpoint = driveToPoseProfile.calculate(driveToPoseTimer.get(), driveToPoseStartState, driveToPoseGoalState);
-        var interpTrans = end.getTranslation().interpolate(driveToPoseStart.getTranslation(), setpoint.position / dist);
+        // Calculate the setpoint (i.e. current distance along the path) we should be targeting
+        State setpoint = driveToPoseProfile.calculate(driveToPoseTimer.get(), driveToPoseStartState, driveToPoseGoalState);
+        Translation2d setpointTarget = endPose.getTranslation().interpolate(driveToPoseStart.getTranslation(), setpoint.position / distance);
 
-        double xFeedback = xPid.calculate(currentPose.getX(), interpTrans.getX());
-        double yFeedback = yPid.calculate(currentPose.getY(), interpTrans.getY());
+        // Use normal PIDs to calculate the feedback for the X and Y axes to reach the setpoint position
+        double xOutput = xPid.calculate(currentPose.getX(), setpointTarget.getX());
+        double yOutput = yPid.calculate(currentPose.getY(), setpointTarget.getY());
 
-        double xVelocity = normDirStartToEnd.getX() * -setpoint.velocity;
-        double yVelocity = normDirStartToEnd.getY() * -setpoint.velocity;
-        xFeedback += xyFeedforward.calculate(xVelocity);
-        yFeedback += xyFeedforward.calculate(yVelocity);
+        // Use feedforward for the X and Y axes to better reach the setpoint speed
+        double xTargetVelocity = normDirStartToEnd.getX() * -setpoint.velocity;
+        double yTargetVelocity = normDirStartToEnd.getY() * -setpoint.velocity;
+        xOutput += xyFeedforward.calculate(xTargetVelocity);
+        yOutput += xyFeedforward.calculate(yTargetVelocity);
 
-        xFeedback = MathUtil.clamp(xFeedback, -driveToPoseConstraints.maxVelocity, driveToPoseConstraints.maxVelocity);
-        yFeedback = MathUtil.clamp(yFeedback, -driveToPoseConstraints.maxVelocity, driveToPoseConstraints.maxVelocity);
+        // Make sure final X and Y outputs are within the max velocity constraints
+        xOutput = MathUtil.clamp(xOutput, -driveToPoseConstraints.maxVelocity, driveToPoseConstraints.maxVelocity);
+        yOutput = MathUtil.clamp(yOutput, -driveToPoseConstraints.maxVelocity, driveToPoseConstraints.maxVelocity);
 
-        double thetaFeedback = calculateHeadingPID(currentPose.getRotation(), pidPose.getRotation().getDegrees());
+        double thetaOutput = calculateHeadingPID(currentPose.getRotation(), endPose.getRotation().getDegrees());
 
-        return ChassisSpeeds.fromFieldRelativeSpeeds(xFeedback, yFeedback, thetaFeedback, currentPose.getRotation());
+        return ChassisSpeeds.fromFieldRelativeSpeeds(xOutput, yOutput, thetaOutput, currentPose.getRotation());
     }
 
     /**
