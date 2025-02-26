@@ -130,17 +130,19 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
 
     @NotLogged
     private final ProfiledPIDController xProfiledPid, yProfiledPid, rotationProfiledPid;
+    @NotLogged
     private final PIDController xPid, yPid;
     private final SimpleMotorFeedforward xyFeedforward;
     private final TrapezoidProfile.Constraints driveToPoseConstraints;
     private final TrapezoidProfile driveToPoseProfile;
-    private double translationKV = 0;
     private State xPidGoalState = new State();
     private State yPidGoalState = new State();
     private double xPosition = 0;
     private double yPosition = 0;
     private double xPidTarget = 0;
     private double yPidTarget = 0;
+    private double[] moduleSpeeds = new double[] {0, 0, 0, 0};
+    private double moduleSpeedAvg = 0;
 
     private boolean pigeonConnected = false;
     private Alert pigeonDisconnectedAlert = new Alert("Pigeon gyro disconnected!", AlertType.kError);
@@ -383,6 +385,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         }
     }
 
+    @NotLogged
     public ChassisSpeeds getFieldRelativeSpeeds() {
         return getFieldRelativeSpeeds(getState());
     }
@@ -771,6 +774,14 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         yPidTarget = yPid.getSetpoint();
 
         poseBuffer.addSample(Timer.getFPGATimestamp(), getPose());
+
+        var modules = getModules();
+        moduleSpeedAvg = 0;
+        for (int i = 0; i < modules.length; i++) {
+            moduleSpeeds[i] = modules[i].getCurrentState().speedMetersPerSecond;
+            moduleSpeedAvg += Math.abs(moduleSpeeds[i]);
+        }
+        moduleSpeedAvg /= modules.length;
 
         if (mapleSimSwerveDrivetrain != null) {
             mapleSimPose = mapleSimSwerveDrivetrain.mapleSimDrive.getSimulatedDriveTrainPose();
