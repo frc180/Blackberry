@@ -33,8 +33,8 @@ public class ElevatorSubsystem extends SubsystemBase {
 
   protected static final double SOFT_UPPER_LIMIT = Meters.of(1.48).in(Meters);
   protected static final double SOFT_LOWER_LIMIT = 0;
-  private static final double SLOW_STOW_THRESHOLD = Inches.of(16).in(Meters);
   private static final double IN_POSITION_METERS = Inches.of(1).in(Meters);
+  private static final double STOW_INTERMEDIATE = Inches.of(5).in(Meters);
 
   private ElevatorIO io;
   private ElevatorIOInputs inputs;
@@ -82,7 +82,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     }
     notHomedAlert.set(!hasHomed);
 
-    specialStowLogic();
+    softStowLogic();
   }
 
   @Override
@@ -179,26 +179,25 @@ public class ElevatorSubsystem extends SubsystemBase {
   }
 
   /**
-   * Handles special logic for stowing the elevator safely.
-   * @return True if the special logic was applied, false otherwise.
+   * Handles special soft-stow logic for stowing the elevator safely.
+   * @return True if the soft stow logic was applied, false otherwise.
    */
-  public boolean specialStowLogic() {
-    if (targetPosition == STOW) {
-        if (atLowerLimitDebounced.getAsBoolean()) {
-            io.stopMotor();
-            return true;
-        } else if (inputs.position <= SLOW_STOW_THRESHOLD) {
-            io.setPower(-0.02);
-            return true;
-        }
-    }
+  private boolean softStowLogic() {
+    if (targetPosition != STOW) return false;
 
-    return false;
+    if (atLowerLimitDebounced.getAsBoolean()) {
+        io.stopMotor();
+    } else if (inputs.position > STOW_INTERMEDIATE + IN_POSITION_METERS) {
+        io.setPosition(STOW_INTERMEDIATE);
+    } else {
+        io.setPower(-0.01);
+    }
+    return true;
   }
 
   public void setPositionDirect(Distance position) {
     targetPosition = position;
-    if (!specialStowLogic()) {
+    if (!softStowLogic()) {
         io.setPosition(position.in(Meters));
     }
   }
