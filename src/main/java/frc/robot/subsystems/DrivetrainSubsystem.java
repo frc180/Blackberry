@@ -38,6 +38,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.interpolation.TimeInterpolatableBuffer;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
@@ -775,13 +776,13 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
 
         poseBuffer.addSample(Timer.getFPGATimestamp(), getPose());
 
-        var modules = getModules();
+        SwerveModuleState[] moduleStates = getState().ModuleStates;
         moduleSpeedAvg = 0;
-        for (int i = 0; i < modules.length; i++) {
-            moduleSpeeds[i] = modules[i].getCurrentState().speedMetersPerSecond;
+        for (int i = 0; i < moduleStates.length; i++) {
+            moduleSpeeds[i] = moduleStates[i].speedMetersPerSecond;
             moduleSpeedAvg += Math.abs(moduleSpeeds[i]);
         }
-        moduleSpeedAvg /= modules.length;
+        moduleSpeedAvg /= moduleStates.length;
 
         if (mapleSimSwerveDrivetrain != null) {
             mapleSimPose = mapleSimSwerveDrivetrain.mapleSimDrive.getSimulatedDriveTrainPose();
