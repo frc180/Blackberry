@@ -28,7 +28,7 @@ public class ElevatorSubsystem extends SubsystemBase {
   public static final Distance L3 = L2.plus(Inches.of(16));
   public static final Distance L4 = Meters.of(1.4).plus(Inches.of(1.5));
   public static final Distance NET = Meters.of(1.47);       // may be able to just be L4
-  public static final Distance STOW = Centimeters.of(0.5);
+  public static final Distance STOW = Centimeters.of(1);
   public static final Distance ZERO = Meters.of(0);
 
   protected static final double SOFT_UPPER_LIMIT = Meters.of(1.48).in(Meters);
@@ -41,6 +41,8 @@ public class ElevatorSubsystem extends SubsystemBase {
 
   private Distance targetPosition = ZERO;
   private boolean hasHomed = false;
+
+  private Trigger atHomingHardstop = new Trigger(this::isAtLowerLimit).debounce(0.2);
 
   @NotLogged
   public Trigger elevatorInPosition = new Trigger(this::isElevatorInPosition);
@@ -102,7 +104,7 @@ public class ElevatorSubsystem extends SubsystemBase {
 
   public Command home() {
     return runOnce(() -> hasHomed = false)
-            .andThen(runSpeed(-0.05).until(this::isAtLowerLimit))
+            .andThen(runSpeed(-0.03).until(atHomingHardstop))
             .andThen(runOnce(() -> io.zero()))
             .withInterruptBehavior(InterruptionBehavior.kCancelIncoming);
   }

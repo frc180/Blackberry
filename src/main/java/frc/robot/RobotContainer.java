@@ -361,11 +361,11 @@ public class RobotContainer {
         // );
 
         teleop.onTrue(Commands.sequence(
-            // Commands.either(
-            //     Commands.none(),
-            //     elevator.home(),
-            //     elevator::isHomed 
-            // ),
+            Commands.either(
+                Commands.none(),
+                elevator.home(),
+                elevator::isHomed 
+            ),
             // elevatorArmPivot.home().andThen(elevatorArmPivot.horizontalPosition()),
             Commands.either(
                 Commands.none(),
