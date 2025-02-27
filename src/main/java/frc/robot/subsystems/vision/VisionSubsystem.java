@@ -3,6 +3,7 @@ package frc.robot.subsystems.vision;
 import static edu.wpi.first.units.Units.*;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import com.ctre.phoenix6.Utils;
 import java.util.Map.Entry;
@@ -22,11 +23,13 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.Field;
 import frc.robot.Robot;
 import frc.robot.RobotContainer;
 import frc.robot.subsystems.vision.VisionIO.VisionIOInputs;
@@ -64,6 +67,11 @@ public class VisionSubsystem extends SubsystemBase {
     public static final List<Integer> redReefTags = List.of(6,7,8,9,10,11);
     public static final List<Integer> blueReefTags = List.of(17, 18, 19, 20, 21, 22);
 
+    // Used to correct for horizontal offset of tags on the field
+    private static final Map<Integer, Distance> TAG_OFFSETS = Map.of(
+        // 6, Inches.of(24)
+    );
+
     public static final Transform3d ROBOT_TO_SCORING_CAMERA = new Transform3d(
         Inches.of(9.757).in(Meters), // forward
         Inches.of(-7.2).in(Meters), // right
@@ -94,8 +102,12 @@ public class VisionSubsystem extends SubsystemBase {
     private final CoralDetector coralDetector;
     private final SingleTagSolver singleTagSolver = new SingleTagSolver();
 
-    private final Transform2d leftReefTransform = new Transform2d(0.55 + Inches.of(2.5).in(Meters), -0.15 - Inches.of(1).in(Meters), Rotation2d.fromDegrees(180));
-    private final Transform2d rightReefTransform = new Transform2d(0.55 + Inches.of(2.5).in(Meters), 0.15 + Inches.of(1).in(Meters), Rotation2d.fromDegrees(180));
+    private final Distance reefBackDistance = Meters.of(0.55).plus(Inches.of(2.5));
+    // private final Distance reefSideDistance = Meters.of(0.15).plus(Inches.of(1)); // the one we've used so far
+    private final Distance reefSideDistance = Field.REEF_BRANCH_SEPARATION.div(2); // field measurement based
+
+    private final Transform2d leftReefTransform = new Transform2d(reefBackDistance.in(Meters), -reefSideDistance.in(Meters), Rotation2d.k180deg);
+    private final Transform2d rightReefTransform = new Transform2d(reefBackDistance.in(Meters), reefSideDistance.in(Meters), Rotation2d.k180deg);
     private final Transform2d processorTransform = new Transform2d(0.55, 0.0, Rotation2d.fromDegrees(90));
 
     // Apply a position transform, then a rotation transform
@@ -349,15 +361,25 @@ public class VisionSubsystem extends SubsystemBase {
         }
     }
 
+    private Pose2d getReefTagPose(int tagID) {
+        Pose2d pose = tagPoses2d.get(tagID);
+        if (pose == null) return null;
+
+        if (TAG_OFFSETS.containsKey(tagID)) {
+            pose = pose.transformBy(new Transform2d(0, TAG_OFFSETS.get(tagID).in(Meters), Rotation2d.kZero));
+        }
+        return pose;
+    }
+
     /**
      * Generates the scoring pose of the robot relative to a reef AprilTag. This is used to pre-calculate and store all
      * positions to prevent duplicate object creation. To access these pre-calculated poses, use {@link #getReefPose(int, boolean)}.
      */
     private Pose2d calculateReefPose(int tagID, boolean left) {
-        Optional<Pose3d> pose3d = aprilTagFieldLayout.getTagPose(tagID); //gets the pose of the april tag in 3d space
-        if (pose3d.isEmpty()) return null;
+        Pose2d pose = getReefTagPose(tagID);
+        if (pose == null) return null;
 
-        return pose3d.get().toPose2d().transformBy(left ? leftReefTransform : rightReefTransform);
+        return pose.transformBy(left ? leftReefTransform : rightReefTransform);
     }
 
     /**
@@ -365,11 +387,11 @@ public class VisionSubsystem extends SubsystemBase {
      * positions to prevent duplicate object creation. To access these pre-calculated poses, use {@link #getL1ReefPose(int, boolean)}.
      */
     private Pose2d calculateL1ReefPose(int tagID, boolean left) {
-        Optional<Pose3d> pose3d = aprilTagFieldLayout.getTagPose(tagID);
-        if (pose3d.isEmpty()) return null;
+        Pose2d pose = getReefTagPose(tagID);
+        if (pose == null) return null;
 
-        return pose3d.get().toPose2d().transformBy(left ? leftL1ReefTransform : rightL1ReefTransform)
-                                      .transformBy(left ? leftL1ReefRotation : rightL1ReefRotation);
+        return pose.transformBy(left ? leftL1ReefTransform : rightL1ReefTransform)
+                   .transformBy(left ? leftL1ReefRotation : rightL1ReefRotation);
     }
 
     /**
@@ -388,10 +410,10 @@ public class VisionSubsystem extends SubsystemBase {
     private Pose2d calculateProcessorPose(boolean blue) {
         int tagID = blue ? BLUE_PROCESSOR_TAG : RED_PROCESSOR_TAG;
 
-        Optional<Pose3d> pose3d = aprilTagFieldLayout.getTagPose(tagID);
-        if (pose3d.isEmpty()) return null;
+        Pose2d pose = getReefTagPose(tagID);
+        if (pose == null) return null;
 
-        return pose3d.get().toPose2d().transformBy(processorTransform);
+        return pose.transformBy(processorTransform);
     }
 
     /**

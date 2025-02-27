@@ -218,8 +218,8 @@ public class RobotContainer {
         ));//.debounce(0.2, DebounceType.kFalling); 
 
         atReef = drivetrain.targetingReef().and(drivetrain.withinTargetPoseTolerance(
-                        Inches.of(1),
-                        Inches.of(1),
+                        Inches.of(0.75), // was 1
+                        Inches.of(0.75), // was 1
                         Degrees.of(2)
         ));
 

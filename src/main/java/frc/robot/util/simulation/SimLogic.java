@@ -1,14 +1,11 @@
 package frc.robot.util.simulation;
 
-import static edu.wpi.first.units.Units.Centimeter;
-import static edu.wpi.first.units.Units.Centimeters;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
-import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeAlgaeOnField;
 import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeAlgaeOnFly;
 import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeCoralOnField;
 import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeCoralOnFly;
@@ -18,6 +15,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.units.measure.Distance;
+import frc.robot.Field;
 import frc.robot.Robot;
 import frc.robot.RobotContainer;
 import frc.robot.subsystems.elevator.ElevatorSubsystem;
@@ -26,7 +24,7 @@ public abstract class SimLogic {
 
     public static final Pose2d redHPCoralPose = new Pose2d(16.17, 1.33, new Rotation2d());
     public static final Pose2d blueHPCoralPose = FlippingUtil.flipFieldPose(redHPCoralPose);
-    public static final double CORAL_LENGTH = Centimeters.of(30).in(Meters);
+    public static final double CORAL_LENGTH = Field.CORAL_LENGTH.in(Meters);
 
     public static boolean intakeHasCoral = false;
     public static boolean armHasCoral = false;
@@ -92,7 +90,7 @@ public abstract class SimLogic {
         SimulatedArena.getInstance().addGamePieceProjectile(new ReefscapeCoralOnFly(
             simRobotPose.getTranslation(),
             // The scoring mechanism position on the robot
-            new Translation2d(0.6, 0),
+            new Translation2d(0.7, 0),
             swerveSim.getDriveTrainSimulatedChassisSpeedsFieldRelative(),
             simRobotPose.getRotation(),
             coralHeight,
