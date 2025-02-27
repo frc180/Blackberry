@@ -22,6 +22,7 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.*;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.DoubleSupplier;
 import java.util.function.Function;
@@ -431,17 +432,34 @@ public class RobotContainer {
         Command coralEject = elevatorArm.runSpeed(0.35).until(elevatorArm.hasNoCoral)
                                         .andThen(Commands.waitSeconds(0.2));
 
-        coralEject = Commands.either(
-            l1CoralEject,
-            coralEject,
-            () -> elevator.getTargetPosition() == ElevatorSubsystem.L1
+        
+        Command elevatorArmEject = Commands.select(Map.of(
+                1, l1CoralEject,
+                2, l4CoralEject,
+                3, coralEject
+            ), 
+            () -> {
+                if (elevator.getTargetPosition() == ElevatorSubsystem.L1) {
+                    return 1;
+                } else if (elevator.getTargetPosition() == ElevatorSubsystem.L4) {
+                    return 2;
+                } else {
+                    return 3;
+                }
+            }
         );
 
-        Command elevatorArmEject = Commands.either(
-            l4CoralEject,
-            coralEject,
-            () -> elevator.getTargetPosition() == ElevatorSubsystem.L4
-        );
+        // coralEject = Commands.either(
+        //     l1CoralEject,
+        //     coralEject,
+        //     () -> elevator.getTargetPosition() == ElevatorSubsystem.L1
+        // );
+
+        // Command elevatorArmEject = Commands.either(
+        //     l4CoralEject,
+        //     coralEject,
+        //     () -> elevator.getTargetPosition() == ElevatorSubsystem.L4
+        // );
 
         Trigger visionScoreReady = vision.poseEstimateDiffLow.or(scoringCameraDisconnected)
                                                              .or(() -> elevator.getTargetPosition() == ElevatorSubsystem.L1);
