@@ -356,16 +356,21 @@ public class RobotContainer {
             })
         ));
 
-        // disabled.and(elevatorArmPivot.atHardstop).onTrue(
-        //     elevatorArmPivot.brakeMode().ignoringDisable(true)
-        // );
+        disabled.and(elevatorArmPivot.atHardstop.negate()).onTrue(
+            elevatorArmPivot.coastMode().ignoringDisable(true)
+        );
+
+        disabled.and(elevatorArmPivot.atHardstop).onTrue(
+            elevatorArmPivot.brakeMode().ignoringDisable(true)
+        );
 
         teleop.onTrue(Commands.sequence(
-            Commands.either(
-                Commands.none(),
-                elevator.home(),
-                elevator::isHomed 
-            ),
+            elevatorArmPivot.brakeMode(),
+            // Commands.either(
+            //     Commands.none(),
+            //     elevator.home(),
+            //     elevator::isHomed 
+            // ),
             // elevatorArmPivot.home().andThen(elevatorArmPivot.horizontalPosition()),
             Commands.either(
                 Commands.none(),
@@ -480,7 +485,7 @@ public class RobotContainer {
             Commands.parallel(
                 elevator.setPosition(ElevatorSubsystem.L1),
                 elevatorArmPivot.receiveAlgaePosition(),
-                elevatorArmAlgae.run()
+                elevatorArmAlgae.runSpeed(1)
             )
         );
 
@@ -545,12 +550,7 @@ public class RobotContainer {
         // testController.button(3).whileTrue(elevatorArmPivot.setSpeed(-0.2)).onFalse(elevatorArmPivot.stop());
         
         driverController.leftStick().whileTrue(elevatorArmAlgae.runSpeed(0.5));
-        driverController.rightStick().whileTrue(
-            Commands.sequence(
-                elevatorArmAlgae.runSpeed(0.05).withTimeout(0.5),
-                Commands.waitSeconds(0.5)
-            ).repeatedly()
-        );
+        driverController.rightStick().whileTrue(elevatorArmAlgae.holdPulse());
 
         // testController.button(1).whileTrue(elevatorArm.intakeAndIndex());
         // testController.button(2).whileTrue(elevatorArm.runSpeed(0.05));
@@ -562,30 +562,29 @@ public class RobotContainer {
         // testController.button(3).whileTrue(intakeAlgaePivot.setSpeed(0.2)).onFalse(intakeAlgaePivot.stop());
         // testController.button(4).whileTrue(intakeAlgaePivot.setSpeed(-0.2)).onFalse(intakeAlgaePivot.stop());
  
-        testController.button(4).onTrue(elevatorArmPivot.zero(0).ignoringDisable(true));
+        // testController.button(4).onTrue(elevatorArmPivot.zero(0).ignoringDisable(true));
 
-        testController.button(6).onTrue(elevatorArmPivot.setPosition(elevatorArmPivot.horizontal));
-        testController.button(7).onTrue(elevatorArmPivot.setPosition(elevatorArmPivot.receiving));
+        // testController.button(6).onTrue(elevatorArmPivot.setPosition(elevatorArmPivot.horizontal));
+        // testController.button(7).onTrue(elevatorArmPivot.setPosition(elevatorArmPivot.receiving));
 
         // // Stops on release since runSpeed automatically stops the motors
         // teleop.and(testController.button(8)).whileTrue(elevator.runSpeed(0.2));
         // teleop.and(testController.button(9)).whileTrue(elevator.runSpeed(-0.2));
         
-
-        //disabled some elevator stuff to do the algae intake
-        Trigger elevatorZeroed = new Trigger(() -> true);//new Trigger(elevator::hasZeroed);
+        teleop.and(testController.button(6))
+            .onTrue(elevator.home().andThen(new RumbleCommand(0.5).withTimeout(0.5)));
         
-        // teleop.and(elevatorZeroed).and(testController.button(7))
-        // .onTrue(elevator.setPosition(ElevatorSubsystem.L1));
+        teleop.and(testController.button(7))
+            .onTrue(elevator.setPosition(ElevatorSubsystem.STOW));
 
-        // teleop.and(elevatorZeroed).and(testController.button(8))
-        // .onTrue(elevator.setPosition(ElevatorSubsystem.L2));
+        teleop.and(testController.button(8))
+            .onTrue(elevator.setPosition(ElevatorSubsystem.L2));
 
-        // teleop.and(elevatorZeroed).and(testController.button(9))
-        //     .onTrue(elevator.setPosition(ElevatorSubsystem.L3));
+        teleop.and(testController.button(9))
+            .onTrue(elevator.setPosition(ElevatorSubsystem.L3));
 
-        // teleop.and(elevatorZeroed).and(testController.button(10))
-        //     .onTrue(elevator.setPosition(ElevatorSubsystem.L4));
+        teleop.and(testController.button(10))
+            .onTrue(elevator.setPosition(ElevatorSubsystem.L4));
 
         // testMode.and(testController.button(10)).onTrue(Commands.sequence(
         //     elevator.home(),

@@ -134,6 +134,7 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
         return runOnce(() -> io.zero(rotations));
     }
 
+    @NotLogged
     private final double MAX_ERROR_THRESHOLD = Inches.of(20).in(Meters);
 
     public Command matchElevatorPreset() {

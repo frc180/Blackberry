@@ -2,6 +2,7 @@ package frc.robot.subsystems.elevatorArmAlgae;
 
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Robot;
@@ -35,30 +36,6 @@ public class ElevatorArmAlgaeSubsystem extends SubsystemBase{
         io.update(inputs);
     }
 
-    public Command run() {
-        return this.run(() -> {
-            io.run();
-        });
-    }
-
-    public Command stop() {
-        return this.run (() -> {
-            io.stop();
-        });
-    }
-
-    public Command spit() {
-        return this.runEnd(() -> {
-            io.reverse();
-        }, () -> {
-            io.stop();
-        });
-    }
-
-    public void reverseDirect() {
-        io.reverse();
-    }
-
     // TODO: Minor fix - prevent this from running when doing left-aligned L2 and L3 (since we only get algae from the right side)
     public Command intakeBasedOnElevator() {
         ElevatorSubsystem elevator = RobotContainer.instance.elevator;
@@ -74,6 +51,16 @@ public class ElevatorArmAlgaeSubsystem extends SubsystemBase{
         );
     }
 
+    public Command holdPulse() {
+        return runSpeed(0.05).withTimeout(0.5)
+                .andThen(Commands.waitSeconds(0.3))
+                .repeatedly();
+    }
+
+    public Command spit() {
+        return runSpeed(-1);
+    }
+
     public Command setSpeed(double speed) {
         return run(() -> io.setSpeed(speed));
     }
@@ -83,6 +70,10 @@ public class ElevatorArmAlgaeSubsystem extends SubsystemBase{
             () -> io.setSpeed(speed),
             () -> io.stop()
         );
+    }
+
+    public Command stop() {
+        return run(() -> io.stop());
     }
     
     public double getSpeed() {

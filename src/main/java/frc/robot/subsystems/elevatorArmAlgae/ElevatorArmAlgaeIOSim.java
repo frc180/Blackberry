@@ -16,18 +16,8 @@ public class ElevatorArmAlgaeIOSim implements ElevatorArmAlgaeIO{
     public ElevatorArmAlgaeIOSim() {}
 
     @Override
-    public void run() {
-        speed = 1;
-    }
-    
-    @Override
     public void stop() {
         speed = 0;
-    }
-
-    @Override
-    public void reverse() {
-        speed = -1;
     }
 
     @Override
@@ -67,12 +57,11 @@ public class ElevatorArmAlgaeIOSim implements ElevatorArmAlgaeIO{
             }
         }
 
-        // inputs.algaeSensor = hasAlgae;
         inputs.hasAlgae = SimLogic.armHasAlgae;
     }
 
     @Override
     public void setSpeed(double speed) {
-        // System.out.println("elevator arm algae test");
+        this.speed = speed;
     }
 }

@@ -10,14 +10,10 @@ public interface ElevatorArmAlgaeIO {
         public boolean hasAlgae;
         public double speed;
     }
-    
-    public void run();
 
+    public void setSpeed(double speed);
+    
     public void stop();
 
-    public void reverse();
-
     public void update(ElevatorArmAlgaeInputs inputs);
-    
-    public void setSpeed(double speed);
 }

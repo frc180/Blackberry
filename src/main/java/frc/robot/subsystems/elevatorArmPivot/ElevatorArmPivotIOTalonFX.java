@@ -2,6 +2,7 @@ package frc.robot.subsystems.elevatorArmPivot;
 
 import static edu.wpi.first.units.Units.*;
 import static frc.robot.util.StatusSignals.trackSignal;
+import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
@@ -27,6 +28,7 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO {
     TalonFX armPivotMotor;
     MotionMagicVoltage motionMagic;
     VoltageOut voltageControl;
+    NeutralModeValue neutralMode = null;
 
     // Status signals
     StatusSignal<Angle> positionSignal;
@@ -69,7 +71,7 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO {
         // }
 
         armPivotMotor.getConfigurator().apply(config);
-        armPivotMotor.setNeutralMode(NeutralModeValue.Coast);
+        setNeutralMode(NeutralModeValue.Coast);
 
         motionMagic = new MotionMagicVoltage(0);
         voltageControl = new VoltageOut(0);
@@ -147,11 +149,22 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO {
 
     @Override
     public void brakeMode() {
-        armPivotMotor.setNeutralMode(NeutralModeValue.Brake);
+        setNeutralMode(NeutralModeValue.Brake);
     }
 
     @Override
     public void coastMode() {
-        armPivotMotor.setNeutralMode(NeutralModeValue.Coast);
+        setNeutralMode(NeutralModeValue.Coast);
+    }
+
+    private void setNeutralMode(NeutralModeValue value) {
+        if (value == neutralMode) return;
+
+        StatusCode code = armPivotMotor.setNeutralMode(value);
+        if (code == StatusCode.OK) {
+            neutralMode = value;
+        } else {
+            System.out.println("FAILED to set arm pivot neutral mode: " + code);
+        }
     }
 }
