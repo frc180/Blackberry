@@ -3,8 +3,8 @@ package frc.robot.subsystems.vision;
 import com.spamrobotics.vision.LimelightStatus;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Robot;
 import frc.robot.RobotContainer;
 import frc.robot.util.LimelightHelpers;
@@ -15,19 +15,26 @@ public class VisionIOLimelight implements VisionIO {
     private static final String SCORING_LIMELIGHT = "limelight";
     private static final String FRONT_LIMEIGHT = "limelight-front";
     private static final String BACK_LIMEIGHT = "limelight-back";
+
+    private static final int APRILTAG_PIPELINE = 0;
+    private static final int VIEWFINDER_PIPELINE = 1;
+
+    private static final int IMU_ASSIST_MT1 = 3;
+    private static final int IMU_ASSIST_EXTERNALIMU = 4;
+
     private final LimelightStatus scoringLimelightStatus;
     private final LimelightStatus frontLimelightStatus;
     private final LimelightStatus backLimelightStatus;
-
-    private final int APRILTAG_PIPELINE = 0;
-    private final int VIEWFINDER_PIPELINE = 1;
-
     private final PoseEstimate simPoseEstimate = new PoseEstimate();
+
+    private int frontCameraImuMode = IMU_ASSIST_EXTERNALIMU;
 
     public VisionIOLimelight() {
         scoringLimelightStatus = new LimelightStatus(SCORING_LIMELIGHT);
         frontLimelightStatus = new LimelightStatus(FRONT_LIMEIGHT);
         backLimelightStatus = new LimelightStatus(BACK_LIMEIGHT);
+
+        SmartDashboard.putNumber("Front Camera IMU Mode", frontCameraImuMode);
     }
 
     @Override
@@ -53,6 +60,14 @@ public class VisionIOLimelight implements VisionIO {
         setLimelightPosition(SCORING_LIMELIGHT, VisionSubsystem.ROBOT_TO_SCORING_CAMERA);
         setLimelightPosition(FRONT_LIMEIGHT, VisionSubsystem.ROBOT_TO_FRONT_CAMERA);
 
+        frontCameraImuMode = (int) SmartDashboard.getNumber("Front Camera IMU Mode", frontCameraImuMode);
+        LimelightHelpers.SetIMUMode(FRONT_LIMEIGHT, frontCameraImuMode);
+        if (frontCameraImuMode == IMU_ASSIST_EXTERNALIMU) {
+            double headingDegrees = RobotContainer.instance.drivetrain.getGyroscopeDegrees();
+            if (Robot.isRed()) headingDegrees += 180;
+            LimelightHelpers.SetRobotOrientation(FRONT_LIMEIGHT, headingDegrees, 0, 0, 0, 0, 0);
+        }
+
         inputs.scoringFiducials = LimelightHelpers.getRawFiducials(SCORING_LIMELIGHT);
         inputs.frontFiducials = LimelightHelpers.getRawFiducials(FRONT_LIMEIGHT);
         inputs.backDetections = LimelightHelpers.getRawDetections(BACK_LIMEIGHT);
@@ -64,6 +79,7 @@ public class VisionIOLimelight implements VisionIO {
         } else {
             inputs.scoringPoseEstimate = LimelightHelpers.getBotPoseEstimate_wpiBlue(SCORING_LIMELIGHT);
             inputs.frontPoseEstimate = LimelightHelpers.getBotPoseEstimate_wpiBlue(FRONT_LIMEIGHT);
+            inputs.frontPoseEstimateAlt = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(FRONT_LIMEIGHT);
         }
 
         if (inputs.scoringPoseEstimate != null) {

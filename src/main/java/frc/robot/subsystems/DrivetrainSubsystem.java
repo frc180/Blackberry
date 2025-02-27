@@ -298,8 +298,8 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
 
         if (Robot.isSimulation()) {
             resetPose(new Pose2d(6.77, 4.2, Rotation2d.fromDegrees(90)));
-            zeroGyroscope();
         }
+        zeroGyroscope();
     }
 
     public void drive(ChassisSpeeds speeds) {
