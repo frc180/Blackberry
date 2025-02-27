@@ -28,11 +28,12 @@ public class ElevatorSubsystem extends SubsystemBase {
   public static final Distance L3 = L2.plus(Inches.of(16));
   public static final Distance L4 = Meters.of(1.4).plus(Inches.of(1.5));
   public static final Distance NET = Meters.of(1.47);       // may be able to just be L4
-  public static final Distance STOW = Centimeters.of(1);
+  public static final Distance STOW = Centimeters.of(0);
   public static final Distance ZERO = Meters.of(0);
 
   protected static final double SOFT_UPPER_LIMIT = Meters.of(1.48).in(Meters);
   protected static final double SOFT_LOWER_LIMIT = 0;
+  private static final double SLOW_STOW_THRESHOLD = Inches.of(16).in(Meters);
   private static final double IN_POSITION_METERS = Inches.of(1).in(Meters);
 
   private ElevatorIO io;
@@ -42,7 +43,7 @@ public class ElevatorSubsystem extends SubsystemBase {
   private Distance targetPosition = ZERO;
   private boolean hasHomed = false;
 
-  private Trigger atHomingHardstop = new Trigger(this::isAtLowerLimit).debounce(0.2);
+  private Trigger atLowerLimitDebounced = new Trigger(this::isAtLowerLimit).debounce(0.2);
 
   @NotLogged
   public Trigger elevatorInPosition = new Trigger(this::isElevatorInPosition);
@@ -80,6 +81,8 @@ public class ElevatorSubsystem extends SubsystemBase {
       hasHomed = true;
     }
     notHomedAlert.set(!hasHomed);
+
+    specialStowLogic();
   }
 
   @Override
@@ -104,7 +107,7 @@ public class ElevatorSubsystem extends SubsystemBase {
 
   public Command home() {
     return runOnce(() -> hasHomed = false)
-            .andThen(runSpeed(-0.03).until(atHomingHardstop))
+            .andThen(runSpeed(-0.03).until(atLowerLimitDebounced))
             .andThen(runOnce(() -> io.zero()))
             .withInterruptBehavior(InterruptionBehavior.kCancelIncoming);
   }
@@ -175,9 +178,29 @@ public class ElevatorSubsystem extends SubsystemBase {
     return targetPosition.in(Meters) - inputs.position;
   }
 
+  /**
+   * Handles special logic for stowing the elevator safely.
+   * @return True if the special logic was applied, false otherwise.
+   */
+  public boolean specialStowLogic() {
+    if (targetPosition == STOW) {
+        if (atLowerLimitDebounced.getAsBoolean()) {
+            io.stopMotor();
+            return true;
+        } else if (inputs.position <= SLOW_STOW_THRESHOLD) {
+            io.setPower(-0.02);
+            return true;
+        }
+    }
+
+    return false;
+  }
+
   public void setPositionDirect(Distance position) {
-    io.setPosition(position.in(Meters));
     targetPosition = position;
+    if (!specialStowLogic()) {
+        io.setPosition(position.in(Meters));
+    }
   }
   
   public Distance levelToPosition(int level) {
