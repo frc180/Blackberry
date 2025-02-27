@@ -161,12 +161,14 @@ public class RobotContainer {
             new DriveToPose(drivetrain, () -> new Pose2d(2, 7, Rotation2d.kZero))
         ));
 
-        autoChooser.addOption("Drive 6 meters", Commands.sequence(
-            Commands.runOnce(() -> drivetrain.resetPose(new Pose2d(2,7, Rotation2d.kZero))),
-            new DriveToPose(drivetrain, () -> new Pose2d(8, 6, Rotation2d.kZero)).until(drivetrain.withinTargetPoseDistance(0.02)),
-            new DriveToPose(drivetrain, () -> new Pose2d(7, 5, Rotation2d.kCW_90deg)).until(drivetrain.withinTargetPoseDistance(0.02)),
-            new DriveToPose(drivetrain, () -> new Pose2d(2, 7, Rotation2d.kZero))
-        ));
+        if (Robot.isSimulation()) {
+            autoChooser.addOption("Drive 6 meters", Commands.sequence(
+                Commands.runOnce(() -> drivetrain.resetPose(new Pose2d(2,7, Rotation2d.kZero))),
+                new DriveToPose(drivetrain, () -> new Pose2d(8, 6, Rotation2d.kZero)).until(drivetrain.withinTargetPoseDistance(0.02)),
+                new DriveToPose(drivetrain, () -> new Pose2d(7, 5, Rotation2d.kCW_90deg)).until(drivetrain.withinTargetPoseDistance(0.02)),
+                new DriveToPose(drivetrain, () -> new Pose2d(2, 7, Rotation2d.kZero))
+            ));
+        }
 
         SmartDashboard.putData("Auto Mode", autoChooser);
 
@@ -295,9 +297,9 @@ public class RobotContainer {
             //     .onFalse(elevator.stow().alongWith(elevatorArmPivot.receivePosition()));
 
             coralIntakeTrigger
-                .whileTrue(elevatorArmPivot.receivePosition());
+                .whileTrue(elevatorArmPivot.receivePosition().alongWith(elevator.stow()));
 
-            coralIntakeTrigger.and(elevatorArmPivot::isAtReceivingPosition)
+            coralIntakeTrigger.and(elevatorArmPivot::isAtReceivingPosition).and(elevator::isElevatorInPosition)
                 .whileTrue(coralIndexer.runSpeed(0.5).alongWith(elevatorArm.intakeAndIndex()));
 
             // elevatorArm.setDefaultCommand(elevatorArm.passiveIndex());
@@ -498,9 +500,9 @@ public class RobotContainer {
         );
 
         // Scoring algae in the net from arm
-        driverNet.and(drivetrain.withinTargetHeadingTolerance(Degrees.of(5)))
+        driverNet//.and(drivetrain.withinTargetHeadingTolerance(Degrees.of(5)))
                  .and(elevator.elevatorInScoringPosition)
-                 .and(elevatorArmPivot.elevatorArmInScoringPosition)
+                 //.and(elevatorArmPivot.elevatorArmInScoringPosition)
                  .and(elevatorArmAlgae.hasAlgae).whileTrue(
                     elevatorArmAlgae.spit()
                  );

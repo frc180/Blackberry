@@ -1,9 +1,9 @@
 package frc.robot.subsystems.vision;
 
 import com.spamrobotics.vision.LimelightStatus;
-
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.Timer;
 import frc.robot.Robot;
 import frc.robot.RobotContainer;
@@ -18,6 +18,9 @@ public class VisionIOLimelight implements VisionIO {
     private final LimelightStatus scoringLimelightStatus;
     private final LimelightStatus frontLimelightStatus;
     private final LimelightStatus backLimelightStatus;
+
+    private final int APRILTAG_PIPELINE = 0;
+    private final int VIEWFINDER_PIPELINE = 1;
 
     private final PoseEstimate simPoseEstimate = new PoseEstimate();
 
@@ -36,6 +39,15 @@ public class VisionIOLimelight implements VisionIO {
         inputs.scoringCameraConnected = scoringLimelightStatus.isConnected();
         inputs.frontCameraConnected = frontLimelightStatus.isConnected();
         inputs.backCameraConnected = backLimelightStatus.isConnected();
+
+        // LimelightHelpers.setPipelineIndex(SCORING_LIMELIGHT, APRILTAG_PIPELINE);
+        // LimelightHelpers.setPipelineIndex(FRONT_LIMEIGHT, APRILTAG_PIPELINE);
+
+        // double throttle = 0;
+        // if (RobotState.isDisabled()) throttle = 200;
+        
+        // LimelightHelpers.setLimelightNTDouble("throttle_set", SCORING_LIMELIGHT, throttle);
+        // LimelightHelpers.setLimelightNTDouble("throttle_set", FRONT_LIMEIGHT, throttle);
 
         // TODO: See if we need to call this every loop
         setLimelightPosition(SCORING_LIMELIGHT, VisionSubsystem.ROBOT_TO_SCORING_CAMERA);

@@ -26,9 +26,9 @@ public class ElevatorSubsystem extends SubsystemBase {
   public static final Distance L1 = Inches.of(2.5);
   public static final Distance L2 = Meters.of(0.302);
   public static final Distance L3 = L2.plus(Inches.of(16));
-  public static final Distance L4 = Meters.of(1.4);
+  public static final Distance L4 = Meters.of(1.4).plus(Inches.of(1.5));
   public static final Distance NET = Meters.of(1.47);       // may be able to just be L4
-  public static final Distance STOW = Centimeters.of(0);
+  public static final Distance STOW = Centimeters.of(0.5);
   public static final Distance ZERO = Meters.of(0);
 
   protected static final double SOFT_UPPER_LIMIT = Meters.of(1.48).in(Meters);

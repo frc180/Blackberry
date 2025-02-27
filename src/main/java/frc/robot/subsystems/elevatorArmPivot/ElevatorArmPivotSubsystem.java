@@ -28,7 +28,7 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
     // TODO: read manually from robot
     protected static final Angle FORWARD_LIMIT = Degrees.of(60.7);
     protected static final Angle REVERSE_LIMIT = Degrees.of(-20);
-    protected static final Angle HARD_STOP_OFFSET = Degrees.of(60.46875 + 3.955078125 + 2.109375);
+    protected static final Angle HARD_STOP_OFFSET = Degrees.of(60.46875 + 3.955078125 + 2.109375 - 2.63671875);
 
     public static final double L4_SCORE = Units.degreesToRotations(-14);
     public static final double L3_SCORE = Units.degreesToRotations(-6);

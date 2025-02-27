@@ -94,8 +94,8 @@ public class VisionSubsystem extends SubsystemBase {
     private final CoralDetector coralDetector;
     private final SingleTagSolver singleTagSolver = new SingleTagSolver();
 
-    private final Transform2d leftReefTransform = new Transform2d(0.55, -0.15, Rotation2d.fromDegrees(180));
-    private final Transform2d rightReefTransform = new Transform2d(0.55, 0.15, Rotation2d.fromDegrees(180));
+    private final Transform2d leftReefTransform = new Transform2d(0.55 + Inches.of(2.5).in(Meters), -0.15 - Inches.of(1).in(Meters), Rotation2d.fromDegrees(180));
+    private final Transform2d rightReefTransform = new Transform2d(0.55 + Inches.of(2.5).in(Meters), 0.15 + Inches.of(1).in(Meters), Rotation2d.fromDegrees(180));
     private final Transform2d processorTransform = new Transform2d(0.55, 0.0, Rotation2d.fromDegrees(90));
 
     // Apply a position transform, then a rotation transform
@@ -122,7 +122,6 @@ public class VisionSubsystem extends SubsystemBase {
     public final Trigger poseEstimateDiffLow;
     @NotLogged
     public final Trigger scoringCameraConnected;
-
 
     private boolean canSeeReef = false;
     public int bestReefID = -1;
@@ -228,8 +227,10 @@ public class VisionSubsystem extends SubsystemBase {
             poseEstimateSource = PoseEstimateSource.SCORING_CAMERA;
         }
 
+        boolean invalidScoring = inputs.scoringPoseEstimate == null || inputs.scoringPoseEstimate.tagCount == 0;
+
         // If we didn't get a pose estimate (valid or not) from the scoring camera, use the front camera's pose estimate
-        if (poseEstimate == null && inputs.scoringPoseEstimate == null && inputs.frontCameraConnected) {
+        if (poseEstimate == null && invalidScoring && inputs.frontCameraConnected) {
             poseEstimate = validatePoseEstimate(inputs.frontPoseEstimate);
             poseEstimateSource = PoseEstimateSource.FRONT_CAMERA;
         }
