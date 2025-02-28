@@ -41,11 +41,11 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.State;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -151,9 +151,6 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     private RobotConfig config;
 
     PathConstraints constraints = new PathConstraints(MAX_SPEED, MAX_SPEED_ACCEL, MAX_ANGULAR_RATE, MAX_ANGULAR_ACCEL); //must be in m/s and rad/s
-    
-    public PathPlannerPath path;
-
 
     // Wheel radius characterization
     @NotLogged
@@ -165,6 +162,8 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     @NotLogged
     private double[] startWheelPositions = new double[4];
     private double currentEffectiveWheelRadius = 0;
+
+    public final Trigger almostStationary = belowSpeed(Inches.of(2).per(Second));
 
     /* SysId routine for characterizing translation. This is used to find PID gains for the drive motors. */
     private final SysIdRoutine m_sysIdRoutineTranslation = new SysIdRoutine(
@@ -621,6 +620,27 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         });
     }
 
+    public Trigger aboveSpeed(LinearVelocity velocity) {
+        return belowSpeed(velocity).negate();
+    }
+
+    public Trigger aboveSpeed(double metersPerSecond) {
+        return belowSpeed(metersPerSecond).negate();
+    }
+
+    public Trigger belowSpeed(LinearVelocity velocity) {
+        return belowSpeed(velocity.in(MetersPerSecond));
+    }
+
+    public Trigger belowSpeed(double metersPerSecond) {
+        return new Trigger(() -> isBelowSpeed(metersPerSecond));
+    }
+
+    public boolean isBelowSpeed(double metersPerSecond) {
+        ChassisSpeeds speeds = getState().Speeds;
+        return Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond) < metersPerSecond;
+    }
+
     private void configureAutoBuilder() {
         try {
             config = RobotConfig.fromGUISettings();
@@ -838,7 +858,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
 
     public PathPlannerPath getPath(double endVel, Rotation2d endRotation, boolean preventFlipping, List<Waypoint> waypoints) {
         //note that waypoints must contain at least 2 pose2ds wrapped inside PathPlannerPath.waypointsfromPoses(waypoints)
-        path = new PathPlannerPath(waypoints, constraints, null, new GoalEndState(endVel, endRotation));
+        PathPlannerPath path = new PathPlannerPath(waypoints, constraints, null, new GoalEndState(endVel, endRotation));
         path.preventFlipping = preventFlipping;
         return path;
     }
