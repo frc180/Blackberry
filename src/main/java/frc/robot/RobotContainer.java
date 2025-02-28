@@ -219,8 +219,8 @@ public class RobotContainer {
         ));//.debounce(0.2, DebounceType.kFalling); 
 
         atReef = drivetrain.targetingReef().and(drivetrain.withinTargetPoseTolerance(
-                        Inches.of(0.75), // was 1
-                        Inches.of(0.75), // was 1
+                        Inches.of(1), // was 1
+                        Inches.of(1), // was 1
                         Degrees.of(2)
         ));
 
@@ -367,11 +367,11 @@ public class RobotContainer {
 
         teleop.onTrue(Commands.sequence(
             elevatorArmPivot.brakeMode(),
-            // Commands.either(
-            //     Commands.none(),
-            //     elevator.home(),
-            //     elevator::isHomed 
-            // ),
+            Commands.either(
+                Commands.none(),
+                elevator.home(),
+                elevator::isHomed 
+            ),
             // elevatorArmPivot.home().andThen(elevatorArmPivot.horizontalPosition()),
             Commands.either(
                 Commands.none(),

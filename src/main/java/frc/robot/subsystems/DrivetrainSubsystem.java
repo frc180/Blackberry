@@ -85,7 +85,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
 
     // STOLEN FROM SONIC, NOT CORRECT
     public static final double MAX_SPEED = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // Meters per second desired top speed
-    public static final double MAX_SPEED_ACCEL = Robot.isReal() ? 6 : 6; // Meters per second squared max acceleration, was 8 -> 7, should try 6
+    public static final double MAX_SPEED_ACCEL = Robot.isReal() ? 4 : 6; // Meters per second squared max acceleration, was 8 -> 7, should try 6
     public static final double MAX_ANGULAR_RATE = 3 * Math.PI; // 3/4 of a rotation per second max angular velocity (1.5 * Math.PI)
     public static final double MAX_ANGULAR_ACCEL = MAX_ANGULAR_RATE * 8; // was * 4
 
@@ -252,11 +252,11 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         }
         configureAutoBuilder();
 
-        double translationMaxSpeed = MAX_SPEED;
-        double translationP = 4;
+        double translationMaxSpeed = MAX_SPEED * 0.8;
+        double translationP = 3;
         double translationI = 0.0;
-        double translationD = 0.05;
-        double translationKV = 0;
+        double translationD = 0.4;
+        double translationKV = 0.8;
 
         if (Robot.isSimulation()) {
             translationMaxSpeed = MAX_SPEED * 0.8;
