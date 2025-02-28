@@ -513,8 +513,8 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         yOutput += xyFeedforward.calculate(yTargetVelocity);
 
         // Ensure X and Y outputs are within the max velocity constraints (note: this stops the PID from helping catch up if we're behind)
-        // xOutput = MathUtil.clamp(xOutput, -constraints.maxVelocity, constraints.maxVelocity);
-        // yOutput = MathUtil.clamp(yOutput, -constraints.maxVelocity, constraints.maxVelocity);
+        xOutput = MathUtil.clamp(xOutput, -constraints.maxVelocity, constraints.maxVelocity);
+        yOutput = MathUtil.clamp(yOutput, -constraints.maxVelocity, constraints.maxVelocity);
 
         double thetaOutput = calculateHeadingPID(currentPose.getRotation(), endPose.getRotation().getDegrees());
 
