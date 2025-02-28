@@ -14,8 +14,7 @@ public abstract class Field {
     private static HashMap<Integer, Integer> ALGAE_HEIGHTS, CURRENT_ALGAE_HEIGHTS;
     private static Pose3d[] reefAlgaePoses = null;
 
-    // Game Manual Page 24
-    // "Vertical pipes extend up from the base, and pipes on the same face are 1 ft. 1 in. (~33 cm) apart (center to center)."
+    // Game Manual Page 24 - "...pipes on the same face are 1 ft. 1 in. (~33 cm) apart (center to center)."
     public static final Distance REEF_BRANCH_SEPARATION = Inches.of(13);
 
     // Game Manual Page 33 - "A CORAL is a 11 ⅞ in. long (~30 cm) piece of..."

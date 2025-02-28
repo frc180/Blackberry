@@ -152,7 +152,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
 
     private RobotConfig config;
 
-    PathConstraints constraints = new PathConstraints(MAX_SPEED, MAX_SPEED_ACCEL, MAX_ANGULAR_RATE, MAX_ANGULAR_ACCEL); //must be in m/s and rad/s
+    PathConstraints constraints = new PathConstraints(MAX_SPEED * 0.8, MAX_SPEED_ACCEL, MAX_ANGULAR_RATE, MAX_ANGULAR_ACCEL); //must be in m/s and rad/s
 
     // Wheel radius characterization
     @NotLogged
@@ -165,7 +165,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     private double[] startWheelPositions = new double[4];
     private double currentEffectiveWheelRadius = 0;
 
-    public final Trigger almostStationary = belowSpeed(Inches.of(1).per(Second));
+    public final Trigger almostStationary = belowSpeed(Inches.of(1.5).per(Second));
 
     /* SysId routine for characterizing translation. This is used to find PID gains for the drive motors. */
     private final SysIdRoutine m_sysIdRoutineTranslation = new SysIdRoutine(
