@@ -1,5 +1,6 @@
 package frc.robot.subsystems;
 
+import static frc.robot.util.StatusSignals.trackSignal;
 import static edu.wpi.first.units.Units.*;
 import java.util.List;
 import java.util.Optional;
@@ -7,6 +8,7 @@ import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import com.ctre.phoenix6.SignalLogger;
+import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
@@ -44,6 +46,7 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.State;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj.Alert;
@@ -138,6 +141,10 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     public final TrapezoidProfile.Constraints driveToPoseConstraintsSlow;
     public final TrapezoidProfile driveToPoseProfile;
     public final TrapezoidProfile driveToPoseProfileSlow;
+
+    private final StatusSignal<Angle> gyroAngleSignal;
+    private final StatusSignal<AngularVelocity> gyroRateSignal;
+
     private State xPidGoalState = new State();
     private State yPidGoalState = new State();
     private double xPosition = 0;
@@ -253,6 +260,9 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         }
         configureAutoBuilder();
 
+        gyroAngleSignal = trackSignal(getPigeon2().getYaw());
+        gyroRateSignal = trackSignal(getPigeon2().getAngularVelocityZWorld());
+
         double translationMaxSpeed = MAX_SPEED * 0.8;
         double translationP = 3;
         double translationI = 0.0;
@@ -337,12 +347,17 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
 
     @NotLogged
     public double getGyroscopeDegrees() {        
-        return (-this.getPigeon2().getAngle()) - gyroOffset.getDegrees();
+        // return (-this.getPigeon2().getAngle()) - gyroOffset.getDegrees();
+        return gyroAngleSignal.getValueAsDouble() - gyroOffset.getDegrees();
     }
 
     @NotLogged
     public double getGyroscopeDegreesWrapped() {
         return MathUtil.inputModulus(getGyroscopeDegrees(), -180, 180);
+    }
+
+    public double getGyroscopeRate() {
+        return -gyroRateSignal.getValueAsDouble();
     }
 
     public void zeroGyroscope() {

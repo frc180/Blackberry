@@ -3,10 +3,12 @@ package frc.robot.subsystems.vision;
 import com.spamrobotics.vision.LimelightStatus;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Robot;
 import frc.robot.RobotContainer;
+import frc.robot.subsystems.DrivetrainSubsystem;
 import frc.robot.util.LimelightHelpers;
 import frc.robot.util.LimelightHelpers.PoseEstimate;
 
@@ -19,8 +21,11 @@ public class VisionIOLimelight implements VisionIO {
     private static final int APRILTAG_PIPELINE = 0;
     private static final int VIEWFINDER_PIPELINE = 1;
 
-    private static final int IMU_ASSIST_MT1 = 3;
-    private static final int IMU_ASSIST_EXTERNALIMU = 4;
+    private static final int IMU_EXTERNALIMU_ONLY = 0;   // 0 - Use external IMU yaw submitted via SetRobotOrientation() for MT2 localization. The internal IMU is ignored entirely.
+    private static final int IMU_MATCH_EXTERNALIMU = 1;  // 1 - Use external IMU yaw submitted via SetRobotOrientation(), and configure the LL4 internal IMU’s fused yaw to match the submitted yaw value.
+    private static final int IMU_INTERNALIMU_ONLY = 2;   // 2 - Use internal IMU for MT2 localization. External imu data is ignored entirely
+    private static final int IMU_ASSIST_MT1 = 3;         // 3 - The internal IMU will utilize filtered MT1 yaw estimates for continuous heading correction
+    private static final int IMU_ASSIST_EXTERNALIMU = 4; // 4 - The internal IMU will utilize the external IMU for continuous heading correction
 
     private final LimelightStatus scoringLimelightStatus;
     private final LimelightStatus frontLimelightStatus;
@@ -59,19 +64,31 @@ public class VisionIOLimelight implements VisionIO {
         // TODO: See if we need to call this every loop
         setLimelightPosition(SCORING_LIMELIGHT, VisionSubsystem.ROBOT_TO_SCORING_CAMERA);
         setLimelightPosition(FRONT_LIMEIGHT, VisionSubsystem.ROBOT_TO_FRONT_CAMERA);
-
-        frontCameraImuMode = (int) SmartDashboard.getNumber("Front Camera IMU Mode", frontCameraImuMode);
-        LimelightHelpers.SetIMUMode(FRONT_LIMEIGHT, frontCameraImuMode);
-        if (frontCameraImuMode == IMU_ASSIST_EXTERNALIMU) {
-            double headingDegrees = RobotContainer.instance.drivetrain.getGyroscopeDegrees();
-            if (Robot.isRed()) headingDegrees += 180;
-            LimelightHelpers.SetRobotOrientation(FRONT_LIMEIGHT, headingDegrees, 0, 0, 0, 0, 0);
+        
+ 
+        // frontCameraImuMode = (int) SmartDashboard.getNumber("Front Camera IMU Mode", frontCameraImuMode);
+        if (RobotState.isEnabled()) {
+            frontCameraImuMode = IMU_ASSIST_EXTERNALIMU;
+        } else {
+            frontCameraImuMode = IMU_MATCH_EXTERNALIMU;
         }
+        LimelightHelpers.SetIMUMode(FRONT_LIMEIGHT, frontCameraImuMode);
+
+        // if (frontCameraImuMode == IMU_EXTERNALIMU_ONLY || frontCameraImuMode == IMU_MATCH_EXTERNALIMU || frontCameraImuMode == IMU_ASSIST_EXTERNALIMU) {
+        DrivetrainSubsystem drivetrain = RobotContainer.instance.drivetrain;
+        double headingDegrees = drivetrain.getGyroscopeDegrees();
+        double yawRate = drivetrain.getGyroscopeRate();
+
+        if (Robot.isRed()) headingDegrees += 180;
+        LimelightHelpers.SetRobotOrientation(FRONT_LIMEIGHT, headingDegrees, yawRate, 0, 0, 0, 0);
+        // }
 
         inputs.scoringFiducials = LimelightHelpers.getRawFiducials(SCORING_LIMELIGHT);
         inputs.frontFiducials = LimelightHelpers.getRawFiducials(FRONT_LIMEIGHT);
         inputs.backDetections = LimelightHelpers.getRawDetections(BACK_LIMEIGHT);
-        inputs.backTimestamp = Timer.getFPGATimestamp() - getLatencySeconds(BACK_LIMEIGHT);
+        if (inputs.backCameraConnected) {
+            inputs.backTimestamp = Timer.getFPGATimestamp() - getLatencySeconds(BACK_LIMEIGHT);
+        }
         
         if (Robot.isSimulation() && RobotContainer.MAPLESIM) {
             inputs.scoringPoseEstimate = simPoseEstimate;
