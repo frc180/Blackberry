@@ -147,8 +147,6 @@ public class VisionSubsystem extends SubsystemBase {
 
     private Pose2d singleTagPose = Pose2d.kZero;
 
-    final boolean megatag2Enabled = false;
-
     private PoseEstimate poseEstimate = null;
     private PoseEstimateSource poseEstimateSource = PoseEstimateSource.NONE;
     private Pose3d scoringCameraPosition = Pose3d.kZero;
@@ -241,10 +239,13 @@ public class VisionSubsystem extends SubsystemBase {
 
         boolean invalidScoring = inputs.scoringPoseEstimate == null || inputs.scoringPoseEstimate.tagCount == 0;
 
-        // If we didn't get a pose estimate (valid or not) from the scoring camera, use the front camera's pose estimate
+        // If we didn't get a pose estimate from the scoring camera, use the front camera's pose estimate
         if (poseEstimate == null && invalidScoring && inputs.frontCameraConnected) {
             poseEstimate = validatePoseEstimate(inputs.frontPoseEstimate);
             poseEstimateSource = PoseEstimateSource.FRONT_CAMERA;
+            // if (poseEstimate == null) {
+            //     poseEstimate = validateMT2PoseEstimate(inputs.frontPoseEstimateMT2);
+            // }
         }
      
         Pose2d robotPose = null;
@@ -507,25 +508,28 @@ public class VisionSubsystem extends SubsystemBase {
     public PoseEstimate validatePoseEstimate(PoseEstimate poseEstimate) {
         if (poseEstimate == null) return null;
 
-        if (megatag2Enabled) {
-            if (poseEstimate.tagCount == 0) return null;
-            if (Math.abs(RobotContainer.instance.drivetrain.getPigeon2().getRate()) > 720) return null;
-        } else {
-            double tagMin = 1;
-            double tagMax = 99;
-            double maxDist = poseEstimate.tagCount == 1 ? 3.7 : 6;
-            double minArea = poseEstimate.tagCount == 1 ? 0.18 : 0.08;
-            if (poseEstimate.tagCount > tagMax || poseEstimate.tagCount < tagMin) return null;
-            if (poseEstimate.avgTagArea < minArea) return null;
-            if (poseEstimate.avgTagDist > maxDist) return null;
+        double tagMin = 1;
+        double tagMax = 99;
+        double maxDist = poseEstimate.tagCount == 1 ? 3.7 : 6;
+        double minArea = poseEstimate.tagCount == 1 ? 0.18 : 0.08;
+        if (poseEstimate.tagCount > tagMax || poseEstimate.tagCount < tagMin) return null;
+        if (poseEstimate.avgTagArea < minArea) return null;
+        if (poseEstimate.avgTagDist > maxDist) return null;
 
-            // Rejected if the pose estimate is too far from the last one
-            // if (lastPoseEstimate != null && deltaSeconds <= 0.25) {
-            //     double maxReasonableDistance = deltaSeconds * DrivetrainSubsystem.MAX_SPEED;
-            //     Translation2d diff = poseEstimate.pose.getTranslation().minus(lastPoseEstimate.pose.getTranslation());
-            //     if (!Helpers.withinTolerance(diff, maxReasonableDistance)) return null;
-            // }
-        }
+        // Rejected if the pose estimate is too far from the last one
+        // if (lastPoseEstimate != null && deltaSeconds <= 0.25) {
+        //     double maxReasonableDistance = deltaSeconds * DrivetrainSubsystem.MAX_SPEED;
+        //     Translation2d diff = poseEstimate.pose.getTranslation().minus(lastPoseEstimate.pose.getTranslation());
+        //     if (!Helpers.withinTolerance(diff, maxReasonableDistance)) return null;
+        // }
+
+        return poseEstimate;
+    }
+
+    public PoseEstimate validateMT2PoseEstimate(PoseEstimate poseEstimate) {
+        if (poseEstimate == null) return null;
+        if (poseEstimate.tagCount == 0) return null;
+        // if (Math.abs(RobotContainer.instance.drivetrain.getGyroscopeRate()) > 720) return null;
 
         return poseEstimate;
     }

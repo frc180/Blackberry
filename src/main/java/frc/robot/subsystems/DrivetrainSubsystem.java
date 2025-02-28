@@ -357,7 +357,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     }
 
     public double getGyroscopeRate() {
-        return -gyroRateSignal.getValueAsDouble();
+        return gyroRateSignal.getValueAsDouble();
     }
 
     public void zeroGyroscope() {

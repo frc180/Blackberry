@@ -22,7 +22,7 @@ public interface VisionIO {
 
         boolean frontCameraConnected = false;
         PoseEstimate frontPoseEstimate = null;
-        PoseEstimate frontPoseEstimateAlt = null;
+        PoseEstimate frontPoseEstimateMT2 = null;
         RawFiducial[] frontFiducials = emptyFiducials;
         double frontTemp = 0;
 
