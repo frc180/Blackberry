@@ -9,6 +9,7 @@ import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.units.measure.Distance;
 import frc.robot.RobotContainer;
+import frc.robot.subsystems.DrivetrainSubsystem;
 import frc.robot.subsystems.DrivetrainSubsystem.PoseTarget;
 import frc.robot.subsystems.elevator.ElevatorSubsystem;
 
@@ -17,6 +18,8 @@ import frc.robot.subsystems.elevator.ElevatorSubsystem;
  */
 public class DriveToCoralPose extends DriveToPose {
 
+    private DrivetrainSubsystem drivetrain;
+
     /**
      * Create a new DriveToCoralPose command.
      * @param tagSupplier Supplier for the ID of the AprilTag to target.
@@ -24,8 +27,10 @@ public class DriveToCoralPose extends DriveToPose {
      */
     public DriveToCoralPose(Supplier<Integer> tagSupplier, Function<Integer, Pose2d> tagToPoseFunction) {
         super(RobotContainer.instance.drivetrain, tagToPoseFunction);
+        drivetrain = RobotContainer.instance.drivetrain;
         withPoseTargetType(PoseTarget.REEF);
         withTargetPoseTag(tagSupplier);
+        // withProfileOverride(drivetrain.driveToPoseProfileSlow, drivetrain.driveToPoseConstraintsSlow);
     }
 
     // WIP nicer pathing to prevent arm collisions with reef or algae

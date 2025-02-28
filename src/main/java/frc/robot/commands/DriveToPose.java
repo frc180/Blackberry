@@ -8,6 +8,7 @@ import com.spamrobotics.util.Helpers;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.DrivetrainSubsystem;
 import frc.robot.subsystems.DrivetrainSubsystem.HeadingTarget;
@@ -33,6 +34,8 @@ public class DriveToPose extends Command {
     private double maxSpeed = 1.0;
     private Supplier<Integer> targetPoseTagSupplier = null;
     private Function<Pose2d, Pose2d> intermediatePoses = null;
+    private TrapezoidProfile profileOverride = null;
+    private TrapezoidProfile.Constraints constraintsOverride = null;
 
     private int targetPoseTag = -1;
 
@@ -113,6 +116,12 @@ public class DriveToPose extends Command {
         return this;
     }
 
+    public DriveToPose withProfileOverride(TrapezoidProfile profile, TrapezoidProfile.Constraints constraints) {
+        profileOverride = profile;
+        constraintsOverride = constraints;
+        return this;
+    }
+
     @Override
     public void initialize() {
         targetPoseTag = targetPoseTagSupplier != null ? targetPoseTagSupplier.get() : -1;
@@ -154,7 +163,12 @@ public class DriveToPose extends Command {
         }
 
         // ChassisSpeeds speeds = drivetrain.calculateChassisSpeeds(currentPose, iterationTarget);
-        ChassisSpeeds speeds = drivetrain.experimentalCalculateSpeeds(currentPose, iterationTarget);
+        ChassisSpeeds speeds;
+        if (profileOverride != null) {
+            speeds = drivetrain.experimentalCalculateSpeeds(currentPose, iterationTarget, profileOverride, constraintsOverride);
+        } else {
+            speeds = drivetrain.experimentalCalculateSpeeds(currentPose, iterationTarget);
+        }
         if (additionalSpeedsSupplier != null) {
             Helpers.addChassisSpeedsOverwrite(speeds, additionalSpeedsSupplier.get());
         }

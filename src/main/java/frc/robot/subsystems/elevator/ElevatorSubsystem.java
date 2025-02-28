@@ -33,7 +33,7 @@ public class ElevatorSubsystem extends SubsystemBase {
 
     protected static final double SOFT_UPPER_LIMIT = Meters.of(1.48).in(Meters);
     protected static final double SOFT_LOWER_LIMIT = 0;
-    private static final double IN_POSITION_METERS = Inches.of(1).in(Meters);
+    private static final double IN_POSITION_METERS = Inches.of(1).in(Meters); // TODO: lower tolerance?
     private static final double STOW_INTERMEDIATE = Inches.of(2).in(Meters);
 
     private ElevatorIO io;

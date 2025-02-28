@@ -134,8 +134,10 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     @NotLogged
     private final PIDController xPid, yPid;
     private final SimpleMotorFeedforward xyFeedforward;
-    private final TrapezoidProfile.Constraints driveToPoseConstraints;
-    private final TrapezoidProfile driveToPoseProfile;
+    public final TrapezoidProfile.Constraints driveToPoseConstraints;
+    public final TrapezoidProfile.Constraints driveToPoseConstraintsSlow;
+    public final TrapezoidProfile driveToPoseProfile;
+    public final TrapezoidProfile driveToPoseProfileSlow;
     private State xPidGoalState = new State();
     private State yPidGoalState = new State();
     private double xPosition = 0;
@@ -163,7 +165,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     private double[] startWheelPositions = new double[4];
     private double currentEffectiveWheelRadius = 0;
 
-    public final Trigger almostStationary = belowSpeed(Inches.of(2).per(Second));
+    public final Trigger almostStationary = belowSpeed(Inches.of(1).per(Second));
 
     /* SysId routine for characterizing translation. This is used to find PID gains for the drive motors. */
     private final SysIdRoutine m_sysIdRoutineTranslation = new SysIdRoutine(
@@ -256,19 +258,23 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         double translationI = 0.0;
         double translationD = 0.4;
         double translationKV = 0.8;
+        double translationKA = 0;
 
         if (Robot.isSimulation()) {
             translationMaxSpeed = MAX_SPEED * 0.8;
-            translationP = 8;
+            translationP = 6;
             translationI = 0.0;
-            translationD = 1;
-            translationKV = 0.8;
+            translationD = 0.6;
+            translationKV = 1;
+            translationKA = 0;
         }
 
-        xyFeedforward = new SimpleMotorFeedforward(0, translationKV, 0);
+        xyFeedforward = new SimpleMotorFeedforward(0, translationKV, translationKA);
 
         driveToPoseConstraints = new TrapezoidProfile.Constraints(translationMaxSpeed, MAX_SPEED_ACCEL);
         driveToPoseProfile = new TrapezoidProfile(driveToPoseConstraints);
+        driveToPoseConstraintsSlow = new TrapezoidProfile.Constraints(translationMaxSpeed, MAX_SPEED_ACCEL * 0.5);
+        driveToPoseProfileSlow = new TrapezoidProfile(driveToPoseConstraintsSlow);
         xPid = new PIDController(translationP, translationI, translationD);
         yPid = new PIDController(translationP, translationI, translationD);
 
@@ -458,12 +464,16 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     final Timer driveToPoseTimer = new Timer();
     Pose2d driveToPoseStart = null;
 
+    public ChassisSpeeds experimentalCalculateSpeeds(Pose2d currentPose, Pose2d endPose) {
+        return experimentalCalculateSpeeds(currentPose, endPose, driveToPoseProfile, driveToPoseConstraints);
+    }
+
     /**
      * Experimental method for driving to a pose using a trapezoidal profile, treating the drivetrain as a one-dimensional
      * mechanism instead of applying the profile to the X and Y axes separately.
      * Derived from this code from team 6995: https://github.com/frc6995/Robot-2025/blob/a9871f804924f71e47eb576578ac69bbe7b9249f/src/main/java/frc/robot/subsystems/DriveBaseS.java#L444
      */
-    public ChassisSpeeds experimentalCalculateSpeeds(Pose2d currentPose, Pose2d endPose) {
+    public ChassisSpeeds experimentalCalculateSpeeds(Pose2d currentPose, Pose2d endPose, TrapezoidProfile profile, TrapezoidProfile.Constraints constraints) {
         intermediatePose = endPose;
         
         boolean initializing = driveToPoseStart == null;
@@ -480,13 +490,13 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
             driveToPoseStartState.position = distance;
             driveToPoseStartState.velocity = MathUtil.clamp(
                 Helpers.velocityTowards(driveToPoseStart, getFieldRelativeSpeeds(), endPose.getTranslation()),
-                -driveToPoseConstraints.maxVelocity, 
+                -constraints.maxVelocity, 
                 0
             );
         }
 
         // Calculate the setpoint (i.e. current distance along the path) we should be targeting
-        State setpoint = driveToPoseProfile.calculate(driveToPoseTimer.get(), driveToPoseStartState, driveToPoseGoalState);
+        State setpoint = profile.calculate(driveToPoseTimer.get(), driveToPoseStartState, driveToPoseGoalState);
         Translation2d setpointTarget = endPose.getTranslation().interpolate(driveToPoseStart.getTranslation(), setpoint.position / distance);
 
         // Use normal PIDs to calculate the feedback for the X and Y axes to reach the setpoint position
@@ -494,14 +504,17 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         double yOutput = yPid.calculate(currentPose.getY(), setpointTarget.getY());
 
         // Use feedforward for the X and Y axes to better reach the setpoint speed
+        // ChassisSpeeds speeds = getState().Speeds;
         double xTargetVelocity = normDirStartToEnd.getX() * -setpoint.velocity;
         double yTargetVelocity = normDirStartToEnd.getY() * -setpoint.velocity;
+        // xOutput += xyFeedforward.calculateWithVelocities(speeds.vxMetersPerSecond, xTargetVelocity);
+        // yOutput += xyFeedforward.calculateWithVelocities(speeds.vyMetersPerSecond, yTargetVelocity);
         xOutput += xyFeedforward.calculate(xTargetVelocity);
         yOutput += xyFeedforward.calculate(yTargetVelocity);
 
-        // Make sure final X and Y outputs are within the max velocity constraints
-        xOutput = MathUtil.clamp(xOutput, -driveToPoseConstraints.maxVelocity, driveToPoseConstraints.maxVelocity);
-        yOutput = MathUtil.clamp(yOutput, -driveToPoseConstraints.maxVelocity, driveToPoseConstraints.maxVelocity);
+        // Ensure X and Y outputs are within the max velocity constraints (note: this stops the PID from helping catch up if we're behind)
+        // xOutput = MathUtil.clamp(xOutput, -constraints.maxVelocity, constraints.maxVelocity);
+        // yOutput = MathUtil.clamp(yOutput, -constraints.maxVelocity, constraints.maxVelocity);
 
         double thetaOutput = calculateHeadingPID(currentPose.getRotation(), endPose.getRotation().getDegrees());
 

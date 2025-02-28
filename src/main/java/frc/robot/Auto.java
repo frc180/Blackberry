@@ -135,9 +135,10 @@ public final class Auto {
 
         return Commands.parallel(
             Auto.configureAuto(coralScoringPositions, simStart),
-            drivetrain.followPath(startingPath, 0.0, false)
-                .until(drivetrain.withinTargetPoseDistance(1.2))
-                .andThen(driveToNextCoralPose())
+            (driveToNextCoralPose())
+            // drivetrain.followPath(startingPath, 0.0, false)
+            //     .until(drivetrain.withinTargetPoseDistance(1.2))
+            //     .andThen(driveToNextCoralPose())
         );
     }
 

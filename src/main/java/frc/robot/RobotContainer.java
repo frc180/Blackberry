@@ -114,9 +114,9 @@ public class RobotContainer {
     public Trigger driverRightReef = new Trigger(() -> false);
     public Trigger driverLeftReef = new Trigger(() -> false);
     @Logged(name = "Reef - Near")
-    public Trigger nearReef = new Trigger(() -> false);
+    public Trigger nearReef = null;
     @Logged(name = "Reef - At")
-    public Trigger atReef = new Trigger(() -> false);
+    public Trigger atReef = null;
 
     public static RobotContainer instance;
 
