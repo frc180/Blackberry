@@ -88,7 +88,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
 
     // STOLEN FROM SONIC, NOT CORRECT
     public static final double MAX_SPEED = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // Meters per second desired top speed
-    public static final double MAX_SPEED_ACCEL = Robot.isReal() ? 4 : 6; // Meters per second squared max acceleration, was 8 -> 7, should try 6
+    public static final double MAX_SPEED_ACCEL = Robot.isReal() ? 5 : 6; // Meters per second squared max acceleration, was 8 -> 7, should try 6
     public static final double MAX_ANGULAR_RATE = 3 * Math.PI; // 3/4 of a rotation per second max angular velocity (1.5 * Math.PI)
     public static final double MAX_ANGULAR_ACCEL = MAX_ANGULAR_RATE * 8; // was * 4
 
@@ -264,10 +264,10 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         gyroRateSignal = trackSignal(getPigeon2().getAngularVelocityZWorld());
 
         double translationMaxSpeed = MAX_SPEED * 0.8;
-        double translationP = 3;
+        double translationP = 4;
         double translationI = 0.0;
-        double translationD = 0.4;
-        double translationKV = 0.8;
+        double translationD = 0.05;
+        double translationKV = 0.5;
         double translationKA = 0;
 
         if (Robot.isSimulation()) {
@@ -301,6 +301,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         SmartDashboard.putData("Drivetrain X PID", xPid);
         SmartDashboard.putData("Drivetrain Y PID", yPid);
         SmartDashboard.putNumber("Drivetrain XY Feedforward", translationKV);
+        SmartDashboard.putNumber("Drivetrain XY kA", translationKA);
 
         setpointGenerator = new SwerveSetpointGenerator(
             config, // The robot configuration. This is the same config used for generating trajectories and running path following commands.
@@ -811,7 +812,9 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         pigeonDisconnectedAlert.set(!pigeonConnected);
 
         double kV = SmartDashboard.getNumber("Drivetrain XY Feedforward", 0);
+        double kA = SmartDashboard.getNumber("Drivetrain XY kA", 0);
         xyFeedforward.setKv(kV);
+        xyFeedforward.setKa(kA);
 
         xPosition = getPose().getX();
         yPosition = getPose().getY();
