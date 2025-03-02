@@ -3,6 +3,7 @@ package frc.robot.subsystems.elevatorArmPivot;
 import static edu.wpi.first.units.Units.*;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.NotLogged;
+import edu.wpi.first.math.filter.MedianFilter;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
@@ -87,6 +88,7 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
         notHomedAlert.set(!homed);
 
         absoluteScalar = SmartDashboard.getNumber("Pivot Absolute Scalar", absoluteScalar);
+        absoluteRatio = inputs.position / getAbsolutePosition();
 
         // if (pidMode) {
         //     setArmPositionDirect(targetPosition);
@@ -136,23 +138,29 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
         ).withInterruptBehavior(InterruptionBehavior.kCancelIncoming);
     }
 
-    Double absoluteRatio = null;
+    double absoluteRatio = 0;
+    double absoluteRatioFiltered = 0;
+    double absoluteRatioSamples = 0;
+    MedianFilter absoluteRatioFilter = new MedianFilter(15);
     public Command calculateAbsoluteRatio() {
         return Commands.sequence(
             runOnce(() -> {
                 io.zero(0);
                 zeroAbsolute();
                 io.setSpeed(0.04);
+                absoluteRatioFiltered = 0;
+                absoluteRatioSamples = 0;
+                absoluteRatioFilter.reset();
             }),
-            Commands.waitSeconds(0.2),
+            Commands.waitSeconds(0.1),
             runEnd(
                 () -> {
-                    absoluteRatio = inputs.position / getAbsolutePosition();
-                    SmartDashboard.putNumber("Pivot Absolute Ratio", absoluteRatio);
+                    absoluteRatioSamples++;
+                    absoluteRatioFiltered = absoluteRatioFilter.calculate(inputs.position / getAbsolutePosition());
                 },
                 () -> io.setSpeed(0)
-            ).until(atHardstop.or(RobotState::isDisabled))
-        );
+            ).until(atHardstop)
+        ).ignoringDisable(true);
     }
 
     public Command zero(Angle angle) {

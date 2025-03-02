@@ -366,7 +366,6 @@ public class RobotContainer {
         );
         
         // teleop.onTrue(elevatorArmPivot.calculateAbsoluteRatio());
-
         teleop.onTrue(Commands.sequence(
             elevatorArmPivot.brakeMode(),
             Commands.either(
@@ -374,7 +373,6 @@ public class RobotContainer {
                 elevator.home(),
                 elevator::isHomed 
             ),
-            // elevatorArmPivot.home().andThen(elevatorArmPivot.horizontalPosition()),
             Commands.either(
                 Commands.none(),
                 elevatorArmPivot.home().andThen(elevatorArmPivot.horizontalPosition()),
