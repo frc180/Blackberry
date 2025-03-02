@@ -364,6 +364,8 @@ public class RobotContainer {
         disabled.and(elevatorArmPivot.atHardstop).onTrue(
             elevatorArmPivot.brakeMode().ignoringDisable(true)
         );
+        
+        // teleop.onTrue(elevatorArmPivot.calculateAbsoluteRatio());
 
         teleop.onTrue(Commands.sequence(
             elevatorArmPivot.brakeMode(),

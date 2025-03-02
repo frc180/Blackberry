@@ -123,7 +123,7 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO {
             StatusSignal<Boolean> signal = ElevatorArmIOTalonFX.HARD_STOP_SIGNAL;
             inputs.hardStop = signal != null && signal.getValueAsDouble() == 1;
         } else {
-            inputs.absolutePosition = Units.radiansToRotations(armSim.getAngleRads());
+            inputs.absolutePosition = 30 + (Units.radiansToRotations(armSim.getAngleRads()) * 0.25);
             double armDegrees = Units.radiansToDegrees(armSim.getAngleRads());
             inputs.hardStop = Math.abs(armDegrees - ElevatorArmPivotSubsystem.HARD_STOP_OFFSET.in(Degrees)) <= 0.5;
         }

@@ -8,6 +8,8 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import edu.wpi.first.wpilibj.RobotState;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -54,6 +56,9 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
     private boolean isHoming = false;
     private boolean homed = false;
 
+    private double absoluteScalar = Robot.isReal() ? 1 : 1;
+    private double absoluteOffset = 0;
+
     @NotLogged
     public Trigger elevatorArmInPosition = new Trigger(() -> isElevatorArmInPosition());
     @NotLogged
@@ -70,6 +75,8 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
         } else {
             io = new ElevatorArmPivotIOTalonFX();
         }
+
+        SmartDashboard.putNumber("Pivot Absolute Scalar", absoluteScalar);
     }
 
     @Override
@@ -78,6 +85,9 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
         SimVisuals.setElevatorArmPivotDegrees(getDegrees());
 
         notHomedAlert.set(!homed);
+
+        absoluteScalar = SmartDashboard.getNumber("Pivot Absolute Scalar", absoluteScalar);
+
         // if (pidMode) {
         //     setArmPositionDirect(targetPosition);
         // }
@@ -126,16 +136,31 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
         ).withInterruptBehavior(InterruptionBehavior.kCancelIncoming);
     }
 
+    Double absoluteRatio = null;
+    public Command calculateAbsoluteRatio() {
+        return Commands.sequence(
+            runOnce(() -> {
+                io.zero(0);
+                zeroAbsolute();
+                io.setSpeed(0.04);
+            }),
+            Commands.waitSeconds(0.2),
+            runEnd(
+                () -> {
+                    absoluteRatio = inputs.position / getAbsolutePosition();
+                    SmartDashboard.putNumber("Pivot Absolute Ratio", absoluteRatio);
+                },
+                () -> io.setSpeed(0)
+            ).until(atHardstop.or(RobotState::isDisabled))
+        );
+    }
+
     public Command zero(Angle angle) {
         return zero(angle.in(Rotations));
     }
 
     public Command zero(double rotations) {
         return runOnce(() -> io.zero(rotations));
-    }
-
-    public Command zeroAbsolute() {
-        return runOnce(() -> io.zero(inputs.absolutePosition));
     }
 
     @NotLogged
@@ -245,6 +270,14 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
 
     public double getTargetDegrees() {
         return Units.rotationsToDegrees(targetPosition);
+    }
+
+    public double getAbsolutePosition() {
+        return (inputs.absolutePosition * absoluteScalar) - absoluteOffset;
+    }
+
+    public void zeroAbsolute() {
+        absoluteOffset = (inputs.absolutePosition * absoluteScalar);
     }
 
     public boolean isAtHomingHardstop() {
