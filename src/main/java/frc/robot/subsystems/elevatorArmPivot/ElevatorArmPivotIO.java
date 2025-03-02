@@ -11,6 +11,7 @@ public interface ElevatorArmPivotIO {
         double voltage;
         double target;
         double velocity;
+        double absolutePosition;
         boolean hardStop;
     }
     

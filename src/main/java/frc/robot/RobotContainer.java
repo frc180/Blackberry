@@ -301,9 +301,9 @@ public class RobotContainer {
                 .whileTrue(elevatorArmPivot.receivePosition().alongWith(elevator.stow()));
 
             coralIntakeTrigger.and(elevatorArmPivot::isAtReceivingPosition).and(elevator::isElevatorInPosition)
-                .whileTrue(coralIndexer.runSpeed(0.5).alongWith(elevatorArm.intakeAndIndex()));
+                .whileTrue(coralIndexer.runSpeed(0.5).alongWith(elevatorArm.intakeAndIndex(), intakeCoral.runSpeed(1)));
 
-            // elevatorArm.setDefaultCommand(elevatorArm.passiveIndex());
+            elevatorArm.setDefaultCommand(elevatorArm.passiveIndex());
         } else {
             coralIntakeTrigger
                 .whileTrue(intakeCoralPivot.extend().alongWith(intakeCoral.intake(), elevatorArmPivot.receivePosition()))
@@ -311,8 +311,8 @@ public class RobotContainer {
         }
         
         //noticed that sometimes when we have a coral the intake doesnt go back to the stow position to tansfer to the arm
-        intakeCoral.hasCoral.and(elevatorArmPivot.elevatorArmInPosition).and(intakeCoralPivot.atStowPosition)
-            .onTrue(intakeCoral.intake().alongWith(elevatorArm.intakeAndIndex()));
+        // intakeCoral.hasCoral.and(elevatorArmPivot.elevatorArmInPosition).and(intakeCoralPivot.atStowPosition)
+        //     .onTrue(intakeCoral.intake().alongWith(elevatorArm.intakeAndIndex()));
         
         // Notify driver we've intaken a coral
         driverIntake.and(robotHasCoral)//(intakeCoral.hasCoral)
@@ -427,7 +427,7 @@ public class RobotContainer {
             .onFalse(elevator.stow().alongWith(elevatorArmPivot.receivePosition()));
 
 
-        Command l4CoralEject = elevatorArm.runSpeed(0.5).until(elevatorArm.hasNoCoral);
+        Command l4CoralEject = elevatorArm.runSpeed(0.425).until(elevatorArm.hasNoCoral).andThen(Commands.waitSeconds(0.2));
         Command l1CoralEject = elevatorArm.runSpeed(0.4).until(elevatorArm.hasNoCoral);
         Command coralEject = elevatorArm.runSpeed(0.35).until(elevatorArm.hasNoCoral)
                                         .andThen(Commands.waitSeconds(0.2));
@@ -558,7 +558,12 @@ public class RobotContainer {
 
         // ====================== TEST CONTROLS ======================
         
-        Trigger armPivotHomed = new Trigger(elevatorArmPivot::isHomed);
+
+        testController.button(1).whileTrue(intakeCoralPivot.runSpeed(0.50));
+        testController.button(2).whileTrue(intakeCoralPivot.runSpeed(-0.50));
+        testController.button(3).whileTrue(intakeCoral.runSpeed(1));
+        testController.button(4).whileTrue(intakeCoral.runSpeed(-1));
+
 
         // testController.button(1).whileTrue(elevatorArm.runSpeed(1));
         // testController.button(2).whileTrue(elevatorArm.runSpeed(0.5));

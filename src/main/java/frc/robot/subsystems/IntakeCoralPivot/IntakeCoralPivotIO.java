@@ -10,6 +10,8 @@ public interface IntakeCoralPivotIO {
         double position;
         double voltage;
         double target;
+        double supplyCurrent;
+        double torqueCurrent;
     }
     
     //to stow and extend
@@ -18,6 +20,8 @@ public interface IntakeCoralPivotIO {
     public default void simulationPeriodic() {}
 
     public void update(IntakeCoralPivotIOInputs inputs);
+
+    public void setSpeed(double speed);
 
     public void runMotorTest();
 

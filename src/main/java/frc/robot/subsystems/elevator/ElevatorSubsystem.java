@@ -26,15 +26,17 @@ public class ElevatorSubsystem extends SubsystemBase {
     public static final Distance L1 = Inches.of(2.5);
     public static final Distance L2 = Meters.of(0.302);
     public static final Distance L3 = L2.plus(Inches.of(16));
-    public static final Distance L4 = Meters.of(1.4).plus(Inches.of(1.5));
+    public static final Distance L4 = Meters.of(1.45);
+    // public static final Distance L4 = Meters.of(1.4).plus(Inches.of(1.5));
     public static final Distance NET = Meters.of(1.47); // may be able to just be L4
-    public static final Distance STOW = Centimeters.of(0);
+    public static final Distance STOW = Inches.of(0);
     public static final Distance ZERO = Meters.of(0);
 
     protected static final double SOFT_UPPER_LIMIT = Meters.of(1.48).in(Meters);
     protected static final double SOFT_LOWER_LIMIT = 0;
-    private static final double IN_POSITION_METERS = Inches.of(1).in(Meters); // TODO: lower tolerance?
-    private static final double STOW_INTERMEDIATE = Inches.of(2).in(Meters);
+    private static final double IN_POSITION_METERS = Inches.of(0.5).in(Meters);// Inches.of(1).in(Meters); // TODO: lower tolerance?
+    private static final double STOW_INTERMEDIATE = Inches.of(3).in(Meters);
+    private static final boolean SOFT_STOW_ENABLED = true;
 
     private ElevatorIO io;
     private ElevatorIOInputs inputs;
@@ -113,6 +115,10 @@ public class ElevatorSubsystem extends SubsystemBase {
         return setPosition(STOW);
     }
 
+    public Command zero() {
+        return setPosition(ZERO);
+    }
+
     public Command setPosition(Distance position) {
         return run(() -> setPositionDirect(position));
     }
@@ -179,7 +185,7 @@ public class ElevatorSubsystem extends SubsystemBase {
      * @return True if the soft stow logic was applied, false otherwise.
      */
     private boolean softStowLogic() {
-        if (targetPosition != STOW) return false;
+        if (targetPosition != STOW || !SOFT_STOW_ENABLED) return false;
 
         if (atLowerLimitDebounced.getAsBoolean()) {
             io.stopMotor();

@@ -31,7 +31,8 @@ public class IntakeCoralPivotSubsystem extends SubsystemBase {
 
     public IntakeCoralPivotSubsystem() {
         if (Robot.isReal()) {
-            io = new IntakeCoralPivotIOSim();
+            io = new IntakeCoralPivotIOTalonFXS();
+            // io = new IntakeCoralPivotIOSim();
         } else {
             io = new IntakeCoralPivotIOTalonFXS();
         }
@@ -79,10 +80,17 @@ public class IntakeCoralPivotSubsystem extends SubsystemBase {
     }
 
     public Command setPosition(double encoderPosition) {
-        return this.run(() -> {
+        return run(() -> {
             io.setIntakePosition(encoderPosition);
             targetPosition = encoderPosition;
           });
+    }
+
+    public Command runSpeed(double speed) {
+        return runEnd(
+            () -> io.setSpeed(speed),
+            () -> io.setSpeed(0)
+        );
     }
 
     public Command test() {

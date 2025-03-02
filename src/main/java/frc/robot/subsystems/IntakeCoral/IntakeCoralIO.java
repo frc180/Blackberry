@@ -18,6 +18,8 @@ public interface IntakeCoralIO {
 
     public void stopRollers();
 
+    public void setSpeed(double speed);
+
     public default void simulationPeriodic() {}
 
     public void runMotorTest();

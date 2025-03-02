@@ -72,6 +72,11 @@ public class IntakeCoralIOSim implements IntakeCoralIO {
     }
 
     @Override
+    public void setSpeed(double speed) {
+        rollerSpeed = speed;
+    }
+
+    @Override
     public void runMotorTest() {
         System.out.println("intake coral test");
 

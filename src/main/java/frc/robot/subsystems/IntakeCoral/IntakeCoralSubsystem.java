@@ -18,8 +18,10 @@ public class IntakeCoralSubsystem extends SubsystemBase {
 
     public IntakeCoralSubsystem() {
         inputs = new IntakeIOInputs();
+        // io = new IntakeCoralIOTalonFXS();
         if (Robot.isReal()) {
-            io = new IntakeCoralIOSim();
+            io = new IntakeCoralIOTalonFXS();
+            // io = new IntakeCoralIOSim();
         } else {
             io = new IntakeCoralIOSim();
         }
@@ -51,6 +53,13 @@ public class IntakeCoralSubsystem extends SubsystemBase {
         return this.run(() -> {
             io.stopRollers();
         });
+    }
+
+    public Command runSpeed(double speed) {
+        return runEnd(
+            () -> io.setSpeed(speed),
+            () -> io.setSpeed(0)
+        );
     }
 
     public Command test() {

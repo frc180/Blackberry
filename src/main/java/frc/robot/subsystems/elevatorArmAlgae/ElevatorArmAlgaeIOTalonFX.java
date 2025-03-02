@@ -1,18 +1,25 @@
 package frc.robot.subsystems.elevatorArmAlgae;
 
+import static frc.robot.util.StatusSignals.trackSignal;
+import com.ctre.phoenix6.StatusSignal;
+import com.ctre.phoenix6.configs.CANrangeConfiguration;
 import com.ctre.phoenix6.configs.TalonFXSConfiguration;
 import com.ctre.phoenix6.controls.VoltageOut;
+import com.ctre.phoenix6.hardware.CANrange;
 import com.ctre.phoenix6.hardware.TalonFXS;
 import com.ctre.phoenix6.signals.MotorArrangementValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.signals.UpdateModeValue;
+import edu.wpi.first.units.measure.Distance;
 import frc.robot.Constants;
 
 public class ElevatorArmAlgaeIOTalonFX implements ElevatorArmAlgaeIO{
 
     TalonFXS motor;
-    // DigitalInput sensor;
-
+    CANrange canrange;
     VoltageOut voltageControl;
+
+    StatusSignal<Distance> distanceSignal;
     
     public ElevatorArmAlgaeIOTalonFX() {
         TalonFXSConfiguration config = new TalonFXSConfiguration();
@@ -20,14 +27,22 @@ public class ElevatorArmAlgaeIOTalonFX implements ElevatorArmAlgaeIO{
         motor = new TalonFXS(Constants.ELEVATOR_ARM_ALGAE, Constants.CANIVORE);
         motor.getConfigurator().apply(config);
         motor.setNeutralMode(NeutralModeValue.Brake);
-        // sensor = new DigitalInput(Constants.ELEVATOR_ARM_ALGAE_SENSOR);
         voltageControl = new VoltageOut(0);
+
+        // CANrangeConfiguration rangeConfig = new CANrangeConfiguration();
+        // rangeConfig.FovParams.FOVRangeX = 6.75;
+        // rangeConfig.ToFParams.UpdateMode = UpdateModeValue.ShortRange100Hz;
+        // canrange = new CANrange(Constants.ALGAE_ARM_CANRANGE, Constants.CANIVORE);
+        // canrange.getConfigurator().apply(rangeConfig);
+        // distanceSignal = trackSignal(canrange.getDistance());
     }
 
     @Override
     public void update(ElevatorArmAlgaeInputs inputs) {
-        // inputs.hasAlgae = sensor.get();
         inputs.hasAlgae = false;
+        // double distance = distanceSignal.getValueAsDouble();
+        // inputs.distance = distance;
+        // inputs.hasAlgae = distance < 0.4;
     }
 
     @Override

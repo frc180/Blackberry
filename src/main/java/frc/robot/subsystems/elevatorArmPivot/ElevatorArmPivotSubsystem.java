@@ -30,7 +30,7 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
     protected static final Angle REVERSE_LIMIT = Degrees.of(-20);
     protected static final Angle HARD_STOP_OFFSET = Degrees.of(60.46875 + 3.955078125 + 2.109375 - 2.63671875);
 
-    public static final double L4_SCORE = Units.degreesToRotations(-14);
+    public static final double L4_SCORE = Units.degreesToRotations(-16);
     public static final double L3_SCORE = Units.degreesToRotations(-6);
     public static final double L2_SCORE = L3_SCORE;
     public static final double L1_SCORE = Units.degreesToRotations(-1);
@@ -132,6 +132,10 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
 
     public Command zero(double rotations) {
         return runOnce(() -> io.zero(rotations));
+    }
+
+    public Command zeroAbsolute() {
+        return runOnce(() -> io.zero(inputs.absolutePosition));
     }
 
     @NotLogged

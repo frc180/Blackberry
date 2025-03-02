@@ -16,6 +16,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
+import edu.wpi.first.wpilibj.AnalogPotentiometer;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 import frc.robot.Constants;
 import frc.robot.Robot;
@@ -24,11 +25,14 @@ import frc.robot.subsystems.elevatorArm.ElevatorArmIOTalonFX;
 public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO {
     final double PIVOT_GEARING = 128;
     final double radToRotations = 1 / (2 * Math.PI);
+    final Angle ABSOLUTE_POSITION_OFFSET = Degrees.of(0);
+
 
     TalonFX armPivotMotor;
     MotionMagicVoltage motionMagic;
     VoltageOut voltageControl;
     NeutralModeValue neutralMode = null;
+    AnalogPotentiometer potentiometer;
 
     // Status signals
     StatusSignal<Angle> positionSignal;
@@ -76,6 +80,12 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO {
         motionMagic = new MotionMagicVoltage(0);
         voltageControl = new VoltageOut(0);
 
+        potentiometer = new AnalogPotentiometer(
+            Constants.ANALOG_ELEVATOR_ARM_PIVOT_POTENTIOMETER,
+            1,
+            ABSOLUTE_POSITION_OFFSET.in(Rotations)
+        );
+
         positionSignal = trackSignal(armPivotMotor.getPosition());
         voltageSignal = trackSignal(armPivotMotor.getMotorVoltage());
         targetSignal = trackSignal(armPivotMotor.getClosedLoopReference());
@@ -107,11 +117,13 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO {
         inputs.target = targetSignal.getValueAsDouble();
         inputs.velocity = velocitySignal.getValueAsDouble();
         if (Robot.isReal()) {
-            // Special case - this signal comes from a CANdi managed by ElevatorArmIOTalonFX, so we need to read it from there
-            // instead of by creating the CANdi and signal objects ourselves here
+            inputs.absolutePosition = potentiometer.get();
+            // Special case - this signal comes from a CANdi managed by ElevatorArmIOTalonFX, so we need to read it 
+            // from there instead of by creating the CANdi and signal objects ourselves here
             StatusSignal<Boolean> signal = ElevatorArmIOTalonFX.HARD_STOP_SIGNAL;
             inputs.hardStop = signal != null && signal.getValueAsDouble() == 1;
         } else {
+            inputs.absolutePosition = Units.radiansToRotations(armSim.getAngleRads());
             double armDegrees = Units.radiansToDegrees(armSim.getAngleRads());
             inputs.hardStop = Math.abs(armDegrees - ElevatorArmPivotSubsystem.HARD_STOP_OFFSET.in(Degrees)) <= 0.5;
         }
