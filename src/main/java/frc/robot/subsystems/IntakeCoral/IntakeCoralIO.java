@@ -12,18 +12,9 @@ public interface IntakeCoralIO {
     }
 
     public void update(IntakeIOInputs inputs);
-    
-    //to intake a coral
-    public void startRollers();
-
-    public void stopRollers();
 
     public void setSpeed(double speed);
 
     public default void simulationPeriodic() {}
-
-    public void runMotorTest();
-
-
 
 }

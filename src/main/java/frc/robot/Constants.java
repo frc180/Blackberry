@@ -25,8 +25,10 @@ public class Constants {
 
     public static final int CORAL_INDEXER = 23;
 
-    public static final int INTAKE_CORAL_TALON = 24; // unmapped
-    public static final int INTAKE_CORAL_PIVOT_TALON = 25; // unmapped
+    public static final int INTAKE_CORAL_TALON = 24;
+    public static final int INTAKE_CORAL_PIVOT_TALON = 25;
+
+    public static final int INTAKE_CORAL_SPARK = 50; // unmapped
 
     public static final int ALGAE_ARM_CANRANGE = 30; // unmapped
 

@@ -9,6 +9,7 @@ import com.ctre.phoenix6.signals.MotorArrangementValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 
 public class IntakeCoralIOTalonFXS implements IntakeCoralIO {
@@ -39,25 +40,10 @@ public class IntakeCoralIOTalonFXS implements IntakeCoralIO {
         inputs.coralSensor = false; //intakeSensor.get();
         inputs.voltage = voltageSignal.getValueAsDouble();
     }
-    
-    @Override
-    public void startRollers() {
-        setSpeed(1);
-    }
-
-    @Override
-    public void stopRollers() {
-        setSpeed(0);
-    }
 
     @Override
     public void setSpeed(double speed) {
         intakeMotor.setControl(voltageControl.withOutput(speed * 12));
-    }
-
-    @Override
-    public void runMotorTest() {
-        System.out.println("coral intake running");
-        intakeMotor.set(0.25);
+        SmartDashboard.putNumber("DEBUG Coral Requested Speed", speed);
     }
 }

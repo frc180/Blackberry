@@ -18,9 +18,9 @@ public class IntakeCoralSubsystem extends SubsystemBase {
 
     public IntakeCoralSubsystem() {
         inputs = new IntakeIOInputs();
-        // io = new IntakeCoralIOTalonFXS();
         if (Robot.isReal()) {
             io = new IntakeCoralIOTalonFXS();
+            // io = new IntakeCoralIOSpark();
             // io = new IntakeCoralIOSim();
         } else {
             io = new IntakeCoralIOSim();
@@ -32,27 +32,20 @@ public class IntakeCoralSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
-        // This method will be called once per scheduler run
         io.update(inputs);
     }
 
     @Override
     public void simulationPeriodic() {
-        // This method will be called once per scheduler run during simulation.
-        // Runs before periodic()
         io.simulationPeriodic();
     }
 
     public Command intake() {
-        return this.run (() -> {
-            io.startRollers();
-        });
+        return run(() -> io.setSpeed(1));
     }
 
     public Command stopIntake() {
-        return this.run(() -> {
-            io.stopRollers();
-        });
+        return run(() -> io.setSpeed(0));
     }
 
     public Command runSpeed(double speed) {
@@ -61,11 +54,4 @@ public class IntakeCoralSubsystem extends SubsystemBase {
             () -> io.setSpeed(0)
         );
     }
-
-    public Command test() {
-        return this.run(() -> {
-          io.runMotorTest();
-        });
-    }
-    
 }

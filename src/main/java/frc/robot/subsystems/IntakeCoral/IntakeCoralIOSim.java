@@ -4,6 +4,7 @@ import static edu.wpi.first.units.Units.Inches;
 import org.ironmaple.simulation.IntakeSimulation;
 import org.ironmaple.simulation.IntakeSimulation.IntakeSide;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.RobotContainer;
 import frc.robot.subsystems.IntakeCoralPivot.IntakeCoralPivotSubsystem;
 import frc.robot.util.simulation.SimLogic;
@@ -62,23 +63,8 @@ public class IntakeCoralIOSim implements IntakeCoralIO {
     }
 
     @Override
-    public void startRollers() {
-        rollerSpeed = 1;
-    }
-
-    @Override
-    public void stopRollers() {
-        rollerSpeed = 0;
-    }
-
-    @Override
     public void setSpeed(double speed) {
         rollerSpeed = speed;
-    }
-
-    @Override
-    public void runMotorTest() {
-        System.out.println("intake coral test");
-
+        SmartDashboard.putNumber("DEBUG Coral Requested Speed", speed);
     }
 }

@@ -57,8 +57,13 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
     private boolean isHoming = false;
     private boolean homed = false;
 
-    private double absoluteScalar = Robot.isReal() ? 1 : 1;
-    private double absoluteOffset = 0;
+    private double absoluteScalar = Robot.isReal() ? 1 : 4;
+    private double absoluteOffset = Robot.isReal() ? 0 : 30 * 4;
+
+    private double absoluteRatio = 0;
+    private double absoluteRatioFiltered = 0;
+    private double absoluteRatioSamples = 0;
+    private final MedianFilter absoluteRatioFilter = new MedianFilter(15);
 
     @NotLogged
     public Trigger elevatorArmInPosition = new Trigger(() -> isElevatorArmInPosition());
@@ -80,6 +85,9 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
         SmartDashboard.putNumber("Pivot Absolute Scalar", absoluteScalar);
     }
 
+    @NotLogged
+    boolean firstPeriodic = true;
+
     @Override
     public void periodic() {
         io.update(inputs);
@@ -89,6 +97,13 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
 
         absoluteScalar = SmartDashboard.getNumber("Pivot Absolute Scalar", absoluteScalar);
         absoluteRatio = inputs.position / getAbsolutePosition();
+
+        if (firstPeriodic) {
+            if (Robot.isSimulation()) {
+                io.zero(getAbsolutePosition());
+            }
+            firstPeriodic = false;
+        }
 
         // if (pidMode) {
         //     setArmPositionDirect(targetPosition);
@@ -138,10 +153,6 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
         ).withInterruptBehavior(InterruptionBehavior.kCancelIncoming);
     }
 
-    double absoluteRatio = 0;
-    double absoluteRatioFiltered = 0;
-    double absoluteRatioSamples = 0;
-    MedianFilter absoluteRatioFilter = new MedianFilter(15);
     public Command calculateAbsoluteRatio() {
         return Commands.sequence(
             runOnce(() -> {
