@@ -21,7 +21,7 @@ public class ElevatorArmIOSim implements ElevatorArmIO{
     public void update(ElevatorArmIOInputs inputs) {
         ElevatorArmPivotSubsystem armPivot = RobotContainer.instance.elevatorArmPivot;
         IntakeCoralPivotSubsystem intakeCoralPivot = RobotContainer.instance.intakeCoralPivot;
-        readyForCoral = SimLogic.intakeHasCoral && armPivot.isAtReceivingPosition() && intakeCoralPivot.isAtTarget();
+        readyForCoral = SimLogic.intakeHasCoral && armPivot.isAtReceivingPosition();// && intakeCoralPivot.isAtTarget();
 
         boolean armHasCoralPrevious = SimLogic.armHasCoral;
 

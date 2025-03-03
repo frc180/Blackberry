@@ -67,7 +67,7 @@ public abstract class SimVisuals {
      */
     public static void update() {
         RobotContainer rc = RobotContainer.instance;
-        boolean armHasCoral = rc.elevatorArm.hasCoral.getAsBoolean();
+        boolean armHasCoral = rc.elevatorArm.hasPartialCoral.getAsBoolean();
 
         // Keep coral arm attached to elevator
         coralArmRoot.setPosition(CORAL_ARM_X, Y_BOTTOM + CORAL_ARM_Y_OFFSET + elevatorLigament.getLength());
