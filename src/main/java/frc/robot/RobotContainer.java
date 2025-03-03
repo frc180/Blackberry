@@ -427,10 +427,11 @@ public class RobotContainer {
             .onFalse(elevator.stow().alongWith(elevatorArmPivot.receivePosition()));
 
 
-        Command l4CoralEject = elevatorArm.runSpeed(0.425).until(elevatorArm.hasNoCoral).andThen(Commands.waitSeconds(0.2));
+        Command l4CoralEject = elevatorArm.runSpeed(0.425).until(elevatorArm.hasNoCoral)
+                                          .andThen(Commands.waitSeconds(0.2));
         Command l1CoralEject = elevatorArm.runSpeed(0.4).until(elevatorArm.hasNoCoral);
         Command coralEject = elevatorArm.runSpeed(0.35).until(elevatorArm.hasNoCoral)
-                                        .andThen(Commands.waitSeconds(0.2));
+                                        .andThen(Commands.waitSeconds(0.2)); // could maybe be slightly less delay (0.1)?
 
         
         Command elevatorArmEject = Commands.select(Map.of(
