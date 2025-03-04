@@ -4,6 +4,7 @@ import static edu.wpi.first.units.Units.*;
 import java.util.HashMap;
 import java.util.Optional;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
@@ -62,6 +63,19 @@ public abstract class Field {
     
     public static boolean hasReefAlgae(int tag) {
         return CURRENT_ALGAE_HEIGHTS.containsKey(tag);
+    }
+
+    public static Pose3d getReefAlgaePose(int tag) {
+        Pose3d[] poses = getReefAlgaePoses();
+        int index = 0;
+        for (var entry : CURRENT_ALGAE_HEIGHTS.entrySet()) {
+            int algaeTag = entry.getKey();
+            if (tag == algaeTag) {
+                return poses[index];
+            }
+            index++;
+        }
+        return null;
     }
 
     public static void removeReefAlgae(int tag) {

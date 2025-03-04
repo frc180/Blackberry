@@ -1,6 +1,7 @@
 package frc.robot.subsystems.elevatorArmAlgae;
 
 import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -13,15 +14,19 @@ import frc.robot.subsystems.elevatorArmAlgae.ElevatorArmAlgaeIO.ElevatorArmAlgae
 @Logged
 public class ElevatorArmAlgaeSubsystem extends SubsystemBase{
 
-    private static final double FAR_OBJECT_THRESHOLD = 0.33;
-    private static final double CLOSE_OBJECT_THRESHOLD = 0.17;
+    protected static final double FAR_OBJECT_THRESHOLD = 0.33;
+    protected static final double CLOSE_OBJECT_THRESHOLD = 0.17;
+    protected static final double HAS_ALGAE_THRESHOLD = 0.1;
 
     ElevatorArmAlgaeIO io;
     ElevatorArmAlgaeInputs inputs;
 
-    public Trigger hasAlgae;
+    private final LinearFilter distanceFilter = LinearFilter.singlePoleIIR(0.1, 0.02);
+    private double distanceFiltered = 0;
 
-    public Trigger farAlgae, closeAlgae;
+    public final Trigger hasAlgae;
+    public final Trigger farAlgae, closeAlgae;
+
 
     public ElevatorArmAlgaeSubsystem() {
         inputs = new 
@@ -30,15 +35,24 @@ public class ElevatorArmAlgaeSubsystem extends SubsystemBase{
             io = new ElevatorArmAlgaeIOTalonFX();
             // io = new ElevatorArmAlgaeIOSim();
         } else {
-            io = new ElevatorArmAlgaeIOSim();
+            io = new ElevatorArmAlgaeIOTalonFX();
+            // io = new ElevatorArmAlgaeIOSim();
         }
 
-        hasAlgae = new Trigger(() -> inputs.hasAlgae);
+        farAlgae = new Trigger(() -> distanceFiltered > FAR_OBJECT_THRESHOLD);
+        closeAlgae = new Trigger(() -> distanceFiltered < CLOSE_OBJECT_THRESHOLD);
+        hasAlgae = new Trigger(() -> distanceFiltered < HAS_ALGAE_THRESHOLD);
     }
 
     @Override
     public void periodic() {
         io.update(inputs);
+        distanceFiltered = distanceFilter.calculate(inputs.distance);
+    }
+    
+    @Override
+    public void simulationPeriodic() {
+        io.simulationPeriodic();
     }
 
     // TODO: Minor fix - prevent this from running when doing left-aligned L2 and L3 (since we only get algae from the right side)
@@ -59,7 +73,7 @@ public class ElevatorArmAlgaeSubsystem extends SubsystemBase{
     public Command pulseWhenNeeded() {
         return runEnd(
             () -> {
-                if (inputs.distance > 0.05) {
+                if (closeAlgae.getAsBoolean() && !hasAlgae.getAsBoolean()) {
                     io.setSpeed(0.05);
                 } else {
                     io.setSpeed(0);

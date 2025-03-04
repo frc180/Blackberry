@@ -195,6 +195,7 @@ public class RobotContainer {
         final Trigger driverL4 = driverController.rightBumper().and(coralMode);
         driverLeftReef = driverController.x().and(coralMode);
         driverRightReef = driverController.b().and(coralMode);
+        Trigger driverAnyReef = driverLeftReef.or(driverRightReef);
         //algae
         final Trigger driverProcessor = algaeMode.and(driverController.b());
         final Trigger driverNet = algaeMode.and(driverController.x());
@@ -423,7 +424,7 @@ public class RobotContainer {
         Trigger reefDeployAllowed = teleop.or(elevatorArm.hasPartialCoral);
 
         nearReef.and(reefDeployAllowed).or(isScoringCoral)
-            .whileTrue(chosenElevatorHeight.alongWith(elevatorArmPivot.matchElevatorPreset(), elevatorArmAlgae.intakeBasedOnElevator()))
+            .whileTrue(chosenElevatorHeight.alongWith(elevatorArmPivot.matchElevatorPreset()))//, elevatorArmAlgae.intakeBasedOnElevator()))
             .onFalse(elevator.stow().alongWith(elevatorArmPivot.receivePosition()));
 
 
@@ -450,17 +451,11 @@ public class RobotContainer {
             }
         );
 
-        // coralEject = Commands.either(
-        //     l1CoralEject,
-        //     coralEject,
-        //     () -> elevator.getTargetPosition() == ElevatorSubsystem.L1
-        // );
-
-        // Command elevatorArmEject = Commands.either(
-        //     l4CoralEject,
-        //     coralEject,
-        //     () -> elevator.getTargetPosition() == ElevatorSubsystem.L4
-        // );
+        Command obtainAlgae = Commands.either(
+            elevatorArmAlgae.runSpeed(0.5).until(elevatorArmAlgae.hasAlgae.or(driverAnyReef.negate())),
+            Commands.none(),
+            () -> elevator.isTargetingReefAlgaePosition() && elevatorArmAlgae.farAlgae.getAsBoolean()
+        );
 
         Trigger visionScoreReady = vision.poseEstimateDiffLow.or(scoringCameraDisconnected)
                                                              .or(() -> elevator.getTargetPosition() == ElevatorSubsystem.L1);
@@ -473,7 +468,7 @@ public class RobotContainer {
             Commands.sequence(
                 Commands.runOnce(() -> Robot.currentlyScoringCoral = true)
                         .alongWith(drivetrain.runOnce(() -> drivetrain.drive(new ChassisSpeeds())))
-                        .alongWith(elevatorArmEject),
+                        .alongWith(elevatorArmEject, obtainAlgae),
                 // elevatorArmEject,
                 Commands.runOnce(() -> {
                     elevatorArmPivot.setArmPositionDirect(ElevatorArmPivotSubsystem.receiving);

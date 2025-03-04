@@ -17,4 +17,6 @@ public interface ElevatorArmAlgaeIO {
     public void stop();
 
     public void update(ElevatorArmAlgaeInputs inputs);
+
+    public default void simulationPeriodic() {}
 }
