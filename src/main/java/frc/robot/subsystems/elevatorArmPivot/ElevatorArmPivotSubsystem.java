@@ -8,6 +8,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -59,6 +60,8 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
     private double absoluteScalar = Robot.isReal() ? (2.29 * .967): 4;
     private double absoluteOffset = Robot.isReal() ? -0.701 : 30 * 4;
 
+    @NotLogged
+    private double lastPositionSyncTime = 0;
     private double positionDisagreement = 0;
     private boolean shouldResync = false;
     private double absoluteRatio = 0;
@@ -86,8 +89,6 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
 
     @NotLogged
     boolean firstPeriodic = true;
-    @NotLogged
-    int resyncTicks = 0;
 
     @Override
     public void periodic() {
@@ -100,13 +101,13 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
         positionDisagreement = getAbsolutePosition() - inputs.position;
         shouldResync = Math.abs(positionDisagreement) > RESYNC_THRESHOLD;
 
-        if (firstPeriodic) {//|| resyncTicks == 50) {
+        double currentTime = Timer.getFPGATimestamp();
+        if (firstPeriodic) {// || currentTime - lastPositionSyncTime > 0.5) {
             io.zero(getAbsolutePosition());
             homed = true;
             firstPeriodic = false;
-            resyncTicks = 0;
+            lastPositionSyncTime = currentTime;
         }
-        resyncTicks++;
 
         // if (pidMode) {
         //     setArmPositionDirect(targetPosition);
