@@ -42,6 +42,7 @@ public class ElevatorIOTalonFX implements ElevatorIO {
     StatusSignal<AngularVelocity> velocitySignal;
     StatusSignal<Voltage> voltageSignal;
     StatusSignal<Double> targetSignal;
+    StatusSignal<Double> dutyCycleSignal;
 
     // Simulation-only variables
     TalonFXSimState motorASim, motorBSim;
@@ -105,6 +106,7 @@ public class ElevatorIOTalonFX implements ElevatorIO {
         velocitySignal = trackSignal(motorA.getVelocity());
         voltageSignal = trackSignal(motorA.getMotorVoltage());
         targetSignal = trackSignal(motorA.getClosedLoopReference());
+        dutyCycleSignal = trackSignal(motorA.getDutyCycle());
 
         // Everything past this point is just for simulation setup
         if (Robot.isReal()) return;
@@ -147,6 +149,7 @@ public class ElevatorIOTalonFX implements ElevatorIO {
         inputs.velocity = velocitySignal.getValueAsDouble();
         inputs.voltage = voltageSignal.getValueAsDouble();
         inputs.target = targetSignal.getValueAsDouble();
+        inputs.dutyCycle = dutyCycleSignal.getValueAsDouble();
 
         if (Robot.isReal()) {
             inputs.bottomLimit = !bottomLimit.get();

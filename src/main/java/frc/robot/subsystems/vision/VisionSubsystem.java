@@ -87,8 +87,19 @@ public class VisionSubsystem extends SubsystemBase {
     );
     
     // TODO: set real values
-    public static final Transform2d ROBOT_TO_INTAKE_CAMERA = new Transform2d(0.1, 0, Rotation2d.fromDegrees(0));
-    public static final Transform2d INTAKE_CAMERA_TO_ROBOT = ROBOT_TO_INTAKE_CAMERA.inverse();
+    public static final Transform3d ROBOT_TO_INTAKE_CAMERA = new Transform3d(
+        Inches.of(-9.757).in(Meters), // forward
+        Inches.of(-7.2).in(Meters), // left
+        Inches.of(31.296).in(Meters),
+        new Rotation3d(0, Units.degreesToRadians(50), Units.degreesToRadians(180)) // downward tilt
+    );
+
+    public static final Transform2d ROBOT_TO_INTAKE_CAMERA_2D = new Transform2d(
+        ROBOT_TO_INTAKE_CAMERA.getTranslation().getX(),
+        ROBOT_TO_INTAKE_CAMERA.getTranslation().getY(),
+        Rotation2d.k180deg
+    );
+    public static final Transform2d INTAKE_CAMERA_TO_ROBOT_2D = ROBOT_TO_INTAKE_CAMERA_2D.inverse();
 
     private static final int RED_PROCESSOR_TAG = 3;
     private static final int BLUE_PROCESSOR_TAG = 16;
@@ -150,6 +161,8 @@ public class VisionSubsystem extends SubsystemBase {
     private PoseEstimate poseEstimate = null;
     private PoseEstimateSource poseEstimateSource = PoseEstimateSource.NONE;
     private Pose3d scoringCameraPosition = Pose3d.kZero;
+    private Pose3d frontCameraPosition = Pose3d.kZero;
+    private Pose3d backCameraPosition = Pose3d.kZero;
     private double poseEstimateDiffX, poseEstimateDiffY, poseEstimateDiffTheta;
     private double lastPoseEstimateTime = 0;
     
@@ -286,8 +299,10 @@ public class VisionSubsystem extends SubsystemBase {
 
         // calculate scoring camera in 3D space, for previewing in AdvantageScope
         if (Robot.isSimulation()) {
-            Pose2d cameraPosebase = RobotContainer.instance.drivetrain.getSimPose();
-            scoringCameraPosition = new Pose3d(cameraPosebase).transformBy(ROBOT_TO_SCORING_CAMERA);
+            Pose3d robotPose3d = new Pose3d(RobotContainer.instance.drivetrain.getSimPose());
+            scoringCameraPosition = robotPose3d.transformBy(ROBOT_TO_SCORING_CAMERA);
+            frontCameraPosition = robotPose3d.transformBy(ROBOT_TO_FRONT_CAMERA);
+            backCameraPosition = robotPose3d.transformBy(ROBOT_TO_INTAKE_CAMERA);
         }
 
         //check if robot can see the reef

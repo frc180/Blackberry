@@ -41,15 +41,15 @@ public class CoralDetectorReal implements CoralDetector {
         }
         sortedDetections.sort(detectionTYComparator);
 
-        Pose2d basePose = robotPose;
-        // Pose2d basePose = robotPose.transformBy(VisionSubsystem.ROBOT_TO_INTAKE_CAMERA);
+        // Pose2d basePose = robotPose;
+        Pose2d basePose = robotPose.transformBy(VisionSubsystem.ROBOT_TO_INTAKE_CAMERA_2D);
 
         for (RawDetection detection : sortedDetections) {
             double distanceMeters = distanceMap.get(detection.tync);
             double degrees = detection.txnc;
 
             // TODO: double check if x or y is the correct value for distanceMeters
-            Transform2d coralTransform = new Transform2d(0, distanceMeters, Rotation2d.fromDegrees(degrees));
+            Transform2d coralTransform = new Transform2d(distanceMeters, 0, Rotation2d.fromDegrees(degrees));
             Pose2d coralPose = basePose.transformBy(coralTransform);
 
             // TODO: reject coralPoses that are outside the field or (perhaps) where the stacked coral are

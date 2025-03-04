@@ -10,6 +10,7 @@ public interface ElevatorIO {
         double position;
         double velocity;
         double voltage;
+        double dutyCycle;
         double target;
         boolean bottomLimit = false;
     }

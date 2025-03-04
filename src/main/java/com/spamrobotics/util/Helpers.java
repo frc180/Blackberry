@@ -6,7 +6,9 @@ import static edu.wpi.first.units.Units.Meters;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.Angle;
@@ -97,12 +99,22 @@ public class Helpers {
         return headingSatisfied;
     }
 
+    public static Transform3d toTransform3d(Distance x, Distance y, Distance z, Rotation3d rotation) {
+        return new Transform3d(x.in(Meters), y.in(Meters), z.in(Meters), rotation);
+    }
+
+    public static Transform2d toTransform2d(Distance x, Distance y, Angle angle) {
+        return new Transform2d(x.in(Meters), y.in(Meters), Rotation2d.fromDegrees(angle.in(Degrees)));
+    }
+
     public static Transform2d toTransform2d(Translation2d translation) {
-        return new Transform2d(translation, new Rotation2d());
+        // return new Transform2d(translation, new Rotation2d());
+        return new Transform2d(translation, Rotation2d.kZero);
     }
 
     public static Transform2d toTransform2d(double x, double y) {
-        return new Transform2d(x, y, new Rotation2d());
+        // return new Transform2d(x, y, new Rotation2d());
+        return new Transform2d(x, y, Rotation2d.kZero);
     }
 
     // Helper methods from https://github.com/frc6995/Robot-2025/blob/main/src/main/java/frc/robot/subsystems/drive/Pathing.java#L18
