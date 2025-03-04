@@ -13,10 +13,15 @@ import frc.robot.subsystems.elevatorArmAlgae.ElevatorArmAlgaeIO.ElevatorArmAlgae
 @Logged
 public class ElevatorArmAlgaeSubsystem extends SubsystemBase{
 
+    private static final double FAR_OBJECT_THRESHOLD = 0.33;
+    private static final double CLOSE_OBJECT_THRESHOLD = 0.17;
+
     ElevatorArmAlgaeIO io;
     ElevatorArmAlgaeInputs inputs;
 
     public Trigger hasAlgae;
+
+    public Trigger farAlgae, closeAlgae;
 
     public ElevatorArmAlgaeSubsystem() {
         inputs = new 
@@ -43,6 +48,19 @@ public class ElevatorArmAlgaeSubsystem extends SubsystemBase{
             () -> {
                 if (elevator.isTargetingReefAlgaePosition()) {
                     io.setSpeed(0.5);
+                } else {
+                    io.setSpeed(0);
+                }
+            },
+            () -> io.setSpeed(0)
+        );
+    }
+
+    public Command pulseWhenNeeded() {
+        return runEnd(
+            () -> {
+                if (inputs.distance > 0.05) {
+                    io.setSpeed(0.05);
                 } else {
                     io.setSpeed(0);
                 }

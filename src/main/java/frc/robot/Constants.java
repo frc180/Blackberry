@@ -28,9 +28,9 @@ public class Constants {
     public static final int INTAKE_CORAL_TALON = 24;
     public static final int INTAKE_CORAL_PIVOT_TALON = 25;
 
-    public static final int INTAKE_CORAL_SPARK = 50; // unmapped
+    public static final int INTAKE_CORAL_SPARK = 22; // RIO bus
 
-    public static final int ALGAE_ARM_CANRANGE = 30; // unmapped
+    public static final int ALGAE_ARM_CANRANGE = 26; // unmapped
 
     //sensor channels
     public static final int DIO_INTAKE_ALGAE_ENCODER = 0;

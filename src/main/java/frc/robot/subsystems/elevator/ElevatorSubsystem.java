@@ -35,7 +35,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     protected static final double SOFT_UPPER_LIMIT = Meters.of(1.48).in(Meters);
     protected static final double SOFT_LOWER_LIMIT = 0;
     private static final double IN_POSITION_METERS = Inches.of(0.5).in(Meters);// Inches.of(1).in(Meters); // TODO: lower tolerance?
-    private static final double STOW_INTERMEDIATE = Inches.of(3).in(Meters);
+    private static final double STOW_INTERMEDIATE = Inches.of(2).in(Meters);
     private static final boolean SOFT_STOW_ENABLED = true;
 
     private ElevatorIO io;
@@ -192,7 +192,7 @@ public class ElevatorSubsystem extends SubsystemBase {
         } else if (inputs.position > STOW_INTERMEDIATE + IN_POSITION_METERS) {
             io.setPosition(STOW_INTERMEDIATE);
         } else {
-            io.setPower(-0.05);
+            io.setPower(-0.03);
         }
         return true;
     }

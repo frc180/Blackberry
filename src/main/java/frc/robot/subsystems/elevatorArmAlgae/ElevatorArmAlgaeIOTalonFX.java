@@ -29,20 +29,20 @@ public class ElevatorArmAlgaeIOTalonFX implements ElevatorArmAlgaeIO{
         motor.setNeutralMode(NeutralModeValue.Brake);
         voltageControl = new VoltageOut(0);
 
-        // CANrangeConfiguration rangeConfig = new CANrangeConfiguration();
-        // rangeConfig.FovParams.FOVRangeX = 6.75;
-        // rangeConfig.ToFParams.UpdateMode = UpdateModeValue.ShortRange100Hz;
-        // canrange = new CANrange(Constants.ALGAE_ARM_CANRANGE, Constants.CANIVORE);
-        // canrange.getConfigurator().apply(rangeConfig);
-        // distanceSignal = trackSignal(canrange.getDistance());
+        CANrangeConfiguration rangeConfig = new CANrangeConfiguration();
+        rangeConfig.FovParams.FOVRangeX = 6.75;
+        rangeConfig.FovParams.FOVRangeY = 6.75;
+        rangeConfig.ToFParams.UpdateMode = UpdateModeValue.ShortRange100Hz;
+        canrange = new CANrange(Constants.ALGAE_ARM_CANRANGE, Constants.CANIVORE);
+        canrange.getConfigurator().apply(rangeConfig);
+        distanceSignal = trackSignal(canrange.getDistance());
     }
 
     @Override
     public void update(ElevatorArmAlgaeInputs inputs) {
-        inputs.hasAlgae = false;
-        // double distance = distanceSignal.getValueAsDouble();
-        // inputs.distance = distance;
-        // inputs.hasAlgae = distance < 0.4;
+        double distance = distanceSignal.getValueAsDouble();
+        inputs.distance = distance;
+        inputs.hasAlgae = distance < 0.1;
     }
 
     @Override

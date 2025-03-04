@@ -5,6 +5,7 @@ import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXSConfiguration;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFXS;
+import com.ctre.phoenix6.signals.AdvancedHallSupportValue;
 import com.ctre.phoenix6.signals.MotorArrangementValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.units.measure.Voltage;
@@ -23,6 +24,7 @@ public class IntakeCoralIOTalonFXS implements IntakeCoralIO {
     public IntakeCoralIOTalonFXS() {
         TalonFXSConfiguration config = new TalonFXSConfiguration();
         config.Commutation.MotorArrangement = MotorArrangementValue.NEO550_JST;
+        config.Commutation.AdvancedHallSupport = AdvancedHallSupportValue.Enabled;
         intakeMotor = new TalonFXS(Constants.INTAKE_CORAL_TALON, Constants.CANIVORE);
         intakeMotor.getConfigurator().apply(config);
         intakeMotor.setNeutralMode(NeutralModeValue.Brake);

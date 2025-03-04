@@ -371,11 +371,12 @@ public class RobotContainer {
                 elevator.home(),
                 elevator::isHomed 
             ),
-            Commands.either(
-                Commands.none(),
-                elevatorArmPivot.home().andThen(elevatorArmPivot.horizontalPosition()),
-                elevatorArmPivot::isHomed
-            ),
+            // .horizontalPosition(),
+            // Commands.either(
+            //     Commands.none(),
+            //     elevatorArmPivot.home().andThen(elevatorArmPivot.horizontalPosition()),
+            //     elevatorArmPivot::isHomed
+            // ),
             new RumbleCommand(0.5).withTimeout(0.3)
         ));
 
@@ -564,6 +565,13 @@ public class RobotContainer {
         testController.button(3).whileTrue(intakeCoral.runSpeed(1));
         testController.button(4).whileTrue(intakeCoral.runSpeed(-1));
 
+        testController.button(5).whileTrue(elevatorArmPivot.calculateAbsoluteRatio());
+
+
+        testController.button(6).whileTrue(elevatorArmPivot.horizontalPosition());
+        testController.button(7).whileTrue(elevatorArmPivot.setPosition(ElevatorArmPivotSubsystem.L3_SCORE));
+        testController.button(8).whileTrue(elevatorArmPivot.receivePosition());
+
 
         // testController.button(1).whileTrue(elevatorArm.runSpeed(1));
         // testController.button(2).whileTrue(elevatorArm.runSpeed(0.5));
@@ -595,20 +603,20 @@ public class RobotContainer {
         // teleop.and(testController.button(8)).whileTrue(elevator.runSpeed(0.2));
         // teleop.and(testController.button(9)).whileTrue(elevator.runSpeed(-0.2));
         
-        teleop.and(testController.button(6))
-            .onTrue(elevator.home().andThen(new RumbleCommand(0.5).withTimeout(0.5)));
+        // teleop.and(testController.button(6))
+        //     .onTrue(elevator.home().andThen(new RumbleCommand(0.5).withTimeout(0.5)));
         
-        teleop.and(testController.button(7))
-            .onTrue(elevator.setPosition(ElevatorSubsystem.STOW));
+        // teleop.and(testController.button(7))
+        //     .onTrue(elevator.setPosition(ElevatorSubsystem.STOW));
 
-        teleop.and(testController.button(8))
-            .onTrue(elevator.setPosition(ElevatorSubsystem.L2));
+        // teleop.and(testController.button(8))
+        //     .onTrue(elevator.setPosition(ElevatorSubsystem.L2));
 
-        teleop.and(testController.button(9))
-            .onTrue(elevator.setPosition(ElevatorSubsystem.L3));
+        // teleop.and(testController.button(9))
+        //     .onTrue(elevator.setPosition(ElevatorSubsystem.L3));
 
-        teleop.and(testController.button(10))
-            .onTrue(elevator.setPosition(ElevatorSubsystem.L4));
+        // teleop.and(testController.button(10))
+        //     .onTrue(elevator.setPosition(ElevatorSubsystem.L4));
 
         // testMode.and(testController.button(10)).onTrue(Commands.sequence(
         //     elevator.home(),

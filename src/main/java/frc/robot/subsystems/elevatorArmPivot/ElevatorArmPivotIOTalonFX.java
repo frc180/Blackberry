@@ -48,11 +48,17 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO {
         armPivotMotor = new TalonFX(Constants.ELEVATOR_ARM_PIVOT_TALON, Constants.CANIVORE);
         TalonFXConfiguration config = new TalonFXConfiguration();
         if (Robot.isReal()) {
-            config.Slot0.kP = 220; // was 200
+            // config.Slot0.kP = 220;
+            // config.Slot0.kI = 0;
+            // config.Slot0.kD = 0;
+            // config.Slot0.kG = 0.23;
+            // config.Slot0.kV = 15;
+            // config.Slot0.kA = 0;
+            config.Slot0.kP = 0;
             config.Slot0.kI = 0;
             config.Slot0.kD = 0;
-            config.Slot0.kG = 0.23;
-            config.Slot0.kV = 15;
+            config.Slot0.kG = 0;
+            config.Slot0.kV = 0;
             config.Slot0.kA = 0;
         } else {
             config.Slot0.kP = 100;
@@ -117,7 +123,7 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO {
         inputs.target = targetSignal.getValueAsDouble();
         inputs.velocity = velocitySignal.getValueAsDouble();
         if (Robot.isReal()) {
-            inputs.absolutePosition = potentiometer.get();
+            inputs.absolutePosition = -potentiometer.get();
             // Special case - this signal comes from a CANdi managed by ElevatorArmIOTalonFX, so we need to read it 
             // from there instead of by creating the CANdi and signal objects ourselves here
             StatusSignal<Boolean> signal = ElevatorArmIOTalonFX.HARD_STOP_SIGNAL;

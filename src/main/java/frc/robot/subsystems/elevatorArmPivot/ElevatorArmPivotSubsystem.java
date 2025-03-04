@@ -9,8 +9,6 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
-import edu.wpi.first.wpilibj.RobotState;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -23,7 +21,7 @@ import frc.robot.subsystems.elevatorArmPivot.ElevatorArmPivotIO.ElevatorArmPivot
 import frc.robot.util.simulation.SimVisuals;
 
 @Logged
-public class ElevatorArmPivotSubsystem extends SubsystemBase{
+public class ElevatorArmPivotSubsystem extends SubsystemBase {
 
     private ElevatorArmPivotIO io;
     private ElevatorArmPivotIOInputs inputs;
@@ -32,6 +30,7 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
     protected static final Angle FORWARD_LIMIT = Degrees.of(60.7);
     protected static final Angle REVERSE_LIMIT = Degrees.of(-20);
     protected static final Angle HARD_STOP_OFFSET = Degrees.of(60.46875 + 3.955078125 + 2.109375 - 2.63671875);
+    private static final double RESYNC_THRESHOLD = Degrees.of(2).in(Rotations);
 
     public static final double L4_SCORE = Units.degreesToRotations(-16);
     public static final double L3_SCORE = Units.degreesToRotations(-6);
@@ -57,9 +56,11 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
     private boolean isHoming = false;
     private boolean homed = false;
 
-    private double absoluteScalar = Robot.isReal() ? 1 : 4;
-    private double absoluteOffset = Robot.isReal() ? 0 : 30 * 4;
+    private double absoluteScalar = Robot.isReal() ? (2.29 * .967): 4;
+    private double absoluteOffset = Robot.isReal() ? -0.701 : 30 * 4;
 
+    private double positionDisagreement = 0;
+    private boolean shouldResync = false;
     private double absoluteRatio = 0;
     private double absoluteRatioFiltered = 0;
     private double absoluteRatioSamples = 0;
@@ -81,12 +82,12 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
         } else {
             io = new ElevatorArmPivotIOTalonFX();
         }
-
-        SmartDashboard.putNumber("Pivot Absolute Scalar", absoluteScalar);
     }
 
     @NotLogged
     boolean firstPeriodic = true;
+    @NotLogged
+    int resyncTicks = 0;
 
     @Override
     public void periodic() {
@@ -95,15 +96,17 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase{
 
         notHomedAlert.set(!homed);
 
-        absoluteScalar = SmartDashboard.getNumber("Pivot Absolute Scalar", absoluteScalar);
         absoluteRatio = inputs.position / getAbsolutePosition();
+        positionDisagreement = getAbsolutePosition() - inputs.position;
+        shouldResync = Math.abs(positionDisagreement) > RESYNC_THRESHOLD;
 
-        if (firstPeriodic) {
-            if (Robot.isSimulation()) {
-                io.zero(getAbsolutePosition());
-            }
+        if (firstPeriodic) {//|| resyncTicks == 50) {
+            io.zero(getAbsolutePosition());
+            homed = true;
             firstPeriodic = false;
+            resyncTicks = 0;
         }
+        resyncTicks++;
 
         // if (pidMode) {
         //     setArmPositionDirect(targetPosition);
