@@ -47,6 +47,7 @@ public class ElevatorArmAlgaeIOTalonFX implements ElevatorArmAlgaeIO{
         CANrangeConfiguration rangeConfig = new CANrangeConfiguration();
         rangeConfig.FovParams.FOVRangeX = 6.75;
         rangeConfig.FovParams.FOVRangeY = 6.75;
+        rangeConfig.FovParams.FOVCenterY = 11.8;
         rangeConfig.ToFParams.UpdateMode = UpdateModeValue.ShortRange100Hz;
         canrange = new CANrange(Constants.ALGAE_ARM_CANRANGE, Constants.CANIVORE);
         canrange.getConfigurator().apply(rangeConfig);

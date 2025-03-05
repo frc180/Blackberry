@@ -42,7 +42,7 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
     public static final double algaeReceive = Units.degreesToRotations(-70);
     public static final double horizontal = 0;
 
-    public static final double netScore = Units.degreesToRotations(46);
+    public static final double netScore = Units.degreesToRotations(62);
     public static final double netScoreBackwards = Units.degreesToRotations(46.01);
 
     private static final double IN_POSITION_TOLERANCE = Units.degreesToRotations(2);

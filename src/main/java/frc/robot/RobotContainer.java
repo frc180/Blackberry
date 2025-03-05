@@ -308,6 +308,7 @@ public class RobotContainer {
         }
 
         elevatorArm.setDefaultCommand(elevatorArm.passiveIndex());
+        elevatorArmAlgae.setDefaultCommand(elevatorArmAlgae.passiveIndex());
         
         //noticed that sometimes when we have a coral the intake doesnt go back to the stow position to tansfer to the arm
         // intakeCoral.hasCoral.and(elevatorArmPivot.elevatorArmInPosition).and(intakeCoralPivot.atStowPosition)
@@ -452,9 +453,13 @@ public class RobotContainer {
         );
 
         Command obtainAlgae = Commands.either(
-            elevatorArmAlgae.runSpeed(0.5).until(elevatorArmAlgae.hasAlgae.or(driverAnyReef.negate())),
+            elevatorArmAlgae.intakeAndIndex(0.5).until(elevatorArmAlgae.hasAlgae.or(driverAnyReef.negate())),
             Commands.none(),
-            () -> elevator.isTargetingReefAlgaePosition() && elevatorArmAlgae.farAlgae.getAsBoolean()
+            () -> {
+                return elevator.isTargetingReefAlgaePosition() && 
+                        elevatorArmAlgae.farAlgae.getAsBoolean() &&
+                        driverRightReef.getAsBoolean();
+            }
         );
 
         Trigger visionScoreReady = vision.poseEstimateDiffLow.or(scoringCameraDisconnected)
@@ -505,7 +510,7 @@ public class RobotContainer {
         );
 
         // Start moving to score algae in net
-        driverNet.and(elevatorArmAlgae.hasAlgae).whileTrue(
+        driverNet.whileTrue(
             Commands.parallel(
                 elevator.setPosition(ElevatorSubsystem.NET),
                 elevatorArmPivot.netScorePosition()//.alongWith(drivetrain.targetHeadingContinuous(0.0, HeadingTarget.GYRO))
@@ -520,12 +525,13 @@ public class RobotContainer {
         );
 
         // Scoring algae in the net from arm
-        driverNet//.and(drivetrain.withinTargetHeadingTolerance(Degrees.of(5)))
-                 .and(elevator.elevatorInScoringPosition)
-                 //.and(elevatorArmPivot.elevatorArmInScoringPosition)
-                 .and(elevatorArmAlgae.hasAlgae).whileTrue(
-                    elevatorArmAlgae.spit()
-                 );
+        // driverNet//.and(drivetrain.withinTargetHeadingTolerance(Degrees.of(5)))
+        //          .and(elevator.elevatorInScoringPosition)
+        //          .and(elevatorArmPivot.elevatorArmInScoringPosition)
+        //          .and(elevatorArmAlgae.hasAlgae).whileTrue(
+        //             elevatorArmAlgae.runSpeed(-1)
+        //                             .until(elevatorArmAlgae.closeAlgae.negate().debounce(0.2))
+        //          );
 
         // ================= Autonomous Trigger Logic =================
 
@@ -560,12 +566,15 @@ public class RobotContainer {
         testController.button(3).whileTrue(intakeCoral.runSpeed(1));
         testController.button(4).whileTrue(intakeCoral.runSpeed(-1));
 
-        testController.button(5).whileTrue(elevatorArmPivot.calculateAbsoluteRatio());
+        // testController.button(5).whileTrue(elevatorArmPivot.calculateAbsoluteRatio());
 
 
         testController.button(6).whileTrue(elevatorArmPivot.horizontalPosition());
-        testController.button(7).whileTrue(elevatorArmPivot.setPosition(ElevatorArmPivotSubsystem.L3_SCORE));
+        testController.button(7).whileTrue(elevatorArmPivot.netScorePosition());
         testController.button(8).whileTrue(elevatorArmPivot.receivePosition());
+
+        testController.button(9).whileTrue(elevatorArmAlgae.intakeAndIndex(0.5));
+        testController.button(10).whileTrue(elevatorArmAlgae.runSpeed(-1));
 
 
         // testController.button(1).whileTrue(elevatorArm.runSpeed(1));

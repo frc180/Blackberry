@@ -829,7 +829,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         SwerveModuleState[] moduleStates = getState().ModuleStates;
         moduleSpeedAvg = 0;
         for (int i = 0; i < moduleStates.length; i++) {
-            moduleSpeeds[i] = moduleStates[i].speedMetersPerSecond;
+            moduleSpeeds[i] = Math.abs(moduleStates[i].speedMetersPerSecond);
             moduleSpeedAvg += Math.abs(moduleSpeeds[i]);
         }
         moduleSpeedAvg /= moduleStates.length;
