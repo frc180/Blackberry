@@ -1,0 +1,29 @@
+package frc.robot.subsystems.IntakeCoralPivot;
+
+import edu.wpi.first.epilogue.Logged;
+
+@Logged
+public interface IntakeCoralPivotIO {
+
+    @Logged
+    public class IntakeCoralPivotIOInputs {
+        double position;
+        double voltage;
+        double target;
+        double supplyCurrent;
+        double torqueCurrent;
+    }
+    
+    //to stow and extend
+    public void setIntakePosition(double position);
+
+    public default void simulationPeriodic() {}
+
+    public void update(IntakeCoralPivotIOInputs inputs);
+
+    public void setSpeed(double speed);
+
+    public void runMotorTest();
+
+    public void stopMotor();
+}

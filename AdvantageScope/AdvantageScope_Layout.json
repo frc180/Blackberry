@@ -1,0 +1,187 @@
+{
+  "hubs": [
+    {
+      "x": 856,
+      "y": 162,
+      "width": 1330,
+      "height": 925,
+      "state": {
+        "sidebar": {
+          "width": 409,
+          "expanded": [
+            "/Robot/RobotContainer/Vision/inputs/scoringPoseEstimate/Pose",
+            "/Robot/robotComponentPosesArray",
+            "/Robot/RobotContainer",
+            "/Robot/RobotContainer/Algae Intake Pivot/inputs",
+            "/Robot/RobotContainer/Vision/inputs",
+            "/Robot",
+            "/Robot/RobotContainer/Elevator Arm Pivot/inputs",
+            "/Robot/RobotContainer/Vision",
+            "/Robot/RobotContainer/Vision/inputs/scoringPoseEstimate"
+          ]
+        },
+        "tabs": {
+          "selected": 1,
+          "tabs": [
+            {
+              "type": 0,
+              "title": "",
+              "controller": null,
+              "controllerUUID": "pna0mmhmtin0n4o7pxp5yck7p87wlg39",
+              "renderer": "#/",
+              "controlsHeight": 0
+            },
+            {
+              "type": 3,
+              "title": "3D Field",
+              "controller": {
+                "sources": [
+                  {
+                    "type": "robot",
+                    "logKey": "NT:Robot/RobotContainer/Drivetrain/getSimPose",
+                    "logType": "Pose2d",
+                    "visible": true,
+                    "options": {
+                      "model": "Anenome"
+                    }
+                  },
+                  {
+                    "type": "mechanism",
+                    "logKey": "NT:/SmartDashboard/Mechanism 2D",
+                    "logType": "Mechanism2d",
+                    "visible": true,
+                    "options": {}
+                  },
+                  {
+                    "type": "component",
+                    "logKey": "NT:Robot Component Poses",
+                    "logType": "Pose3d[]",
+                    "visible": true,
+                    "options": {}
+                  },
+                  {
+                    "type": "robot",
+                    "logKey": "NT:AI Robot Poses",
+                    "logType": "Pose2d[]",
+                    "visible": true,
+                    "options": {
+                      "model": "Duck Bot"
+                    }
+                  },
+                  {
+                    "type": "gamePiece",
+                    "logKey": "NT:Algae Poses",
+                    "logType": "Pose3d[]",
+                    "visible": true,
+                    "options": {
+                      "variant": "Algae"
+                    }
+                  },
+                  {
+                    "type": "gamePiece",
+                    "logKey": "NT:Coral Poses",
+                    "logType": "Pose3d[]",
+                    "visible": true,
+                    "options": {
+                      "variant": "Coral"
+                    }
+                  },
+                  {
+                    "type": "cameraOverride",
+                    "logKey": "NT:Robot/RobotContainer/Vision/scoringCameraPosition",
+                    "logType": "Pose3d",
+                    "visible": true,
+                    "options": {}
+                  },
+                  {
+                    "type": "ghost",
+                    "logKey": "NT:Robot/RobotContainer/Vision/singleTagPose",
+                    "logType": "Pose2d",
+                    "visible": true,
+                    "options": {
+                      "model": "Anenome",
+                      "color": "#00ff00"
+                    }
+                  },
+                  {
+                    "type": "ghost",
+                    "logKey": "NT:Robot/RobotContainer/Vision/inputs/scoringPoseEstimate/Pose",
+                    "logType": "Pose2d",
+                    "visible": true,
+                    "options": {
+                      "model": "Anenome",
+                      "color": "#ff8c00"
+                    }
+                  }
+                ],
+                "game": "2025 Field (Welded)",
+                "origin": "blue"
+              },
+              "controllerUUID": "rkxo3u7ycplvvhpeu9wnwtnch59v2kd4",
+              "renderer": {
+                "cameraIndex": -1,
+                "orbitFov": 50,
+                "cameraPosition": [
+                  -12.916814712348064,
+                  5.15010300875823,
+                  0.08839735856993707
+                ],
+                "cameraTarget": [
+                  -2.5891925524063204,
+                  1.0120016441492607,
+                  0.0951650578875966
+                ]
+              },
+              "controlsHeight": 200
+            },
+            {
+              "type": 2,
+              "title": "Odometry",
+              "controller": {
+                "sources": [
+                  {
+                    "type": "robot",
+                    "logKey": "NT:Robot/RobotContainer/Drivetrain/getSimPose",
+                    "logType": "Pose2d",
+                    "visible": true,
+                    "options": {}
+                  },
+                  {
+                    "type": "arrow",
+                    "logKey": "NT:Coral Poses",
+                    "logType": "Pose3d[]",
+                    "visible": true,
+                    "options": {
+                      "position": "center"
+                    }
+                  },
+                  {
+                    "type": "ghostLegacy",
+                    "logKey": "NT:Robot/RobotContainer/Vision/inputs/scoringPoseEstimate/Pose",
+                    "logType": "NumberArray",
+                    "visible": true,
+                    "options": {
+                      "color": "#ff8c00",
+                      "format": "Pose2d",
+                      "units": "radians"
+                    }
+                  }
+                ],
+                "game": "2025 Field (Welded)",
+                "bumpers": "auto",
+                "origin": "blue",
+                "orientation": 0,
+                "size": 30
+              },
+              "controllerUUID": "d8ectwd5qdoi8n4lcmkpv6h8uuv29kx9",
+              "renderer": null,
+              "controlsHeight": 200
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "satellites": [],
+  "version": "4.1.2"
+}
