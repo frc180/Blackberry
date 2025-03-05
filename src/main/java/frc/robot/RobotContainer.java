@@ -24,6 +24,7 @@ import static edu.wpi.first.units.Units.*;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -34,6 +35,7 @@ import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -421,49 +423,43 @@ public class RobotContainer {
             }
         });
 
-        Trigger isScoringCoral = new Trigger(() -> Robot.currentlyScoringCoral);
         Trigger reefDeployAllowed = teleop.or(elevatorArm.hasPartialCoral);
+        Trigger isScoringCoral = new Trigger(() -> Robot.currentlyScoringCoral);
 
         nearReef.and(reefDeployAllowed).or(isScoringCoral)
             .whileTrue(chosenElevatorHeight.alongWith(elevatorArmPivot.matchElevatorPreset()))//, elevatorArmAlgae.intakeBasedOnElevator()))
             .onFalse(elevator.stow().alongWith(elevatorArmPivot.receivePosition()));
 
+ 
+        BooleanSupplier shouldObtainAlgae = () -> {
+            return elevator.isTargetingReefAlgaePosition() && 
+                    elevatorArmAlgae.farAlgae.getAsBoolean() &&
+                    driverRightReef.getAsBoolean();
+        };
 
-        Command l4CoralEject = elevatorArm.runSpeed(0.425).until(elevatorArm.hasNoCoral)
-                                          .andThen(Commands.waitSeconds(0.2));
-        Command l1CoralEject = elevatorArm.runSpeed(0.4).until(elevatorArm.hasNoCoral);
-        Command coralEject = elevatorArm.runSpeed(0.35).until(elevatorArm.hasNoCoral)
-                                        .andThen(Commands.waitSeconds(0.2)); // could maybe be slightly less delay (0.1)?
+        Command obtainAlgae = elevatorArmAlgae.intakeAndIndex(0.5)
+                                              .until(elevatorArmAlgae.hasAlgae.or(driverAnyReef.negate()))
+                                              .withTimeout(4);
+        // Command obtainAlgae = Commands.either(
+        //     elevatorArmAlgae.intakeAndIndex(0.5).until(elevatorArmAlgae.hasAlgae.or(driverAnyReef.negate())),
+        //     Commands.none(),
+        //     shouldObtainAlgae
+        // );
 
-        
-        Command elevatorArmEject = Commands.select(Map.of(
-                1, l1CoralEject,
-                2, l4CoralEject,
-                3, coralEject
-            ), 
-            () -> {
-                if (elevator.getTargetPosition() == ElevatorSubsystem.L1) {
-                    return 1;
-                } else if (elevator.getTargetPosition() == ElevatorSubsystem.L4) {
-                    return 2;
-                } else {
-                    return 3;
-                }
-            }
-        );
-
-        Command obtainAlgae = Commands.either(
-            elevatorArmAlgae.intakeAndIndex(0.5).until(elevatorArmAlgae.hasAlgae.or(driverAnyReef.negate())),
-            Commands.none(),
-            () -> {
-                return elevator.isTargetingReefAlgaePosition() && 
-                        elevatorArmAlgae.farAlgae.getAsBoolean() &&
-                        driverRightReef.getAsBoolean();
-            }
+        Command scoringSequence = Commands.either(
+            obtainAlgae.andThen(coralEject().deadlineFor(elevatorArmAlgae.passiveIndex())),
+            coralEject(),
+            shouldObtainAlgae
         );
 
         Trigger visionScoreReady = vision.poseEstimateDiffLow.or(scoringCameraDisconnected)
-                                                             .or(() -> elevator.getTargetPosition() == ElevatorSubsystem.L1);
+                                                             .or(() -> {
+                                                                Distance elevatorTarget = elevator.getTargetPosition();
+                                                                boolean blockableTarget = elevatorTarget == ElevatorSubsystem.L1 || elevatorTarget == ElevatorSubsystem.L2;
+                                                                return blockableTarget && driverRightReef.getAsBoolean();
+                                                             });
+                                                             //.or(() -> elevator.getTargetPosition() == ElevatorSubsystem.L1 && driverRightReef.getAsBoolean())
+                                                             //.or(() -> elevator.getTargetPosition() == ElevatorSubsystem.L2 && driverRightReef.getAsBoolean());
 
         // Coral scoring sequence - kCancelIncoming means nothing else will be able to stop this command until it finishes
         atReef.and(elevator.elevatorInScoringPosition)
@@ -473,8 +469,7 @@ public class RobotContainer {
             Commands.sequence(
                 Commands.runOnce(() -> Robot.currentlyScoringCoral = true)
                         .alongWith(drivetrain.runOnce(() -> drivetrain.drive(new ChassisSpeeds())))
-                        .alongWith(elevatorArmEject, obtainAlgae),
-                // elevatorArmEject,
+                        .alongWith(scoringSequence), //.alongWith(elevatorArmEject, obtainAlgae),
                 Commands.runOnce(() -> {
                     elevatorArmPivot.setArmPositionDirect(ElevatorArmPivotSubsystem.receiving);
                     Robot.currentlyScoringCoral = false;
@@ -524,14 +519,16 @@ public class RobotContainer {
             elevator.stow().alongWith(elevatorArmPivot.stowPosition(), elevatorArmAlgae.stop())
         );
 
-        // Scoring algae in the net from arm
-        // driverNet//.and(drivetrain.withinTargetHeadingTolerance(Degrees.of(5)))
-        //          .and(elevator.elevatorInScoringPosition)
-        //          .and(elevatorArmPivot.elevatorArmInScoringPosition)
-        //          .and(elevatorArmAlgae.hasAlgae).whileTrue(
-        //             elevatorArmAlgae.runSpeed(-1)
-        //                             .until(elevatorArmAlgae.closeAlgae.negate().debounce(0.2))
-        //          );
+        if (Robot.isSimulation()) {
+            // Scoring algae in the net from arm
+            driverNet//.and(drivetrain.withinTargetHeadingTolerance(Degrees.of(5)))
+                    .and(elevator.elevatorInScoringPosition)
+                    .and(elevatorArmPivot.elevatorArmInScoringPosition)
+                    .and(elevatorArmAlgae.hasAlgae).whileTrue(
+                        elevatorArmAlgae.runSpeed(-1)
+                                        .until(elevatorArmAlgae.closeAlgae.negate().debounce(0.2))
+                    );
+        }
 
         // ================= Autonomous Trigger Logic =================
 
@@ -684,6 +681,30 @@ public class RobotContainer {
     private static double modifyAxis(double value) {
         value = MathUtil.applyDeadband(value, DEADBAND);
         return Math.copySign(value * value, value);
+    }
+
+    private Command coralEject() {
+        Command l4CoralEject = elevatorArm.runSpeed(0.425).until(elevatorArm.hasNoCoral)
+                                          .andThen(Commands.waitSeconds(0.2));
+        Command l1CoralEject = elevatorArm.runSpeed(0.4).until(elevatorArm.hasNoCoral);
+        Command coralEject = elevatorArm.runSpeed(0.35).until(elevatorArm.hasNoCoral)
+                                        .andThen(Commands.waitSeconds(0.2)); // could maybe be slightly less delay (0.1)?
+
+        return Commands.select(Map.of(
+                1, l1CoralEject,
+                2, l4CoralEject,
+                3, coralEject
+            ), 
+            () -> {
+                if (elevator.getTargetPosition() == ElevatorSubsystem.L1) {
+                    return 1;
+                } else if (elevator.getTargetPosition() == ElevatorSubsystem.L4) {
+                    return 2;
+                } else {
+                    return 3;
+                }
+            }
+        );
     }
 
 }
