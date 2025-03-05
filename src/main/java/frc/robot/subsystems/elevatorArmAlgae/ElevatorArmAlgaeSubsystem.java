@@ -29,8 +29,7 @@ public class ElevatorArmAlgaeSubsystem extends SubsystemBase{
 
 
     public ElevatorArmAlgaeSubsystem() {
-        inputs = new 
-        ElevatorArmAlgaeInputs();
+        inputs = new ElevatorArmAlgaeInputs();
         if (Robot.isReal()) {
             io = new ElevatorArmAlgaeIOTalonFX();
             // io = new ElevatorArmAlgaeIOSim();
