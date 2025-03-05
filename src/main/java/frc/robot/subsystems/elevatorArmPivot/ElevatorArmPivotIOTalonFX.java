@@ -97,6 +97,8 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO {
         targetSignal = trackSignal(armPivotMotor.getClosedLoopReference());
         velocitySignal = trackSignal(armPivotMotor.getVelocity());
 
+        // armPivotMotor.optimizeBusUtilization(10, 0.1);
+
         // Everything below this line is for simulation only
         if (Robot.isReal()) return;
 

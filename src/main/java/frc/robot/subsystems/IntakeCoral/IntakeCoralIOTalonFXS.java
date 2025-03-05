@@ -34,6 +34,8 @@ public class IntakeCoralIOTalonFXS implements IntakeCoralIO {
         voltageControl = new VoltageOut(0);
 
         voltageSignal = trackSignal(intakeMotor.getMotorVoltage());
+
+        // intakeMotor.optimizeBusUtilization(10, 0.1);
     }
 
     

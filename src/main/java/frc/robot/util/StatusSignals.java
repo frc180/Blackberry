@@ -12,8 +12,8 @@ public class StatusSignals {
     private static StatusSignal<?>[] statusSignalsArray = null;
 
     public static <T> StatusSignal<T> trackSignal(StatusSignal<T> statusSignal) {
+        // statusSignal.setUpdateFrequency(statusSignal.getAppliedUpdateFrequency());
         statusSignals.add(statusSignal);
-        // statusSignal.setUpdateFrequency(40);
         return statusSignal;
     }
 

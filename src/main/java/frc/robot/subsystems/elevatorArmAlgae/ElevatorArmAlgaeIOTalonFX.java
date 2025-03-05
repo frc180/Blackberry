@@ -6,6 +6,7 @@ import com.ctre.phoenix6.configs.CANrangeConfiguration;
 import com.ctre.phoenix6.configs.TalonFXSConfiguration;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.CANrange;
+import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFXS;
 import com.ctre.phoenix6.signals.MotorArrangementValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -42,7 +43,6 @@ public class ElevatorArmAlgaeIOTalonFX implements ElevatorArmAlgaeIO{
         motor = new TalonFXS(Constants.ELEVATOR_ARM_ALGAE, Constants.CANIVORE);
         motor.getConfigurator().apply(config);
         motor.setNeutralMode(NeutralModeValue.Brake);
-        // motor.optimizeBusUtilization();
         voltageControl = new VoltageOut(0);
 
         CANrangeConfiguration rangeConfig = new CANrangeConfiguration();
@@ -53,6 +53,8 @@ public class ElevatorArmAlgaeIOTalonFX implements ElevatorArmAlgaeIO{
         canrange = new CANrange(Constants.ALGAE_ARM_CANRANGE, Constants.CANIVORE);
         canrange.getConfigurator().apply(rangeConfig);
         distanceSignal = trackSignal(canrange.getDistance());
+
+        // ParentDevice.optimizeBusUtilizationForAll(10.0, motor, canrange);
         
         if (Robot.isReal()) return;
 

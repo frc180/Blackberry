@@ -6,6 +6,7 @@ import com.ctre.phoenix6.configs.CANdiConfiguration;
 import com.ctre.phoenix6.configs.TalonFXSConfiguration;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.CANdi;
+import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFXS;
 import com.ctre.phoenix6.signals.MotorArrangementValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -33,7 +34,6 @@ public class ElevatorArmIOTalonFX implements ElevatorArmIO {
         rollerMotor = new TalonFXS(Constants.ELEVATOR_ARM_TALON, Constants.CANIVORE);
         rollerMotor.getConfigurator().apply(config);
         rollerMotor.setNeutralMode(NeutralModeValue.Brake);
-        // rollerMotor.optimizeBusUtilization();
 
         voltageControl = new VoltageOut(0);
 
@@ -54,6 +54,8 @@ public class ElevatorArmIOTalonFX implements ElevatorArmIO {
         // ElevatorArmPivotSubsystem uses this signal, but it's read from the same CANdi as one of our sensors -
         // so we expose it as a static variable here since we can't have two instances of the same CANdi
         HARD_STOP_SIGNAL = trackSignal(candiB.getS2Closed());
+
+        // ParentDevice.optimizeBusUtilizationForAll(10.0, rollerMotor, candiA, candiB);
     }
 
     @Override

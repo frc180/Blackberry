@@ -95,7 +95,6 @@ public class ElevatorIOTalonFX implements ElevatorIO {
         followerControl = new Follower(Constants.ELEVATOR_REAR, false);
 
         motorB.setControl(followerControl);
-        // motorB.optimizeBusUtilization();
 
         bottomLimit = new DigitalInput(Constants.DIO_ELEVATOR_BOTTOM_LIMIT);
 
@@ -104,6 +103,8 @@ public class ElevatorIOTalonFX implements ElevatorIO {
         voltageSignal = trackSignal(motorA.getMotorVoltage());
         targetSignal = trackSignal(motorA.getClosedLoopReference());
         dutyCycleSignal = trackSignal(motorA.getDutyCycle());
+
+        // motorB.optimizeBusUtilization(10, 0.1);
 
         // Everything past this point is just for simulation setup
         if (Robot.isReal()) return;
