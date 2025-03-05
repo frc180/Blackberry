@@ -42,6 +42,7 @@ public class ElevatorArmAlgaeIOTalonFX implements ElevatorArmAlgaeIO{
         motor = new TalonFXS(Constants.ELEVATOR_ARM_ALGAE, Constants.CANIVORE);
         motor.getConfigurator().apply(config);
         motor.setNeutralMode(NeutralModeValue.Brake);
+        // motor.optimizeBusUtilization();
         voltageControl = new VoltageOut(0);
 
         CANrangeConfiguration rangeConfig = new CANrangeConfiguration();

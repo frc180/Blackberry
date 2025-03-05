@@ -13,6 +13,7 @@ public class StatusSignals {
 
     public static <T> StatusSignal<T> trackSignal(StatusSignal<T> statusSignal) {
         statusSignals.add(statusSignal);
+        // statusSignal.setUpdateFrequency(40);
         return statusSignal;
     }
 

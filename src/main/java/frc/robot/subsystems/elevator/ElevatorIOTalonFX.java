@@ -35,7 +35,6 @@ public class ElevatorIOTalonFX implements ElevatorIO {
     VoltageOut voltageControl;
     Follower followerControl;
     DigitalInput bottomLimit;
-    PIDTuner pidTuner = null;
 
     // Status signals
     StatusSignal<Angle> positionSignal;
@@ -96,11 +95,9 @@ public class ElevatorIOTalonFX implements ElevatorIO {
         followerControl = new Follower(Constants.ELEVATOR_REAR, false);
 
         motorB.setControl(followerControl);
+        // motorB.optimizeBusUtilization();
 
         bottomLimit = new DigitalInput(Constants.DIO_ELEVATOR_BOTTOM_LIMIT);
-        
-        // pidTuner = new PIDTuner(config.Slot0, motorA).withName("Elevator");
-        // pidTuner.initializeValues(config.Slot0);
 
         positionSignal = trackSignal(motorA.getPosition());
         velocitySignal = trackSignal(motorA.getVelocity());
@@ -156,8 +153,6 @@ public class ElevatorIOTalonFX implements ElevatorIO {
         } else {
             inputs.bottomLimit = elevatorSim.getPositionMeters() <= 0.01;
         }
-
-        if (pidTuner != null) pidTuner.periodic();
     }
 
     // Simulation-only code which runs periodically before update() is called

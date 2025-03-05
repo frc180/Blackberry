@@ -26,7 +26,6 @@ public class ElevatorArmIOTalonFX implements ElevatorArmIO {
     VoltageOut voltageControl;
 
     StatusSignal<Boolean> frontSensorSignal, middleSensorSignal, backSensorSignal;
-    StatusSignal<Voltage> voltageSignal;
 
     public ElevatorArmIOTalonFX() {
         TalonFXSConfiguration config = new TalonFXSConfiguration();
@@ -34,6 +33,7 @@ public class ElevatorArmIOTalonFX implements ElevatorArmIO {
         rollerMotor = new TalonFXS(Constants.ELEVATOR_ARM_TALON, Constants.CANIVORE);
         rollerMotor.getConfigurator().apply(config);
         rollerMotor.setNeutralMode(NeutralModeValue.Brake);
+        // rollerMotor.optimizeBusUtilization();
 
         voltageControl = new VoltageOut(0);
 
@@ -50,7 +50,6 @@ public class ElevatorArmIOTalonFX implements ElevatorArmIO {
         frontSensorSignal = trackSignal(candiA.getS2Closed());
         middleSensorSignal = trackSignal(candiA.getS1Closed());
         backSensorSignal = trackSignal(candiB.getS1Closed());
-        voltageSignal = trackSignal(rollerMotor.getMotorVoltage());
 
         // ElevatorArmPivotSubsystem uses this signal, but it's read from the same CANdi as one of our sensors -
         // so we expose it as a static variable here since we can't have two instances of the same CANdi
@@ -62,7 +61,6 @@ public class ElevatorArmIOTalonFX implements ElevatorArmIO {
         inputs.frontCoralSensor = frontSensorSignal.getValueAsDouble() == 1;
         inputs.middleCoralSensor = middleSensorSignal.getValueAsDouble() == 1;
         inputs.backCoralSensor = backSensorSignal.getValueAsDouble() == 1;
-        inputs.voltage = voltageSignal.getValueAsDouble();
     }
 
     @Override
