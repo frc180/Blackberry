@@ -12,6 +12,7 @@ import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.NotLogged;
 import edu.wpi.first.math.MatBuilder;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.Nat;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -26,6 +27,7 @@ import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -33,6 +35,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Field;
 import frc.robot.Robot;
 import frc.robot.RobotContainer;
+import frc.robot.subsystems.DrivetrainSubsystem;
 import frc.robot.subsystems.vision.VisionIO.VisionIOInputs;
 import frc.robot.util.ReefProximity;
 import frc.robot.util.LimelightHelpers.PoseEstimate;
@@ -234,6 +237,8 @@ public class VisionSubsystem extends SubsystemBase {
         scoringCameraConnected = new Trigger(() -> inputs.scoringCameraConnected);
     }
 
+    boolean wasEnabled = false;
+
     @Override
     public void periodic() {
         io.update(inputs);
@@ -256,11 +261,15 @@ public class VisionSubsystem extends SubsystemBase {
 
         // If we didn't get a pose estimate from the scoring camera, use the front camera's pose estimate
         if (poseEstimate == null && invalidScoring && inputs.frontCameraConnected) {
-            poseEstimate = validatePoseEstimate(inputs.frontPoseEstimate);
+            // poseEstimate = validatePoseEstimate(inputs.frontPoseEstimate);
             poseEstimateSource = PoseEstimateSource.FRONT_CAMERA;
-            // if (poseEstimate == null) {
-            //     poseEstimate = validateMT2PoseEstimate(inputs.frontPoseEstimateMT2);
-            // }
+
+            if (RobotState.isEnabled() && Robot.isSimulation()) {
+                poseEstimate = validateMT2PoseEstimate(inputs.frontPoseEstimateMT2);
+            } else {
+                poseEstimate = validatePoseEstimate(inputs.frontPoseEstimate);
+            }
+
         }
      
         Pose2d robotPose = null;

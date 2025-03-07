@@ -33,6 +33,7 @@ public class VisionIOLimelight implements VisionIO {
     private final PoseEstimate simPoseEstimate = new PoseEstimate();
 
     private int frontCameraImuMode = IMU_ASSIST_EXTERNALIMU;
+    private boolean wasEnabled = false;
 
     public VisionIOLimelight() {
         scoringLimelightStatus = new LimelightStatus(SCORING_LIMELIGHT);

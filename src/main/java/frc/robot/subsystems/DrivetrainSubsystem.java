@@ -55,6 +55,7 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -67,6 +68,7 @@ import frc.robot.Robot;
 import frc.robot.RobotContainer;
 import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
+import frc.robot.subsystems.vision.VisionSubsystem;
 import frc.robot.util.simulation.MapleSimSwerveDrivetrain;
 
 /**
@@ -345,7 +347,6 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         return Rotation2d.fromDegrees(getGyroscopeDegrees());
     }
 
-    @NotLogged
     public double getGyroscopeDegrees() {        
         // return (-this.getPigeon2().getAngle()) - gyroOffset.getDegrees();
         return gyroAngleSignal.getValueAsDouble() - gyroOffset.getDegrees();
@@ -361,9 +362,17 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     }
 
     public void zeroGyroscope() {
-        gyroOffset = this.getPigeon2().getRotation2d();
-        // seedFieldRelative(); // last year
-        // seedFieldCentric(); // this year, acts weird
+        setGyroscopeAngle(0.0);
+    }
+
+    public void zeroGyroscopeUsingPose() {
+        double angle = getPose().getRotation().getDegrees() - (Robot.isBlue() ? 0 : 180);
+        setGyroscopeAngle(angle);
+    }
+
+    public void setGyroscopeAngle(double degrees) {
+        double newZero = MathUtil.inputModulus(getPigeon2().getRotation2d().getDegrees() - degrees, -180, 180);
+        gyroOffset = Rotation2d.fromDegrees(newZero);
     }
 
     @Override
@@ -809,6 +818,10 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
 
         pigeonConnected = getPigeon2().isConnected();
         pigeonDisconnectedAlert.set(!pigeonConnected);
+
+        if (RobotState.isDisabled()) {
+            zeroGyroscopeUsingPose();
+        }
 
         double kV = SmartDashboard.getNumber("Drivetrain XY Feedforward", 0);
         double kA = SmartDashboard.getNumber("Drivetrain XY kA", 0);

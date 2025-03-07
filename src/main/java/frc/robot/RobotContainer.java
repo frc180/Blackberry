@@ -28,6 +28,8 @@ import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.Function;
 import java.util.function.Supplier;
+
+import com.pathplanner.lib.util.FlippingUtil;
 import com.spamrobotics.util.JoystickInputs;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.MathUtil;
@@ -148,12 +150,13 @@ public class RobotContainer {
         Command leftBargeAuto = Auto.bargeCoralAuto(
             Auto.LEFT_BARGE_CORAL_POSITIONS,            // what positions to score at
             leftBargeToLeftReef,                        // the path to take from our starting position to the first coral position
-            new Pose2d(7.9, 5, Rotation2d.k180deg)  // the position the robot should start at in simulation
+            new Pose2d(7, 5.5, Rotation2d.fromDegrees(180 + 60))  // the position the robot should start at in simulation
         );
         if (Robot.isReal()) {
             autoChooser.setDefaultOption("Do Nothing", Commands.none());
         } else {
             autoChooser.setDefaultOption("Left Barge to Left Reef", leftBargeAuto);
+            autoChooser.addOption("Do Nothing", Commands.none());
         }
 
         double offset = Inches.of(203).in(Meters);
@@ -171,6 +174,12 @@ public class RobotContainer {
                 new DriveToPose(drivetrain, () -> new Pose2d(7, 5, Rotation2d.kCW_90deg)).until(drivetrain.withinTargetPoseDistance(0.02)),
                 new DriveToPose(drivetrain, () -> new Pose2d(2, 7, Rotation2d.kZero))
             ));
+
+            autoChooser.addOption("Vision Zeroing Test", Commands.runOnce(() -> {
+                Pose2d start = new Pose2d(7, 5.5, Rotation2d.fromDegrees(180 + 60));
+                if (Robot.isRed()) start = FlippingUtil.flipFieldPose(start);
+                drivetrain.resetPose(start);
+            }));
         }
 
         SmartDashboard.putData("Auto Mode", autoChooser);
@@ -368,6 +377,9 @@ public class RobotContainer {
         // );
         
         // teleop.onTrue(elevatorArmPivot.calculateAbsoluteRatio());
+
+        // autonomous.or(teleop).onTrue(Commands.runOnce(drivetrain::zeroGyroscopeUsingPose));
+
         teleop.onTrue(Commands.sequence(
             elevatorArmPivot.brakeMode(),
             Commands.either(
