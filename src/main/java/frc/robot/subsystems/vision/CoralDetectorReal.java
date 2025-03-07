@@ -80,13 +80,15 @@ public class CoralDetectorReal implements CoralDetector {
             SmartDashboard.putNumber("Coral TY", detection.tync);
             SmartDashboard.putNumber("Coral TX", detection.txnc);
             SmartDashboard.putNumber("Coral Distance", coralDistance.mut_replace(distanceMeters, Meters).in(Inches));
+            SmartDashboard.putNumber("Coral Width", width(detection));
+            SmartDashboard.putNumber("Coral Height", height(detection));
+            SmartDashboard.putNumber("Coral Ratio", width(detection) / height(detection));
 
             double yComponent = distanceMeters * Math.tan(radians);
             Transform2d coralTransform = new Transform2d(distanceMeters, -yComponent, Rotation2d.kZero);
             Pose2d coralPose = basePose.transformBy(coralTransform);
 
-            // Reject coral detections that are outside the field 
-            if (coralPose.getX() < 0 || coralPose.getX() > FlippingUtil.fieldSizeX || coralPose.getY() < 0 || coralPose.getY() > FlippingUtil.fieldSizeY) {
+            if (!CoralDetector.isValid(coralPose)) {
                 continue;
             }
 

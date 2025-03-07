@@ -1,6 +1,9 @@
 package frc.robot.subsystems.vision;
 
 import org.ironmaple.simulation.SimulatedArena;
+
+import com.pathplanner.lib.util.FlippingUtil;
+
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -68,6 +71,10 @@ public class CoralDetectorSim implements CoralDetector {
             if (poseWithinPOV(robotPose, coral)) {
                 double distance = robotPose.getTranslation().getDistance(coral.getTranslation());
                 if (distance < bestDistance) {
+                    if (!CoralDetector.isValid(coral)) {
+                        continue;
+                    }
+
                     bestCoral = coral;
                     bestDistance = distance;
                 }
