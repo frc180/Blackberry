@@ -20,6 +20,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
@@ -152,6 +153,7 @@ public class VisionSubsystem extends SubsystemBase {
 
     private Pose2d coralPose = Pose2d.kZero;
     private boolean coralPoseValid = false;
+    private Pose2d coralPickupPose = null;
 
     private boolean closestReefPoseValid = false;
     private Pose2d closestReefPose = Pose2d.kZero;
@@ -330,6 +332,8 @@ public class VisionSubsystem extends SubsystemBase {
         } else {
             coralPoseValid = true;
         }
+        // Invalidate any previously stored coralPickUpPose - this will be recalculated if needed by getCoralPickupPose()
+        coralPickupPose = null;
 
         // For now, we're just going to use the closest reef tag to the robot
         if (false && inputs.scoringCameraConnected) {
@@ -518,6 +522,22 @@ public class VisionSubsystem extends SubsystemBase {
 
         // TODO: recalculating this every loop is expensive
         return new Pose3d(coralPose);
+    }
+
+    @NotLogged
+    public Pose2d getCoralPickupPose() {
+        if (coralPickupPose == null && coralPoseValid) {
+            Translation2d robotPosition = RobotContainer.instance.drivetrain.getPose().getTranslation();
+            Translation2d coralPosition = coralPose.getTranslation();
+            double centerDistance = robotPosition.getDistance(coralPosition);
+            double pickupDistance = centerDistance - 0.6;
+
+            Translation2d pickupPosition = robotPosition.interpolate(coralPosition, pickupDistance / centerDistance);
+            double radiansToCoral = Math.atan2(coralPosition.getY() - robotPosition.getY(), coralPosition.getX() - robotPosition.getX());
+
+            coralPickupPose = new Pose2d(pickupPosition, new Rotation2d(radiansToCoral + Math.PI));
+        }
+        return coralPickupPose;
     }
 
     public PoseEstimate validatePoseEstimate(PoseEstimate poseEstimate) {

@@ -95,17 +95,16 @@ public final class Auto {
         VisionSubsystem vision = RobotContainer.instance.vision;
 
         return new DriveToPose(drivetrain, () -> {
-            Pose2d robotPose = drivetrain.getPose();
-            Pose2d coralPose = vision.getCoralPose();
-            if (coralPose == null) return robotPose;
+            Pose2d coralPose = vision.getCoralPickupPose();
+            return coralPose == null ? drivetrain.getPose() : coralPose;
 
-            Translation2d robotTranslation = robotPose.getTranslation();
-            Translation2d coralTranslation = coralPose.getTranslation();
+            // Translation2d robotTranslation = robotPose.getTranslation();
+            // Translation2d coralTranslation = coralPose.getTranslation();
 
-            // Calculate the angle in radians to the coral
-            double angleToCoral = Math.atan2(coralTranslation.getY() - robotTranslation.getY(), coralTranslation.getX() - robotTranslation.getX());
+            // // Calculate the angle in radians to the coral
+            // double angleToCoral = Math.atan2(coralTranslation.getY() - robotTranslation.getY(), coralTranslation.getX() - robotTranslation.getX());
 
-            return new Pose2d(coralPose.getTranslation(), new Rotation2d(angleToCoral + Math.PI));
+            // return new Pose2d(coralPose.getTranslation(), new Rotation2d(angleToCoral + Math.PI));
         }).withDynamicTarget(true);
     }
 

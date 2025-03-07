@@ -1,14 +1,9 @@
 package frc.robot.commands;
 
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.RobotContainer;
 import frc.robot.subsystems.DrivetrainSubsystem;
@@ -19,8 +14,7 @@ import com.spamrobotics.util.Helpers;
 import com.spamrobotics.util.JoystickInputs;
 
 public class DefaultDriveCommand extends Command {
-    private final double coralAssistKp = 0.9;
-    private final double coralAssistExponent = -3/2;
+    private final double coralAssistKp = 4;
     private final DrivetrainSubsystem m_drivetrainSubsystem;
 
     private final Supplier<JoystickInputs> m_joystickInputsSupplier;
@@ -51,8 +45,9 @@ public class DefaultDriveCommand extends Command {
     @Override
     public void execute() {
         gyroRotation = m_drivetrainSubsystem.getGyroscopeRotation();
-
         rotationSpeed = m_rotationSupplier.getAsDouble();
+
+        applyCoralAngleAimAssist();
     
         if (Math.abs(rotationSpeed) < 0.02) {
             // If we were manually rotating and have stopped, save this heading as our new target
@@ -91,46 +86,56 @@ public class DefaultDriveCommand extends Command {
 
     @Override
     public void end(boolean interrupted) {
-        if (DriverStation.isAutonomous()) return;
-        m_drivetrainSubsystem.drive(new ChassisSpeeds(0.0, 0.0, 0.0));
+        // if (DriverStation.isAutonomous()) return;
+        // m_drivetrainSubsystem.drive(new ChassisSpeeds(0.0, 0.0, 0.0));
     }
 
-    public void applyCoralAimAssist(ChassisSpeeds speeds, JoystickInputs inputs) {
-        Pose2d coralPose = RobotContainer.instance.vision.getCoralPose();
-        if (coralPose == null || !RobotContainer.instance.coralIntakeTrigger.getAsBoolean()) {
+    // ======================= Game Specific Helper Methods =======================
+
+    private boolean shouldApplyCoralAssist() {
+        if (!RobotContainer.instance.coralIntakeTrigger.getAsBoolean() || RobotContainer.instance.vision.getCoralPickupPose() == null) {
+            return false;
+        }
+        return true;
+    }
+
+    private void applyCoralAngleAimAssist() {
+        if (!shouldApplyCoralAssist()) {
             return;
         }
 
+        Pose2d coralPose = RobotContainer.instance.vision.getCoralPickupPose();
+        m_drivetrainSubsystem.setTargetHeading(coralPose.getRotation().getDegrees(), HeadingTarget.POSE);
+    }
+
+    private void applyCoralAimAssist(ChassisSpeeds speeds, JoystickInputs inputs) {
+        if (!shouldApplyCoralAssist()) {
+            return;
+        }
+
+        Pose2d coralPose = RobotContainer.instance.vision.getCoralPose();
+        Pose2d coralPickupPose = RobotContainer.instance.vision.getCoralPickupPose();
         Pose2d currentPose = m_drivetrainSubsystem.getPose();
-        Translation2d robotTranslation = currentPose.getTranslation();
-        double xFeedback = coralPose.getX() - currentPose.getX();
-        double yFeedback = coralPose.getY() - currentPose.getY();
+        double xFeedback = coralPickupPose.getX() - currentPose.getX();
+        double yFeedback = coralPickupPose.getY() - currentPose.getY();
         ChassisSpeeds coralSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(xFeedback, yFeedback, 0, currentPose.getRotation());
 
         Translation2d coralTranslation = coralPose.getTranslation();
         Translation2d rayStart = m_drivetrainSubsystem.getPose().getTranslation();
-        Translation2d rayTest = rayStart.plus(new Translation2d(inputs.y, inputs.x));
+        Translation2d rayEnd = rayStart.plus(new Translation2d(-inputs.x * 1000, -inputs.y * 1000));
 
-        // Ensure we're driving towards the coral
-        // if (rayTest.getDistance(coralTranslation) <= rayStart.getDistance(coralTranslation)) {
-        //     return;
-        // }
+        double aimAngle = Helpers.angleToPoint(coralTranslation, rayStart, rayEnd);
+        // System.out.println(aimAngle);
 
-        Translation2d rayEnd = rayStart.plus(new Translation2d(inputs.y * 1000, inputs.x * 1000));
-    
-        double perpdist = Helpers.perpendicularLineLength(coralTranslation, rayStart, rayEnd);
-        perpdist = Math.pow(perpdist, coralAssistExponent);
+        double aimThreshold = 90;
+        if (aimAngle > aimThreshold) {
+            return;
+        }
 
-        // Calculate the angle to the coral
-        double angleToCoral = Math.atan2(coralTranslation.getY() - robotTranslation.getY(), coralTranslation.getX() - robotTranslation.getX());
-        double angleDiff = Units.radiansToDegrees(angleToCoral) - currentPose.getRotation().getDegrees();
-        angleDiff = MathUtil.inputModulus(-angleDiff, -180, 180);
+        double dynamicMultiplier = 1;
 
-        coralSpeeds.vxMetersPerSecond *= (perpdist * coralAssistKp);
-        coralSpeeds.vyMetersPerSecond *= (perpdist * coralAssistKp);
-        // TODO: Bug - when this is enabled, driver cannot turn at all when this is active
-        // They should be able to fight against the turning input
-        // coralSpeeds.omegaRadiansPerSecond = angleDiff * 0.008; // 0.01
+        coralSpeeds.vxMetersPerSecond *= (dynamicMultiplier * coralAssistKp);
+        coralSpeeds.vyMetersPerSecond *= (dynamicMultiplier * coralAssistKp);
         
         // Track the top speed of the speeds request, so that we can keep the coral assist from exceeding that
         double maxSpeed = Math.max(Math.abs(speeds.vxMetersPerSecond), Math.abs(speeds.vyMetersPerSecond));

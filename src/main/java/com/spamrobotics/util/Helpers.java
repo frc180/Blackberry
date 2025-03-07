@@ -47,6 +47,7 @@ public class Helpers {
         return prev.plus(diff.times(maxDeltaV / Math.sqrt(diffSqMag)));
       }
 
+    @Deprecated
     public static double perpendicularLineLength(Translation2d point, Translation2d vectorStart, Translation2d vectorEnd) {
         double numerator = Math.abs((vectorEnd.getY() - vectorStart.getY()) * point.getX() - 
                                     (vectorEnd.getX() - vectorStart.getX()) * point.getY() + 
@@ -54,6 +55,27 @@ public class Helpers {
                                     vectorEnd.getY() * vectorStart.getX());
         double denominator = vectorStart.getDistance(vectorEnd);
         return numerator / denominator;
+    }
+
+    public static double angleToPoint(Translation2d point, Translation2d vectorStart, Translation2d vectorEnd) {
+        // Vector from start to end
+        Translation2d vector = vectorEnd.minus(vectorStart);
+        
+        // Vector from start to point
+        Translation2d toPoint = point.minus(vectorStart);
+        
+        // Calculate the dot product
+        double dotProduct = vector.getX() * toPoint.getX() + vector.getY() * toPoint.getY();
+        
+        // Calculate the magnitudes of the vectors
+        double vectorMagnitude = Math.sqrt(vector.getX() * vector.getX() + vector.getY() * vector.getY());
+        double toPointMagnitude = Math.sqrt(toPoint.getX() * toPoint.getX() + toPoint.getY() * toPoint.getY());
+        
+        // Calculate the angle between the two vectors
+        double angle = Math.acos(dotProduct / (vectorMagnitude * toPointMagnitude));
+        
+        // Convert the angle to degrees
+        return Math.toDegrees(angle);
     }
 
     public static double capValue(double value, double max) {

@@ -4,11 +4,16 @@ import static edu.wpi.first.units.Units.*;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+
+import com.pathplanner.lib.util.FlippingUtil;
+
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.measure.MutDistance;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.util.LimelightHelpers.RawDetection;
 
@@ -17,21 +22,36 @@ public class CoralDetectorReal implements CoralDetector {
     private final InterpolatingDoubleTreeMap distanceMap;
     private final List<RawDetection> sortedDetections;
     private final Comparator<RawDetection> detectionTYComparator;
+    private final MutDistance coralDistance;
+
+    private double lastDetectionTime = 0;
+    private Pose2d lastDetection = null;
 
     public CoralDetectorReal() {
-        // TODO: confirm what min and max ty are and what the distance is for each
         distanceMap = new InterpolatingDoubleTreeMap();
-        distanceMap.put(-22.2, Inches.of(18.5).in(Meters));
-        distanceMap.put(-14.79, Inches.of(24).in(Meters));
-        distanceMap.put(-6.05, Inches.of(32).in(Meters));
-        distanceMap.put(5.44, Inches.of(48).in(Meters));
-        distanceMap.put(14.89, Inches.of(72).in(Meters));
-        distanceMap.put(20.82, Inches.of(100).in(Meters));
-        distanceMap.put(24.7, Inches.of(132).in(Meters));
+        // distanceMap.put(-22.2, Inches.of(18.5).in(Meters));
+        // distanceMap.put(-14.79, Inches.of(24).in(Meters));
+        // distanceMap.put(-6.05, Inches.of(32).in(Meters));
+        // distanceMap.put(5.44, Inches.of(48).in(Meters));
+        // distanceMap.put(14.89, Inches.of(72).in(Meters));
+        // distanceMap.put(20.82, Inches.of(100).in(Meters));
+        // distanceMap.put(24.7, Inches.of(132).in(Meters));
 
+        addDistance(-22.2, 18.5);
+        addDistance(-14.79, 24);
+        addDistance(-6.05, 32);
+        addDistance(5.44, 48);
+        addDistance(14.89, 72);
+        addDistance(20.82, 100);
+        addDistance(24.7, 132);
 
         sortedDetections = new ArrayList<>();
         detectionTYComparator = (a, b) -> Double.compare(a.tync, b.tync);
+        coralDistance = Meters.of(0).mutableCopy();
+    }
+
+    private void addDistance(double ty, double inches) {
+        distanceMap.put(ty, Inches.of(inches).in(Meters));
     }
 
     @Override
@@ -49,7 +69,6 @@ public class CoralDetectorReal implements CoralDetector {
         }
         sortedDetections.sort(detectionTYComparator);
 
-        // Pose2d basePose = robotPose;
         Pose2d basePose = robotPose.transformBy(VisionSubsystem.ROBOT_TO_INTAKE_CAMERA_2D);
 
         for (RawDetection detection : sortedDetections) {
@@ -60,16 +79,37 @@ public class CoralDetectorReal implements CoralDetector {
             SmartDashboard.putBoolean("Coral Present", true);
             SmartDashboard.putNumber("Coral TY", detection.tync);
             SmartDashboard.putNumber("Coral TX", detection.txnc);
-            // SmartDashboard.putNumber("Coral Distance", Meters.of(distanceMeters).in(Inches));
+            SmartDashboard.putNumber("Coral Distance", coralDistance.mut_replace(distanceMeters, Meters).in(Inches));
 
-            double yComponent = (distanceMeters)*Math.tan(radians);
+            double yComponent = distanceMeters * Math.tan(radians);
             Transform2d coralTransform = new Transform2d(distanceMeters, -yComponent, Rotation2d.kZero);
             Pose2d coralPose = basePose.transformBy(coralTransform);
 
-            // TODO: reject coralPoses that are outside the field or (perhaps) where the stacked coral are
+            // Reject coral detections that are outside the field 
+            if (coralPose.getX() < 0 || coralPose.getX() > FlippingUtil.fieldSizeX || coralPose.getY() < 0 || coralPose.getY() > FlippingUtil.fieldSizeY) {
+                continue;
+            }
+
+            lastDetectionTime = Timer.getFPGATimestamp();
+            lastDetection = coralPose;
             return coralPose;
         }
+
         SmartDashboard.putBoolean("Coral Present", false);
+        // If we didn't find any coral, return the last detection if it was very recent
+        if (Timer.getFPGATimestamp() - lastDetectionTime < 0.5) {
+            return lastDetection;
+        }
+
+        lastDetection = null;
         return null;
+    }
+
+    private double width(RawDetection detection) {
+        return Math.abs(detection.corner0_X - detection.corner1_X);
+    }
+
+    private double height(RawDetection detection) {
+        return Math.abs(detection.corner0_Y - detection.corner2_Y);
     }
 }
