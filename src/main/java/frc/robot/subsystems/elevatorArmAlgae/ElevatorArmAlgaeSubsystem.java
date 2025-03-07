@@ -15,8 +15,8 @@ import frc.robot.subsystems.elevatorArmAlgae.ElevatorArmAlgaeIO.ElevatorArmAlgae
 public class ElevatorArmAlgaeSubsystem extends SubsystemBase{
 
     protected static final double FAR_OBJECT_THRESHOLD = 0.30;
-    protected static final double CLOSE_OBJECT_THRESHOLD = 0.17;
-    protected static final double HAS_ALGAE_THRESHOLD = 0.1; // 0.9ish 0.065 for non-crosshatch
+    protected static final double CLOSE_OBJECT_THRESHOLD = 0.15;
+    protected static final double HAS_ALGAE_THRESHOLD = 0.11; // 0.9ish 0.065 for non-crosshatch
 
     ElevatorArmAlgaeIO io;
     ElevatorArmAlgaeInputs inputs;
@@ -70,7 +70,7 @@ public class ElevatorArmAlgaeSubsystem extends SubsystemBase{
     }
 
     public Command intakeAndIndex(double speed) {
-        return indexWithIdle(speed, speed);
+        return indexWithIdle(speed, 0.5);
     }
 
     public Command passiveIndex() {

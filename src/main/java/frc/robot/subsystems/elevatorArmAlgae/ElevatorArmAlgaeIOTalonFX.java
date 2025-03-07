@@ -25,7 +25,7 @@ import frc.robot.subsystems.elevator.ElevatorSubsystem;
 import frc.robot.subsystems.elevatorArmPivot.ElevatorArmPivotSubsystem;
 import frc.robot.util.simulation.SimLogic;
 
-public class ElevatorArmAlgaeIOTalonFX implements ElevatorArmAlgaeIO{
+public class ElevatorArmAlgaeIOTalonFX implements ElevatorArmAlgaeIO {
 
     TalonFXS motor;
     CANrange canrange;

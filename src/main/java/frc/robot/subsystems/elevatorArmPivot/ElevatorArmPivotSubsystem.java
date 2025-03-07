@@ -42,7 +42,7 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
     public static final double algaeReceive = Units.degreesToRotations(-70);
     public static final double horizontal = 0;
 
-    public static final double netScore = Units.degreesToRotations(62);
+    public static final double netScore = Units.degreesToRotations(5);
     public static final double netScoreBackwards = Units.degreesToRotations(46.01);
 
     private static final double IN_POSITION_TOLERANCE = Units.degreesToRotations(2);
@@ -58,7 +58,7 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
     private boolean homed = false;
 
     private double absoluteScalar = Robot.isReal() ? (2.29 * .967): 4;
-    private double absoluteOffset = Robot.isReal() ? -0.701 : 30 * 4;
+    private double absoluteOffset = Robot.isReal() ? -.751 : 30 * 4; // was  -0.701
 
     @NotLogged
     private double lastPositionSyncTime = 0;
@@ -73,9 +73,9 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
     public Trigger elevatorArmInPosition = new Trigger(() -> isElevatorArmInPosition());
     @NotLogged
     public Trigger elevatorArmInScoringPosition = new Trigger (() -> isElevatorArmInScoringPosition());
-    @NotLogged
-    public Trigger atHardstop = new Trigger(() -> inputs.hardStop).debounce(0.2);
-    private Trigger atHomingHardstop = new Trigger(this::isAtHomingHardstop).debounce(0.2);
+    // @NotLogged
+    // public Trigger atHardstop = new Trigger(() -> inputs.hardStop).debounce(0.2);
+    // private Trigger atHomingHardstop = new Trigger(this::isAtHomingHardstop).debounce(0.2);
 
     public ElevatorArmPivotSubsystem() {
         inputs = new ElevatorArmPivotIOInputs();
@@ -102,7 +102,7 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
         shouldResync = Math.abs(positionDisagreement) > RESYNC_THRESHOLD;
 
         double currentTime = Timer.getFPGATimestamp();
-        if (firstPeriodic) {// || currentTime - lastPositionSyncTime > 0.5) {
+        if (firstPeriodic && currentTime - lastPositionSyncTime > 0.5) {
             io.zero(getAbsolutePosition());
             homed = true;
             firstPeriodic = false;
@@ -143,40 +143,40 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
         return setPosition(algaeReceive);
     }
 
-    public Command home() {
-        return Commands.sequence(
-            runOnce(() -> {
-                homed = false;
-                isHoming = true;
-            }),
-            runSpeed(0.04).until(atHomingHardstop),
-            zero(HARD_STOP_OFFSET).alongWith(Commands.runOnce(() -> {
-                homed = true;
-                isHoming = false;
-            }))
-        ).withInterruptBehavior(InterruptionBehavior.kCancelIncoming);
-    }
+    // public Command home() {
+    //     return Commands.sequence(
+    //         runOnce(() -> {
+    //             homed = false;
+    //             isHoming = true;
+    //         }),
+    //         runSpeed(0.04).until(atHomingHardstop),
+    //         zero(HARD_STOP_OFFSET).alongWith(Commands.runOnce(() -> {
+    //             homed = true;
+    //             isHoming = false;
+    //         }))
+    //     ).withInterruptBehavior(InterruptionBehavior.kCancelIncoming);
+    // }
 
-    public Command calculateAbsoluteRatio() {
-        return Commands.sequence(
-            runOnce(() -> {
-                io.zero(0);
-                zeroAbsolute();
-                io.setSpeed(0.04);
-                absoluteRatioFiltered = 0;
-                absoluteRatioSamples = 0;
-                absoluteRatioFilter.reset();
-            }),
-            Commands.waitSeconds(0.1),
-            runEnd(
-                () -> {
-                    absoluteRatioSamples++;
-                    absoluteRatioFiltered = absoluteRatioFilter.calculate(inputs.position / getAbsolutePosition());
-                },
-                () -> io.setSpeed(0)
-            ).until(atHardstop)
-        ).ignoringDisable(true);
-    }
+    // public Command calculateAbsoluteRatio() {
+    //     return Commands.sequence(
+    //         runOnce(() -> {
+    //             io.zero(0);
+    //             zeroAbsolute();
+    //             io.setSpeed(0.04);
+    //             absoluteRatioFiltered = 0;
+    //             absoluteRatioSamples = 0;
+    //             absoluteRatioFilter.reset();
+    //         }),
+    //         Commands.waitSeconds(0.1),
+    //         runEnd(
+    //             () -> {
+    //                 absoluteRatioSamples++;
+    //                 absoluteRatioFiltered = absoluteRatioFilter.calculate(inputs.position / getAbsolutePosition());
+    //             },
+    //             () -> io.setSpeed(0)
+    //         ).until(atHardstop)
+    //     ).ignoringDisable(true);
+    // }
 
     public Command zero(Angle angle) {
         return zero(angle.in(Rotations));
@@ -303,10 +303,9 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
         absoluteOffset = (inputs.absolutePosition * absoluteScalar);
     }
 
-    public boolean isAtHomingHardstop() {
-        // return Math.abs(inputs.velocity) <= 0.004 && isHoming;
-        return isHoming && inputs.hardStop;
-    }
+    // public boolean isAtHomingHardstop() {
+    //     return isHoming && inputs.hardStop;
+    // }
 
     @NotLogged
     public boolean isHomed() {

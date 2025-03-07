@@ -8,6 +8,8 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
+import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.util.LimelightHelpers.RawDetection;
 
 public class CoralDetectorReal implements CoralDetector {
@@ -19,8 +21,14 @@ public class CoralDetectorReal implements CoralDetector {
     public CoralDetectorReal() {
         // TODO: confirm what min and max ty are and what the distance is for each
         distanceMap = new InterpolatingDoubleTreeMap();
-        distanceMap.put(0.0, Inches.of(2).in(Meters));
-        distanceMap.put(640.0, Inches.of(36).in(Meters));
+        distanceMap.put(-22.2, Inches.of(18.5).in(Meters));
+        distanceMap.put(-14.79, Inches.of(24).in(Meters));
+        distanceMap.put(-6.05, Inches.of(32).in(Meters));
+        distanceMap.put(5.44, Inches.of(48).in(Meters));
+        distanceMap.put(14.89, Inches.of(72).in(Meters));
+        distanceMap.put(20.82, Inches.of(100).in(Meters));
+        distanceMap.put(24.7, Inches.of(132).in(Meters));
+
 
         sortedDetections = new ArrayList<>();
         detectionTYComparator = (a, b) -> Double.compare(a.tync, b.tync);
@@ -28,7 +36,7 @@ public class CoralDetectorReal implements CoralDetector {
 
     @Override
     public Pose2d getCoralPose(Pose2d robotPose, RawDetection[] detections) {
-        if (detections == null || detections.length == 0) {
+        if (robotPose == null || detections == null || detections.length == 0) {
             return null;
         }
 
@@ -47,14 +55,21 @@ public class CoralDetectorReal implements CoralDetector {
         for (RawDetection detection : sortedDetections) {
             double distanceMeters = distanceMap.get(detection.tync);
             double degrees = detection.txnc;
+            double radians = Units.degreesToRadians(degrees);
 
-            // TODO: double check if x or y is the correct value for distanceMeters
-            Transform2d coralTransform = new Transform2d(distanceMeters, 0, Rotation2d.fromDegrees(degrees));
+            SmartDashboard.putBoolean("Coral Present", true);
+            SmartDashboard.putNumber("Coral TY", detection.tync);
+            SmartDashboard.putNumber("Coral TX", detection.txnc);
+            // SmartDashboard.putNumber("Coral Distance", Meters.of(distanceMeters).in(Inches));
+
+            double yComponent = (distanceMeters)*Math.tan(radians);
+            Transform2d coralTransform = new Transform2d(distanceMeters, -yComponent, Rotation2d.kZero);
             Pose2d coralPose = basePose.transformBy(coralTransform);
 
             // TODO: reject coralPoses that are outside the field or (perhaps) where the stacked coral are
             return coralPose;
         }
+        SmartDashboard.putBoolean("Coral Present", false);
         return null;
     }
 }

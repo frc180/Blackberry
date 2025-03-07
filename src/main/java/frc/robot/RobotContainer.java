@@ -359,13 +359,13 @@ public class RobotContainer {
             })
         ));
 
-        disabled.and(elevatorArmPivot.atHardstop.negate()).onTrue(
-            elevatorArmPivot.coastMode().ignoringDisable(true)
-        );
+        // disabled.and(elevatorArmPivot.atHardstop.negate()).onTrue(
+        //     elevatorArmPivot.coastMode().ignoringDisable(true)
+        // );
 
-        disabled.and(elevatorArmPivot.atHardstop).onTrue(
-            elevatorArmPivot.brakeMode().ignoringDisable(true)
-        );
+        // disabled.and(elevatorArmPivot.atHardstop).onTrue(
+        //     elevatorArmPivot.brakeMode().ignoringDisable(true)
+        // );
         
         // teleop.onTrue(elevatorArmPivot.calculateAbsoluteRatio());
         teleop.onTrue(Commands.sequence(
@@ -437,9 +437,9 @@ public class RobotContainer {
                     driverRightReef.getAsBoolean();
         };
 
-        Command obtainAlgae = elevatorArmAlgae.intakeAndIndex(0.5)
+        Command obtainAlgae = elevatorArmAlgae.intakeAndIndex(1)
                                               .until(elevatorArmAlgae.hasAlgae.or(driverAnyReef.negate()))
-                                              .withTimeout(4);
+                                              .withTimeout(3);
         // Command obtainAlgae = Commands.either(
         //     elevatorArmAlgae.intakeAndIndex(0.5).until(elevatorArmAlgae.hasAlgae.or(driverAnyReef.negate())),
         //     Commands.none(),
@@ -496,13 +496,13 @@ public class RobotContainer {
 
         //scoring algae net
         //if arm does not have algae already (passing from algae intake to algae arm)
-        driverNet.and(intakeAlgae.hasAlgae).whileTrue(
-            Commands.parallel(
-                elevator.setPosition(ElevatorSubsystem.L1),
-                elevatorArmPivot.receiveAlgaePosition(),
-                elevatorArmAlgae.runSpeed(1)
-            )
-        );
+        // driverNet.and(intakeAlgae.hasAlgae).whileTrue(
+        //     Commands.parallel(
+        //         elevator.setPosition(ElevatorSubsystem.L1),
+        //         elevatorArmPivot.receiveAlgaePosition(),
+        //         elevatorArmAlgae.runSpeed(1)
+        //     )
+        // );
 
         // Start moving to score algae in net
         driverNet.whileTrue(
@@ -565,12 +565,14 @@ public class RobotContainer {
 
         // testController.button(5).whileTrue(elevatorArmPivot.calculateAbsoluteRatio());
 
+        testController.button(5).whileTrue(Auto.driveToCoral());
+
 
         testController.button(6).whileTrue(elevatorArmPivot.horizontalPosition());
         testController.button(7).whileTrue(elevatorArmPivot.netScorePosition());
         testController.button(8).whileTrue(elevatorArmPivot.receivePosition());
 
-        testController.button(9).whileTrue(elevatorArmAlgae.intakeAndIndex(0.5));
+        testController.button(9).whileTrue(elevatorArmAlgae.intakeAndIndex(1));
         testController.button(10).whileTrue(elevatorArmAlgae.runSpeed(-1));
 
 

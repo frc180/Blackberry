@@ -88,9 +88,9 @@ public class VisionSubsystem extends SubsystemBase {
     
     // TODO: set real values
     public static final Transform3d ROBOT_TO_INTAKE_CAMERA = new Transform3d(
-        Inches.of(-9.757).in(Meters), // forward
-        Inches.of(-7.2).in(Meters), // left
-        Inches.of(31.296).in(Meters),
+        Inches.of(-8.7).in(Meters), // forward
+        Inches.of(-5.22).in(Meters), // left
+        Inches.of(30.049).in(Meters),
         new Rotation3d(0, Units.degreesToRadians(50), Units.degreesToRadians(180)) // downward tilt
     );
 
