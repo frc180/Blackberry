@@ -541,11 +541,11 @@ public class RobotContainer {
         );
 
         Command autoIntakeCoral = Commands.sequence(
-            autoHPDrive.alongWith(Auto.startCoralIntake()),
+            autoHPDrive,
             Auto.driveToCoral()
                 .withMaxSpeed(1)
                 .until(intakeCoral.hasCoral) // at this point, the command gets interrupted by the auto coral intake trigger
-        );
+        ).alongWith(Auto.smartStartCoralIntake());
                                     
         justScoredCoral.and(autonomous).and(drivetrainAvailable).onTrue(
             Commands.either(

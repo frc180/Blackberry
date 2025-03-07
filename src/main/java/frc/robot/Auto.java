@@ -56,6 +56,20 @@ public final class Auto {
         return Commands.runOnce(() -> coralIntaking = false);
     }
 
+    public static Command smartStartCoralIntake() {
+        return Commands.run(() -> {
+            Pose2d coralPickup = RobotContainer.instance.vision.getCoralPickupPose();
+            if (coralPickup == null) {
+                return;
+            }
+
+            Pose2d robot = RobotContainer.instance.drivetrain.getPose();
+            if (robot.getTranslation().getDistance(coralPickup.getTranslation()) < 2.5) {
+                coralIntaking = true;
+            }
+        }).until(Auto::isCoralIntaking);
+    }
+
     public static Command driveToHPStation() {
         return Commands.either(
             driveToHPStationFar(),
