@@ -11,6 +11,7 @@ import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorArrangementValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.signals.SensorPhaseValue;
 import com.ctre.phoenix6.sim.TalonFXSSimState;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
@@ -37,7 +38,7 @@ public class IntakeCoralPivotIOTalonFXS implements IntakeCoralPivotIO {
 
     // Simulation-only variables
     TalonFXSSimState motorSim = null;
-    double simulatedPosition = Units.degreesToRotations(90);
+    double simulatedPosition = Units.degreesToRotations(-90);
     
     public IntakeCoralPivotIOTalonFXS() {
         TalonFXSConfiguration config = new TalonFXSConfiguration();
@@ -102,11 +103,11 @@ public class IntakeCoralPivotIOTalonFXS implements IntakeCoralPivotIO {
         double previousPosition = simulatedPosition;
         simulatedPosition += motorSim.getMotorVoltage() * Units.degreesToRotations(1.5);
 
-        if (simulatedPosition > Units.degreesToRotations(90)) {
-            simulatedPosition = Units.degreesToRotations(90);
-        } else if (simulatedPosition < Units.degreesToRotations(0)) {
-            simulatedPosition = Units.degreesToRotations(0);
-        }
+        // if (simulatedPosition > Units.degreesToRotations(90)) {
+        //     simulatedPosition = Units.degreesToRotations(90);
+        // } else if (simulatedPosition < Units.degreesToRotations(0)) {
+        //     simulatedPosition = Units.degreesToRotations(0);
+        // }
 
         motorSim.setRawRotorPosition(-simulatedPosition);
         motorSim.setRotorVelocity((simulatedPosition - previousPosition) * 50);

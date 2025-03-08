@@ -54,16 +54,16 @@ public class IntakeCoralPivotSubsystem extends SubsystemBase {
         io.update(inputs);
         SimVisuals.setCoralIntakeDegrees(180 - getDegrees());
 
-        if (state == CoralPivotState.SLAMMING && isStallingDebounce.getAsBoolean()) {
-            state = CoralPivotState.HOLD;
-        }
+        // if (state == CoralPivotState.SLAMMING && isStallingDebounce.getAsBoolean()) {
+        //     state = CoralPivotState.HOLD;
+        // }
 
-        if (state == CoralPivotState.SLAMMING) {
-            double dir = targetPosition == stow ? -1 : 1;
-            io.setSpeed(dir * 1);
-        } else if (state == CoralPivotState.HOLD) {
-            io.setSpeed(0);
-        }
+        // if (state == CoralPivotState.SLAMMING) {
+        //     double dir = targetPosition == stow ? -0.3 : 0.3;
+        //     io.setSpeed(dir * 1);
+        // } else if (state == CoralPivotState.HOLD) {
+        //     io.setSpeed(0);
+        // }
     }
 
     @Override
@@ -74,8 +74,8 @@ public class IntakeCoralPivotSubsystem extends SubsystemBase {
     }
 
     public boolean isAtTarget() {
-        return state == CoralPivotState.HOLD;
-        // return Math.abs(inputs.position - targetPosition) <= IN_POSITION_TOLERANCE;
+        // return state == CoralPivotState.HOLD;
+        return Math.abs(inputs.position - targetPosition) <= IN_POSITION_TOLERANCE;
     }
 
     @NotLogged
@@ -101,13 +101,13 @@ public class IntakeCoralPivotSubsystem extends SubsystemBase {
 
     public Command setPosition(double encoderPosition) {
         return run(() -> {
-            if (targetPosition != encoderPosition) {
-                state = CoralPivotState.SLAMMING;
-            } else if (state == CoralPivotState.MANUAL) {
-                state = CoralPivotState.HOLD;
-            }
+            // if (targetPosition != encoderPosition) {
+            //     state = CoralPivotState.SLAMMING;
+            // } else if (state == CoralPivotState.MANUAL) {
+            //     state = CoralPivotState.HOLD;
+            // }
             targetPosition = encoderPosition;
-            // io.setIntakePosition(encoderPosition);
+            io.setIntakePosition(encoderPosition);
           });
     }
 
@@ -121,13 +121,13 @@ public class IntakeCoralPivotSubsystem extends SubsystemBase {
     public Command stop() {
         return run(() -> {
             io.stopMotor();
-            state = CoralPivotState.MANUAL;
+            // state = CoralPivotState.MANUAL;
         });
     }
 
     public void setSpeed(double speed) {
         io.setSpeed(speed);
-        state = CoralPivotState.MANUAL;
+        // state = CoralPivotState.MANUAL;
     }
 
     public boolean isAtStowPosition() {
@@ -135,6 +135,7 @@ public class IntakeCoralPivotSubsystem extends SubsystemBase {
     }
 
     public boolean isStalling() {
-        return state == CoralPivotState.SLAMMING && Math.abs(inputs.velocity) < 0.001;
+        // return state == CoralPivotState.SLAMMING && Math.abs(inputs.velocity) < 0.001;
+        return Math.abs(inputs.velocity) < 0.001;
     }
 }
