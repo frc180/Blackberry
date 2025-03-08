@@ -10,6 +10,7 @@ public interface ElevatorArmAlgaeIO {
         public boolean hasAlgae;
         public double speed;
         public double distance;
+        public double temperature;
     }
 
     public void setSpeed(double speed);

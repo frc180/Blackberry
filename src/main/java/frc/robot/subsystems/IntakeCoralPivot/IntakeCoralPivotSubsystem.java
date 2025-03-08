@@ -74,7 +74,8 @@ public class IntakeCoralPivotSubsystem extends SubsystemBase {
     }
 
     public boolean isAtTarget() {
-        return Math.abs(inputs.position - targetPosition) <= IN_POSITION_TOLERANCE;
+        return state == CoralPivotState.HOLD;
+        // return Math.abs(inputs.position - targetPosition) <= IN_POSITION_TOLERANCE;
     }
 
     @NotLogged

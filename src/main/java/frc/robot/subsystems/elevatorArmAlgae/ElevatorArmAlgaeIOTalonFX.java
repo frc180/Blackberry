@@ -15,6 +15,7 @@ import com.ctre.phoenix6.sim.CANrangeSimState;
 import com.ctre.phoenix6.sim.TalonFXSSimState;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.units.measure.Temperature;
 import frc.robot.Constants;
 import frc.robot.Field;
 import frc.robot.Robot;
@@ -30,6 +31,7 @@ public class ElevatorArmAlgaeIOTalonFX implements ElevatorArmAlgaeIO {
     TalonFXS motor;
     CANrange canrange;
     VoltageOut voltageControl;
+    StatusSignal<Temperature> temperatureSignal;
     StatusSignal<Distance> distanceSignal;
 
     // Simulation-only variables
@@ -52,7 +54,9 @@ public class ElevatorArmAlgaeIOTalonFX implements ElevatorArmAlgaeIO {
         rangeConfig.ToFParams.UpdateMode = UpdateModeValue.ShortRange100Hz;
         canrange = new CANrange(Constants.ALGAE_ARM_CANRANGE, Constants.CANIVORE);
         canrange.getConfigurator().apply(rangeConfig);
+
         distanceSignal = trackSignal(canrange.getDistance());
+        temperatureSignal = trackSignal(motor.getDeviceTemp());
 
         // ParentDevice.optimizeBusUtilizationForAll(10.0, motor, canrange);
         
@@ -67,6 +71,7 @@ public class ElevatorArmAlgaeIOTalonFX implements ElevatorArmAlgaeIO {
         double distance = distanceSignal.getValueAsDouble();
         inputs.distance = distance;
         inputs.hasAlgae = distance < 0.1;
+        inputs.temperature = temperatureSignal.getValueAsDouble();
     }
 
     @Override
