@@ -12,17 +12,25 @@ import frc.robot.util.simulation.SimVisuals;
 
 @Logged
 public class IntakeCoralPivotSubsystem extends SubsystemBase {
+
+    enum CoralPivotState {
+        SLAMMING,
+        HOLD,
+        MANUAL
+    }
     
     //presets for intake positions
     public static final double stow = Units.degreesToRotations(90);
-    public static final double extend = Units.degreesToRotations(200);
+    public static final double extend = Units.degreesToRotations(0);
 
-    private static final double IN_POSITION_TOLERANCE = Units.degreesToRotations(6);
+    private static final double IN_POSITION_TOLERANCE = Units.degreesToRotations(3);
 
-    public IntakeCoralPivotIO io;
-    private IntakeCoralPivotIOInputs inputs;
+    private final IntakeCoralPivotIO io;
+    private final IntakeCoralPivotIOInputs inputs;
 
-    private double targetPosition = 0;
+    private CoralPivotState state = CoralPivotState.MANUAL;
+    private double targetPosition = -1;
+    private Trigger isStallingDebounce = new Trigger(this::isStalling).debounce(0.1);
 
     @NotLogged
     public final Trigger atTarget = new Trigger(this::isAtTarget);
@@ -44,7 +52,18 @@ public class IntakeCoralPivotSubsystem extends SubsystemBase {
     public void periodic() {
         // This method will be called once per scheduler run
         io.update(inputs);
-        SimVisuals.setCoralIntakeDegrees(getDegrees());
+        SimVisuals.setCoralIntakeDegrees(180 - getDegrees());
+
+        if (state == CoralPivotState.SLAMMING && isStallingDebounce.getAsBoolean()) {
+            state = CoralPivotState.HOLD;
+        }
+
+        if (state == CoralPivotState.SLAMMING) {
+            double dir = targetPosition == stow ? -1 : 1;
+            io.setSpeed(dir * 1);
+        } else if (state == CoralPivotState.HOLD) {
+            io.setSpeed(0);
+        }
     }
 
     @Override
@@ -81,31 +100,40 @@ public class IntakeCoralPivotSubsystem extends SubsystemBase {
 
     public Command setPosition(double encoderPosition) {
         return run(() -> {
-            io.setIntakePosition(encoderPosition);
+            if (targetPosition != encoderPosition) {
+                state = CoralPivotState.SLAMMING;
+            } else if (state == CoralPivotState.MANUAL) {
+                state = CoralPivotState.HOLD;
+            }
             targetPosition = encoderPosition;
+            // io.setIntakePosition(encoderPosition);
           });
     }
 
     public Command runSpeed(double speed) {
         return runEnd(
-            () -> io.setSpeed(speed),
-            () -> io.setSpeed(0)
+            () -> setSpeed(speed),
+            () -> setSpeed(0)
         );
     }
 
-    public Command test() {
-        return this.run(() -> {
-          io.runMotorTest();
+    public Command stop() {
+        return run(() -> {
+            io.stopMotor();
+            state = CoralPivotState.MANUAL;
         });
     }
 
-    public Command stop() {
-        return this.run(() -> {
-            io.stopMotor();
-        });
+    public void setSpeed(double speed) {
+        io.setSpeed(speed);
+        state = CoralPivotState.MANUAL;
     }
 
     public boolean isAtStowPosition() {
         return targetPosition == stow && isAtTarget();
+    }
+
+    public boolean isStalling() {
+        return state == CoralPivotState.SLAMMING && Math.abs(inputs.velocity) < 0.001;
     }
 }

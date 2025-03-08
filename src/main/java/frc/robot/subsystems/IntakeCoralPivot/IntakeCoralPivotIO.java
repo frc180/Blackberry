@@ -8,6 +8,7 @@ public interface IntakeCoralPivotIO {
     @Logged
     public class IntakeCoralPivotIOInputs {
         double position;
+        double velocity;
         double voltage;
         double target;
         double supplyCurrent;
