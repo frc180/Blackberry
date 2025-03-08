@@ -59,7 +59,9 @@ public class IntakeCoralIOSim implements IntakeCoralIO {
         }
 
         inputs.voltage = rollerSpeed * 12;
-        inputs.coralSensor = SimLogic.intakeHasCoral;
+        inputs.coralDistance = SimLogic.intakeHasCoral ? 0.07 : 3;
+        inputs.coralSensorConnected = true;
+        inputs.coralSensorStatus = 0;
     }
 
     @Override

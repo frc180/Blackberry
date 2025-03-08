@@ -5,14 +5,15 @@ import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkMaxConfig;
-import edu.wpi.first.wpilibj.DigitalInput;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
+import au.grapplerobotics.ConfigurationFailedException;
+import au.grapplerobotics.LaserCan;
 import frc.robot.Constants;
 
 public class IntakeCoralIOSpark implements IntakeCoralIO {
 
     SparkMax motor;
-    DigitalInput intakeSensor;
+    LaserCan laserCan;
 
     public IntakeCoralIOSpark() {
         SparkMaxConfig motorConfig = new SparkMaxConfig();
@@ -22,17 +23,44 @@ public class IntakeCoralIOSpark implements IntakeCoralIO {
         motor = new SparkMax(Constants.INTAKE_CORAL_SPARK, MotorType.kBrushless);
         motor.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
 
-        intakeSensor = new DigitalInput(Constants.INTAKE_CORAL_SENSOR);
+        laserCan = configureLaser(new LaserCan(Constants.INTAKE_LASERCAN));
     }
 
     @Override
     public void update(IntakeIOInputs inputs) {
-        inputs.coralSensor = false; //intakeSensor.get();
+        double distance = 2;
+
+        if (laserCan != null) {
+            LaserCan.Measurement measurement = laserCan.getMeasurement();
+            if (measurement != null) {
+                if (measurement.status == LaserCan.LASERCAN_STATUS_VALID_MEASUREMENT) {
+                    distance = measurement.distance_mm * 0.001;
+                }
+                inputs.coralSensorStatus = measurement.status;
+            } else {
+                inputs.coralSensorStatus = -1;
+            }
+        }
+
+        inputs.coralSensorConnected = laserCan != null;
+        inputs.coralDistance = distance;
         inputs.voltage = motor.getAppliedOutput() * 12;
     }
 
     @Override
     public void setSpeed(double speed) {
         motor.setVoltage(speed * 12);
+    }
+
+    private LaserCan configureLaser(LaserCan laser) {
+        try {
+            laser.setRangingMode(LaserCan.RangingMode.SHORT);
+            laser.setRegionOfInterest(new LaserCan.RegionOfInterest(8, 8, 16, 16));
+            laser.setTimingBudget(LaserCan.TimingBudget.TIMING_BUDGET_33MS);
+        } catch (ConfigurationFailedException e) {
+            System.out.println("Configuration failed! " + e);
+            return null;
+        }
+        return laser;
     }
 }

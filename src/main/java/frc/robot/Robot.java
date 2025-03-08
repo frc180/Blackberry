@@ -15,7 +15,13 @@ import edu.wpi.first.networktables.StructArrayPublisher;
 import java.util.ArrayList;
 import java.util.List;
 import org.ironmaple.simulation.SimulatedArena;
+
+import com.ctre.phoenix6.CANBus;
+import com.ctre.phoenix6.CANBus.CANBusStatus;
+
 import edu.wpi.first.epilogue.Epilogue;
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -37,6 +43,9 @@ public class Robot extends TimedRobot {
 
   @Logged(name = "RobotContainer")
   private final RobotContainer robotContainer;
+  private final CANBus canivoreBus = new CANBus(Constants.CANIVORE);
+
+  private final Alert canivoreUsageAlert = new Alert("CANivore bus usage high (> 80%) ", AlertType.kWarning);
 
 
   StructArrayPublisher<Pose3d> robotComponentPoses = NetworkTableInstance.getDefault()
@@ -61,11 +70,18 @@ public class Robot extends TimedRobot {
   @Override
   public void robotInit() {}
 
+  @Logged(name = "CANivore Bus Utilization")
+  float canivoreBusUtilization = 0;
+
   @Override
   public void robotPeriodic() {
     StatusSignals.refreshAll();
     CommandScheduler.getInstance().run();
     SimVisuals.update();
+
+    CANBusStatus busInfo = canivoreBus.getStatus();
+    canivoreBusUtilization = busInfo.BusUtilization;
+    canivoreUsageAlert.set(canivoreBusUtilization > 0.8);
 
     // Get all robot component (mechanism) poses and publish them to NetworkTables
     robotComponentPosesArray[0] = robotContainer.intakeAlgaePivot.getPose();

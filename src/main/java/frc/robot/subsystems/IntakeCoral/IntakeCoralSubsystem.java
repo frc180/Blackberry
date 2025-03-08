@@ -1,6 +1,8 @@
 package frc.robot.subsystems.IntakeCoral;
 
 import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -10,29 +12,36 @@ import frc.robot.subsystems.IntakeCoral.IntakeCoralIO.IntakeIOInputs;
 @Logged
 public class IntakeCoralSubsystem extends SubsystemBase {
 
-    private IntakeCoralIO io;
-    private IntakeIOInputs inputs;
+    private final IntakeCoralIO io;
+    private final IntakeIOInputs inputs;
+
+    private final Alert coralSensorDisconnectedAlert;
+    private final Alert coralSensorStatusAlert;
 
     public final Trigger hasCoral;
-    public final Trigger doneIntaking;
 
     public IntakeCoralSubsystem() {
         inputs = new IntakeIOInputs();
         if (Robot.isReal()) {
             // io = new IntakeCoralIOTalonFXS();
             io = new IntakeCoralIOSpark();
-            // io = new IntakeCoralIOSim();
         } else {
             io = new IntakeCoralIOSim();
         }
 
-        hasCoral = new Trigger(() -> inputs.coralSensor);
-        doneIntaking = hasCoral.and(() -> inputs.voltage > 0);
+        hasCoral = new Trigger(this::hasCoralBool);
+
+        coralSensorDisconnectedAlert = new Alert("Coral intake sensor disconnected!", AlertType.kError);
+        coralSensorStatusAlert = new Alert("Coral intake sensor status: %d", AlertType.kWarning);
     }
 
     @Override
     public void periodic() {
         io.update(inputs);
+
+        coralSensorDisconnectedAlert.set(!inputs.coralSensorConnected);
+        coralSensorStatusAlert.setText("Coral intake sensor status: " + inputs.coralSensorStatus);
+        coralSensorStatusAlert.set(inputs.coralSensorStatus != 0);
     }
 
     @Override
@@ -53,5 +62,9 @@ public class IntakeCoralSubsystem extends SubsystemBase {
             () -> io.setSpeed(speed),
             () -> io.setSpeed(0)
         );
+    }
+
+    public boolean hasCoralBool() {
+        return inputs.coralSensorConnected && inputs.coralDistance < 0.1;
     }
 }

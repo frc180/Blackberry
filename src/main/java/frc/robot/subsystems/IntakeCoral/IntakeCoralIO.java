@@ -8,7 +8,9 @@ public interface IntakeCoralIO {
     @Logged
     public class IntakeIOInputs {
         public double voltage = 0;
-        public boolean coralSensor = false;
+        public double coralDistance = 0;
+        public boolean coralSensorConnected = false;
+        public int coralSensorStatus = -1;
     }
 
     public void update(IntakeIOInputs inputs);
