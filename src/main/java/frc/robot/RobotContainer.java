@@ -35,6 +35,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -51,6 +52,7 @@ import frc.robot.commands.DriveToPose;
 import frc.robot.commands.RumbleCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.DrivetrainSubsystem;
+import frc.robot.subsystems.LEDSubsystem;
 import frc.robot.subsystems.DrivetrainSubsystem.HeadingTarget;
 import frc.robot.subsystems.DrivetrainSubsystem.PoseTarget;
 import frc.robot.subsystems.IntakeAlgae.IntakeAlgaeSubsystem;
@@ -106,6 +108,7 @@ public class RobotContainer {
     public final ElevatorArmAlgaeSubsystem elevatorArmAlgae;
     @Logged(name = "Coral Indexer")
     public final CoralIndexerSubsystem coralIndexer;
+    public final LEDSubsystem leds;
 
     private final SendableChooser<Command> autoChooser = new SendableChooser<Command>();
 
@@ -136,6 +139,7 @@ public class RobotContainer {
         elevatorArm = new ElevatorArmSubsystem();
         elevatorArmAlgae = new ElevatorArmAlgaeSubsystem();
         coralIndexer = new CoralIndexerSubsystem();
+        leds = null; //new LEDSubsystem();
 
         Pose2d firstCoralPose = Auto.LEFT_BARGE_CORAL_POSITIONS.get(0).getPose();
         List<Pose2d> leftBargeToLeftReef = List.of(
@@ -596,8 +600,29 @@ public class RobotContainer {
             ).alongWith(Commands.runOnce(() -> Robot.justScoredCoral = false))
         );
 
+        if (leds != null) {
+            leds.setDefaultCommand(leds.run(() -> {
+                if (!vision.isScoringCameraConnected()) {
+                    leds.setAnimation(leds.rainbow);
+                    return;
+                }
+
+                if (RobotState.isDisabled()) {
+                    if (DriverStation.isFMSAttached()) {
+                        leds.setAnimation(Robot.isBlue() ? leds.blueFade : leds.redFade);
+                    } else {
+                        leds.setAnimation(leds.yellowFade);
+                    }
+                    return;
+                }
+
+                leds.setAnimation(leds.blueTwinkle);
+            }));
+        }
+
         // ====================== TEST CONTROLS ======================
-        
+
+        //using the doneIntaking & hasCoral triggers to pass on to arm
 
         testController.button(1).whileTrue(intakeCoralPivot.runSpeed(0.50));
         testController.button(2).whileTrue(intakeCoralPivot.runSpeed(-0.50));

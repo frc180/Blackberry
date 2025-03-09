@@ -30,6 +30,8 @@ public class Constants {
 
     public static final int ALGAE_ARM_CANRANGE = 26; 
 
+    public static final int CANDLE = 27; // unmapped
+
     // CAN IDs - RIO Bus
 
     public static final int INTAKE_LASERCAN = 13;
