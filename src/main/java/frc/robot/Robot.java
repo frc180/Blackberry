@@ -79,9 +79,9 @@ public class Robot extends TimedRobot {
     CommandScheduler.getInstance().run();
     SimVisuals.update();
 
-    CANBusStatus busInfo = canivoreBus.getStatus();
-    canivoreBusUtilization = busInfo.BusUtilization;
-    canivoreUsageAlert.set(canivoreBusUtilization > 0.8);
+    // CANBusStatus busInfo = canivoreBus.getStatus();
+    // canivoreBusUtilization = busInfo.BusUtilization;
+    // canivoreUsageAlert.set(canivoreBusUtilization > 0.8);
 
     // Get all robot component (mechanism) poses and publish them to NetworkTables
     robotComponentPosesArray[0] = robotContainer.intakeAlgaePivot.getPose();

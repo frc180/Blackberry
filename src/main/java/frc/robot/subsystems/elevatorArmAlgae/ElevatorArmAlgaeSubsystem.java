@@ -14,9 +14,9 @@ import frc.robot.subsystems.elevatorArmAlgae.ElevatorArmAlgaeIO.ElevatorArmAlgae
 @Logged
 public class ElevatorArmAlgaeSubsystem extends SubsystemBase{
 
-    protected static final double FAR_OBJECT_THRESHOLD = 0.30;
-    protected static final double CLOSE_OBJECT_THRESHOLD = 0.15;
-    protected static final double HAS_ALGAE_THRESHOLD = 0.11; // 0.9ish 0.065 for non-crosshatch
+    protected static final double FAR_OBJECT_THRESHOLD = 0.23;
+    protected static final double CLOSE_OBJECT_THRESHOLD = 0.16;
+    protected static final double HAS_ALGAE_THRESHOLD = 0.149; // 0.9ish 0.065 for non-crosshatch
 
     ElevatorArmAlgaeIO io;
     ElevatorArmAlgaeInputs inputs;
@@ -70,25 +70,25 @@ public class ElevatorArmAlgaeSubsystem extends SubsystemBase{
     }
 
     public Command intakeAndIndex(double speed) {
-        return indexWithIdle(speed, 0.5);
+        return indexWithIdle(speed, speed);
     }
 
     public Command passiveIndex() {
-        return indexWithIdle(0, 1);
+        return indexWithIdle(0, 0.5);
     }
 
     private Command indexWithIdle(double idleSpeed, double indexSpeed) {
         return runEnd(
             () -> {
                 if (hasAlgae.getAsBoolean()) {
-                    io.setSpeed(0);
+                    io.setSpeed(0.05);
                 } else if (closeAlgae.getAsBoolean() ) {
                     io.setSpeed(indexSpeed);
                 } else {
                     io.setSpeed(idleSpeed);
                 }
             },
-            () -> io.setSpeed(0)
+            () -> io.setSpeed(0.0)
         );
     }
 

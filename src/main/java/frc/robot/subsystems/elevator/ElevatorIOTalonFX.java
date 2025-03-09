@@ -59,14 +59,14 @@ public class ElevatorIOTalonFX implements ElevatorIO {
         config.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
         // config.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
         if (Robot.isReal()) {
-            config.Slot0.kP = 20;
+            config.Slot0.kP = 55;
             config.Slot0.kI = 0;
             config.Slot0.kD = 0;
             config.Slot0.kG = 0;
             config.Slot0.kV = 3;
             config.Slot0.kA = 0;
-            config.MotionMagic.MotionMagicExpo_kV = 4;
-            config.MotionMagic.MotionMagicExpo_kA = 1.5;
+            config.MotionMagic.MotionMagicExpo_kV = 2;
+            config.MotionMagic.MotionMagicExpo_kA = 1.4;
         } else {
             config.Slot0.kP = 0.97;
             config.Slot0.kI = 0;

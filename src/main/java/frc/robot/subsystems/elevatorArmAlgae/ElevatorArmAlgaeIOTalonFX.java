@@ -8,6 +8,7 @@ import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.CANrange;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFXS;
+import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorArrangementValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.UpdateModeValue;
@@ -42,6 +43,7 @@ public class ElevatorArmAlgaeIOTalonFX implements ElevatorArmAlgaeIO {
     public ElevatorArmAlgaeIOTalonFX() {
         TalonFXSConfiguration config = new TalonFXSConfiguration();
         config.Commutation.MotorArrangement = MotorArrangementValue.Minion_JST;
+        config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         motor = new TalonFXS(Constants.ELEVATOR_ARM_ALGAE, Constants.CANIVORE);
         motor.getConfigurator().apply(config);
         motor.setNeutralMode(NeutralModeValue.Brake);

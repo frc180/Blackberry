@@ -57,5 +57,10 @@ public class IntakeCoralPivotIOSim implements IntakeCoralPivotIO{
     public void stopMotor() {
         speed = 0;
     }
+
+    @Override
+    public void zero(double rotations) {
+        // Do nothing
+    }
     
 }

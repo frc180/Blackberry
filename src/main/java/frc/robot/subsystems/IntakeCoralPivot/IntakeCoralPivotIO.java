@@ -27,4 +27,6 @@ public interface IntakeCoralPivotIO {
     public void runMotorTest();
 
     public void stopMotor();
+
+    public void zero(double rotations);
 }

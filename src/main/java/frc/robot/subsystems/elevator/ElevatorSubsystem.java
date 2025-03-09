@@ -28,7 +28,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     public static final Distance L3 = L2.plus(Inches.of(16));
     public static final Distance L4 = Meters.of(1.45);
     // public static final Distance L4 = Meters.of(1.4).plus(Inches.of(1.5));
-    public static final Distance NET = Meters.of(1.47); // may be able to just be L4
+    public static final Distance NET = Meters.of(1.47).minus(Inches.of(1));//ay be able to just be L4
     public static final Distance STOW = Inches.of(0);
     public static final Distance ZERO = Meters.of(0);
 
@@ -177,6 +177,10 @@ public class ElevatorSubsystem extends SubsystemBase {
 
     public double getTargetErrorMeters() {
         return targetPosition.in(Meters) - inputs.position;
+    }
+
+    public double getTargetErrorInches() {
+        return getTargetErrorMeters() * 39.37;
     }
 
     /**

@@ -1,9 +1,12 @@
 package frc.robot.subsystems.IntakeCoralPivot;
 
+import static edu.wpi.first.units.Units.*;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.NotLogged;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Robot;
@@ -123,6 +126,18 @@ public class IntakeCoralPivotSubsystem extends SubsystemBase {
             io.stopMotor();
             // state = CoralPivotState.MANUAL;
         });
+    }
+
+    public Command zero() {
+        return zero(0);
+    }
+
+    public Command zero(Angle angle) {
+        return zero(angle.in(Rotations));
+    }
+
+    public Command zero(double rotations) {
+        return Commands.runOnce(() -> io.zero(rotations));
     }
 
     public void setSpeed(double speed) {

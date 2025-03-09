@@ -13,7 +13,6 @@ import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Robot;
 import frc.robot.RobotContainer;
@@ -42,7 +41,7 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
     public static final double algaeReceive = Units.degreesToRotations(-70);
     public static final double horizontal = 0;
 
-    public static final double netScore = Units.degreesToRotations(5);
+    public static final double netScore = Units.degreesToRotations(5 + 3);
     public static final double netScoreBackwards = Units.degreesToRotations(46.01);
 
     private static final double IN_POSITION_TOLERANCE = Units.degreesToRotations(2);

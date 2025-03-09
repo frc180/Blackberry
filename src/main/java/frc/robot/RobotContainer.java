@@ -220,6 +220,8 @@ public class RobotContainer {
         final Trigger drivetrainAvailable = new Trigger(() -> drivetrain.getCurrentCommand() == drivetrain.getDefaultCommand());
         final Trigger scoringCameraDisconnected = vision.scoringCameraConnected.negate();
 
+        Trigger reefAlgaeTarget = driverRightReef.and(driverL2.or(driverL3));
+
         // TODO: probably change these triggers (or where they're used) to also return true if the scoring camera is disconnected
         nearReef = drivetrain.targetingReef().and(drivetrain.withinTargetPoseTolerance(         
                         Meters.of(1),
@@ -435,7 +437,10 @@ public class RobotContainer {
         Trigger reefDeployAllowed = teleop.or(elevatorArm.hasPartialCoral);
         Trigger isScoringCoral = new Trigger(() -> Robot.currentlyScoringCoral);
 
-        nearReef.and(reefDeployAllowed).or(isScoringCoral)
+        Trigger nearReefModified = nearReef.and(reefAlgaeTarget.negate())
+                                            .or(atReef.debounce(0.1));
+
+        nearReefModified.and(reefDeployAllowed).or(isScoringCoral)
             .whileTrue(chosenElevatorHeight.alongWith(elevatorArmPivot.matchElevatorPreset()))//, elevatorArmAlgae.intakeBasedOnElevator()))
             .onFalse(elevator.stow().alongWith(elevatorArmPivot.receivePosition()));
 
@@ -524,9 +529,15 @@ public class RobotContainer {
                 //     () -> Math.abs(drivetrain.getGyroscopeDegreesWrapped()) <= 90
                 // )
             )
-        ).onFalse(
+        ).onFalse(Commands.sequence(
+            Commands.either(
+                elevatorArmAlgae.runSpeed(-1).withTimeout(0.5),
+                Commands.none(),
+                elevator.elevatorInPosition
+            ),
+            // elevatorArmAlgae.runSpeed(-1).withTimeout(0.5),
             elevator.stow().alongWith(elevatorArmPivot.stowPosition(), elevatorArmAlgae.stop())
-        );
+        ));
 
         if (Robot.isSimulation()) {
             // Scoring algae in the net from arm
@@ -577,12 +588,12 @@ public class RobotContainer {
         testController.button(5).whileTrue(Auto.driveToCoral());
 
 
-        testController.button(6).whileTrue(elevatorArmPivot.horizontalPosition());
-        testController.button(7).whileTrue(elevatorArmPivot.netScorePosition());
-        testController.button(8).whileTrue(elevatorArmPivot.receivePosition());
+        testController.button(6).whileTrue(intakeCoralPivot.zero(Degrees.of(90)));
+        // testController.button(7).whileTrue(intakeCoralPivot.stow());
+        // testController.button(8).whileTrue(intakeCoralPivot.extend());
 
-        testController.button(9).whileTrue(elevatorArmAlgae.intakeAndIndex(1));
-        testController.button(10).whileTrue(elevatorArmAlgae.runSpeed(-1));
+        // testController.button(9).whileTrue(elevatorArmAlgae.intakeAndIndex(0.25));
+        // testController.button(10).whileTrue(elevatorArmAlgae.runSpeed(-1));
 
 
         // testController.button(1).whileTrue(elevatorArm.runSpeed(1));
@@ -590,24 +601,12 @@ public class RobotContainer {
         // testController.button(3).whileTrue(elevatorArm.runSpeed(0.25)); // l2 & l3 speeds
 
 
-        // testController.button(2).whileTrue(elevatorArmPivot.setSpeed(0.2)).onFalse(elevatorArmPivot.stop());
-        // testController.button(3).whileTrue(elevatorArmPivot.setSpeed(-0.2)).onFalse(elevatorArmPivot.stop());
-        
-        driverController.leftStick().whileTrue(elevatorArmAlgae.runSpeed(0.5));
-        driverController.rightStick().whileTrue(elevatorArmAlgae.holdPulse());
-
-        // testController.button(1).whileTrue(elevatorArm.intakeAndIndex());
-        // testController.button(2).whileTrue(elevatorArm.runSpeed(0.05));
-        // testController.button(3).whileTrue(elevatorArm.runSpeed(-0.05));
-
         // testController.button(1).whileTrue(intakeAlgae.setSpeed(1)).onFalse(intakeAlgae.stopIntake());
         // testController.button(2).whileTrue(intakeAlgae.setSpeed(-1)).onFalse(intakeAlgae.stopIntake());
 
         // testController.button(3).whileTrue(intakeAlgaePivot.setSpeed(0.2)).onFalse(intakeAlgaePivot.stop());
         // testController.button(4).whileTrue(intakeAlgaePivot.setSpeed(-0.2)).onFalse(intakeAlgaePivot.stop());
  
-        // testController.button(4).onTrue(elevatorArmPivot.zero(0).ignoringDisable(true));
-
         // testController.button(6).onTrue(elevatorArmPivot.setPosition(elevatorArmPivot.horizontal));
         // testController.button(7).onTrue(elevatorArmPivot.setPosition(elevatorArmPivot.receiving));
 
@@ -618,17 +617,17 @@ public class RobotContainer {
         // teleop.and(testController.button(6))
         //     .onTrue(elevator.home().andThen(new RumbleCommand(0.5).withTimeout(0.5)));
         
-        // teleop.and(testController.button(7))
-        //     .onTrue(elevator.setPosition(ElevatorSubsystem.STOW));
+        teleop.and(testController.button(7))
+            .onTrue(elevator.setPosition(ElevatorSubsystem.STOW));
 
-        // teleop.and(testController.button(8))
-        //     .onTrue(elevator.setPosition(ElevatorSubsystem.L2));
+        teleop.and(testController.button(8))
+            .onTrue(elevator.setPosition(ElevatorSubsystem.L2));
 
-        // teleop.and(testController.button(9))
-        //     .onTrue(elevator.setPosition(ElevatorSubsystem.L3));
+        teleop.and(testController.button(9))
+            .onTrue(elevator.setPosition(ElevatorSubsystem.L3));
 
-        // teleop.and(testController.button(10))
-        //     .onTrue(elevator.setPosition(ElevatorSubsystem.L4));
+        teleop.and(testController.button(10))
+            .onTrue(elevator.setPosition(ElevatorSubsystem.NET));
 
         // testMode.and(testController.button(10)).onTrue(Commands.sequence(
         //     elevator.home(),

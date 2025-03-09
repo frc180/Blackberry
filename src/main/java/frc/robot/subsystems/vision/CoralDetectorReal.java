@@ -4,9 +4,6 @@ import static edu.wpi.first.units.Units.*;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-
-import com.pathplanner.lib.util.FlippingUtil;
-
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
@@ -57,7 +54,7 @@ public class CoralDetectorReal implements CoralDetector {
     @Override
     public Pose2d getCoralPose(Pose2d robotPose, RawDetection[] detections) {
         if (robotPose == null || detections == null || detections.length == 0) {
-            return null;
+            return recentLastDetection();
         }
 
         sortedDetections.clear();
@@ -91,6 +88,11 @@ public class CoralDetectorReal implements CoralDetector {
             if (!CoralDetector.isValid(coralPose)) {
                 continue;
             }
+            double distDiff = 0;
+            if (recentLastDetection() != null) {
+                distDiff = coralPose.getTranslation().getDistance(recentLastDetection().getTranslation());
+                if (distDiff > 1) continue;
+            }
 
             lastDetectionTime = Timer.getFPGATimestamp();
             lastDetection = coralPose;
@@ -99,11 +101,13 @@ public class CoralDetectorReal implements CoralDetector {
 
         SmartDashboard.putBoolean("Coral Present", false);
         // If we didn't find any coral, return the last detection if it was very recent
+        return recentLastDetection();
+    }
+
+    private Pose2d recentLastDetection() {
         if (Timer.getFPGATimestamp() - lastDetectionTime < 0.5) {
             return lastDetection;
         }
-
-        lastDetection = null;
         return null;
     }
 
