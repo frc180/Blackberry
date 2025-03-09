@@ -117,7 +117,7 @@ public class VisionSubsystem extends SubsystemBase {
     private final CoralDetector coralDetector;
     private final SingleTagSolver singleTagSolver = new SingleTagSolver();
 
-    private final Distance reefBackDistance = Meters.of(0.55).plus(Inches.of(2.5));
+    private final Distance reefBackDistance = Meters.of(0.55).plus(Inches.of(2.5 - 2));
     // private final Distance reefSideDistance = Meters.of(0.15).plus(Inches.of(1)); // the one we've used so far
     private final Distance reefSideDistance = Field.REEF_BRANCH_SEPARATION.div(2); // field measurement based
 
@@ -132,7 +132,7 @@ public class VisionSubsystem extends SubsystemBase {
     private final Transform2d rightL1ReefRotation = new Transform2d(0, 0, Rotation2d.fromDegrees(-30));
 
     // 3 inches closer (forward) than standard, applied on top of left/right reef transforms
-    private final Transform2d algaeReefTransform = new Transform2d(Inches.of(3 + 0.5).in(Meters), 0, Rotation2d.kZero);
+    private final Transform2d algaeReefTransform = new Transform2d(Inches.of(3 + 0.5 - 2).in(Meters), 0, Rotation2d.kZero);
 
     private final Pose2d redProcessorPose;
     private final Pose2d blueProcessorPose;

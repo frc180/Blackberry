@@ -300,7 +300,7 @@ public class RobotContainer {
         ));
 
         // Driver Coral Intake
-        coralIntakeTrigger = driverIntake.or(autoCoralIntake).and(robotHasCoral.negate());
+        coralIntakeTrigger = driverIntake.or(autoCoralIntake).and(elevatorArm.hasCoral.negate());
 
         // "Drive-thru" loading directly into the arm
         // driverIntake
@@ -437,8 +437,9 @@ public class RobotContainer {
         Trigger reefDeployAllowed = teleop.or(elevatorArm.hasPartialCoral);
         Trigger isScoringCoral = new Trigger(() -> Robot.currentlyScoringCoral);
 
-        Trigger nearReefModified = nearReef.and(reefAlgaeTarget.negate())
-                                            .or(atReef.debounce(0.1));
+        Trigger nearReefModified = nearReef;
+        // Trigger nearReefModified = nearReef.and(reefAlgaeTarget.negate())
+        //                                     .or(atReef.debounce(0.1));
 
         nearReefModified.and(reefDeployAllowed).or(isScoringCoral)
             .whileTrue(chosenElevatorHeight.alongWith(elevatorArmPivot.matchElevatorPreset()))//, elevatorArmAlgae.intakeBasedOnElevator()))
