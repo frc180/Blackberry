@@ -229,6 +229,12 @@ public class RobotContainer {
                         Degrees.of(90)
         ));//.debounce(0.2, DebounceType.kFalling); 
 
+        Trigger almostAtReef = drivetrain.targetingReef().and(drivetrain.withinTargetPoseTolerance(
+                        Inches.of(3), 
+                        Inches.of(3),
+                        Degrees.of(4)
+        ));
+
         atReef = drivetrain.targetingReef().and(drivetrain.withinTargetPoseTolerance(
                         Inches.of(1), // was 1
                         Inches.of(1), // was 1
@@ -268,7 +274,9 @@ public class RobotContainer {
         driverLeftReef.whileTrue(new DriveToCoralPose(
             () -> vision.lastReefID,
             (tagID) -> {
-                if (elevator.getTargetPosition() == ElevatorSubsystem.L1) {
+                if (elevator.isTargetingReefAlgaePosition()) {
+                    return vision.getReefAlgaePose(tagID, true);
+                } else if (elevator.getTargetPosition() == ElevatorSubsystem.L1) {
                     return vision.getL1ReefPose(tagID, true);
                 } else {
                     return vision.getReefPose(tagID, true);
@@ -280,7 +288,7 @@ public class RobotContainer {
             () -> vision.lastReefID,
             (tagID) -> {
                 if (elevator.isTargetingReefAlgaePosition()) {
-                    return vision.getReefAlgaePose(tagID);
+                    return vision.getReefAlgaePose(tagID, false);
                 } else if (elevator.getTargetPosition() == ElevatorSubsystem.L1) {
                     return vision.getL1ReefPose(tagID, false);
                 } else {
@@ -437,19 +445,31 @@ public class RobotContainer {
         Trigger reefDeployAllowed = teleop.or(elevatorArm.hasPartialCoral);
         Trigger isScoringCoral = new Trigger(() -> Robot.currentlyScoringCoral);
 
-        Trigger nearReefModified = nearReef;
-        // Trigger nearReefModified = nearReef.and(reefAlgaeTarget.negate())
-        //                                     .or(atReef.debounce(0.1));
+        // Trigger nearReefModified = nearReef;
 
-        nearReefModified.and(reefDeployAllowed).or(isScoringCoral)
+        Trigger rightL2 = driverRightReef.and(driverL2);
+        Trigger nearReefModified = nearReef.and(rightL2.negate())
+                                            .or(almostAtReef.debounce(0.1));
+
+        // Trigger nearReefModified = nearReef.and(reefAlgaeTarget.negate())
+        //                                     .or(almostAtReef.debounce(0.1));
+
+        
+        Trigger finalReefTrigger = nearReefModified.and(reefDeployAllowed).or(isScoringCoral);
+
+        finalReefTrigger
             .whileTrue(chosenElevatorHeight.alongWith(elevatorArmPivot.matchElevatorPreset()))//, elevatorArmAlgae.intakeBasedOnElevator()))
             .onFalse(elevator.stow().alongWith(elevatorArmPivot.receivePosition()));
+
+        // Experimental - start intaking algae earlier regardless of sensor
+        // finalReefTrigger.and(reefAlgaeTarget)
+        //     .whileTrue(elevatorArmAlgae.intakeAndIndex(1));
 
  
         BooleanSupplier shouldObtainAlgae = () -> {
             return elevator.isTargetingReefAlgaePosition() && 
-                    elevatorArmAlgae.farAlgae.getAsBoolean() &&
-                    driverRightReef.getAsBoolean();
+                    driverRightReef.getAsBoolean() && 
+                    (elevatorArmAlgae.farAlgae.getAsBoolean());// || elevatorArmAlgae.closeAlgae.getAsBoolean());
         };
 
         Command obtainAlgae = elevatorArmAlgae.intakeAndIndex(1)
@@ -586,10 +606,14 @@ public class RobotContainer {
 
         // testController.button(5).whileTrue(elevatorArmPivot.calculateAbsoluteRatio());
 
-        testController.button(5).whileTrue(Auto.driveToCoral());
+        // testController.button(5).whileTrue(Auto.driveToCoral());
 
 
-        testController.button(6).whileTrue(intakeCoralPivot.zero(Degrees.of(90)));
+        testController.button(6).whileTrue(intakeCoralPivot.runSpeed(0.05));
+        testController.button(7).whileTrue(intakeCoralPivot.runSpeed(-0.05));
+
+
+        // testController.button(6).whileTrue(intakeCoralPivot.zero(Degrees.of(90)));
         // testController.button(7).whileTrue(intakeCoralPivot.stow());
         // testController.button(8).whileTrue(intakeCoralPivot.extend());
 

@@ -24,7 +24,7 @@ import frc.robot.util.simulation.SimVisuals;
 public class ElevatorSubsystem extends SubsystemBase {
     // Distance presets, with 0 being the bottom of the elevator
     public static final Distance L1 = Inches.of(2.5);
-    public static final Distance L2 = Meters.of(0.302);
+    public static final Distance L2 = Meters.of(0.302).plus(Inches.of(1));
     public static final Distance L3 = L2.plus(Inches.of(16));
     public static final Distance L4 = Meters.of(1.45);
     // public static final Distance L4 = Meters.of(1.4).plus(Inches.of(1.5));

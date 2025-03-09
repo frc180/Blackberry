@@ -805,31 +805,34 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
          * Otherwise, only check and apply the operator perspective if the DS is disabled.
          * This ensures driving behavior doesn't change until an explicit disable event occurs during testing.
          */
-        if (!m_hasAppliedOperatorPerspective || DriverStation.isDisabled()) {
-            DriverStation.getAlliance().ifPresent(allianceColor -> {
-                setOperatorPerspectiveForward(
-                    allianceColor == Alliance.Red
-                        ? kRedAlliancePerspectiveRotation
-                        : kBlueAlliancePerspectiveRotation
-                );
-                m_hasAppliedOperatorPerspective = true;
-            });
-        }
+        // if (!m_hasAppliedOperatorPerspective || DriverStation.isDisabled()) {
+        //     DriverStation.getAlliance().ifPresent(allianceColor -> {
+        //         setOperatorPerspectiveForward(
+        //             allianceColor == Alliance.Red
+        //                 ? kRedAlliancePerspectiveRotation
+        //                 : kBlueAlliancePerspectiveRotation
+        //         );
+        //         m_hasAppliedOperatorPerspective = true;
+        //     });
+        // }
 
-        pigeonConnected = getPigeon2().isConnected();
+        // pigeonConnected = getPigeon2().isConnected();
+        pigeonConnected = gyroAngleSignal.getTimestamp().getLatency() <= 0.5;
         pigeonDisconnectedAlert.set(!pigeonConnected);
 
         if (RobotState.isDisabled()) {
             zeroGyroscopeUsingPose();
         }
 
-        double kV = SmartDashboard.getNumber("Drivetrain XY Feedforward", 0);
-        double kA = SmartDashboard.getNumber("Drivetrain XY kA", 0);
-        xyFeedforward.setKv(kV);
-        xyFeedforward.setKa(kA);
+        // double kV = SmartDashboard.getNumber("Drivetrain XY Feedforward", 0);
+        // double kA = SmartDashboard.getNumber("Drivetrain XY kA", 0);
+        // xyFeedforward.setKv(kV);
+        // xyFeedforward.setKa(kA);
 
-        xPosition = getPose().getX();
-        yPosition = getPose().getY();
+        SwerveDriveState state = getState();
+        Pose2d pose = state.Pose;
+        xPosition = pose.getX();
+        yPosition = pose.getY();
         // State xSetpoint = xProfiledPid.getSetpoint();
         // State ySetpoint = yProfiledPid.getSetpoint();
         // xPidTarget = xSetpoint.position;
@@ -837,9 +840,9 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         xPidTarget = xPid.getSetpoint();
         yPidTarget = yPid.getSetpoint();
 
-        poseBuffer.addSample(Timer.getFPGATimestamp(), getPose());
+        poseBuffer.addSample(Timer.getFPGATimestamp(), pose);
 
-        SwerveModuleState[] moduleStates = getState().ModuleStates;
+        SwerveModuleState[] moduleStates = state.ModuleStates;
         moduleSpeedAvg = 0;
         for (int i = 0; i < moduleStates.length; i++) {
             moduleSpeeds[i] = Math.abs(moduleStates[i].speedMetersPerSecond);

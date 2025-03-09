@@ -117,8 +117,7 @@ public class VisionSubsystem extends SubsystemBase {
     private final CoralDetector coralDetector;
     private final SingleTagSolver singleTagSolver = new SingleTagSolver();
 
-    private final Distance reefBackDistance = Meters.of(0.55).plus(Inches.of(2.5 - 2));
-    // private final Distance reefSideDistance = Meters.of(0.15).plus(Inches.of(1)); // the one we've used so far
+    private final Distance reefBackDistance = Meters.of(0.55).plus(Inches.of(0.5));
     private final Distance reefSideDistance = Field.REEF_BRANCH_SEPARATION.div(2); // field measurement based
 
     private final Transform2d leftReefTransform = new Transform2d(reefBackDistance.in(Meters), -reefSideDistance.in(Meters), Rotation2d.k180deg);
@@ -131,8 +130,8 @@ public class VisionSubsystem extends SubsystemBase {
     private final Transform2d leftL1ReefRotation = new Transform2d(0, 0, Rotation2d.fromDegrees(30));
     private final Transform2d rightL1ReefRotation = new Transform2d(0, 0, Rotation2d.fromDegrees(-30));
 
-    // 3 inches closer (forward) than standard, applied on top of left/right reef transforms
-    private final Transform2d algaeReefTransform = new Transform2d(Inches.of(3 + 0.5 - 2).in(Meters), 0, Rotation2d.kZero);
+    // 1.5 inches closer (forward) than standard, applied on top of left/right reef transforms
+    private final Transform2d algaeReefTransform = new Transform2d(Inches.of(1.5).in(Meters), 0, Rotation2d.kZero);
 
     private final Pose2d redProcessorPose;
     private final Pose2d blueProcessorPose;
@@ -142,7 +141,8 @@ public class VisionSubsystem extends SubsystemBase {
     public final HashMap<Integer, Pose2d> rightReefHashMap = new HashMap<>();
     private final HashMap<Integer, Pose2d> leftL1ReefHashMap = new HashMap<>();
     private final HashMap<Integer, Pose2d> rightL1ReefHashMap = new HashMap<>();
-    private final HashMap<Integer, Pose2d> reefAlgaePoses = new HashMap<>();
+    private final HashMap<Integer, Pose2d> leftReefAlgaePoses = new HashMap<>();
+    private final HashMap<Integer, Pose2d> rightReefAlgaePoses = new HashMap<>();
 
 
     public AprilTagFieldLayout aprilTagFieldLayout;
@@ -219,7 +219,8 @@ public class VisionSubsystem extends SubsystemBase {
         }
 
         // Pre-calculate reef algae poses
-        rightReefHashMap.keySet().forEach(i -> reefAlgaePoses.put(i, calculateReefAlgaePose(i)));
+        leftReefHashMap.keySet().forEach(i -> leftReefAlgaePoses.put(i, calculateReefAlgaePose(i, true)));
+        rightReefHashMap.keySet().forEach(i -> rightReefAlgaePoses.put(i, calculateReefAlgaePose(i, false)));
         
         // Pre-calculate processor poses
         redProcessorPose = calculateProcessorPose(false);
@@ -428,8 +429,8 @@ public class VisionSubsystem extends SubsystemBase {
      * the standard reef pose in order to faciliate grabbing an algae. This is used to pre-calculate and store all
      * positions to prevent duplicate object creation. To access these pre-calculated poses, use {@link #getReefAlgaePose(int)}.
      */
-    private Pose2d calculateReefAlgaePose(int tagID) {
-        return getReefPose(tagID, false).transformBy(algaeReefTransform);
+    private Pose2d calculateReefAlgaePose(int tagID, boolean left) {
+        return getReefPose(tagID, left).transformBy(algaeReefTransform);
     }
 
     /**
@@ -484,8 +485,8 @@ public class VisionSubsystem extends SubsystemBase {
      * the standard reef pose in order to faciliate grabbing an algae.
      * @param tagID the ID of the reef AprilTag
      */
-    public Pose2d getReefAlgaePose(int tagID) {
-        return reefAlgaePoses.get(tagID);
+    public Pose2d getReefAlgaePose(int tagID, boolean left) {
+        return (left ? leftReefAlgaePoses : rightReefAlgaePoses).get(tagID);
     }
 
     /**

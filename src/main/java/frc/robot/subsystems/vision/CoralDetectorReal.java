@@ -4,6 +4,8 @@ import static edu.wpi.first.units.Units.*;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.epilogue.NotLogged;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
@@ -14,14 +16,23 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.util.LimelightHelpers.RawDetection;
 
+@Logged
 public class CoralDetectorReal implements CoralDetector {
 
     private final InterpolatingDoubleTreeMap distanceMap;
     private final List<RawDetection> sortedDetections;
     private final Comparator<RawDetection> detectionTYComparator;
+    private final Comparator<RawDetection> detectionTXYComparator;
     private final MutDistance coralDistance;
 
+    // How close to the robot a detected coral has to be to be considered "close" (i.e. intakeable)
+    private final double CLOSE_CORAL_DISTANCE = 0.5;
+    // How close two detected coral have to be to each other to be considered the same/close enough 
+    // to allow switching without a timeout
+    private final double SIMILAR_CORAL_THRESHOLD = 0.75;
+
     private double lastDetectionTime = 0;
+    private double lastDetectionDistance = 0;
     private Pose2d lastDetection = null;
 
     public CoralDetectorReal() {
@@ -44,6 +55,7 @@ public class CoralDetectorReal implements CoralDetector {
 
         sortedDetections = new ArrayList<>();
         detectionTYComparator = (a, b) -> Double.compare(a.tync, b.tync);
+        detectionTXYComparator = (a, b) -> Double.compare(tXYCombined(a), tXYCombined(b));
         coralDistance = Meters.of(0).mutableCopy();
     }
 
@@ -53,8 +65,15 @@ public class CoralDetectorReal implements CoralDetector {
 
     @Override
     public Pose2d getCoralPose(Pose2d robotPose, RawDetection[] detections) {
+        Pose2d recentLastDetection = getRecentLastDetection();
         if (robotPose == null || detections == null || detections.length == 0) {
-            return recentLastDetection();
+            return recentLastDetection;
+        }
+
+        // If the last detected coral was very close to the robot, wait a bit in case
+        // we're trying to intake it
+        if (recentLastDetection != null && lastDetectionClose()) {
+            return recentLastDetection;
         }
 
         sortedDetections.clear();
@@ -64,7 +83,8 @@ public class CoralDetectorReal implements CoralDetector {
 
             sortedDetections.add(detection);
         }
-        sortedDetections.sort(detectionTYComparator);
+        sortedDetections.sort(detectionTXYComparator);
+        // sortedDetections.sort(detectionTYComparator);
 
         Pose2d basePose = robotPose.transformBy(VisionSubsystem.ROBOT_TO_INTAKE_CAMERA_2D);
 
@@ -88,27 +108,39 @@ public class CoralDetectorReal implements CoralDetector {
             if (!CoralDetector.isValid(coralPose)) {
                 continue;
             }
+
             double distDiff = 0;
-            if (recentLastDetection() != null) {
-                distDiff = coralPose.getTranslation().getDistance(recentLastDetection().getTranslation());
-                if (distDiff > 1) continue;
+            if (recentLastDetection != null) {
+                distDiff = coralPose.getTranslation().getDistance(recentLastDetection.getTranslation());
+                if (distDiff > SIMILAR_CORAL_THRESHOLD) continue;
             }
 
             lastDetectionTime = Timer.getFPGATimestamp();
+            lastDetectionDistance = distanceMeters;
             lastDetection = coralPose;
             return coralPose;
         }
 
         SmartDashboard.putBoolean("Coral Present", false);
         // If we didn't find any coral, return the last detection if it was very recent
-        return recentLastDetection();
+        return recentLastDetection;
     }
 
-    private Pose2d recentLastDetection() {
-        if (Timer.getFPGATimestamp() - lastDetectionTime < 0.5) {
+    @NotLogged
+    private Pose2d getRecentLastDetection() {
+        double timeoutSeconds = lastDetectionClose() ? 1 : 0.5;
+        if (Timer.getFPGATimestamp() - lastDetectionTime < timeoutSeconds) {
             return lastDetection;
         }
         return null;
+    }
+
+    private boolean lastDetectionClose() {
+        return lastDetectionDistance < CLOSE_CORAL_DISTANCE;
+    }
+
+    private double tXYCombined(RawDetection detection) {
+        return detection.tync + Math.abs(detection.txnc * 0.33);
     }
 
     private double width(RawDetection detection) {

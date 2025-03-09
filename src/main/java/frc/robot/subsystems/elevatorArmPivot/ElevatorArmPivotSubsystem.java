@@ -101,7 +101,7 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
         shouldResync = Math.abs(positionDisagreement) > RESYNC_THRESHOLD;
 
         double currentTime = Timer.getFPGATimestamp();
-        if (firstPeriodic && currentTime - lastPositionSyncTime > 0.5) {
+        if (firstPeriodic || currentTime - lastPositionSyncTime > 0.5) {
             io.zero(getAbsolutePosition());
             homed = true;
             firstPeriodic = false;

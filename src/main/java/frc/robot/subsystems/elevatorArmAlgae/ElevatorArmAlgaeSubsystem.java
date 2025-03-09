@@ -3,7 +3,6 @@ package frc.robot.subsystems.elevatorArmAlgae;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Robot;
@@ -12,11 +11,11 @@ import frc.robot.subsystems.elevator.ElevatorSubsystem;
 import frc.robot.subsystems.elevatorArmAlgae.ElevatorArmAlgaeIO.ElevatorArmAlgaeInputs;
 
 @Logged
-public class ElevatorArmAlgaeSubsystem extends SubsystemBase{
+public class ElevatorArmAlgaeSubsystem extends SubsystemBase {
 
-    protected static final double FAR_OBJECT_THRESHOLD = 0.23;
+    protected static final double FAR_OBJECT_THRESHOLD = 0.25; // was 0.23 which is probably too low
     protected static final double CLOSE_OBJECT_THRESHOLD = 0.16;
-    protected static final double HAS_ALGAE_THRESHOLD = 0.149; // 0.9ish 0.065 for non-crosshatch
+    protected static final double HAS_ALGAE_THRESHOLD = 0.149;
 
     ElevatorArmAlgaeIO io;
     ElevatorArmAlgaeInputs inputs;
@@ -90,12 +89,6 @@ public class ElevatorArmAlgaeSubsystem extends SubsystemBase{
             },
             () -> io.setSpeed(0.0)
         );
-    }
-
-    public Command holdPulse() {
-        return runSpeed(0.05).withTimeout(0.5)
-                .andThen(Commands.waitSeconds(0.3))
-                .repeatedly();
     }
 
     public Command spit() {
