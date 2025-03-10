@@ -47,6 +47,7 @@ public final class Auto {
     private Auto() {}
     
     public static void init() {
+        state = AutoState.IDLE;
         coralIntaking = false;
     }
 
@@ -87,14 +88,14 @@ public final class Auto {
         ).alongWith(setState(AutoState.INTAKING));
     }
 
-    public static DriveToPose driveToHPStationClose() {
+    private static DriveToPose driveToHPStationClose() {
         return new DriveToPose(RobotContainer.instance.drivetrain, () -> {
                                     Pose2d hpStation = Robot.isBlue() ? SimLogic.blueHPCoralPose : SimLogic.redHPCoralPose;
                                     return hpStation.transformBy(HP_STATION_TRANSFORM);
                                 });
     }
 
-    public static Command driveToHPStationFar() {
+    private static Command driveToHPStationFar() {
         DrivetrainSubsystem drivetrain = RobotContainer.instance.drivetrain;
         return Commands.defer(() -> {
             double sign = Robot.isBlue() ? 1 : -1;

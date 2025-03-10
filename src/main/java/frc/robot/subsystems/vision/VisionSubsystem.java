@@ -357,11 +357,11 @@ public class VisionSubsystem extends SubsystemBase {
 
         if (bestReefID != -1) lastReefID = bestReefID;
 
-        if (inputs.frontFiducials.length > 0) {
-            // TODO: If this seems more accurate than global pose, we need to specifically pass in the front fiducial
-            // that corresponds to the tag we're actively targeting, not just the first or closest one
-            singleTagPose = singleTagSolver.getPose(inputs.scoringTimestamp, inputs.frontFiducials[0], ROBOT_TO_FRONT_CAMERA);
-        }
+        // if (inputs.frontFiducials.length > 0) {
+        //     // TODO: If this seems more accurate than global pose, we need to specifically pass in the front fiducial
+        //     // that corresponds to the tag we're actively targeting, not just the first or closest one
+        //     singleTagPose = singleTagSolver.getPose(inputs.scoringTimestamp, inputs.frontFiducials[0], ROBOT_TO_FRONT_CAMERA);
+        // }
     }
 
     

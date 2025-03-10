@@ -50,8 +50,8 @@ public class Robot extends TimedRobot {
   private final Alert canivoreUsageAlert = new Alert("CANivore bus usage high (> 80%) ", AlertType.kWarning);
 
 
-  @Logged(name = "CANivore Bus Utilization")
-  float canivoreBusUtilization = 0;
+//   @Logged(name = "CANivore Bus Utilization")
+//   float canivoreBusUtilization = 0;
 
   @Logged(name = "Battery Voltage")
   double batteryVoltage = 0;
