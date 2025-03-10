@@ -3,9 +3,6 @@ package frc.robot;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Function;
-import java.util.function.Supplier;
-
 import com.pathplanner.lib.util.FlippingUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -13,22 +10,31 @@ import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.commands.DriveToCoralPose;
 import frc.robot.commands.DriveToPose;
 import frc.robot.subsystems.DrivetrainSubsystem;
-import frc.robot.subsystems.DrivetrainSubsystem.PoseTarget;
-import frc.robot.subsystems.elevator.ElevatorSubsystem;
 import frc.robot.subsystems.vision.VisionSubsystem;
 import frc.robot.util.CoralScoringPosition;
 import frc.robot.util.simulation.SimLogic;
 
 public final class Auto {
 
+    public enum AutoState {
+        IDLE,
+        INTAKING,
+        SCORING
+    }
+
     private static final Transform2d HP_STATION_TRANSFORM = new Transform2d(0, 0, Rotation2d.fromDegrees(150));
     
     private static boolean coralIntaking = false;
+    public static AutoState state = AutoState.IDLE;
     public static CoralScoringPosition previousCoralScoringPosition = null; 
     public static List<CoralScoringPosition> coralScoringPositions = new ArrayList<>();
+
+    public static final Trigger intakingState = new Trigger(() -> state == AutoState.INTAKING);
+    public static final Trigger scoringState = new Trigger(() -> state == AutoState.SCORING);
 
     public static final List<CoralScoringPosition> LEFT_BARGE_CORAL_POSITIONS = List.of(
         new CoralScoringPosition(20, 4, true),
@@ -73,12 +79,12 @@ public final class Auto {
     public static Command driveToHPStation() {
         return Commands.either(
             driveToHPStationFar(),
-            driveToHPStationClose().withMaxSpeed(0.5),
+            driveToHPStationClose().withMaxSpeed(0.5), // TEMPORARY speed limit
             () -> {
                 CoralScoringPosition previous = previousCoralScoringPosition;
                 return previous != null && previous.isFarTag();
             }
-        );
+        ).alongWith(setState(AutoState.INTAKING));
     }
 
     public static DriveToPose driveToHPStationClose() {
@@ -129,6 +135,10 @@ public final class Auto {
         );
     }
 
+    public static Command setState(AutoState newState) {
+        return Commands.runOnce(() -> Auto.state = newState);
+    }
+
     /**
      * Creates a command that configures variables needed for autonomous mode.
      * The Command should be the first one to be executed at the start of autonomous.
@@ -177,11 +187,11 @@ public final class Auto {
 
     // =========== Helper Methods ===========
 
-    private static DriveToPose driveToNextCoralPose() {
+    private static Command driveToNextCoralPose() {
         return new DriveToCoralPose(
             () -> nextCoralScoringPosition().tag,
             (tag) -> nextCoralScoringPosition().getPose()
-        ).withIntermediatePoses(DriveToCoralPose.AVOID_BIG_DIAGONAL);
+        ).withIntermediatePoses(DriveToCoralPose.AVOID_BIG_DIAGONAL)
+        .alongWith(setState(AutoState.SCORING));
     }
-
 }

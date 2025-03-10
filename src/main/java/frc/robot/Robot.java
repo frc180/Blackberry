@@ -18,6 +18,7 @@ import org.ironmaple.simulation.SimulatedArena;
 
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.CANBus.CANBusStatus;
+import com.pathplanner.lib.commands.FollowPathCommand;
 
 import edu.wpi.first.epilogue.Epilogue;
 import edu.wpi.first.wpilibj.Alert;
@@ -75,7 +76,10 @@ public class Robot extends TimedRobot {
   }
 
   @Override
-  public void robotInit() {}
+  public void robotInit() {
+    // Make sure Pathplanner is loaded and ready to go
+    FollowPathCommand.warmupCommand().schedule();
+  }
 
   @Override
   public void robotPeriodic() {

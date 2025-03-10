@@ -590,34 +590,6 @@ public class RobotContainer {
                     );
         }
 
-        // ================= Autonomous Trigger Logic =================
-
-        autoCoralIntake.and(intakeCoral.hasCoral)
-            .onTrue(Auto.driveToReefWithCoral());
-
-        Command autoHPDrive = Auto.driveToHPStation().withDeadline(
-            Commands.waitSeconds(0.25)
-                    .andThen(Commands.waitUntil(() -> vision.getCoralPose() != null))
-        );
-
-        Command autoIntakeCoral = Commands.sequence(
-            autoHPDrive,
-            Auto.driveToCoral()
-                .withMaxSpeed(0.3)
-                .until(intakeCoral.hasCoral) // at this point, the command gets interrupted by the auto coral intake trigger
-        ).alongWith(Auto.startCoralIntake());
-                                    
-        justScoredCoral.and(autonomous).and(drivetrainAvailable).onTrue(
-            Commands.either(
-                autoIntakeCoral,
-                Commands.none(),
-                () -> Auto.nextCoralScoringPosition() != null
-            ).alongWith(Commands.runOnce(() -> {
-                Robot.justScoredCoral = false;
-                vision.resetCoralDetector();
-            }))
-        );
-
         if (leds != null) {
             leds.setDefaultCommand(leds.run(() -> {
                 if (!vision.isScoringCameraConnected()) {
@@ -637,6 +609,34 @@ public class RobotContainer {
                 leds.setAnimation(leds.blueTwinkle);
             }));
         }
+
+        // ================= Autonomous Trigger Logic =================
+
+        Auto.intakingState.and(autoCoralIntake).and(intakeCoral.hasCoral)
+            .onTrue(Auto.driveToReefWithCoral());
+
+        Command autoHPDrive = Auto.driveToHPStation().withDeadline(
+            Commands.waitSeconds(0.25)
+                    .andThen(Commands.waitUntil(() -> vision.getCoralPose() != null))
+        );
+
+        Command autoIntakeCoral = Commands.sequence(
+            autoHPDrive,
+            Auto.driveToCoral()
+                .withMaxSpeed(0.3) // TEMPORARY speed limit
+                .until(intakeCoral.hasCoral) // at this point, the command gets interrupted by the auto coral intake trigger
+        ).alongWith(Auto.startCoralIntake());
+                                    
+        justScoredCoral.and(autonomous).and(drivetrainAvailable).onTrue(
+            Commands.either(
+                autoIntakeCoral,
+                Commands.none(),
+                () -> Auto.nextCoralScoringPosition() != null
+            ).alongWith(Commands.runOnce(() -> {
+                Robot.justScoredCoral = false;
+                vision.resetCoralDetector();
+            }))
+        );
 
         // ====================== TEST CONTROLS ======================
 
