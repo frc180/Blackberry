@@ -598,16 +598,20 @@ public class RobotContainer {
                 }
 
                 if (RobotState.isDisabled()) {
-                    if (DriverStation.isFMSAttached()) {
-                        leds.setAnimation(Robot.isBlue() ? leds.blueFade : leds.redFade);
-                    } else {
+                    if (!vision.hasPoseEstimates.getAsBoolean()) {
+                        leds.setAnimation(leds.yellowLarson);
+                    } else if (!DriverStation.isDSAttached()) {
                         leds.setAnimation(leds.yellowFade);
+                    } else {
+                        leds.setAnimation(Robot.isBlue() ? leds.blueFade : leds.redFade);
                     }
                     return;
                 }
 
-                leds.setAnimation(leds.blueTwinkle);
+                leds.setAnimation(Robot.isBlue() ? leds.blueTwinkle : leds.redTwinkle);
             }));
+
+            disabled.onTrue(leds.animate(leds.yellowFlow).withTimeout(5));
         }
 
         // ================= Autonomous Trigger Logic =================

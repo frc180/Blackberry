@@ -144,12 +144,6 @@ public class VisionSubsystem extends SubsystemBase {
     private final HashMap<Integer, Pose2d> leftReefAlgaePoses = new HashMap<>();
     private final HashMap<Integer, Pose2d> rightReefAlgaePoses = new HashMap<>();
 
-
-    public AprilTagFieldLayout aprilTagFieldLayout;
-    public final Trigger poseEstimateDiffLow;
-    @NotLogged
-    public final Trigger scoringCameraConnected;
-
     private boolean canSeeReef = false;
     public int bestReefID = -1;
     public int lastReefID = -1;
@@ -177,6 +171,12 @@ public class VisionSubsystem extends SubsystemBase {
 
     private Alert scoringCameraTempAlert = new Alert("", AlertType.kWarning);
     private Alert frontCameraTempAlert = new Alert("", AlertType.kWarning);
+
+    public AprilTagFieldLayout aprilTagFieldLayout;
+    public final Trigger poseEstimateDiffLow;
+    @NotLogged
+    public final Trigger scoringCameraConnected;
+    public final Trigger hasPoseEstimates = new Trigger(()-> poseEstimate != null).debounce(0.5);
 
     @SuppressWarnings("unused")
     public VisionSubsystem() {

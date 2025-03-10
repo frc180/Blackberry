@@ -3,6 +3,7 @@ package frc.robot.subsystems.IntakeCoralPivot;
 import static edu.wpi.first.units.Units.*;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.NotLogged;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -16,11 +17,11 @@ import frc.robot.util.simulation.SimVisuals;
 @Logged
 public class IntakeCoralPivotSubsystem extends SubsystemBase {
 
-    enum CoralPivotState {
-        SLAMMING,
-        HOLD,
-        MANUAL
-    }
+    // enum CoralPivotState {
+    //     SLAMMING,
+    //     HOLD,
+    //     MANUAL
+    // }
     
     //presets for intake positions
     public static final double stow = Units.degreesToRotations(90);
@@ -31,7 +32,9 @@ public class IntakeCoralPivotSubsystem extends SubsystemBase {
     private final IntakeCoralPivotIO io;
     private final IntakeCoralPivotIOInputs inputs;
 
-    private CoralPivotState state = CoralPivotState.MANUAL;
+    private final PIDController rioPID;
+
+    // private CoralPivotState state = CoralPivotState.MANUAL;
     private double targetPosition = -1;
     private Trigger isStallingDebounce = new Trigger(this::isStalling).debounce(0.1);
 
@@ -41,6 +44,7 @@ public class IntakeCoralPivotSubsystem extends SubsystemBase {
     public final Trigger atStowPosition = new Trigger(this::isAtStowPosition);
 
     public IntakeCoralPivotSubsystem() {
+        inputs = new IntakeCoralPivotIOInputs();
         if (Robot.isReal()) {
             io = new IntakeCoralPivotIOTalonFXS();
             // io = new IntakeCoralPivotIOSim();
@@ -48,7 +52,8 @@ public class IntakeCoralPivotSubsystem extends SubsystemBase {
             io = new IntakeCoralPivotIOTalonFXS();
         }
 
-        inputs = new IntakeCoralPivotIOInputs();
+        // Unused for now, may be utilized to PID off the string potentiometer
+        rioPID = new PIDController(5, 0, 0);
     }
 
     @Override
@@ -56,6 +61,9 @@ public class IntakeCoralPivotSubsystem extends SubsystemBase {
         // This method will be called once per scheduler run
         io.update(inputs);
         SimVisuals.setCoralIntakeDegrees(180 - getDegrees());
+
+        // double output = rioPID.calculate(inputs.position, targetPosition);
+        // io.setSpeed(output);
 
         // if (state == CoralPivotState.SLAMMING && isStallingDebounce.getAsBoolean()) {
         //     state = CoralPivotState.HOLD;
