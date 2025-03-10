@@ -105,21 +105,21 @@ public class VisionIOLimelight implements VisionIO {
         }
 
         // fps, cpu temp, ram usage, temp
-        double[] hw = LimelightHelpers.getLimelightNTDoubleArray(SCORING_LIMELIGHT, "hw");
-        if (hw.length > 3) {
-            inputs.scoringCPUTemp = hw[1];
-            inputs.scoringTemp = hw[3];
-        } else {
-            inputs.scoringCPUTemp = - 1;
-            inputs.scoringTemp = -1;
-        }
+        // double[] hw = LimelightHelpers.getLimelightNTDoubleArray(SCORING_LIMELIGHT, "hw");
+        // if (hw.length > 3) {
+        //     inputs.scoringCPUTemp = hw[1];
+        //     inputs.scoringTemp = hw[3];
+        // } else {
+        //     inputs.scoringCPUTemp = - 1;
+        //     inputs.scoringTemp = -1;
+        // }
 
-        hw = LimelightHelpers.getLimelightNTDoubleArray(FRONT_LIMEIGHT, "hw");
-        if (hw.length > 3) {
-            inputs.frontTemp = hw[3];
-        } else {
-            inputs.frontTemp = -1;
-        }
+        // hw = LimelightHelpers.getLimelightNTDoubleArray(FRONT_LIMEIGHT, "hw");
+        // if (hw.length > 3) {
+        //     inputs.frontTemp = hw[3];
+        // } else {
+        //     inputs.frontTemp = -1;
+        // }
     }
 
     @Override

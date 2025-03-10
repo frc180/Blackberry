@@ -89,6 +89,11 @@ public abstract class Field {
         reefAlgaePoses = null;
     }
 
+    public static int getAlgaeLevel(int tag) {
+        Integer level = ALGAE_HEIGHTS.get(tag);
+        return level != null ? level : -1;
+    }
+
     public static int blueReefTagToRed(int blueTag) {
         switch(blueTag) {
             case 17:

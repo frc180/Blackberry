@@ -248,9 +248,8 @@ public class VisionSubsystem extends SubsystemBase {
         frontCameraDisconnectedAlert.set(!inputs.frontCameraConnected);
         backCameraDisconnectedAlert.set(!inputs.backCameraConnected);
 
-        cameraTemperatureAlert(scoringCameraTempAlert, "Scoring", inputs.scoringTemp);
-        cameraTemperatureAlert(frontCameraTempAlert, "Front", inputs.frontTemp);
-
+        // cameraTemperatureAlert(scoringCameraTempAlert, "Scoring", inputs.scoringTemp);
+        // cameraTemperatureAlert(frontCameraTempAlert, "Front", inputs.frontTemp);
 
         // If the scoring camera is connected, use its pose estimate
         if (inputs.scoringCameraConnected) {
@@ -270,7 +269,6 @@ public class VisionSubsystem extends SubsystemBase {
             } else {
                 poseEstimate = validatePoseEstimate(inputs.frontPoseEstimate);
             }
-
         }
      
         Pose2d robotPose = null;
@@ -370,6 +368,10 @@ public class VisionSubsystem extends SubsystemBase {
     @Override
     public void simulationPeriodic() {
         io.simulationPeriodic();
+    }
+
+    public void resetCoralDetector() {
+        coralDetector.reset();
     }
 
     public int getReefTag(RawFiducial[] rawFiducial) {

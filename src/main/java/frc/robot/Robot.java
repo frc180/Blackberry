@@ -24,6 +24,7 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -48,6 +49,12 @@ public class Robot extends TimedRobot {
   private final Alert canivoreUsageAlert = new Alert("CANivore bus usage high (> 80%) ", AlertType.kWarning);
 
 
+  @Logged(name = "CANivore Bus Utilization")
+  float canivoreBusUtilization = 0;
+
+  @Logged(name = "Battery Voltage")
+  double batteryVoltage = 0;
+
   StructArrayPublisher<Pose3d> robotComponentPoses = NetworkTableInstance.getDefault()
                                                     .getStructArrayTopic("Robot Component Poses", Pose3d.struct)
                                                     .publish();
@@ -70,9 +77,6 @@ public class Robot extends TimedRobot {
   @Override
   public void robotInit() {}
 
-  @Logged(name = "CANivore Bus Utilization")
-  float canivoreBusUtilization = 0;
-
   @Override
   public void robotPeriodic() {
     StatusSignals.refreshAll();
@@ -86,6 +90,8 @@ public class Robot extends TimedRobot {
     // Get all robot component (mechanism) poses and publish them to NetworkTables
     robotComponentPosesArray[0] = robotContainer.intakeAlgaePivot.getPose();
     robotComponentPoses.accept(robotComponentPosesArray);
+
+    batteryVoltage = RobotController.getBatteryVoltage();
 
     /*
      * This example of adding Limelight is very simple and may not be sufficient for on-field use.

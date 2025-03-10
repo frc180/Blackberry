@@ -173,7 +173,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     private double[] startWheelPositions = new double[4];
     private double currentEffectiveWheelRadius = 0;
 
-    public final Trigger almostStationary = belowSpeed(Inches.of(1.5).per(Second));
+    public final Trigger almostStationary = belowSpeed(Inches.of(1).per(Second)); // was 1.5
 
     /* SysId routine for characterizing translation. This is used to find PID gains for the drive motors. */
     private final SysIdRoutine m_sysIdRoutineTranslation = new SysIdRoutine(

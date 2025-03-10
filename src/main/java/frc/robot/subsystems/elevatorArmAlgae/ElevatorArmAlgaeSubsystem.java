@@ -13,9 +13,9 @@ import frc.robot.subsystems.elevatorArmAlgae.ElevatorArmAlgaeIO.ElevatorArmAlgae
 @Logged
 public class ElevatorArmAlgaeSubsystem extends SubsystemBase {
 
-    protected static final double FAR_OBJECT_THRESHOLD = 0.25; // was 0.23 which is probably too low
-    protected static final double CLOSE_OBJECT_THRESHOLD = 0.16;
-    protected static final double HAS_ALGAE_THRESHOLD = 0.149;
+    protected static final double FAR_OBJECT_THRESHOLD = 0.28; // was 0.23 which is probably too low
+    protected static final double CLOSE_OBJECT_THRESHOLD = 0.17; // was 0.16
+    protected static final double HAS_ALGAE_THRESHOLD = 0.14;
 
     ElevatorArmAlgaeIO io;
     ElevatorArmAlgaeInputs inputs;

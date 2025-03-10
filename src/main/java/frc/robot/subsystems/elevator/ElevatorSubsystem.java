@@ -51,6 +51,9 @@ public class ElevatorSubsystem extends SubsystemBase {
     public Trigger elevatorInPosition = new Trigger(this::isElevatorInPosition);
     @NotLogged
     public Trigger elevatorInScoringPosition = new Trigger(this::isElevatorInScoringPosition);
+    public Trigger inReefPosition = new Trigger(this::isInReefPosition);
+
+    public String activeCommand = "none";
 
     private final SysIdRoutine sysIdRoutine = new SysIdRoutine(
             new SysIdRoutine.Config(
@@ -74,11 +77,27 @@ public class ElevatorSubsystem extends SubsystemBase {
         io.update(inputs);
         SimVisuals.setElevatorHeight(inputs.position);
 
+        // Command current = getCurrentCommand();
+        // if (current != null) {
+        //     activeCommand = current.getName();
+        // } else {
+        //     activeCommand = "null";
+        // }
+
         // To be considered homed, the elevator must be at the lower limit and the motor
         // position must be within 0.01 meters of 0
-        if (isAtLowerLimit() && Math.abs(inputs.position) <= 0.01) {
+        if (isAtLowerLimit() && Math.abs(inputs.position) <= 0.001) {
             hasHomed = true;
         }
+
+        // if (atLowerLimitDebounced.getAsBoolean()) {
+        //     if (Math.abs(inputs.position) > 0.001) {
+        //         io.zero();
+        //     }
+        //     hasHomed = true;
+        // }
+
+
         notHomedAlert.set(!hasHomed);
 
         softStowLogic();
@@ -104,33 +123,34 @@ public class ElevatorSubsystem extends SubsystemBase {
         return hasHomed;
     }
 
-    public Command home() {
-        return runOnce(() -> hasHomed = false)
-                .andThen(runSpeed(-0.03).until(atLowerLimitDebounced))
-                .andThen(runOnce(() -> io.zero()))
-                .withInterruptBehavior(InterruptionBehavior.kCancelIncoming);
-    }
+    // public Command home() {
+    //     return runOnce(() -> hasHomed = false)
+    //             .andThen(runSpeed(-0.03).until(atLowerLimitDebounced))
+    //             .andThen(runOnce(() -> io.zero()))
+    //             .withInterruptBehavior(InterruptionBehavior.kCancelIncoming);
+    // }
 
     public Command stow() {
-        return setPosition(STOW);
+        return setPosition(STOW).withName("stow");
     }
 
     public Command zero() {
-        return setPosition(ZERO);
+        return setPosition(ZERO).withName("zero");
     }
 
     public Command setPosition(Distance position) {
-        return run(() -> setPositionDirect(position));
+        return run(() -> setPositionDirect(position)).withName("set position");
     }
 
     public Command runSpeed(double speed) {
         return runEnd(
                 () -> io.setPower(speed),
-                () -> io.stopMotor());
+                () -> io.stopMotor()
+        ).withName("runSpeed " + speed);
     }
 
     public Command stop() {
-        return run(() -> io.stopMotor());
+        return run(() -> io.stopMotor()).withName("stop");
     }
 
     public Command sysIdQuasi(SysIdRoutine.Direction direction) {
@@ -165,6 +185,12 @@ public class ElevatorSubsystem extends SubsystemBase {
 
     public boolean isElevatorInScoringPosition() {
         return isElevatorInPosition() && targetPosition != ZERO && targetPosition != STOW;
+    }
+
+    public boolean isInReefPosition() {
+        return isElevatorInPosition() && (
+            targetPosition == L1 || targetPosition == L2 || targetPosition == L3 || targetPosition == L4  
+        );
     }
 
     public boolean isTargetingReefAlgaePosition() {

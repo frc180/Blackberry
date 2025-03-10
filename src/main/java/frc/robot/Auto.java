@@ -73,7 +73,7 @@ public final class Auto {
     public static Command driveToHPStation() {
         return Commands.either(
             driveToHPStationFar(),
-            driveToHPStationClose(),
+            driveToHPStationClose().withMaxSpeed(0.5),
             () -> {
                 CoralScoringPosition previous = previousCoralScoringPosition;
                 return previous != null && previous.isFarTag();
@@ -123,7 +123,10 @@ public final class Auto {
     }
 
     public static Command driveToReefWithCoral() {
-        return driveToNextCoralPose().alongWith(Auto.stopCoralIntake());
+        return driveToNextCoralPose().alongWith(
+            Commands.waitUntil(RobotContainer.instance.elevatorArm.hasCoral)
+                    .andThen(Auto.stopCoralIntake())
+        );
     }
 
     /**
