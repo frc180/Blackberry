@@ -211,7 +211,7 @@ public class RobotContainer {
         final Trigger driverAlgaeDescore = driverController.a().and(coralMode);
         driverLeftReef = driverController.x().and(coralMode);
         driverRightReef = driverController.b().and(coralMode).or(driverAlgaeDescore);
-        Trigger driverAnyReef = driverLeftReef.or(driverRightReef);
+        final Trigger driverAnyReef = driverLeftReef.or(driverRightReef);
         //algae
         final Trigger driverProcessor = algaeMode.and(driverController.b());
         final Trigger driverNet = algaeMode.and(driverController.x());
@@ -228,14 +228,24 @@ public class RobotContainer {
         final Trigger drivetrainAvailable = new Trigger(() -> drivetrain.getCurrentCommand() == drivetrain.getDefaultCommand());
         final Trigger scoringCameraDisconnected = vision.scoringCameraConnected.negate();
 
-        Trigger reefAlgaeTarget = driverRightReef.and(driverL2.or(driverL3));
+        final Trigger targetingL2_3 = driverL2.or(driverL3);
+        final Trigger reefAlgaeTarget = driverRightReef.and(targetingL2_3);
 
-        // TODO: probably change these triggers (or where they're used) to also return true if the scoring camera is disconnected
-        nearReef = drivetrain.targetingReef().and(drivetrain.withinTargetPoseTolerance(         
+        // Trigger l2_3NearReef = targetingL2_3.and(drivetrain.withinTargetPoseTolerance(
+        //     Meters.of(1),
+        //     Meters.of(1),
+        //     Degrees.of(90)
+        // ));
+
+        nearReef = drivetrain.targetingReef().and(
+                    drivetrain.withinTargetPoseTolerance(         
                         Meters.of(0.75), // was 1, then 0.5, then 0.6
                         Meters.of(0.75), // was 1, then 0.5, then 0.6
                         Degrees.of(90)
-        ));//.debounce(0.2, DebounceType.kFalling); 
+                    )//.or(l2_3NearReef)
+        );
+
+
 
         Trigger almostAtReef = drivetrain.targetingReef().and(drivetrain.withinTargetPoseTolerance(
                         Inches.of(3), 
@@ -276,7 +286,7 @@ public class RobotContainer {
     
         drivetrain.setDefaultCommand(new DefaultDriveCommand(drivetrain, joystickInputsSupplier, rotationSupplier));
         driverController.back().onTrue(Commands.runOnce(drivetrain::zeroGyroscope));
-        driverController.start().whileTrue(drivetrain.wheelRadiusCharacterization(1));
+        // driverController.start().whileTrue(drivetrain.wheelRadiusCharacterization(1));
 
         // Coral reef auto-aligns
         driverLeftReef.whileTrue(new DriveToCoralPose(
