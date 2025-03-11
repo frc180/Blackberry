@@ -303,13 +303,8 @@ public class RobotContainer {
             }
         ).withDynamicTarget(true));
 
+        // Ensure we reset if we cancelled mid-score previously
         driverAnyReef.onTrue(Commands.runOnce(() -> Robot.currentlyScoringCoral = false));
-        
-        // test outtaking algae
-        driverSpitAlgae.whileTrue(Commands.parallel(
-           elevatorArmPivot.setPosition(elevatorArmPivot.L1_SCORE),
-           Commands.waitUntil(elevatorArmPivot::isElevatorArmInPosition).andThen(elevatorArmAlgae.runSpeed(-1))
-        ));
 
         // Driver Coral Intake
         coralIntakeTrigger = driverIntake.and(driverL1.negate())
@@ -471,7 +466,7 @@ public class RobotContainer {
         Trigger finalReefTrigger = nearReefModified.and(reefDeployAllowed).or(isScoringCoral);
 
         finalReefTrigger
-            .whileTrue(chosenElevatorHeight.alongWith(elevatorArmPivot.matchElevatorPreset()))//, elevatorArmAlgae.intakeBasedOnElevator()))
+            .whileTrue(chosenElevatorHeight.alongWith(elevatorArmPivot.matchElevatorPreset()))
             .onFalse(elevator.stow().alongWith(elevatorArmPivot.receivePosition()));
 
         // Experimental - start intaking algae earlier\
@@ -553,6 +548,14 @@ public class RobotContainer {
         //     )
         // );
 
+        // Outtaking algae without trying to score it
+        driverSpitAlgae.whileTrue(elevatorArmPivot.setPosition(ElevatorArmPivotSubsystem.L1_SCORE))
+                       .onFalse(elevatorArmPivot.stowPosition());
+
+        driverSpitAlgae.and(elevatorArmPivot::isElevatorArmInPosition)
+                       .and(() -> elevatorArmPivot.getTargetPosition() == ElevatorArmPivotSubsystem.L1_SCORE)
+                       .whileTrue(elevatorArmAlgae.runSpeed(-1));
+
         // Start moving to score algae in net
         driverNet.whileTrue(
             Commands.parallel(
@@ -565,24 +568,13 @@ public class RobotContainer {
                 // )
             )
         ).onFalse(Commands.sequence(
-                Commands.either(
-                    elevatorArmAlgae.runSpeed(-1).withTimeout(0.5),
-                    Commands.none(),
-                    elevator.elevatorInPosition
-                ),
-                elevator.stow().alongWith(elevatorArmPivot.stowPosition(), elevatorArmAlgae.stop())
-            ));
-
-        if (Robot.isSimulation()) {
-            // Scoring algae in the net from arm
-            driverNet//.and(drivetrain.withinTargetHeadingTolerance(Degrees.of(5)))
-                    .and(elevator.elevatorInScoringPosition)
-                    .and(elevatorArmPivot.elevatorArmInScoringPosition)
-                    .and(elevatorArmAlgae.hasAlgae).whileTrue(
-                        elevatorArmAlgae.runSpeed(-1)
-                                        .until(elevatorArmAlgae.closeAlgae.negate().debounce(0.2))
-                    );
-        }
+            Commands.either(
+                elevatorArmAlgae.runSpeed(-1).withTimeout(0.5),
+                Commands.none(),
+                elevator.elevatorInPosition
+            ),
+            elevator.stow().alongWith(elevatorArmPivot.stowPosition())//, elevatorArmAlgae.stop())
+        ));
 
         if (leds != null) {
             leds.setDefaultCommand(leds.run(() -> {

@@ -95,16 +95,27 @@ public final class Auto {
                                 });
     }
 
+    private static final Pose2d leftBlueHPStation = new Pose2d(SimLogic.blueHPCoralPose.getTranslation(), Rotation2d.kZero);
+    private static final Pose2d leftRedHPStation = new Pose2d(SimLogic.redHPCoralPose.getTranslation(), Rotation2d.kZero);
+    private static final Translation2d hpStationDriveOffset = new Translation2d(3, -0.5);
+
     private static Command driveToHPStationFar() {
         DrivetrainSubsystem drivetrain = RobotContainer.instance.drivetrain;
         return Commands.defer(() -> {
             double sign = Robot.isBlue() ? 1 : -1;
 
-            Pose2d hpStation = new Pose2d((Robot.isBlue() ? SimLogic.blueHPCoralPose : SimLogic.redHPCoralPose).getTranslation(), Rotation2d.kZero);
-            Translation2d end = hpStation.getTranslation().plus(new Translation2d(2 * sign, -0.5 * sign));
+            // Pose2d hpStation = new Pose2d((Robot.isBlue() ? SimLogic.blueHPCoralPose : SimLogic.redHPCoralPose).getTranslation(), Rotation2d.kZero);
+            // Translation2d end = hpStation.getTranslation().plus(new Translation2d(3 * sign, -0.5 * sign));
+            Pose2d hpStation = Robot.isBlue() ? leftBlueHPStation : leftRedHPStation;
+            Translation2d end;
+            if (Robot.isBlue()) {
+                end = hpStation.getTranslation().plus(hpStationDriveOffset);
+            } else {
+                end = hpStation.getTranslation().minus(hpStationDriveOffset);
+            }
             List<Pose2d> pathA = List.of(
                 new Pose2d(drivetrain.getPose().getTranslation(), Rotation2d.fromDegrees(90 * sign)),
-                new Pose2d(end, Rotation2d.fromDegrees(0)),
+                new Pose2d(end, Rotation2d.kZero),
                 new Pose2d(end, Rotation2d.fromDegrees(160 - (Robot.isBlue() ? 180 : 0)))
             );
             return drivetrain.followPath(pathA, 0, true);

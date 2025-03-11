@@ -72,6 +72,7 @@ public class Robot extends TimedRobot {
 
     robotContainer = new RobotContainer();
     DataLogManager.start();
+    DriverStation.startDataLog(DataLogManager.getLog());
     Epilogue.bind(this);
   }
 

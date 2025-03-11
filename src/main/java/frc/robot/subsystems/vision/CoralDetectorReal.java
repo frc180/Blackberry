@@ -32,6 +32,9 @@ public class CoralDetectorReal implements CoralDetector {
     // to allow switching without a timeout
     private final double SIMILAR_CORAL_THRESHOLD = 0.75;
 
+    // Experimental
+    private final double CORAL_FURTHER_THRESHOLD = 0.6;
+
     private double lastDetectionTime = 0;
     private double lastDetectionDistance = 0;
     private Pose2d lastDetection = null;
@@ -110,14 +113,15 @@ public class CoralDetectorReal implements CoralDetector {
                 continue;
             }
 
-            double distDiff = 0;
+            double robotDist = coralPose.getTranslation().getDistance(robotPose.getTranslation());
             if (recentLastDetection != null) {
-                distDiff = coralPose.getTranslation().getDistance(recentLastDetection.getTranslation());
-                if (distDiff > SIMILAR_CORAL_THRESHOLD) continue;
+                // double distDiff = coralPose.getTranslation().getDistance(recentLastDetection.getTranslation());
+                // if (distDiff > SIMILAR_CORAL_THRESHOLD) continue;
+                if (robotDist > lastDetectionDistance + CORAL_FURTHER_THRESHOLD) continue;
             }
 
             lastDetectionTime = Timer.getFPGATimestamp();
-            lastDetectionDistance = coralPose.getTranslation().getDistance(robotPose.getTranslation());
+            lastDetectionDistance = robotDist;
             lastDetection = coralPose;
             return coralPose;
         }
@@ -136,9 +140,10 @@ public class CoralDetectorReal implements CoralDetector {
 
     @NotLogged
     private Pose2d getRecentLastDetection() {
-        if (RobotState.isAutonomous() && lastDetectionClose()) return lastDetection;
+        boolean lastClose = lastDetectionClose();
+        if (RobotState.isAutonomous() && lastClose) return lastDetection;
 
-        double timeoutSeconds = lastDetectionClose() ? 3 : 0.5;
+        double timeoutSeconds = lastClose ? 3 : 0.5;
         if (Timer.getFPGATimestamp() - lastDetectionTime < timeoutSeconds) {
             return lastDetection;
         }

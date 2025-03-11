@@ -25,7 +25,8 @@ public class ElevatorArmAlgaeSubsystem extends SubsystemBase {
     private double distanceFiltered = 0;
 
     public final Trigger hasAlgae;
-    public final Trigger farAlgae, closeAlgae, closeAlgaeDebounced;
+    public final Trigger hadAlgae;
+    // public final Trigger closeAlgae, closeAlgaeDebounced;
 
 
     public ElevatorArmAlgaeSubsystem() {
@@ -35,41 +36,26 @@ public class ElevatorArmAlgaeSubsystem extends SubsystemBase {
             // io = new ElevatorArmAlgaeIOSim();
         } else {
             io = new ElevatorArmAlgaeIOTalonFX();
-            // io = new ElevatorArmAlgaeIOSim();
         }
 
-        farAlgae = new Trigger(() -> distanceFiltered > FAR_OBJECT_THRESHOLD);
-        closeAlgae = new Trigger(() -> distanceFiltered < CLOSE_OBJECT_THRESHOLD);
+        // farAlgae = new Trigger(() -> distanceFiltered > FAR_OBJECT_THRESHOLD);
+        // closeAlgae = new Trigger(() -> distanceFiltered < CLOSE_OBJECT_THRESHOLD);
         hasAlgae = new Trigger(() -> distanceFiltered < HAS_ALGAE_THRESHOLD);
 
-        closeAlgaeDebounced = closeAlgae.debounce(1, DebounceType.kFalling);
+        hadAlgae = hasAlgae.debounce(1.5, DebounceType.kFalling);
+        // closeAlgaeDebounced = closeAlgae.debounce(1, DebounceType.kFalling);
     }
 
     @Override
     public void periodic() {
         io.update(inputs);
-        distanceFiltered = inputs.distance;
-        // distanceFiltered = distanceFilter.calculate(inputs.distance);
+        // distanceFiltered = inputs.distance;
+        distanceFiltered = distanceFilter.calculate(inputs.distance);
     }
     
     @Override
     public void simulationPeriodic() {
         io.simulationPeriodic();
-    }
-
-    // TODO: Minor fix - prevent this from running when doing left-aligned L2 and L3 (since we only get algae from the right side)
-    public Command intakeBasedOnElevator() {
-        ElevatorSubsystem elevator = RobotContainer.instance.elevator;
-        return runEnd(
-            () -> {
-                if (elevator.isTargetingReefAlgaePosition()) {
-                    io.setSpeed(0.5);
-                } else {
-                    io.setSpeed(0);
-                }
-            },
-            () -> io.setSpeed(0)
-        );
     }
 
     public Command intakeAndIndex(double speed) {
@@ -85,7 +71,7 @@ public class ElevatorArmAlgaeSubsystem extends SubsystemBase {
             () -> {
                 if (hasAlgae.getAsBoolean()) {
                     io.setSpeed(0.05);
-                } else if (closeAlgaeDebounced.getAsBoolean() ) {
+                } else if (hadAlgae.getAsBoolean()) { // } else if (closeAlgaeDebounced.getAsBoolean() ) {
                     io.setSpeed(indexSpeed);
                 } else {
                     io.setSpeed(idleSpeed);

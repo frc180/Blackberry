@@ -293,7 +293,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         yProfiledPid = new ProfiledPIDController(translationP, translationI, translationD, driveToPoseConstraints);
         
 
-        rotationProfiledPid = new ProfiledPIDController(4, 0., 0, // was 5
+        rotationProfiledPid = new ProfiledPIDController(5, 0., 0,
                                         new TrapezoidProfile.Constraints(MAX_ANGULAR_RATE, MAX_ANGULAR_ACCEL));
         rotationProfiledPid.enableContinuousInput(-Math.PI, Math.PI);
 
@@ -688,7 +688,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
                 (speeds, feedforwards) -> drive(speeds),
                 new PPHolonomicDriveController(
                     new PIDConstants(2.5, 0, 0), //translation
-                    new PIDConstants(5, 0, 0)), //rotation
+                    new PIDConstants(4, 0, 0)), //rotation, was 5
                 config,
                 Robot::isRed, //path flips for red/blue alliance
                 this // Subsystem for requirements
