@@ -28,6 +28,7 @@ public class CoralDetectorReal implements CoralDetector {
 
     // How close to the robot a detected coral has to be to be considered "close" (i.e. intakeable)
     private final double CLOSE_CORAL_DISTANCE = 0.75;
+    private final double CLOSE_CORAL_TX = 10;
     // How close two detected coral have to be to each other to be considered the same/close enough 
     // to allow switching without a timeout
     private final double SIMILAR_CORAL_THRESHOLD = 0.75;
@@ -37,6 +38,7 @@ public class CoralDetectorReal implements CoralDetector {
 
     private double lastDetectionTime = 0;
     private double lastDetectionDistance = 0;
+    private double lastDetectionTX = 0;
     private Pose2d lastDetection = null;
 
     public CoralDetectorReal() {
@@ -114,7 +116,7 @@ public class CoralDetectorReal implements CoralDetector {
             }
 
             double robotDist = coralPose.getTranslation().getDistance(robotPose.getTranslation());
-            if (recentLastDetection != null) {
+            if (recentLastDetection != null && !RobotState.isAutonomous()) {
                 // double distDiff = coralPose.getTranslation().getDistance(recentLastDetection.getTranslation());
                 // if (distDiff > SIMILAR_CORAL_THRESHOLD) continue;
                 if (robotDist > lastDetectionDistance + CORAL_FURTHER_THRESHOLD) continue;
@@ -122,6 +124,7 @@ public class CoralDetectorReal implements CoralDetector {
 
             lastDetectionTime = Timer.getFPGATimestamp();
             lastDetectionDistance = robotDist;
+            lastDetectionTX = detection.txnc;
             lastDetection = coralPose;
             return coralPose;
         }
@@ -143,7 +146,7 @@ public class CoralDetectorReal implements CoralDetector {
         boolean lastClose = lastDetectionClose();
         if (RobotState.isAutonomous() && lastClose) return lastDetection;
 
-        double timeoutSeconds = lastClose ? 3 : 0.2;
+        double timeoutSeconds = lastClose ? 3 : 0.5;
         if (Timer.getFPGATimestamp() - lastDetectionTime < timeoutSeconds) {
             return lastDetection;
         }
@@ -151,7 +154,9 @@ public class CoralDetectorReal implements CoralDetector {
     }
 
     private boolean lastDetectionClose() {
-        return lastDetection != null && lastDetectionDistance < CLOSE_CORAL_DISTANCE;
+        if (lastDetection == null) return false;
+
+        return lastDetectionDistance < CLOSE_CORAL_DISTANCE;// && Math.abs(lastDetectionTX) < CLOSE_CORAL_TX;
     }
 
     private double tXYCombined(RawDetection detection) {
