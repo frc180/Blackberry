@@ -90,14 +90,18 @@ public final class Auto {
 
     private static DriveToPose driveToHPStationClose() {
         return new DriveToPose(RobotContainer.instance.drivetrain, () -> {
-                                    Pose2d hpStation = Robot.isBlue() ? SimLogic.blueHPCoralPose : SimLogic.redHPCoralPose;
-                                    return hpStation.transformBy(HP_STATION_TRANSFORM);
+                                    Pose2d robotPose = RobotContainer.instance.drivetrain.getPose();
+                                    Pose2d hpStation = (Robot.isBlue() ? SimLogic.blueHPCoralPose : SimLogic.redHPCoralPose).transformBy(HP_STATION_TRANSFORM);
+                                    double distance = robotPose.getTranslation().getDistance(hpStation.getTranslation());
+                                    double targetDistance = distance - 1.5;
+                                    Translation2d target = robotPose.getTranslation().interpolate(hpStation.getTranslation(), targetDistance / distance);
+                                    return new Pose2d(target, hpStation.getRotation());
                                 });
     }
 
     private static final Pose2d leftBlueHPStation = new Pose2d(SimLogic.blueHPCoralPose.getTranslation(), Rotation2d.kZero);
     private static final Pose2d leftRedHPStation = new Pose2d(SimLogic.redHPCoralPose.getTranslation(), Rotation2d.kZero);
-    private static final Translation2d hpStationDriveOffset = new Translation2d(3, -0.5);
+    private static final Translation2d hpStationDriveFarOffset = new Translation2d(3, -0.5);
 
     private static Command driveToHPStationFar() {
         DrivetrainSubsystem drivetrain = RobotContainer.instance.drivetrain;
@@ -109,9 +113,9 @@ public final class Auto {
             Pose2d hpStation = Robot.isBlue() ? leftBlueHPStation : leftRedHPStation;
             Translation2d end;
             if (Robot.isBlue()) {
-                end = hpStation.getTranslation().plus(hpStationDriveOffset);
+                end = hpStation.getTranslation().plus(hpStationDriveFarOffset);
             } else {
-                end = hpStation.getTranslation().minus(hpStationDriveOffset);
+                end = hpStation.getTranslation().minus(hpStationDriveFarOffset);
             }
             List<Pose2d> pathA = List.of(
                 new Pose2d(drivetrain.getPose().getTranslation(), Rotation2d.fromDegrees(90 * sign)),

@@ -27,18 +27,22 @@ public class CoralDetectorReal implements CoralDetector {
     private final MutDistance coralDistance;
 
     // How close to the robot a detected coral has to be to be considered "close" (i.e. intakeable)
-    private final double CLOSE_CORAL_DISTANCE = 0.6;
-    private final double CLOSE_CORAL_TX = 10;
+    private final static double CLOSE_CORAL_DISTANCE = 0.6;
+    private final static double CLOSE_CORAL_TX = 10;
     // How close two detected coral have to be to each other to be considered the same/close enough 
     // to allow switching without a timeout
-    private final double SIMILAR_CORAL_THRESHOLD = 0.75;
+    private final static double SIMILAR_CORAL_THRESHOLD = 0.75;
 
     // Experimental
-    private final double CORAL_FURTHER_THRESHOLD = 0.6;
+    private final static double CORAL_FURTHER_THRESHOLD = 0.6;
 
+    private boolean newCoralValue = false;
     private double lastDetectionTime = 0;
     private double lastDetectionDistance = 0;
     private double lastDetectionTX = 0;
+    private double lastDetectionWidth = 0;
+    private double lastDetectionHeight = 0;
+    private double lastDetectionRatio = 0;
     private Pose2d lastDetection = null;
 
     public CoralDetectorReal() {
@@ -71,6 +75,7 @@ public class CoralDetectorReal implements CoralDetector {
 
     @Override
     public Pose2d getCoralPose(Pose2d robotPose, RawDetection[] detections) {
+        newCoralValue = false;
         Pose2d recentLastDetection = getRecentLastDetection();
         if (robotPose == null || detections == null || detections.length == 0) {
             return recentLastDetection;
@@ -101,14 +106,6 @@ public class CoralDetectorReal implements CoralDetector {
             double degrees = detection.txnc;
             double radians = Units.degreesToRadians(degrees);
 
-            SmartDashboard.putBoolean("Coral Present", true);
-            SmartDashboard.putNumber("Coral TY", detection.tync);
-            SmartDashboard.putNumber("Coral TX", detection.txnc);
-            SmartDashboard.putNumber("Coral Distance", coralDistance.mut_replace(distanceMeters, Meters).in(Inches));
-            SmartDashboard.putNumber("Coral Width", width(detection));
-            SmartDashboard.putNumber("Coral Height", height(detection));
-            SmartDashboard.putNumber("Coral Ratio", width(detection) / height(detection));
-
             double yComponent = distanceMeters * Math.tan(radians);
             Transform2d coralTransform = new Transform2d(distanceMeters, -yComponent, Rotation2d.kZero);
             Pose2d coralPose = basePose.transformBy(coralTransform);
@@ -124,14 +121,17 @@ public class CoralDetectorReal implements CoralDetector {
                 // if (robotDist > lastDetectionDistance + CORAL_FURTHER_THRESHOLD) continue;
             }
 
+            lastDetection = coralPose;
             lastDetectionTime = Timer.getFPGATimestamp();
             lastDetectionDistance = robotDist;
             lastDetectionTX = detection.txnc;
-            lastDetection = coralPose;
+            lastDetectionWidth = width(detection);
+            lastDetectionHeight = height(detection);
+            lastDetectionRatio = lastDetectionWidth / lastDetectionHeight;
+            newCoralValue = true;
             return coralPose;
         }
 
-        SmartDashboard.putBoolean("Coral Present", false);
         // If we didn't find any coral, return the last detection if it was very recent
         return recentLastDetection;
     }
@@ -143,7 +143,6 @@ public class CoralDetectorReal implements CoralDetector {
         lastDetectionTime = 0;
     }
 
-    @NotLogged
     private Pose2d getRecentLastDetection() {
         boolean lastClose = lastDetectionClose();
         if (RobotState.isAutonomous() && lastClose) return lastDetection;
@@ -155,7 +154,7 @@ public class CoralDetectorReal implements CoralDetector {
         return null;
     }
 
-    private boolean lastDetectionClose() {
+    public boolean lastDetectionClose() {
         if (lastDetection == null) return false;
 
         return lastDetectionDistance < CLOSE_CORAL_DISTANCE;// && Math.abs(lastDetectionTX) < CLOSE_CORAL_TX;

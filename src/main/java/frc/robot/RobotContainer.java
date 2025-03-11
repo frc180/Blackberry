@@ -30,6 +30,7 @@ import java.util.function.Supplier;
 import com.pathplanner.lib.util.FlippingUtil;
 import com.spamrobotics.util.JoystickInputs;
 import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.epilogue.NotLogged;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -113,7 +114,8 @@ public class RobotContainer {
     private final SendableChooser<Command> autoChooser = new SendableChooser<Command>();
 
     public Trigger robotHasCoral = new Trigger(() -> false);
-    public Trigger robotHasAlgae = new Trigger(() -> false);;
+    public Trigger robotHasAlgae = new Trigger(() -> false);
+    @NotLogged
     public Trigger coralIntakeTrigger = new Trigger(() -> false);
     public Trigger driverRightReef = new Trigger(() -> false);
     public Trigger driverLeftReef = new Trigger(() -> false);
@@ -242,8 +244,8 @@ public class RobotContainer {
         ));
 
         atReef = drivetrain.targetingReef().and(drivetrain.withinTargetPoseTolerance(
-                        Inches.of(1), // was 1
-                        Inches.of(1), // was 1
+                        Inches.of(1),
+                        Inches.of(1),
                         Degrees.of(2)
         ));
 
@@ -513,7 +515,7 @@ public class RobotContainer {
             Commands.sequence(
                 Commands.runOnce(() -> Robot.currentlyScoringCoral = true)
                         .alongWith(drivetrain.runOnce(() -> drivetrain.drive(new ChassisSpeeds())))
-                        .alongWith(scoringSequence), //.alongWith(elevatorArmEject, obtainAlgae),
+                        .alongWith(scoringSequence),
                 Commands.runOnce(() -> {
                     elevatorArmPivot.setArmPositionDirect(ElevatorArmPivotSubsystem.receiving);
                     Robot.currentlyScoringCoral = false;
@@ -605,9 +607,14 @@ public class RobotContainer {
         Auto.intakingState.and(autoCoralIntake).and(intakeCoral.hasCoral)
             .onTrue(Auto.driveToReefWithCoral());
 
+        Command coralTrackingDelay = Commands.either(
+            Commands.waitSeconds(0.5),
+            Commands.waitSeconds(0.25),
+            () -> Auto.previousCoralScoringPosition.isFrontMiddle()
+        );
+
         Command autoHPDrive = Auto.driveToHPStation().withDeadline(
-            Commands.waitSeconds(0.25)
-                    .andThen(Commands.waitUntil(() -> vision.getCoralPose() != null))
+            coralTrackingDelay.andThen(Commands.waitUntil(() -> vision.getCoralPose() != null))
         );
 
         Command autoIntakeCoral = Commands.sequence(
@@ -752,7 +759,7 @@ public class RobotContainer {
     }
 
     private Command coralEject() {
-        Command l4CoralEject = elevatorArm.runSpeed(0.35).until(elevatorArm.hasNoCoral) //was .425
+        Command l4CoralEject = elevatorArm.runSpeed(0.4).until(elevatorArm.hasNoCoral) //was .425
                                           .andThen(Commands.waitSeconds(0.2));
         Command l1CoralEject = elevatorArm.runSpeed(0.4).until(elevatorArm.hasNoCoral);
         Command coralEject = elevatorArm.runSpeed(0.35).until(elevatorArm.hasNoCoral)

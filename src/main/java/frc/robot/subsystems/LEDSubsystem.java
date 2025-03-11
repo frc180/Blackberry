@@ -2,6 +2,7 @@ package frc.robot.subsystems;
 
 import com.ctre.phoenix.led.Animation;
 import com.ctre.phoenix.led.CANdle;
+import com.ctre.phoenix.led.CANdleConfiguration;
 import com.ctre.phoenix.led.ColorFlowAnimation;
 import com.ctre.phoenix.led.LarsonAnimation;
 import com.ctre.phoenix.led.RainbowAnimation;
@@ -16,10 +17,6 @@ import frc.robot.Constants;
 
 public class LEDSubsystem extends SubsystemBase {
 
-    private final int NUM_LEDS = 8 + 60;
-    private final int STRIP_OFFSET = 0;
-    private final CANdle candle;
-
     public final LEDColor RED = new LEDColor(255, 0, 0, 255);
     // public final LEDColor BLUE = new LEDColor(0, 0, 255, 255); // primary blue
     public final LEDColor BLUE = new LEDColor(21, 46, 99, 255); // navy blue
@@ -32,8 +29,18 @@ public class LEDSubsystem extends SubsystemBase {
     public final ColorFlowAnimation yellowFlow;
     public final LarsonAnimation yellowLarson;
 
+    private final int NUM_LEDS = 8 + 60;
+    private final int STRIP_OFFSET = 0;
+    private final CANdle candle;
+
+    private Animation currentAnimation = null;
+
     public LEDSubsystem() {
+        CANdleConfiguration config = new CANdleConfiguration();
+        config.disableWhenLOS = true;
+        config.statusLedOffWhenActive = true;
         candle = new CANdle(Constants.CANDLE);
+        candle.configAllSettings(config);
 
         rainbow = new RainbowAnimation(1, 1, NUM_LEDS, false, STRIP_OFFSET);
 
@@ -53,7 +60,10 @@ public class LEDSubsystem extends SubsystemBase {
     }
 
     public void setAnimation(Animation animation) {
-        candle.animate(animation);
+        if (animation != currentAnimation) {
+            candle.animate(animation);
+            currentAnimation = animation;
+        }
     }
 
     public SingleFadeAnimation fade(LEDColor color, double speed) {

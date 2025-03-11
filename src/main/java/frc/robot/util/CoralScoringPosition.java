@@ -27,6 +27,10 @@ public class CoralScoringPosition {
         return tag >= 9 && tag <= 11 || tag >= 20 && tag <= 22;
     }
 
+    public boolean isFrontMiddle() {
+        return tag == 7 || tag == 18;
+    }
+
     public Pose2d getPose() {
         if (pose == null) {
             VisionSubsystem vision = RobotContainer.instance.vision;
