@@ -143,7 +143,7 @@ public class CoralDetectorReal implements CoralDetector {
         boolean lastClose = lastDetectionClose();
         if (RobotState.isAutonomous() && lastClose) return lastDetection;
 
-        double timeoutSeconds = lastClose ? 3 : 0.5;
+        double timeoutSeconds = lastClose ? 3 : 0.2;
         if (Timer.getFPGATimestamp() - lastDetectionTime < timeoutSeconds) {
             return lastDetection;
         }
