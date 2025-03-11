@@ -27,7 +27,7 @@ public class CoralDetectorReal implements CoralDetector {
     private final MutDistance coralDistance;
 
     // How close to the robot a detected coral has to be to be considered "close" (i.e. intakeable)
-    private final double CLOSE_CORAL_DISTANCE = 0.75;
+    private final double CLOSE_CORAL_DISTANCE = 0.6;
     private final double CLOSE_CORAL_TX = 10;
     // How close two detected coral have to be to each other to be considered the same/close enough 
     // to allow switching without a timeout
@@ -76,9 +76,11 @@ public class CoralDetectorReal implements CoralDetector {
             return recentLastDetection;
         }
 
+        boolean auto = RobotState.isAutonomous();
+
         // If the last detected coral was very close to the robot, wait a bit in case
         // we're trying to intake it
-        if (recentLastDetection != null && lastDetectionClose()) {
+        if (recentLastDetection != null && auto && lastDetectionClose()) {
             return recentLastDetection;
         }
 
@@ -116,10 +118,10 @@ public class CoralDetectorReal implements CoralDetector {
             }
 
             double robotDist = coralPose.getTranslation().getDistance(robotPose.getTranslation());
-            if (recentLastDetection != null && !RobotState.isAutonomous()) {
-                // double distDiff = coralPose.getTranslation().getDistance(recentLastDetection.getTranslation());
-                // if (distDiff > SIMILAR_CORAL_THRESHOLD) continue;
-                if (robotDist > lastDetectionDistance + CORAL_FURTHER_THRESHOLD) continue;
+            if (recentLastDetection != null && !auto) {
+                double distDiff = coralPose.getTranslation().getDistance(recentLastDetection.getTranslation());
+                if (distDiff > SIMILAR_CORAL_THRESHOLD) continue;
+                // if (robotDist > lastDetectionDistance + CORAL_FURTHER_THRESHOLD) continue;
             }
 
             lastDetectionTime = Timer.getFPGATimestamp();
