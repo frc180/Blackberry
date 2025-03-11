@@ -752,7 +752,7 @@ public class RobotContainer {
     }
 
     private Command coralEject() {
-        Command l4CoralEject = elevatorArm.runSpeed(0.425).until(elevatorArm.hasNoCoral)
+        Command l4CoralEject = elevatorArm.runSpeed(0.35).until(elevatorArm.hasNoCoral) //was .425
                                           .andThen(Commands.waitSeconds(0.2));
         Command l1CoralEject = elevatorArm.runSpeed(0.4).until(elevatorArm.hasNoCoral);
         Command coralEject = elevatorArm.runSpeed(0.35).until(elevatorArm.hasNoCoral)
