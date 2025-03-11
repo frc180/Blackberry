@@ -54,7 +54,7 @@ public class DefaultDriveCommand extends Command {
                 previousHeadingType = null;
             }
 
-            applyCoralAngleAimAssist();
+            // applyCoralAngleAimAssist();
 
             Double targetHeadingDegrees = m_drivetrainSubsystem.getTargetHeading();
             if (targetHeadingDegrees != null) {
@@ -94,7 +94,9 @@ public class DefaultDriveCommand extends Command {
 
     private boolean shouldApplyCoralAssist() {
         return false;
-        // if (!RobotContainer.instance.coralIntakeTrigger.getAsBoolean() || RobotContainer.instance.vision.getCoralPickupPose() == null) {
+        // if (!RobotContainer.instance.coralIntakeTrigger.getAsBoolean() || 
+        //     RobotContainer.instance.vision.getCoralPickupPose() == null ||
+        //     RobotContainer.instance.robotHasCoral.getAsBoolean()) {
         //     return false;
         // }
         // return true;

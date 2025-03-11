@@ -213,7 +213,7 @@ public class RobotContainer {
         //algae
         final Trigger driverProcessor = algaeMode.and(driverController.b());
         final Trigger driverNet = algaeMode.and(driverController.x());
-        final Trigger driverSpitAlgae = algaeMode.and(driverController.y());
+        final Trigger driverSpitAlgae = algaeMode.and(driverController.a());
         final Trigger driverIntakeAlgae = algaeMode.and(driverController.leftTrigger());
         //climb (must be in algae mode)
         final Trigger driverReadyClimb = algaeMode.and(driverController.leftStick().and(driverController.rightStick())); // left/right stick is M1 and M2
@@ -230,8 +230,8 @@ public class RobotContainer {
 
         // TODO: probably change these triggers (or where they're used) to also return true if the scoring camera is disconnected
         nearReef = drivetrain.targetingReef().and(drivetrain.withinTargetPoseTolerance(         
-                        Meters.of(0.5), // was 1
-                        Meters.of(0.5), // was 1
+                        Meters.of(0.75), // was 1, then 0.5, then 0.6
+                        Meters.of(0.75), // was 1, then 0.5, then 0.6
                         Degrees.of(90)
         ));//.debounce(0.2, DebounceType.kFalling); 
 
@@ -306,13 +306,9 @@ public class RobotContainer {
         driverAnyReef.onTrue(Commands.runOnce(() -> Robot.currentlyScoringCoral = false));
         
         // test outtaking algae
-        driverSpitAlgae.and(intakeAlgae.hasAlgae).onTrue(Commands.parallel(
-            intakeAlgae.spit(),
-            Commands.runOnce(() -> {
-                if (Robot.isSimulation()) {
-                    SimLogic.outtakeAlgae();
-                }
-            })
+        driverSpitAlgae.whileTrue(Commands.parallel(
+           elevatorArmPivot.setPosition(elevatorArmPivot.L1_SCORE),
+           Commands.waitUntil(elevatorArmPivot::isElevatorArmInPosition).andThen(elevatorArmAlgae.runSpeed(-1))
         ));
 
         // Driver Coral Intake
@@ -339,7 +335,7 @@ public class RobotContainer {
         }
 
         elevatorArm.setDefaultCommand(elevatorArm.passiveIndex());
-        // elevatorArmAlgae.setDefaultCommand(elevatorArmAlgae.passiveIndex());
+        elevatorArmAlgae.setDefaultCommand(elevatorArmAlgae.passiveIndex());
         
         //noticed that sometimes when we have a coral the intake doesnt go back to the stow position to tansfer to the arm
         // intakeCoral.hasCoral.and(elevatorArmPivot.elevatorArmInPosition).and(intakeCoralPivot.atStowPosition)
@@ -418,13 +414,11 @@ public class RobotContainer {
 
 
         // Make the robot point towards the closest side of the reef
-        if (Robot.isSimulation()) {
-            teleop.and(coralMode).and(robotHasCoral)
-                .whileTrue(drivetrain.targetHeadingContinuous(() -> {
-                    Pose2d reefPose = vision.getClosestReefPose();
-                    return reefPose != null ? reefPose.getRotation().getDegrees() : null;
-                }, HeadingTarget.POSE));
-        }
+        teleop.and(coralMode).and(elevatorArm.hasCoral)
+            .whileTrue(drivetrain.targetHeadingContinuous(() -> {
+                Pose2d reefPose = vision.getClosestReefPose();
+                return reefPose != null ? reefPose.getRotation().getDegrees() : null;
+            }, HeadingTarget.POSE));
 
         Command chosenElevatorHeight = elevator.run(() -> {
             // In autonomous, read the next coral scoring position from the list to determine the elevator height
@@ -627,7 +621,7 @@ public class RobotContainer {
         Command autoIntakeCoral = Commands.sequence(
             autoHPDrive,
             Auto.driveToCoral()
-                .withMaxSpeed(0.3) // TEMPORARY speed limit
+                .withMaxSpeed(0.5) // TEMPORARY speed limit
                 .until(intakeCoral.hasCoral) // at this point, the command gets interrupted by the auto coral intake trigger
         ).alongWith(Auto.startCoralIntake());
                                     

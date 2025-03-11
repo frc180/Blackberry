@@ -265,7 +265,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         gyroRateSignal = trackSignal(getPigeon2().getAngularVelocityZWorld());
 
         double translationMaxSpeed = MAX_SPEED * 0.8;
-        double translationP = 4;
+        double translationP = 3.5; // was 4
         double translationI = 0.0;
         double translationD = 0.15;
         double translationKV = 0.5;
@@ -293,7 +293,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         yProfiledPid = new ProfiledPIDController(translationP, translationI, translationD, driveToPoseConstraints);
         
 
-        rotationProfiledPid = new ProfiledPIDController(5, 0., 0,
+        rotationProfiledPid = new ProfiledPIDController(4, 0., 0, // was 5
                                         new TrapezoidProfile.Constraints(MAX_ANGULAR_RATE, MAX_ANGULAR_ACCEL));
         rotationProfiledPid.enableContinuousInput(-Math.PI, Math.PI);
 

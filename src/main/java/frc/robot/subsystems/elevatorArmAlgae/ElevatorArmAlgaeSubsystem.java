@@ -2,6 +2,7 @@ package frc.robot.subsystems.elevatorArmAlgae;
 
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.filter.LinearFilter;
+import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -14,8 +15,8 @@ import frc.robot.subsystems.elevatorArmAlgae.ElevatorArmAlgaeIO.ElevatorArmAlgae
 public class ElevatorArmAlgaeSubsystem extends SubsystemBase {
 
     protected static final double FAR_OBJECT_THRESHOLD = 0.28; // was 0.23 which is probably too low
-    protected static final double CLOSE_OBJECT_THRESHOLD = 0.17; // was 0.16
-    protected static final double HAS_ALGAE_THRESHOLD = 0.14;
+    protected static final double CLOSE_OBJECT_THRESHOLD = 0.2;
+    protected static final double HAS_ALGAE_THRESHOLD = 0.1;
 
     ElevatorArmAlgaeIO io;
     ElevatorArmAlgaeInputs inputs;
@@ -24,7 +25,7 @@ public class ElevatorArmAlgaeSubsystem extends SubsystemBase {
     private double distanceFiltered = 0;
 
     public final Trigger hasAlgae;
-    public final Trigger farAlgae, closeAlgae;
+    public final Trigger farAlgae, closeAlgae, closeAlgaeDebounced;
 
 
     public ElevatorArmAlgaeSubsystem() {
@@ -40,12 +41,15 @@ public class ElevatorArmAlgaeSubsystem extends SubsystemBase {
         farAlgae = new Trigger(() -> distanceFiltered > FAR_OBJECT_THRESHOLD);
         closeAlgae = new Trigger(() -> distanceFiltered < CLOSE_OBJECT_THRESHOLD);
         hasAlgae = new Trigger(() -> distanceFiltered < HAS_ALGAE_THRESHOLD);
+
+        closeAlgaeDebounced = closeAlgae.debounce(1, DebounceType.kFalling);
     }
 
     @Override
     public void periodic() {
         io.update(inputs);
-        distanceFiltered = distanceFilter.calculate(inputs.distance);
+        distanceFiltered = inputs.distance;
+        // distanceFiltered = distanceFilter.calculate(inputs.distance);
     }
     
     @Override
@@ -73,7 +77,7 @@ public class ElevatorArmAlgaeSubsystem extends SubsystemBase {
     }
 
     public Command passiveIndex() {
-        return indexWithIdle(0, 0.5);
+        return indexWithIdle(0, 1);
     }
 
     private Command indexWithIdle(double idleSpeed, double indexSpeed) {
@@ -81,7 +85,7 @@ public class ElevatorArmAlgaeSubsystem extends SubsystemBase {
             () -> {
                 if (hasAlgae.getAsBoolean()) {
                     io.setSpeed(0.05);
-                } else if (closeAlgae.getAsBoolean() ) {
+                } else if (closeAlgaeDebounced.getAsBoolean() ) {
                     io.setSpeed(indexSpeed);
                 } else {
                     io.setSpeed(idleSpeed);

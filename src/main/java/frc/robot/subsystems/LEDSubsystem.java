@@ -16,12 +16,13 @@ import frc.robot.Constants;
 
 public class LEDSubsystem extends SubsystemBase {
 
-    private final int NUM_LEDS = 8;
+    private final int NUM_LEDS = 8 + 60;
     private final int STRIP_OFFSET = 0;
     private final CANdle candle;
 
     public final LEDColor RED = new LEDColor(255, 0, 0, 255);
-    public final LEDColor BLUE = new LEDColor(0, 0, 255, 255);
+    // public final LEDColor BLUE = new LEDColor(0, 0, 255, 255); // primary blue
+    public final LEDColor BLUE = new LEDColor(21, 46, 99, 255); // navy blue
     public final LEDColor GREEN = new LEDColor(0, 255, 0, 255);
     public final LEDColor YELLOW = new LEDColor(255, 255, 0, 255);
 
