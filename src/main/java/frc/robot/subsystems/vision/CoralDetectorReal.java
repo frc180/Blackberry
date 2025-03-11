@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import edu.wpi.first.epilogue.Logged;
-import edu.wpi.first.epilogue.NotLogged;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
@@ -14,7 +13,6 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.MutDistance;
 import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.util.LimelightHelpers.RawDetection;
 
 @Logged
@@ -22,6 +20,7 @@ public class CoralDetectorReal implements CoralDetector {
 
     private final InterpolatingDoubleTreeMap distanceMap;
     private final List<RawDetection> sortedDetections;
+    private final List<RawDetection> algaeDetections;
     private final Comparator<RawDetection> detectionTYComparator;
     private final Comparator<RawDetection> detectionTXYComparator;
     private final MutDistance coralDistance;
@@ -36,7 +35,8 @@ public class CoralDetectorReal implements CoralDetector {
     // Experimental
     private final static double CORAL_FURTHER_THRESHOLD = 0.6;
 
-    private boolean newCoralValue = false;
+    private static final double ALGAE_AVOID_THRESHOLD_DEGREES = 3;
+
     private double lastDetectionTime = 0;
     private double lastDetectionDistance = 0;
     private double lastDetectionTX = 0;
@@ -44,6 +44,11 @@ public class CoralDetectorReal implements CoralDetector {
     private double lastDetectionHeight = 0;
     private double lastDetectionRatio = 0;
     private Pose2d lastDetection = null;
+
+    // Additional flags for viewing in logs
+    private boolean newCoralValue = false;
+    private boolean rejectionAlgae = false;
+    private boolean rejectionOutsideField = false;
 
     public CoralDetectorReal() {
         distanceMap = new InterpolatingDoubleTreeMap();
@@ -64,6 +69,7 @@ public class CoralDetectorReal implements CoralDetector {
         addDistance(24.7, 132);
 
         sortedDetections = new ArrayList<>();
+        algaeDetections = new ArrayList<>();
         detectionTYComparator = (a, b) -> Double.compare(a.tync, b.tync);
         detectionTXYComparator = (a, b) -> Double.compare(tXYCombined(a), tXYCombined(b));
         coralDistance = Meters.of(0).mutableCopy();
@@ -76,6 +82,11 @@ public class CoralDetectorReal implements CoralDetector {
     @Override
     public Pose2d getCoralPose(Pose2d robotPose, RawDetection[] detections) {
         newCoralValue = false;
+        rejectionAlgae = false;
+        rejectionOutsideField = false;
+        sortedDetections.clear();
+        algaeDetections.clear();
+        
         Pose2d recentLastDetection = getRecentLastDetection();
         if (robotPose == null || detections == null || detections.length == 0) {
             return recentLastDetection;
@@ -89,12 +100,12 @@ public class CoralDetectorReal implements CoralDetector {
             return recentLastDetection;
         }
 
-        sortedDetections.clear();
         for (RawDetection detection : detections) {
-            // Skip non-coral detections
-            if (detection.classId != 1) continue;
-
-            sortedDetections.add(detection);
+            if (detection.classId == 1) {
+                sortedDetections.add(detection);
+            } else {
+                algaeDetections.add(detection);
+            }
         }
         sortedDetections.sort(detectionTXYComparator);
         // sortedDetections.sort(detectionTYComparator);
@@ -102,15 +113,24 @@ public class CoralDetectorReal implements CoralDetector {
         Pose2d basePose = robotPose.transformBy(VisionSubsystem.ROBOT_TO_INTAKE_CAMERA_2D);
 
         for (RawDetection detection : sortedDetections) {
-            double distanceMeters = distanceMap.get(detection.tync);
             double degrees = detection.txnc;
-            double radians = Units.degreesToRadians(degrees);
 
+            // Skip any coral that are close to an algae on the X axis - these are likely lollipops
+            for (RawDetection algae : algaeDetections) {
+                if (Math.abs(degrees - algae.txnc) < ALGAE_AVOID_THRESHOLD_DEGREES) {// && detection.tync < algae.tync) {
+                    rejectionAlgae = true;
+                    continue;
+                }
+            }
+
+            double distanceMeters = distanceMap.get(detection.tync);
+            double radians = Units.degreesToRadians(degrees);
             double yComponent = distanceMeters * Math.tan(radians);
             Transform2d coralTransform = new Transform2d(distanceMeters, -yComponent, Rotation2d.kZero);
             Pose2d coralPose = basePose.transformBy(coralTransform);
 
             if (!CoralDetector.isValid(coralPose)) {
+                rejectionOutsideField = true;
                 continue;
             }
 
