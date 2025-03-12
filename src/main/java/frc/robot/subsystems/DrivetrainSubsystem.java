@@ -492,15 +492,21 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         return experimentalCalculateSpeeds(currentPose, endPose, driveToPoseProfile, driveToPoseConstraints);
     }
 
+    private double driveToPoseTimerOffset = 0;
+
     /**
      * Experimental method for driving to a pose using a trapezoidal profile, treating the drivetrain as a one-dimensional
      * mechanism instead of applying the profile to the X and Y axes separately.
      * Derived from this code from team 6995: https://github.com/frc6995/Robot-2025/blob/a9871f804924f71e47eb576578ac69bbe7b9249f/src/main/java/frc/robot/subsystems/DriveBaseS.java#L444
      */
     public ChassisSpeeds experimentalCalculateSpeeds(Pose2d currentPose, Pose2d endPose, TrapezoidProfile profile, TrapezoidProfile.Constraints constraints) {
-        boolean initializing = driveToPoseStart == null;// || endPose != intermediatePose;
-        if (intermediatePose == null || intermediatePose.getTranslation().getDistance(endPose.getTranslation()) > 0.1)
+        boolean initializing = driveToPoseStart == null;
+        if (!initializing && (intermediatePose == null || intermediatePose.getTranslation().getDistance(endPose.getTranslation()) > 0.1)) {
             initializing = true;
+            driveToPoseTimerOffset = Constants.LOOP_TIME;
+        } else {
+            driveToPoseTimerOffset = 0;
+        }
 
         intermediatePose = endPose;
         
@@ -525,7 +531,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         }
 
         // Calculate the setpoint (i.e. current distance along the path) we should be targeting
-        State setpoint = profile.calculate(driveToPoseTimer.get(), driveToPoseStartState, driveToPoseGoalState);
+        State setpoint = profile.calculate(driveToPoseTimer.get() + driveToPoseTimerOffset, driveToPoseStartState, driveToPoseGoalState);
         Translation2d setpointTarget = endPose.getTranslation().interpolate(driveToPoseStart.getTranslation(), setpoint.position / distance);
 
         // Use normal PIDs to calculate the feedback for the X and Y axes to reach the setpoint position

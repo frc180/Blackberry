@@ -5,6 +5,7 @@ import org.ironmaple.simulation.SimulatedArena;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import frc.robot.Robot;
 import frc.robot.RobotContainer;
@@ -79,7 +80,12 @@ public class CoralDetectorSim implements CoralDetector {
             }
         }
 
-        return bestCoral;
+        if (bestCoral == null) return null;
+        return bestCoral.transformBy(new Transform2d(randomRange(-0.2, 0.2), randomRange(-0.2, 0.2), Rotation2d.kZero));
+    }
+
+    private double randomRange(double min, double max) {
+        return Math.random() * (max - min) + min;
     }
 
     // =========== Helper methods to calculate robot POV ===========
