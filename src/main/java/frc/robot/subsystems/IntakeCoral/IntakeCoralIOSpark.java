@@ -8,12 +8,16 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import au.grapplerobotics.ConfigurationFailedException;
 import au.grapplerobotics.LaserCan;
+import edu.wpi.first.wpilibj.Timer;
 import frc.robot.Constants;
 
 public class IntakeCoralIOSpark implements IntakeCoralIO {
 
     SparkMax motor;
     LaserCan laserCan;
+
+    double previousDistance = 0;
+    double lastDistanceChangeTime = 0;
 
     public IntakeCoralIOSpark() {
         SparkMaxConfig motorConfig = new SparkMaxConfig();
@@ -42,9 +46,16 @@ public class IntakeCoralIOSpark implements IntakeCoralIO {
             }
         }
 
-        inputs.coralSensorConnected = laserCan != null;
+        double currentTime = Timer.getFPGATimestamp();
+        if (distance - previousDistance != 0) {
+            lastDistanceChangeTime = currentTime;
+        }
+
+        inputs.coralSensorConnected = laserCan != null && currentTime - lastDistanceChangeTime < 0.5;
         inputs.coralDistance = distance;
         inputs.voltage = motor.getAppliedOutput() * 12;
+
+        previousDistance = distance;
     }
 
     @Override
