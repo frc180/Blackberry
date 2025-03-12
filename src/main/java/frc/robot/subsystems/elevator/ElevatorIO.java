@@ -9,7 +9,6 @@ public interface ElevatorIO {
     public class ElevatorIOInputs {
         double position;
         double velocity;
-        double voltage;
         double dutyCycle;
         double target;
         boolean bottomLimit = false;

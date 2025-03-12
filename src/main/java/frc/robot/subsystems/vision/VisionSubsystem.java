@@ -12,7 +12,6 @@ import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.NotLogged;
 import edu.wpi.first.math.MatBuilder;
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.Nat;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -35,7 +34,6 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Field;
 import frc.robot.Robot;
 import frc.robot.RobotContainer;
-import frc.robot.subsystems.DrivetrainSubsystem;
 import frc.robot.subsystems.vision.VisionIO.VisionIOInputs;
 import frc.robot.util.ReefProximity;
 import frc.robot.util.LimelightHelpers.PoseEstimate;
@@ -145,7 +143,6 @@ public class VisionSubsystem extends SubsystemBase {
     private final HashMap<Integer, Pose2d> leftReefAlgaePoses = new HashMap<>();
     private final HashMap<Integer, Pose2d> rightReefAlgaePoses = new HashMap<>();
 
-    private boolean canSeeReef = false;
     public int bestReefID = -1;
     public int lastReefID = -1;
 
@@ -316,9 +313,6 @@ public class VisionSubsystem extends SubsystemBase {
             frontCameraPosition = robotPose3d.transformBy(ROBOT_TO_FRONT_CAMERA);
             backCameraPosition = robotPose3d.transformBy(ROBOT_TO_INTAKE_CAMERA);
         }
-
-        //check if robot can see the reef
-        canSeeReef = reefVisible();
 
         Entry<Integer, Pose2d> closestTagAndPose = reefProximity.closestReefPose(robotPose, Robot.isBlue());
         if (closestTagAndPose == null) {

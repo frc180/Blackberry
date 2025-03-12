@@ -20,6 +20,7 @@ public class CoralIndexerIOTalonFXS implements CoralIndexerIO {
         motor = new TalonFXS(Constants.CORAL_INDEXER, Constants.CANIVORE);
         motor.getConfigurator().apply(config);
         motor.setNeutralMode(NeutralModeValue.Brake);
+        motor.optimizeBusUtilization(10, 0.1);
 
         voltageControl = new VoltageOut(0);
     }

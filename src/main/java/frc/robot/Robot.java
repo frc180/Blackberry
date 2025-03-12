@@ -73,6 +73,10 @@ public class Robot extends TimedRobot {
     robotContainer = new RobotContainer();
     DataLogManager.start();
     DriverStation.startDataLog(DataLogManager.getLog());
+
+    Epilogue.configure(config -> {
+        config.minimumImportance = Logged.Importance.DEBUG;
+    });
     Epilogue.bind(this);
   }
 

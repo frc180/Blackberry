@@ -127,14 +127,8 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO {
         inputs.hardStop = false;
         if (Robot.isReal()) {
             inputs.absolutePosition = -potentiometer.get();
-            // Special case - this signal comes from a CANdi managed by ElevatorArmIOTalonFX, so we need to read it 
-            // from there instead of by creating the CANdi and signal objects ourselves here
-            // StatusSignal<Boolean> signal = ElevatorArmIOTalonFX.HARD_STOP_SIGNAL;
-            // inputs.hardStop = signal != null && signal.getValueAsDouble() == 1;
         } else {
             inputs.absolutePosition = 30 + (Units.radiansToRotations(armSim.getAngleRads()) * 0.25);
-            double armDegrees = Units.radiansToDegrees(armSim.getAngleRads());
-            // inputs.hardStop = Math.abs(armDegrees - ElevatorArmPivotSubsystem.HARD_STOP_OFFSET.in(Degrees)) <= 0.5;
         }
     }
 

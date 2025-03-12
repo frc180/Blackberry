@@ -421,7 +421,7 @@ public class RobotContainer {
 
 
         // Make the robot point towards the closest side of the reef
-        teleop.and(coralMode).and(elevatorArm.hasCoral)
+        teleop.and(coralMode).and(elevatorArm.hasCoral).and(elevatorArmAlgae.hadAlgae.negate())
             .whileTrue(drivetrain.targetHeadingContinuous(() -> {
                 Pose2d reefPose = vision.getClosestReefPose();
                 return reefPose != null ? reefPose.getRotation().getDegrees() : null;
@@ -585,8 +585,15 @@ public class RobotContainer {
                 Commands.none(),
                 elevator.elevatorInPosition
             ),
-            elevator.stow().alongWith(elevatorArmPivot.stowPosition())//, elevatorArmAlgae.stop())
+            elevator.stow().alongWith(elevatorArmPivot.stowPosition())
         ));
+
+        // EXPERIMENT - attempt to lob algae into the net by releasing while moving the elevator 
+        driverNet.and(elevatorArmPivot::isElevatorArmInScoringPosition)
+                 .and(() -> elevator.getTargetPosition() == ElevatorSubsystem.NET && elevator.getTargetErrorInches() < 36)
+                 .onTrue(
+                    elevatorArmAlgae.runSpeed(-1).withTimeout(0.5)
+                 );
 
         if (leds != null) {
             leds.setDefaultCommand(leds.run(() -> {

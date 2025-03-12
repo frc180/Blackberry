@@ -12,8 +12,8 @@ import frc.robot.subsystems.elevatorArmAlgae.ElevatorArmAlgaeIO.ElevatorArmAlgae
 @Logged
 public class ElevatorArmAlgaeSubsystem extends SubsystemBase {
 
-    protected static final double FAR_OBJECT_THRESHOLD = 0.28; // was 0.23 which is probably too low
-    protected static final double CLOSE_OBJECT_THRESHOLD = 0.2;
+    // protected static final double FAR_OBJECT_THRESHOLD = 0.28; // was 0.23 which is probably too low
+    // protected static final double CLOSE_OBJECT_THRESHOLD = 0.2;
     protected static final double HAS_ALGAE_THRESHOLD = 0.1;
 
     ElevatorArmAlgaeIO io;
@@ -22,8 +22,7 @@ public class ElevatorArmAlgaeSubsystem extends SubsystemBase {
     private final LinearFilter distanceFilter = LinearFilter.singlePoleIIR(0.1, 0.02);
     private double distanceFiltered = 0;
 
-    public final Trigger hasAlgae;
-    public final Trigger hadAlgae;
+    public final Trigger hasAlgae, hadAlgae;
     // public final Trigger closeAlgae, closeAlgaeDebounced;
 
 
@@ -38,10 +37,10 @@ public class ElevatorArmAlgaeSubsystem extends SubsystemBase {
 
         // farAlgae = new Trigger(() -> distanceFiltered > FAR_OBJECT_THRESHOLD);
         // closeAlgae = new Trigger(() -> distanceFiltered < CLOSE_OBJECT_THRESHOLD);
-        hasAlgae = new Trigger(() -> distanceFiltered < HAS_ALGAE_THRESHOLD);
-
-        hadAlgae = hasAlgae.debounce(1.5, DebounceType.kFalling);
         // closeAlgaeDebounced = closeAlgae.debounce(1, DebounceType.kFalling);
+
+        hasAlgae = new Trigger(() -> distanceFiltered < HAS_ALGAE_THRESHOLD);
+        hadAlgae = hasAlgae.debounce(1.5, DebounceType.kFalling);
     }
 
     @Override

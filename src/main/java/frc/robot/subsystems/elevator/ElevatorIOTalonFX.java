@@ -16,7 +16,6 @@ import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.simulation.ElevatorSim;
 import frc.robot.Constants;
@@ -38,7 +37,6 @@ public class ElevatorIOTalonFX implements ElevatorIO {
     // Status signals
     StatusSignal<Angle> positionSignal;
     StatusSignal<AngularVelocity> velocitySignal;
-    StatusSignal<Voltage> voltageSignal;
     StatusSignal<Double> targetSignal;
     StatusSignal<Double> dutyCycleSignal;
 
@@ -99,7 +97,6 @@ public class ElevatorIOTalonFX implements ElevatorIO {
 
         positionSignal = trackSignal(motorA.getPosition());
         velocitySignal = trackSignal(motorA.getVelocity());
-        voltageSignal = trackSignal(motorA.getMotorVoltage());
         targetSignal = trackSignal(motorA.getClosedLoopReference());
         dutyCycleSignal = trackSignal(motorA.getDutyCycle());
 
@@ -144,7 +141,6 @@ public class ElevatorIOTalonFX implements ElevatorIO {
     public void update(ElevatorIOInputs inputs) {
         inputs.position = positionSignal.getValueAsDouble();
         inputs.velocity = velocitySignal.getValueAsDouble();
-        inputs.voltage = voltageSignal.getValueAsDouble();
         inputs.target = targetSignal.getValueAsDouble();
         inputs.dutyCycle = dutyCycleSignal.getValueAsDouble();
 

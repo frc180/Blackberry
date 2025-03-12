@@ -9,12 +9,12 @@ import java.util.function.BooleanSupplier;
 import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.NotLogged;
+import edu.wpi.first.epilogue.Logged.Importance;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.subsystems.elevator.ElevatorIO.ElevatorIOInputs;
@@ -27,8 +27,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     public static final Distance L2 = Meters.of(0.302).plus(Inches.of(1));
     public static final Distance L3 = L2.plus(Inches.of(16));
     public static final Distance L4 = Meters.of(1.45);
-    // public static final Distance L4 = Meters.of(1.4).plus(Inches.of(1.5));
-    public static final Distance NET = Meters.of(1.47).minus(Inches.of(1));//ay be able to just be L4
+    public static final Distance NET = Meters.of(1.47).minus(Inches.of(1));
     public static final Distance STOW = Inches.of(0);
     public static final Distance ZERO = Meters.of(0);
 
@@ -51,9 +50,8 @@ public class ElevatorSubsystem extends SubsystemBase {
     public Trigger elevatorInPosition = new Trigger(this::isElevatorInPosition);
     @NotLogged
     public Trigger elevatorInScoringPosition = new Trigger(this::isElevatorInScoringPosition);
+    @NotLogged
     public Trigger inReefPosition = new Trigger(this::isInReefPosition);
-
-    public String activeCommand = "none";
 
     private final SysIdRoutine sysIdRoutine = new SysIdRoutine(
             new SysIdRoutine.Config(
@@ -76,13 +74,6 @@ public class ElevatorSubsystem extends SubsystemBase {
     public void periodic() {
         io.update(inputs);
         SimVisuals.setElevatorHeight(inputs.position);
-
-        // Command current = getCurrentCommand();
-        // if (current != null) {
-        //     activeCommand = current.getName();
-        // } else {
-        //     activeCommand = "null";
-        // }
 
         // To be considered homed, the elevator must be at the lower limit and the motor
         // position must be within 0.01 meters of 0
@@ -179,6 +170,7 @@ public class ElevatorSubsystem extends SubsystemBase {
         return inputs.bottomLimit;
     }
 
+    @Logged(importance = Importance.CRITICAL)
     public boolean isElevatorInPosition() {
         return Math.abs(getTargetErrorMeters()) <= IN_POSITION_METERS;
     }
@@ -205,6 +197,7 @@ public class ElevatorSubsystem extends SubsystemBase {
         return targetPosition.in(Meters) - inputs.position;
     }
 
+    @Logged(importance = Importance.CRITICAL)
     public double getTargetErrorInches() {
         return getTargetErrorMeters() * 39.37;
     }

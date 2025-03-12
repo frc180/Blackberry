@@ -15,18 +15,19 @@ import com.ctre.phoenix6.signals.S1FloatStateValue;
 import com.ctre.phoenix6.signals.S2CloseStateValue;
 import com.ctre.phoenix6.signals.S2FloatStateValue;
 import edu.wpi.first.units.measure.Voltage;
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import frc.robot.Constants;
 
 public class ElevatorArmIOTalonFX implements ElevatorArmIO {
 
-    // Special case - this signal needs to be read by a different subsystem (ElevatorArmPivot)
-    public static StatusSignal<Boolean> HARD_STOP_SIGNAL = null;
+    final TalonFXS rollerMotor;
+    final CANdi candiA, candiB;
+    final VoltageOut voltageControl;
 
-    TalonFXS rollerMotor;
-    CANdi candiA, candiB;
-    VoltageOut voltageControl;
+    final StatusSignal<Boolean> frontSensorSignal, middleSensorSignal, backSensorSignal;
 
-    StatusSignal<Boolean> frontSensorSignal, middleSensorSignal, backSensorSignal;
+    final Alert candiADisconnectedAlert, candiBDisconnectedAlert;
 
     public ElevatorArmIOTalonFX() {
         TalonFXSConfiguration config = new TalonFXSConfiguration();
@@ -51,15 +52,20 @@ public class ElevatorArmIOTalonFX implements ElevatorArmIO {
         middleSensorSignal = trackSignal(candiA.getS1Closed());
         backSensorSignal = trackSignal(candiB.getS1Closed());
 
-        // ElevatorArmPivotSubsystem uses this signal, but it's read from the same CANdi as one of our sensors -
-        // so we expose it as a static variable here since we can't have two instances of the same CANdi
-        HARD_STOP_SIGNAL = trackSignal(candiB.getS2Closed());
-
         // ParentDevice.optimizeBusUtilizationForAll(10.0, rollerMotor, candiA, candiB);
+
+        candiADisconnectedAlert = new Alert("ElevatorArm CANDi A disconnected (#" + Constants.ELEVATOR_ARM_CANDI_A + ")", AlertType.kError);
+        candiBDisconnectedAlert = new Alert("ElevatorArm CANDi B disconnected (#" + Constants.ELEVATOR_ARM_CANDI_B + ")", AlertType.kError);
     }
 
     @Override
     public void update(ElevatorArmIOInputs inputs) {
+        boolean candiADisconnected = frontSensorSignal.getTimestamp().getLatency() > 0.5;
+        boolean candiBDisconnected = backSensorSignal.getTimestamp().getLatency() > 0.5;
+
+        candiADisconnectedAlert.set(candiADisconnected);
+        candiBDisconnectedAlert.set(candiBDisconnected);
+
         inputs.frontCoralSensor = frontSensorSignal.getValueAsDouble() == 1;
         inputs.middleCoralSensor = middleSensorSignal.getValueAsDouble() == 1;
         inputs.backCoralSensor = backSensorSignal.getValueAsDouble() == 1;
