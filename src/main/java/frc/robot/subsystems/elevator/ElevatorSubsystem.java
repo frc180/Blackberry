@@ -211,18 +211,18 @@ public class ElevatorSubsystem extends SubsystemBase {
 
     /**
      * Handles special soft-stow logic for stowing the elevator safely.
-     * 
      * @return True if the soft stow logic was applied, false otherwise.
      */
     private boolean softStowLogic() {
         if (targetPosition != STOW || !SOFT_STOW_ENABLED) return false;
 
-        if (atLowerLimitDebounced.getAsBoolean()) {
+        // if (atLowerLimitDebounced.getAsBoolean()) {
+        if (atLowerLimitDebounced.getAsBoolean() || isElevatorInPosition()) {
             io.stopMotor();
         } else if (inputs.position > STOW_INTERMEDIATE + IN_POSITION_METERS) {
             io.setPosition(STOW_INTERMEDIATE);
         } else {
-            io.setPower(-0.03);
+            io.setPower(-0.05); // was -0.03
         }
         return true;
     }
