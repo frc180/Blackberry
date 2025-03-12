@@ -501,7 +501,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
      */
     public ChassisSpeeds experimentalCalculateSpeeds(Pose2d currentPose, Pose2d endPose, TrapezoidProfile profile, TrapezoidProfile.Constraints constraints) {
         boolean initializing = driveToPoseStart == null;
-        if (!initializing && (intermediatePose == null || intermediatePose.getTranslation().getDistance(endPose.getTranslation()) > 0.1)) {
+        if (!initializing && (intermediatePose == null || intermediatePose.getTranslation().getDistance(endPose.getTranslation()) > 0.5)) {
             initializing = true;
             driveToPoseTimerOffset = Constants.LOOP_TIME;
         } else {
