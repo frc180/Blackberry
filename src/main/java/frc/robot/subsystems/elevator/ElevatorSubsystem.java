@@ -45,7 +45,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     private Distance targetPosition = ZERO;
     private boolean hasHomed = false;
 
-    private Trigger atLowerLimitDebounced = new Trigger(this::isAtLowerLimit).debounce(0.2);
+    private Trigger atLowerLimitDebounced = new Trigger(this::isAtLowerLimit).debounce(0.1);
 
     @NotLogged
     public Trigger elevatorInPosition = new Trigger(this::isElevatorInPosition);

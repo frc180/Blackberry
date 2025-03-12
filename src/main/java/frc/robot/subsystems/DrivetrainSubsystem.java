@@ -265,9 +265,9 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         gyroRateSignal = trackSignal(getPigeon2().getAngularVelocityZWorld());
 
         double translationMaxSpeed = MAX_SPEED * 0.8;
-        double translationP = 3.5; // was 4
+        double translationP = 4; // was 4
         double translationI = 0.0;
-        double translationD = 0.15;
+        double translationD = 0.3; // was 0.15 most of  the  time, 0.3 hasn't shown huge difference
         double translationKV = 0.5;
         double translationKA = 0;
 
@@ -498,10 +498,15 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
      * Derived from this code from team 6995: https://github.com/frc6995/Robot-2025/blob/a9871f804924f71e47eb576578ac69bbe7b9249f/src/main/java/frc/robot/subsystems/DriveBaseS.java#L444
      */
     public ChassisSpeeds experimentalCalculateSpeeds(Pose2d currentPose, Pose2d endPose, TrapezoidProfile profile, TrapezoidProfile.Constraints constraints) {
+        boolean initializing = driveToPoseStart == null;// || endPose != intermediatePose;
+        if (intermediatePose == null || intermediatePose.getTranslation().getDistance(endPose.getTranslation()) > 0.1)
+            initializing = true;
+
         intermediatePose = endPose;
         
-        boolean initializing = driveToPoseStart == null;
         if (initializing) {
+            xPid.reset();
+            yPid.reset();
             driveToPoseStart = currentPose;
             driveToPoseTimer.restart();
         }

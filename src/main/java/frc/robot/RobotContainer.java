@@ -165,11 +165,11 @@ public class RobotContainer {
 
         double offset = Inches.of(203).in(Meters);
 
-        autoChooser.addOption("Drive 203 inches", Commands.sequence(
-            Commands.runOnce(() -> drivetrain.resetPose(new Pose2d(2,7, Rotation2d.kZero))),
-            new DriveToPose(drivetrain, () -> new Pose2d(2 + offset, 7, Rotation2d.kZero)).until(drivetrain.withinTargetPoseDistance(0.02)),
-            new DriveToPose(drivetrain, () -> new Pose2d(2, 7, Rotation2d.kZero))
-        ));
+        // autoChooser.addOption("Drive 203 inches", Commands.sequence(
+        //     Commands.runOnce(() -> drivetrain.resetPose(new Pose2d(2,7, Rotation2d.kZero))),
+        //     new DriveToPose(drivetrain, () -> new Pose2d(2 + offset, 7, Rotation2d.kZero)).until(drivetrain.withinTargetPoseDistance(0.02)),
+        //     new DriveToPose(drivetrain, () -> new Pose2d(2, 7, Rotation2d.kZero))
+        // ));
 
         if (Robot.isSimulation()) {
             autoChooser.addOption("Drive 6 meters", Commands.sequence(
@@ -231,18 +231,18 @@ public class RobotContainer {
         final Trigger targetingL2_3 = driverL2.or(driverL3);
         final Trigger reefAlgaeTarget = driverRightReef.and(targetingL2_3);
 
-        // Trigger l2_3NearReef = targetingL2_3.and(drivetrain.withinTargetPoseTolerance(
-        //     Meters.of(1),
-        //     Meters.of(1),
-        //     Degrees.of(90)
-        // ));
+        Trigger l1_2_3NearReef = targetingL2_3.or(driverL1).and(drivetrain.withinTargetPoseTolerance(
+            Meters.of(1.25),
+            Meters.of(1.25),
+            Degrees.of(90)
+        ));
 
         nearReef = drivetrain.targetingReef().and(
                     drivetrain.withinTargetPoseTolerance(         
-                        Meters.of(0.75), // was 1, then 0.5, then 0.6
-                        Meters.of(0.75), // was 1, then 0.5, then 0.6
+                        Meters.of(0.7), // 0.75 low, 1 high
+                        Meters.of(0.7), // 0.75 low, 1 high
                         Degrees.of(90)
-                    )//.or(l2_3NearReef)
+                    ).or(l1_2_3NearReef)
         );
 
 
@@ -630,7 +630,7 @@ public class RobotContainer {
         Command autoIntakeCoral = Commands.sequence(
             autoHPDrive,
             Auto.driveToCoral()
-                .withMaxSpeed(0.5) // TEMPORARY speed limit
+                .withMaxSpeed(0.7) // TEMPORARY speed limit
                 .until(intakeCoral.hasCoral) // at this point, the command gets interrupted by the auto coral intake trigger
         ).alongWith(Auto.startCoralIntake());
                                     
@@ -771,7 +771,7 @@ public class RobotContainer {
     private Command coralEject() {
         Command l4CoralEject = elevatorArm.runSpeed(0.4).until(elevatorArm.hasNoCoral) //was .425
                                           .andThen(Commands.waitSeconds(0.2));
-        Command l1CoralEject = elevatorArm.runSpeed(0.4).until(elevatorArm.hasNoCoral);
+        Command l1CoralEject = elevatorArm.runSpeed(0.33).until(elevatorArm.hasNoCoral);
         Command coralEject = elevatorArm.runSpeed(0.35).until(elevatorArm.hasNoCoral)
                                         .andThen(Commands.waitSeconds(0.2)); // could maybe be slightly less delay (0.1)?
 

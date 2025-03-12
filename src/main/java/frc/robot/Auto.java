@@ -80,7 +80,7 @@ public final class Auto {
     public static Command driveToHPStation() {
         return Commands.either(
             driveToHPStationFar(),
-            driveToHPStationClose().withMaxSpeed(0.5), // TEMPORARY speed limit
+            driveToHPStationClose().withMaxSpeed(0.7), // TEMPORARY speed limit
             () -> {
                 CoralScoringPosition previous = previousCoralScoringPosition;
                 return previous != null && previous.isFarTag();

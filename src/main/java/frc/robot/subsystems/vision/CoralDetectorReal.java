@@ -35,7 +35,7 @@ public class CoralDetectorReal implements CoralDetector {
     // Experimental
     private final static double CORAL_FURTHER_THRESHOLD = 0.6;
 
-    private static final double ALGAE_AVOID_THRESHOLD_DEGREES = 3;
+    private static final double ALGAE_AVOID_THRESHOLD_DEGREES = 4;
 
     private double lastDetectionTime = 0;
     private double lastDetectionDistance = 0;
@@ -119,9 +119,10 @@ public class CoralDetectorReal implements CoralDetector {
             for (RawDetection algae : algaeDetections) {
                 if (Math.abs(degrees - algae.txnc) < ALGAE_AVOID_THRESHOLD_DEGREES) {// && detection.tync < algae.tync) {
                     rejectionAlgae = true;
-                    continue;
+                    break;
                 }
             }
+            if (rejectionAlgae) continue;
 
             double distanceMeters = distanceMap.get(detection.tync);
             double radians = Units.degreesToRadians(degrees);

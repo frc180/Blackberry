@@ -126,7 +126,7 @@ public class VisionSubsystem extends SubsystemBase {
     private final Transform2d processorTransform = new Transform2d(0.55, 0.0, Rotation2d.fromDegrees(90));
 
     // Apply a position transform, then a rotation transform
-    private final Transform2d leftL1ReefTransform = new Transform2d(0.60, 0, Rotation2d.k180deg);
+    private final Transform2d leftL1ReefTransform = new Transform2d(0.7, 0, Rotation2d.k180deg);
     private final Transform2d rightL1ReefTransform = leftL1ReefTransform;
     private final Transform2d leftL1ReefRotation = new Transform2d(0, 0, Rotation2d.fromDegrees(30));
     private final Transform2d rightL1ReefRotation = new Transform2d(0, 0, Rotation2d.fromDegrees(-30));
