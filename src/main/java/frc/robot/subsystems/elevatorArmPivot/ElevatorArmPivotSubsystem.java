@@ -38,6 +38,7 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
     public static final double L1_SCORE = Units.degreesToRotations(-1);
     
     public static final double receiving = Units.degreesToRotations(45 - 3);
+    public static final double receivingHP = Units.degreesToRotations(15); //idk this number yet
     public static final double algaeReceive = Units.degreesToRotations(-70);
     public static final double horizontal = 0;
     public static final double PROCESSOR = Units.degreesToRotations(-17);
@@ -145,6 +146,9 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
 
     public Command processorPosition() {
         return setPosition(PROCESSOR);
+    }
+    public Command receiveHPposition() {
+        return setPosition(receivingHP);
     }
 
     // public Command home() {
