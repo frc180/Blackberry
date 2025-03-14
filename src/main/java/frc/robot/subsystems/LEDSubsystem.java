@@ -27,18 +27,23 @@ public class LEDSubsystem extends SubsystemBase {
     public final LEDColor BLUE = new LEDColor(21, 46, 99, 255); // navy blue
     public final LEDColor GREEN = new LEDColor(0, 255, 0, 255);
     public final LEDColor YELLOW = new LEDColor(255, 255, 0, 255);
+    public final LEDColor WHITE = new LEDColor(255, 255, 255, 255);
+    public final LEDColor ALGAE = new LEDColor(53, 202, 183, 255);
 
     public final RainbowAnimation rainbow;
-    public final SingleFadeAnimation blueFade, redFade, yellowFade;
+    public final SingleFadeAnimation blueFade, redFade, yellowFade, whiteFade;
     public final TwinkleAnimation blueTwinkle, redTwinkle;
     public final ColorFlowAnimation yellowFlow;
     public final LarsonAnimation yellowLarson;
 
     private final int NUM_LEDS = 8 + 60;
     private final int STRIP_OFFSET = 0;
+    private final int NO_CANDLE_OFFSET = 8;
     private final CANdle candle;
 
     private Animation currentAnimation = null;
+    private LEDColor currentColor = null;
+    private LEDColor currentSplitColor = null;
 
     public LEDSubsystem() {
         CANdleConfiguration config = new CANdleConfiguration();
@@ -56,6 +61,7 @@ public class LEDSubsystem extends SubsystemBase {
         blueFade = fade(BLUE, 0.25);
         redFade = fade(RED, 0.25);
         yellowFade = fade(YELLOW, 0.25);
+        whiteFade = fade(WHITE, 1);
 
         blueTwinkle = twinkle(BLUE, 0.25, TwinklePercent.Percent88);
         redTwinkle = twinkle(RED, 0.25, TwinklePercent.Percent88);
@@ -68,10 +74,35 @@ public class LEDSubsystem extends SubsystemBase {
         return run(() -> setAnimation(animation));
     }
 
+    public Command color(LEDColor color) {
+        return run(() -> setColor(color));
+    }
+
     public void setAnimation(Animation animation) {
         if (animation != currentAnimation) {
             candle.animate(animation);
             currentAnimation = animation;
+            currentColor = null;
+            currentSplitColor = null;
+        }
+    }
+
+    public void setColor(LEDColor color) {
+        if (color != currentColor) {
+            candle.setLEDs(color.r, color.g, color.b, color.w, STRIP_OFFSET, NUM_LEDS);
+            currentColor = color;
+            currentAnimation = null;
+            currentSplitColor = null;
+        }
+    }
+
+    public void setSplitColor(LEDColor top, LEDColor bottom) {
+        if (top != currentColor || bottom != currentSplitColor) {
+            candle.setLEDs(top.r, top.g, top.b, top.w, 0, 38);
+            candle.setLEDs(bottom.r, bottom.g, bottom.b, bottom.w, 38, 30);
+            currentColor = top;
+            currentSplitColor = bottom;
+            currentAnimation = null;
         }
     }
 
@@ -83,12 +114,16 @@ public class LEDSubsystem extends SubsystemBase {
         return new TwinkleAnimation(color.r, color.g, color.b, color.w, speed, NUM_LEDS, percent, STRIP_OFFSET);
     }
 
+    public TwinkleOffAnimation twinkleOff(LEDColor color, double speed, TwinkleOffPercent percent) {
+        return new TwinkleOffAnimation(color.r, color.g, color.b, color.w, speed, NUM_LEDS, percent, STRIP_OFFSET);
+    }
+
     public ColorFlowAnimation colorFlow(LEDColor color, double speed, Direction direction) {
         return new ColorFlowAnimation(color.r, color.g, color.b, color.w, speed, NUM_LEDS, direction, STRIP_OFFSET);
     }
 
     public LarsonAnimation larson(LEDColor color, double speed, int size, BounceMode mode) {
-        return new LarsonAnimation(color.r, color.g, color.b, color.w, speed, NUM_LEDS, mode, size, STRIP_OFFSET);
+        return new LarsonAnimation(color.r, color.g, color.b, color.w, speed, NUM_LEDS, mode, size, NO_CANDLE_OFFSET);
     }
 
     private record LEDColor(int r, int g, int b, int w) {}

@@ -353,9 +353,11 @@ public class RobotContainer {
         //     .onTrue(intakeCoral.intake().alongWith(elevatorArm.intakeAndIndex()));
         
         // Notify driver we've intaken a coral
-        driverIntake.and(robotHasCoral)//(intakeCoral.hasCoral)
-            .onTrue(new RumbleCommand(1).withTimeout(0.5));
-                
+        driverIntake.and(robotHasCoral)
+            .onTrue(new RumbleCommand(1)
+                        .withTimeout(0.5)
+                        .deadlineFor(leds.animate(leds.whiteFade)));
+
         //create a trigger to check if the elevatorArm has a coral in it so that way it can stop running and go to a score/stow position
         // elevatorArm.hasCoral.onTrue(intakeCoral.stopIntake().alongWith(elevatorArm.stop()));
 
@@ -613,9 +615,15 @@ public class RobotContainer {
                     return;
                 }
 
-                leds.setAnimation(Robot.isBlue() ? leds.blueTwinkle : leds.redTwinkle);
+                var primaryColor = Robot.isBlue() ? leds.BLUE : leds.RED;
+                if (robotHasCoral.getAsBoolean()) {
+                    leds.setSplitColor(leds.WHITE, primaryColor);
+                } else if (robotHasAlgae.getAsBoolean()) {
+                    leds.setSplitColor(leds.ALGAE, primaryColor);
+                } else {
+                    leds.setColor(primaryColor);
+                }
             }).ignoringDisable(true));
-            // disabled.onTrue(leds.animate(leds.yellowFlow).withTimeout(5));
         }
 
         // ================= Autonomous Trigger Logic =================

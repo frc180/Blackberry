@@ -40,6 +40,7 @@ public class Robot extends TimedRobot {
 
   public static boolean currentlyScoringCoral = false;
   public static boolean justScoredCoral = false;
+  public static boolean wasEverEnabled = false;
 
   private Command m_autonomousCommand;
 
@@ -149,6 +150,7 @@ public class Robot extends TimedRobot {
     if (m_autonomousCommand != null) {
       m_autonomousCommand.schedule();
     }
+    wasEverEnabled = true;
   }
 
   @Override
@@ -166,6 +168,7 @@ public class Robot extends TimedRobot {
     if (currentDrive != null) {
       currentDrive.cancel();
     }
+    wasEverEnabled = true;
   }
 
   @Override
