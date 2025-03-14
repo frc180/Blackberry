@@ -605,7 +605,9 @@ public class RobotContainer {
                 }
 
                 if (RobotState.isDisabled()) {
-                    if (!vision.hasPoseEstimates.getAsBoolean()) {
+                    if (Robot.wasEverEnabled) {
+                        leds.setAnimation(leds.greenStrobe);
+                    } else if (!vision.hasPoseEstimates.getAsBoolean()) {
                         leds.setAnimation(leds.yellowLarson);
                     } else if (!DriverStation.isDSAttached()) {
                         leds.setAnimation(leds.yellowFade);

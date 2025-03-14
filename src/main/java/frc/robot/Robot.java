@@ -14,6 +14,8 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+
 import org.ironmaple.simulation.SimulatedArena;
 
 import com.ctre.phoenix6.CANBus;
@@ -41,6 +43,8 @@ public class Robot extends TimedRobot {
   public static boolean currentlyScoringCoral = false;
   public static boolean justScoredCoral = false;
   public static boolean wasEverEnabled = false;
+  private static boolean receivedValidAlliance = false;
+  private static boolean isBlueAlliance = false;
 
   private Command m_autonomousCommand;
 
@@ -79,6 +83,17 @@ public class Robot extends TimedRobot {
         config.minimumImportance = Logged.Importance.DEBUG;
     });
     Epilogue.bind(this);
+
+    // Query and cache the alliance
+    addPeriodic(() -> {
+        Optional<Alliance> alliance = DriverStation.getAlliance();
+        if (alliance.isPresent()) {
+            receivedValidAlliance = true;
+            isBlueAlliance = alliance.get() == Alliance.Blue;
+        } else if (!receivedValidAlliance) {
+            isBlueAlliance = true;
+        }
+    }, 0.5);
   }
 
   @Override
@@ -250,7 +265,8 @@ public class Robot extends TimedRobot {
 
   // Helper method to simplify checking if the robot is blue or red alliance
   public static boolean isBlue() {
-    return DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue;
+    return isBlueAlliance;
+    // return DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue;
   }
 
   public static boolean isRed() {

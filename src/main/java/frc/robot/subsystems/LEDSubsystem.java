@@ -7,6 +7,7 @@ import com.ctre.phoenix.led.ColorFlowAnimation;
 import com.ctre.phoenix.led.LarsonAnimation;
 import com.ctre.phoenix.led.RainbowAnimation;
 import com.ctre.phoenix.led.SingleFadeAnimation;
+import com.ctre.phoenix.led.StrobeAnimation;
 import com.ctre.phoenix.led.TwinkleAnimation;
 import com.ctre.phoenix.led.TwinkleOffAnimation;
 import com.ctre.phoenix.led.CANdle.LEDStripType;
@@ -35,6 +36,7 @@ public class LEDSubsystem extends SubsystemBase {
     public final TwinkleAnimation blueTwinkle, redTwinkle;
     public final ColorFlowAnimation yellowFlow;
     public final LarsonAnimation yellowLarson;
+    public final StrobeAnimation greenStrobe;
 
     private final int NUM_LEDS = 8 + 60;
     private final int STRIP_OFFSET = 0;
@@ -68,6 +70,8 @@ public class LEDSubsystem extends SubsystemBase {
 
         yellowFlow = colorFlow(YELLOW, 0.5, Direction.Forward);
         yellowLarson = larson(YELLOW, 0.5, 3, BounceMode.Front);
+
+        greenStrobe = strobe(GREEN, 1);
     }
 
     public Command animate(Animation animation) {
@@ -124,6 +128,10 @@ public class LEDSubsystem extends SubsystemBase {
 
     public LarsonAnimation larson(LEDColor color, double speed, int size, BounceMode mode) {
         return new LarsonAnimation(color.r, color.g, color.b, color.w, speed, NUM_LEDS, mode, size, NO_CANDLE_OFFSET);
+    }
+
+    public StrobeAnimation strobe(LEDColor color, double speed) {
+        return new StrobeAnimation(color.r, color.g, color.b, color.w, speed, NUM_LEDS, STRIP_OFFSET);
     }
 
     private record LEDColor(int r, int g, int b, int w) {}
