@@ -48,6 +48,10 @@ public class ElevatorArmSubsystem extends SubsystemBase{
         return indexCommand(0);
     }
 
+    public Command reverseIntakeAndIndex() {
+        return indexCommand(-0.3);
+    }
+
     private Command indexCommand(double idleSpeed) {
         return runEnd(() -> {
             // Middle sensor only means we're centered, so stop

@@ -204,6 +204,7 @@ public class RobotContainer {
         // Driver buttons
         //coral
         final Trigger driverIntake = driverController.leftTrigger().and(coralMode);
+        final Trigger driverIntakeHP = driverController.povLeft().and(coralMode); //trigger for intaking from the human player station
         final Trigger driverL1 = driverController.y().and(coralMode);
         final Trigger driverL2 = driverController.leftBumper().and(coralMode);
         final Trigger driverL3 = driverController.rightTrigger().and(coralMode);
@@ -336,6 +337,9 @@ public class RobotContainer {
 
 
         driverIntake.and(driverL1).whileTrue(intakeCoral.runSpeed(-1).alongWith(coralIndexer.runSpeed(-1)));
+
+        //intaking from the human player station (need elevator height, elevator arm pivot setpoint, intake and index with a negative idle speed)
+        driverIntakeHP.whileTrue(elevatorArmPivot.receiveHPposition().alongWith(elevator.setPosition(ElevatorSubsystem.receiveHP), elevatorArm.reverseIntakeAndIndex()));
 
         if (Robot.isSimulation()) {
             coralIntakeTrigger.onFalse(intakeCoralPivot.stow());
