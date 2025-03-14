@@ -1,5 +1,11 @@
 package frc.robot.subsystems.IntakeCoral;
 
+import com.ctre.phoenix6.configs.TalonFXSConfiguration;
+import com.ctre.phoenix6.controls.VoltageOut;
+import com.ctre.phoenix6.hardware.TalonFXS;
+import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.MotorArrangementValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
@@ -14,7 +20,10 @@ import frc.robot.Constants;
 public class IntakeCoralIOSpark implements IntakeCoralIO {
 
     SparkMax motor;
+    TalonFXS bottomRoller;
     LaserCan laserCan;
+
+    VoltageOut voltageControl;
 
     double previousDistance = 0;
     double lastDistanceChangeTime = 0;
@@ -26,6 +35,15 @@ public class IntakeCoralIOSpark implements IntakeCoralIO {
 
         motor = new SparkMax(Constants.INTAKE_CORAL_SPARK, MotorType.kBrushless);
         motor.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
+
+        TalonFXSConfiguration talonConfig = new TalonFXSConfiguration();
+        talonConfig.Commutation.MotorArrangement = MotorArrangementValue.Minion_JST;
+        talonConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        bottomRoller = new TalonFXS(Constants.INTAKE_CORAL_ROLLER_TALON, Constants.CANIVORE);
+        bottomRoller.getConfigurator().apply(talonConfig);
+        bottomRoller.setNeutralMode(NeutralModeValue.Brake);
+
+        voltageControl = new VoltageOut(0);
 
         laserCan = configureLaser(new LaserCan(Constants.INTAKE_LASERCAN));
     }
@@ -61,6 +79,7 @@ public class IntakeCoralIOSpark implements IntakeCoralIO {
     @Override
     public void setSpeed(double speed) {
         motor.setVoltage(speed * 12);
+        bottomRoller.setControl(voltageControl.withOutput(speed * 12));
     }
 
     private LaserCan configureLaser(LaserCan laser) {

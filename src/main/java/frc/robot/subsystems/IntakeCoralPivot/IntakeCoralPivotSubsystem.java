@@ -4,6 +4,8 @@ import static edu.wpi.first.units.Units.*;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.NotLogged;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -32,10 +34,11 @@ public class IntakeCoralPivotSubsystem extends SubsystemBase {
     private final IntakeCoralPivotIO io;
     private final IntakeCoralPivotIOInputs inputs;
 
-    private final PIDController rioPID;
+    private final ProfiledPIDController profiledPID;
 
     // private CoralPivotState state = CoralPivotState.MANUAL;
     private double targetPosition = -1;
+    private boolean firstPeriodic = true;
     private Trigger isStallingDebounce = new Trigger(this::isStalling).debounce(0.1);
 
     @NotLogged
@@ -53,7 +56,7 @@ public class IntakeCoralPivotSubsystem extends SubsystemBase {
         }
 
         // Unused for now, may be utilized to PID off the string potentiometer
-        rioPID = new PIDController(5, 0, 0);
+        profiledPID = new ProfiledPIDController(5, 0, 0, new Constraints(99, 99));
     }
 
     @Override
@@ -62,7 +65,13 @@ public class IntakeCoralPivotSubsystem extends SubsystemBase {
         io.update(inputs);
         SimVisuals.setCoralIntakeDegrees(180 - getDegrees());
 
-        // double output = rioPID.calculate(inputs.position, targetPosition);
+        if (firstPeriodic) {
+            profiledPID.reset(inputs.absolutePosition);
+            targetPosition = inputs.absolutePosition;
+            firstPeriodic = false;
+        }
+
+        // double output = profiledPID.calculate(inputs.absolutePosition, targetPosition);
         // io.setSpeed(output);
 
         // if (state == CoralPivotState.SLAMMING && isStallingDebounce.getAsBoolean()) {

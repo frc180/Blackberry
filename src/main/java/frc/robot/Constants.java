@@ -25,12 +25,13 @@ public class Constants {
 
     public static final int CORAL_INDEXER = 23;
 
-    public static final int INTAKE_CORAL_TALON = 24;
+    public static final int INTAKE_CORAL_TALON = 24; // nused, is replaced by INTAKE_CORAL_SPARk
     public static final int INTAKE_CORAL_PIVOT_TALON = 25;
 
     public static final int ALGAE_ARM_CANRANGE = 26; 
 
-    public static final int CANDLE = 27; // unmapped
+    public static final int CANDLE = 27;
+    public static final int INTAKE_CORAL_ROLLER_TALON = 28;
 
     // CAN IDs - RIO Bus
 
@@ -45,5 +46,7 @@ public class Constants {
     public static final int INTAKE_ALGAE_SENSOR = 7;
 
     public static final int ANALOG_ELEVATOR_ARM_PIVOT_POTENTIOMETER = 3;
+
+    public static final int ANALOG_INTAKE_CORAL_PIVOT_POTENTIOMETER = 2;
     
 }

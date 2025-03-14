@@ -36,10 +36,11 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
     public static final double L3_SCORE = Units.degreesToRotations(-6);
     public static final double L2_SCORE = L3_SCORE;
     public static final double L1_SCORE = Units.degreesToRotations(-1);
-
+    
     public static final double receiving = Units.degreesToRotations(45 - 3);
     public static final double algaeReceive = Units.degreesToRotations(-70);
     public static final double horizontal = 0;
+    public static final double PROCESSOR = Units.degreesToRotations(-17);
 
     public static final double netScore = Units.degreesToRotations(5 + 3);
     public static final double netScoreBackwards = Units.degreesToRotations(46.01);
@@ -69,7 +70,7 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
     private final MedianFilter absoluteRatioFilter = new MedianFilter(15);
 
     @NotLogged
-    public Trigger elevatorArmInPosition = new Trigger(() -> isElevatorArmInPosition());
+    public Trigger elevatorArmInPosition = new Trigger(() -> isInPosition());
     @NotLogged
     public Trigger elevatorArmInScoringPosition = new Trigger (() -> isElevatorArmInScoringPosition());
     // @NotLogged
@@ -140,6 +141,10 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
 
     public Command receiveAlgaePosition() {
         return setPosition(algaeReceive);
+    }
+
+    public Command processorPosition() {
+        return setPosition(PROCESSOR);
     }
 
     // public Command home() {
@@ -251,6 +256,15 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
         return Commands.runOnce(io::coastMode);
     }
 
+    public Trigger isTargeting(double target) {
+        return new Trigger(() -> targetPosition == target);
+    }
+
+    public Trigger isAt(double target) {
+        // return isTargeting(target).and(elevatorArmInPosition);
+        return new Trigger(() -> targetPosition == target && isInPosition());
+    }
+
     public void setPositionLimits(Double min, Double max) {
         targetPositionMin = min;
         targetPositionMax = max;
@@ -264,18 +278,18 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
         io.setPosition(position);
     }
 
-    public boolean isElevatorArmInPosition() {
+    public boolean isInPosition() {
         return Math.abs(targetPosition - inputs.position) <= IN_POSITION_TOLERANCE;
     }
 
     public boolean isAtReceivingPosition() {
-        if (!isElevatorArmInPosition()) return false;
+        if (!isInPosition()) return false;
         
         return (targetPosition == receiving || targetPosition == algaeReceive);
     }
 
     public boolean isElevatorArmInScoringPosition() {
-        if (!isElevatorArmInPosition()) return false;
+        if (!isInPosition()) return false;
 
         return targetPosition == L1_SCORE || targetPosition == L2_SCORE || targetPosition == L3_SCORE || 
                targetPosition == L4_SCORE || targetPosition == netScore || targetPosition == netScoreBackwards;

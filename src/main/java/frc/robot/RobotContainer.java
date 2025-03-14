@@ -141,7 +141,7 @@ public class RobotContainer {
         elevatorArm = new ElevatorArmSubsystem();
         elevatorArmAlgae = new ElevatorArmAlgaeSubsystem();
         coralIndexer = new CoralIndexerSubsystem();
-        leds = null; //new LEDSubsystem();
+        leds = new LEDSubsystem();
 
         Pose2d firstCoralPose = Auto.LEFT_BARGE_CORAL_POSITIONS.get(0).getPose();
         List<Pose2d> leftBargeToLeftReef = List.of(
@@ -366,42 +366,39 @@ public class RobotContainer {
         driverStartClimb.whileTrue(intakeAlgaePivot.stow()); //didnt put any onFalse commands because once we climb we physically cannot un-climb
 
         //processor alignment
-        driverProcessor.whileTrue(new DriveToPose(drivetrain, () -> vision.getProcessorPose(Robot.isBlue()))
-                                        .withPoseTargetType(PoseTarget.PROCESSOR));
+        // driverProcessor.whileTrue(new DriveToPose(drivetrain, () -> vision.getProcessorPose(Robot.isBlue()))
+        //                                 .withPoseTargetType(PoseTarget.PROCESSOR));
 
-        // passing from algae arm to algae intake for processor (note: we've been told this is not possible)
-        driverProcessor.and(elevatorArmAlgae.hasAlgae).whileTrue(Commands.parallel(
-            elevatorArmPivot.receiveAlgaePosition(),
-            elevatorArmAlgae.spit()
-        ));
+        // passing from algae arm to algae intake for processor (note: we've been told this is may not be possible)
+        // driverProcessor.and(elevatorArmAlgae.hasAlgae).whileTrue(Commands.parallel(
+        //     elevatorArmPivot.receiveAlgaePosition(),
+        //     elevatorArmAlgae.spit()
+        // ));
 
-        Trigger atProcessor = drivetrain.targetingProcessor()
-                                    .and(drivetrain.withinTargetPoseTolerance(
-                                        Inches.of(1),
-                                        Inches.of(1),
-                                        Degrees.of(5)
-                                    ));
+        // Trigger atProcessor = drivetrain.targetingProcessor()
+        //                             .and(drivetrain.withinTargetPoseTolerance(
+        //                                 Inches.of(1),
+        //                                 Inches.of(1),
+        //                                 Degrees.of(5)
+        //                             ));
 
-        driverProcessor.and(atProcessor).and(intakeAlgae.hasAlgae).whileTrue(Commands.parallel(
-            intakeAlgae.spit(),
-            Commands.runOnce(() -> {
-                if (Robot.isSimulation()) {
-                    SimLogic.outtakeAlgae();
-                }
-            })
-        ));
+        // driverProcessor.and(atProcessor).and(intakeAlgae.hasAlgae).whileTrue(Commands.parallel(
+        //     intakeAlgae.spit(),
+        //     Commands.runOnce(() -> {
+        //         if (Robot.isSimulation()) {
+        //             SimLogic.outtakeAlgae();
+        //         }
+        //     })
+        // ));
 
-        // disabled.and(elevatorArmPivot.atHardstop.negate()).onTrue(
-        //     elevatorArmPivot.coastMode().ignoringDisable(true)
-        // );
+        driverProcessor.whileTrue(elevatorArmPivot.processorPosition())
+                       .onFalse(elevatorArmPivot.stowPosition());
 
-        // disabled.and(elevatorArmPivot.atHardstop).onTrue(
-        //     elevatorArmPivot.brakeMode().ignoringDisable(true)
-        // );
-        
-        // teleop.onTrue(elevatorArmPivot.calculateAbsoluteRatio());
+        driverProcessor.and(elevatorArmPivot.isAt(ElevatorArmPivotSubsystem.PROCESSOR))
+                       .whileTrue(elevatorArmAlgae.runSpeed(-1));
 
-        // autonomous.or(teleop).onTrue(Commands.runOnce(drivetrain::zeroGyroscopeUsingPose));
+        driverProcessor.and(elevatorArmAlgae.hadAlgae.negate())
+                       .whileTrue(new RumbleCommand(1));
 
         teleop.onTrue(Commands.sequence(
             elevatorArmPivot.brakeMode(),
@@ -564,8 +561,7 @@ public class RobotContainer {
         driverSpitAlgae.whileTrue(elevatorArmPivot.setPosition(ElevatorArmPivotSubsystem.L1_SCORE))
                        .onFalse(elevatorArmPivot.stowPosition());
 
-        driverSpitAlgae.and(elevatorArmPivot::isElevatorArmInPosition)
-                       .and(() -> elevatorArmPivot.getTargetPosition() == ElevatorArmPivotSubsystem.L1_SCORE)
+        driverSpitAlgae.and(elevatorArmPivot.isAt(ElevatorArmPivotSubsystem.L1_SCORE))
                        .whileTrue(elevatorArmAlgae.runSpeed(-1));
 
         // Start moving to score algae in net
@@ -614,9 +610,8 @@ public class RobotContainer {
                 }
 
                 leds.setAnimation(Robot.isBlue() ? leds.blueTwinkle : leds.redTwinkle);
-            }));
-
-            disabled.onTrue(leds.animate(leds.yellowFlow).withTimeout(5));
+            }).ignoringDisable(true));
+            // disabled.onTrue(leds.animate(leds.yellowFlow).withTimeout(5));
         }
 
         // ================= Autonomous Trigger Logic =================

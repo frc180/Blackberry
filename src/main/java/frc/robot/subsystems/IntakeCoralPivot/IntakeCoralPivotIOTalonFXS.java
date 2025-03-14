@@ -16,6 +16,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
+import edu.wpi.first.wpilibj.AnalogPotentiometer;
 import frc.robot.Constants;
 import frc.robot.Robot;
 
@@ -25,6 +26,7 @@ public class IntakeCoralPivotIOTalonFXS implements IntakeCoralPivotIO {
     TalonFXS motor;
     MotionMagicExpoVoltage motionMagicControl;
     VoltageOut voltageControl;
+    AnalogPotentiometer potentiometer;
 
     // Status signals
     StatusSignal<Angle> positionSignal;
@@ -35,7 +37,7 @@ public class IntakeCoralPivotIOTalonFXS implements IntakeCoralPivotIO {
 
     // Simulation-only variables
     TalonFXSSimState motorSim = null;
-    double simulatedPosition = Units.degreesToRotations(-90);
+    double simulatedPosition = Units.degreesToRotations(90);
     
     public IntakeCoralPivotIOTalonFXS() {
         TalonFXSConfiguration config = new TalonFXSConfiguration();
@@ -63,7 +65,7 @@ public class IntakeCoralPivotIOTalonFXS implements IntakeCoralPivotIO {
         config.MotionMagic.MotionMagicJerk = 0;
         config.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
 
-        config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         config.CurrentLimits.StatorCurrentLimit = 40;
         config.CurrentLimits.StatorCurrentLimitEnable = true;
         motor = new TalonFXS(Constants.INTAKE_CORAL_PIVOT_TALON, Constants.CANIVORE);
@@ -79,6 +81,12 @@ public class IntakeCoralPivotIOTalonFXS implements IntakeCoralPivotIO {
         supplyCurrentSignal = trackSignal(motor.getSupplyCurrent());
         torqueCurrentSignal = trackSignal(motor.getTorqueCurrent());
 
+        potentiometer = new AnalogPotentiometer(
+            Constants.ANALOG_INTAKE_CORAL_PIVOT_POTENTIOMETER,
+            1,
+            0
+        );
+
         if (Robot.isReal()) return;
 
         motorSim = motor.getSimState();
@@ -91,6 +99,11 @@ public class IntakeCoralPivotIOTalonFXS implements IntakeCoralPivotIO {
         inputs.target = targetSignal.getValueAsDouble();
         inputs.supplyCurrent = supplyCurrentSignal.getValueAsDouble();
         inputs.torqueCurrent = torqueCurrentSignal.getValueAsDouble();
+        if (Robot.isReal()) {
+            inputs.absolutePosition = potentiometer.get();
+        } else {
+            inputs.absolutePosition = simulatedPosition;
+        }
     }
 
     @Override

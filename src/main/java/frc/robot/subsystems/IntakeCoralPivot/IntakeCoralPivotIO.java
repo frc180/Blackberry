@@ -13,6 +13,7 @@ public interface IntakeCoralPivotIO {
         double target;
         double supplyCurrent;
         double torqueCurrent;
+        double absolutePosition;
     }
     
     //to stow and extend

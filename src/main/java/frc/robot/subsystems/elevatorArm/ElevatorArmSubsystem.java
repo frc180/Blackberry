@@ -19,7 +19,7 @@ public class ElevatorArmSubsystem extends SubsystemBase{
     public final Trigger hasNoCoral;
 
     @NotLogged
-    final double slowIndexSpeed = 0.05;
+    final double slowIndexSpeed = 0.025; // 0.05
 
     public ElevatorArmSubsystem() {
         inputs = new ElevatorArmIOInputs();

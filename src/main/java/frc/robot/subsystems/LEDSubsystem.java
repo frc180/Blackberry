@@ -8,9 +8,14 @@ import com.ctre.phoenix.led.LarsonAnimation;
 import com.ctre.phoenix.led.RainbowAnimation;
 import com.ctre.phoenix.led.SingleFadeAnimation;
 import com.ctre.phoenix.led.TwinkleAnimation;
+import com.ctre.phoenix.led.TwinkleOffAnimation;
+import com.ctre.phoenix.led.CANdle.LEDStripType;
+import com.ctre.phoenix.led.CANdle.VBatOutputMode;
 import com.ctre.phoenix.led.ColorFlowAnimation.Direction;
 import com.ctre.phoenix.led.LarsonAnimation.BounceMode;
 import com.ctre.phoenix.led.TwinkleAnimation.TwinklePercent;
+import com.ctre.phoenix.led.TwinkleOffAnimation.TwinkleOffPercent;
+
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
@@ -39,20 +44,24 @@ public class LEDSubsystem extends SubsystemBase {
         CANdleConfiguration config = new CANdleConfiguration();
         config.disableWhenLOS = true;
         config.statusLedOffWhenActive = true;
-        candle = new CANdle(Constants.CANDLE);
+        config.brightnessScalar = 0.4;
+        config.v5Enabled = true;
+        config.stripType = LEDStripType.GRB;
+        config.vBatOutputMode = VBatOutputMode.Off;
+        candle = new CANdle(Constants.CANDLE, Constants.CANIVORE);
         candle.configAllSettings(config);
 
         rainbow = new RainbowAnimation(1, 1, NUM_LEDS, false, STRIP_OFFSET);
 
-        blueFade = fade(BLUE, 1);
-        redFade = fade(RED, 1);
-        yellowFade = fade(YELLOW, 1);
+        blueFade = fade(BLUE, 0.25);
+        redFade = fade(RED, 0.25);
+        yellowFade = fade(YELLOW, 0.25);
 
-        blueTwinkle = twinkle(BLUE, 1, TwinklePercent.Percent30);
-        redTwinkle = twinkle(RED, 1, TwinklePercent.Percent30);
+        blueTwinkle = twinkle(BLUE, 0.25, TwinklePercent.Percent88);
+        redTwinkle = twinkle(RED, 0.25, TwinklePercent.Percent88);
 
         yellowFlow = colorFlow(YELLOW, 0.5, Direction.Forward);
-        yellowLarson = larson(YELLOW, 1, 3, BounceMode.Front);
+        yellowLarson = larson(YELLOW, 0.5, 3, BounceMode.Front);
     }
 
     public Command animate(Animation animation) {
@@ -67,11 +76,11 @@ public class LEDSubsystem extends SubsystemBase {
     }
 
     public SingleFadeAnimation fade(LEDColor color, double speed) {
-        return new SingleFadeAnimation(color.r, color.g, color.b, color.w, 1, NUM_LEDS, STRIP_OFFSET);
+        return new SingleFadeAnimation(color.r, color.g, color.b, color.w, speed, NUM_LEDS, STRIP_OFFSET);
     }
 
     public TwinkleAnimation twinkle(LEDColor color, double speed, TwinklePercent percent) {
-        return new TwinkleAnimation(color.r, color.g, color.b, color.w, 1, NUM_LEDS, percent, STRIP_OFFSET);
+        return new TwinkleAnimation(color.r, color.g, color.b, color.w, speed, NUM_LEDS, percent, STRIP_OFFSET);
     }
 
     public ColorFlowAnimation colorFlow(LEDColor color, double speed, Direction direction) {
