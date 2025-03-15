@@ -1,5 +1,6 @@
 package frc.robot.subsystems;
 
+import com.ctre.phoenix.ErrorCode;
 import com.ctre.phoenix.led.Animation;
 import com.ctre.phoenix.led.CANdle;
 import com.ctre.phoenix.led.CANdleConfiguration;
@@ -23,13 +24,13 @@ import frc.robot.Constants;
 
 public class LEDSubsystem extends SubsystemBase {
 
-    public final LEDColor RED = new LEDColor(255, 0, 0, 255);
+    public final LEDColor RED = new LEDColor(50, 0, 0, 255);
     // public final LEDColor BLUE = new LEDColor(0, 0, 255, 255); // primary blue
-    public final LEDColor BLUE = new LEDColor(21, 46, 99, 255); // navy blue
+    public final LEDColor BLUE = new LEDColor(21, 46, 150, 255); // navy blue, b 99
     public final LEDColor GREEN = new LEDColor(0, 255, 0, 255);
     public final LEDColor YELLOW = new LEDColor(255, 255, 0, 255);
     public final LEDColor WHITE = new LEDColor(255, 255, 255, 255);
-    public final LEDColor ALGAE = new LEDColor(53, 202, 183, 255);
+    public final LEDColor ALGAE = new LEDColor(0, 255, 30, 255);
 
     public final RainbowAnimation rainbow;
     public final SingleFadeAnimation blueFade, redFade, yellowFade, whiteFade;
@@ -49,7 +50,7 @@ public class LEDSubsystem extends SubsystemBase {
 
     public LEDSubsystem() {
         CANdleConfiguration config = new CANdleConfiguration();
-        config.disableWhenLOS = true;
+        config.disableWhenLOS = false;
         config.statusLedOffWhenActive = true;
         config.brightnessScalar = 0.4;
         config.v5Enabled = true;
@@ -84,29 +85,35 @@ public class LEDSubsystem extends SubsystemBase {
 
     public void setAnimation(Animation animation) {
         if (animation != currentAnimation) {
-            candle.animate(animation);
-            currentAnimation = animation;
-            currentColor = null;
-            currentSplitColor = null;
+            ErrorCode code = candle.animate(animation);
+            if (code == ErrorCode.OK) {
+                currentAnimation = animation;
+                currentColor = null;
+                currentSplitColor = null;
+            }
         }
     }
 
     public void setColor(LEDColor color) {
         if (color != currentColor) {
-            candle.setLEDs(color.r, color.g, color.b, color.w, STRIP_OFFSET, NUM_LEDS);
-            currentColor = color;
-            currentAnimation = null;
-            currentSplitColor = null;
+            ErrorCode code = candle.setLEDs(color.r, color.g, color.b, color.w, STRIP_OFFSET, NUM_LEDS);
+            if (code == ErrorCode.OK) {
+                currentColor = color;
+                currentAnimation = null;
+                currentSplitColor = null;
+            }
         }
     }
 
     public void setSplitColor(LEDColor top, LEDColor bottom) {
         if (top != currentColor || bottom != currentSplitColor) {
-            candle.setLEDs(top.r, top.g, top.b, top.w, 0, 38);
-            candle.setLEDs(bottom.r, bottom.g, bottom.b, bottom.w, 38, 30);
-            currentColor = top;
-            currentSplitColor = bottom;
-            currentAnimation = null;
+            ErrorCode code1 = candle.setLEDs(bottom.r, bottom.g, bottom.b, bottom.w, 0, 38);
+            ErrorCode code2 = candle.setLEDs(top.r, top.g, top.b, top.w, 38, 30);
+            if (code1 == ErrorCode.OK && code2 == ErrorCode.OK) {
+                currentColor = top;
+                currentSplitColor = bottom;
+                currentAnimation = null;
+            }
         }
     }
 
@@ -127,7 +134,7 @@ public class LEDSubsystem extends SubsystemBase {
     }
 
     public LarsonAnimation larson(LEDColor color, double speed, int size, BounceMode mode) {
-        return new LarsonAnimation(color.r, color.g, color.b, color.w, speed, NUM_LEDS, mode, size, NO_CANDLE_OFFSET);
+        return new LarsonAnimation(color.r, color.g, color.b, color.w, speed, NUM_LEDS - NO_CANDLE_OFFSET, mode, size, NO_CANDLE_OFFSET);
     }
 
     public StrobeAnimation strobe(LEDColor color, double speed) {

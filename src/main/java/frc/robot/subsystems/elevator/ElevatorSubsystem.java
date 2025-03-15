@@ -6,6 +6,8 @@ package frc.robot.subsystems.elevator;
 
 import static edu.wpi.first.units.Units.*;
 import java.util.function.BooleanSupplier;
+
+import com.ctre.phoenix6.Orchestra;
 import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.NotLogged;
@@ -30,7 +32,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     public static final Distance NET = Meters.of(1.47).minus(Inches.of(1));
     public static final Distance STOW = Inches.of(0);
     public static final Distance ZERO = Meters.of(0);
-    public static final Distance receiveHP = Inches.of(3); //idk if this is right i guesstimated
+    public static final Distance receiveHP = Inches.of(1.5); //idk if this is right i guesstimated
 
     protected static final double SOFT_UPPER_LIMIT = Meters.of(1.48).in(Meters);
     protected static final double SOFT_LOWER_LIMIT = 0;

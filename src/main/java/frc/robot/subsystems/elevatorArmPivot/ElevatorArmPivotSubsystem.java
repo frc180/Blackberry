@@ -8,6 +8,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -30,7 +31,7 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
     protected static final Angle FORWARD_LIMIT = Degrees.of(60.7);
     protected static final Angle REVERSE_LIMIT = Degrees.of(-20);
     protected static final Angle HARD_STOP_OFFSET = Degrees.of(60.46875 + 3.955078125 + 2.109375 - 2.63671875);
-    private static final double RESYNC_THRESHOLD = Degrees.of(2).in(Rotations);
+    private static final double RESYNC_THRESHOLD = Degrees.of(1).in(Rotations);
 
     public static final double L4_SCORE = Units.degreesToRotations(-16);
     public static final double L3_SCORE = Units.degreesToRotations(-6);
@@ -38,7 +39,7 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
     public static final double L1_SCORE = Units.degreesToRotations(-1);
     
     public static final double receiving = Units.degreesToRotations(45 - 3);
-    public static final double receivingHP = Units.degreesToRotations(15); //idk this number yet
+    public static final double receivingHP = Units.degreesToRotations(42.1); //idk this number yet
     public static final double algaeReceive = Units.degreesToRotations(-70);
     public static final double horizontal = 0;
     public static final double PROCESSOR = Units.degreesToRotations(-17);
@@ -90,9 +91,12 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
 
     @NotLogged
     boolean firstPeriodic = true;
+    @NotLogged
+    boolean wasEnabled = false;
 
     @Override
     public void periodic() {
+        boolean enabled = RobotState.isEnabled();
         io.update(inputs);
         SimVisuals.setElevatorArmPivotDegrees(getDegrees());
 
@@ -103,12 +107,14 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
         shouldResync = Math.abs(positionDisagreement) > RESYNC_THRESHOLD;
 
         double currentTime = Timer.getFPGATimestamp();
-        if (firstPeriodic || currentTime - lastPositionSyncTime > 0.5) {
+        if (firstPeriodic || (enabled && !wasEnabled)){// || currentTime - lastPositionSyncTime > 0.5) {
             io.zero(getAbsolutePosition());
             homed = true;
             firstPeriodic = false;
             lastPositionSyncTime = currentTime;
         }
+
+        wasEnabled = enabled;
 
         // if (pidMode) {
         //     setArmPositionDirect(targetPosition);

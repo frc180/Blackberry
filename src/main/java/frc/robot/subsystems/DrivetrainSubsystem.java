@@ -7,10 +7,16 @@ import java.util.Optional;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
+
+import com.ctre.phoenix6.Orchestra;
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.Utils;
+import com.ctre.phoenix6.configs.AudioConfigs;
+import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
+import com.ctre.phoenix6.configs.TalonFXConfigurator;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
+import com.ctre.phoenix6.swerve.SwerveModule;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
@@ -158,6 +164,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     private boolean pigeonConnected = false;
     private Alert pigeonDisconnectedAlert = new Alert("Pigeon gyro disconnected!", AlertType.kError);
 
+    private final Orchestra orchestra;
     private RobotConfig config;
 
     PathConstraints constraints = new PathConstraints(MAX_SPEED * 0.8, MAX_SPEED_ACCEL, MAX_ANGULAR_RATE, MAX_ANGULAR_ACCEL); //must be in m/s and rad/s
@@ -296,6 +303,14 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         rotationProfiledPid = new ProfiledPIDController(5, 0., 0,
                                         new TrapezoidProfile.Constraints(MAX_ANGULAR_RATE, MAX_ANGULAR_ACCEL));
         rotationProfiledPid.enableContinuousInput(-Math.PI, Math.PI);
+
+        orchestra = new Orchestra();
+        var mods = getModules();
+        for (int i = 0; i < mods.length; i++) {
+            var module = mods[i];
+            orchestra.addInstrument(module.getDriveMotor(), 1);
+            orchestra.addInstrument(module.getSteerMotor(), 0);
+        }
 
         // SmartDashboard.putData("Drivetrain X Profiled PID", xProfiledPid);
         // SmartDashboard.putData("Drivetrain Y Profiled PID", yProfiledPid);
@@ -952,5 +967,19 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
             return pose.get();
         }
         return null;
+    }
+
+    public void sing(String song) {
+        orchestra.loadMusic(song + ".chrp");
+        orchestra.play();
+    }
+
+    public Command singCommand(String song) {
+        return runEnd(
+            ()-> {
+                if (!orchestra.isPlaying()) sing(song); 
+            },
+            orchestra::stop
+        ).until(DriverStation::isEnabled).ignoringDisable(true);
     }
 }

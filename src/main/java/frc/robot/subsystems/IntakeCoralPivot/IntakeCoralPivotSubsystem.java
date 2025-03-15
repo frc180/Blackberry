@@ -8,6 +8,7 @@ import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -26,8 +27,9 @@ public class IntakeCoralPivotSubsystem extends SubsystemBase {
     // }
     
     //presets for intake positions
-    public static final double stow = Units.degreesToRotations(90);
-    public static final double extend = Units.degreesToRotations(0);
+    // potentiometer units
+    public static final double stow = .03;
+    public static final double extend = .121; // .122
 
     private static final double IN_POSITION_TOLERANCE = Units.degreesToRotations(3);
 
@@ -56,7 +58,8 @@ public class IntakeCoralPivotSubsystem extends SubsystemBase {
         }
 
         // Unused for now, may be utilized to PID off the string potentiometer
-        profiledPID = new ProfiledPIDController(5, 0, 0, new Constraints(99, 99));
+        profiledPID = new ProfiledPIDController(30, 0, 0, new Constraints(99, 99));
+        SmartDashboard.putData("CoralPivotPID", profiledPID);
     }
 
     @Override
@@ -71,8 +74,8 @@ public class IntakeCoralPivotSubsystem extends SubsystemBase {
             firstPeriodic = false;
         }
 
-        // double output = profiledPID.calculate(inputs.absolutePosition, targetPosition);
-        // io.setSpeed(output);
+        double output = profiledPID.calculate(inputs.absolutePosition, targetPosition);
+        io.setSpeed(output);
 
         // if (state == CoralPivotState.SLAMMING && isStallingDebounce.getAsBoolean()) {
         //     state = CoralPivotState.HOLD;
@@ -126,8 +129,9 @@ public class IntakeCoralPivotSubsystem extends SubsystemBase {
             // } else if (state == CoralPivotState.MANUAL) {
             //     state = CoralPivotState.HOLD;
             // }
+
+            // io.setIntakePosition(encoderPosition);
             targetPosition = encoderPosition;
-            io.setIntakePosition(encoderPosition);
           });
     }
 

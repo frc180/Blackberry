@@ -36,13 +36,24 @@ public final class Auto {
     public static final Trigger intakingState = new Trigger(() -> state == AutoState.INTAKING);
     public static final Trigger scoringState = new Trigger(() -> state == AutoState.SCORING);
 
-    public static final List<CoralScoringPosition> LEFT_BARGE_CORAL_POSITIONS = List.of(
-        new CoralScoringPosition(20, 4, true),
-        new CoralScoringPosition(19, 4, false),
-        new CoralScoringPosition(19, 4, true),
-        new CoralScoringPosition(18, 4, true),
-        new CoralScoringPosition(18, 4, false)
-    );
+    public static List<CoralScoringPosition> leftBarge5(boolean firstBranchLeft) {
+        return List.of(
+            new CoralScoringPosition(20, 4, firstBranchLeft),
+            new CoralScoringPosition(19, 4, false),
+            new CoralScoringPosition(19, 4, true),
+            new CoralScoringPosition(18, 4, true),
+            new CoralScoringPosition(18, 4, false)
+        );
+    }
+
+    public static List<CoralScoringPosition> leftBargeAvoidFront(boolean firstBranchLeft) {
+        return List.of(
+            new CoralScoringPosition(20, 4, firstBranchLeft),
+            new CoralScoringPosition(19, 4, false),
+            new CoralScoringPosition(19, 4, true),
+            new CoralScoringPosition(20, 4, !firstBranchLeft)
+        );
+    }
 
     private Auto() {}
     
@@ -172,15 +183,10 @@ public final class Auto {
         });
     }
 
-    public static Command bargeCoralAuto(List<CoralScoringPosition> coralScoringPositions, List<Pose2d> startingPath, Pose2d simStart) {
-        DrivetrainSubsystem drivetrain = RobotContainer.instance.drivetrain;
-
+    public static Command bargeCoralAuto(List<CoralScoringPosition> coralScoringPositions, Pose2d simStart) {
         return Commands.parallel(
             Auto.configureAuto(coralScoringPositions, simStart),
             (driveToNextCoralPose())
-            // drivetrain.followPath(startingPath, 0.0, false)
-            //     .until(drivetrain.withinTargetPoseDistance(1.2))
-            //     .andThen(driveToNextCoralPose())
         );
     }
 

@@ -85,15 +85,15 @@ public class Robot extends TimedRobot {
     Epilogue.bind(this);
 
     // Query and cache the alliance
-    addPeriodic(() -> {
-        Optional<Alliance> alliance = DriverStation.getAlliance();
-        if (alliance.isPresent()) {
-            receivedValidAlliance = true;
-            isBlueAlliance = alliance.get() == Alliance.Blue;
-        } else if (!receivedValidAlliance) {
-            isBlueAlliance = true;
-        }
-    }, 0.5);
+    // addPeriodic(() -> {
+    //     Optional<Alliance> alliance = DriverStation.getAlliance();
+    //     if (alliance.isPresent()) {
+    //         receivedValidAlliance = true;
+    //         isBlueAlliance = alliance.get() == Alliance.Blue;
+    //     } else if (!receivedValidAlliance) {
+    //         isBlueAlliance = true;
+    //     }
+    // }, 0.5);
   }
 
   @Override
@@ -104,6 +104,7 @@ public class Robot extends TimedRobot {
 
   @Override
   public void robotPeriodic() {
+    isBlueAlliance = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue;
     StatusSignals.refreshAll();
     CommandScheduler.getInstance().run();
     SimVisuals.update();

@@ -22,6 +22,13 @@ import frc.robot.Robot;
 
 public class IntakeCoralPivotIOTalonFXS implements IntakeCoralPivotIO {
     final double PIVOT_GEARING = 7 * 5 * 3 * (22.0/16.0) * (36.0/22.0);
+    final double POTENTIOMETER_SCALAR = 1; // convert potentiometer reading to ROTATIONS
+    final double POTENTIOMETER_OFFSET = 0;
+
+    // intake - .122
+    // match stow - .017
+    // real stow .03
+
 
     TalonFXS motor;
     MotionMagicExpoVoltage motionMagicControl;
@@ -100,7 +107,7 @@ public class IntakeCoralPivotIOTalonFXS implements IntakeCoralPivotIO {
         inputs.supplyCurrent = supplyCurrentSignal.getValueAsDouble();
         inputs.torqueCurrent = torqueCurrentSignal.getValueAsDouble();
         if (Robot.isReal()) {
-            inputs.absolutePosition = potentiometer.get();
+            inputs.absolutePosition = (potentiometer.get() * POTENTIOMETER_SCALAR) - POTENTIOMETER_OFFSET;
         } else {
             inputs.absolutePosition = simulatedPosition;
         }

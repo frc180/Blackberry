@@ -130,7 +130,7 @@ public class VisionSubsystem extends SubsystemBase {
     private final Transform2d rightL1ReefRotation = new Transform2d(0, 0, Rotation2d.fromDegrees(-30));
 
     // 1.5 inches closer (forward) than standard, applied on top of left/right reef transforms
-    private final Transform2d algaeReefTransform = new Transform2d(Inches.of(1.5).in(Meters), 0, Rotation2d.kZero);
+    private final Transform2d algaeReefTransform = new Transform2d(Inches.of(0.75).in(Meters), 0, Rotation2d.kZero);
 
     private final Pose2d redProcessorPose;
     private final Pose2d blueProcessorPose;

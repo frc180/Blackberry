@@ -14,12 +14,14 @@ public class ElevatorArmSubsystem extends SubsystemBase{
     ElevatorArmIO io;
     ElevatorArmIOInputs inputs;
 
+    @NotLogged
     public final Trigger hasCoral;
+    @NotLogged
     public final Trigger hasPartialCoral;
     public final Trigger hasNoCoral;
 
     @NotLogged
-    final double slowIndexSpeed = 0.025; // 0.05
+    final double slowIndexSpeed = 0.04; // 0.05
 
     public ElevatorArmSubsystem() {
         inputs = new ElevatorArmIOInputs();
@@ -30,8 +32,8 @@ public class ElevatorArmSubsystem extends SubsystemBase{
             io = new ElevatorArmIOSim();
         }
 
-        hasCoral = new Trigger(() -> inputs.middleCoralSensor && !inputs.backCoralSensor);
-        hasPartialCoral = new Trigger(() -> inputs.frontCoralSensor || inputs.middleCoralSensor || inputs.backCoralSensor);
+        hasCoral = new Trigger(this::hasCoralBool);
+        hasPartialCoral = new Trigger(this::hasPartialCoralBool);
         hasNoCoral = hasPartialCoral.negate();
     }
 
@@ -98,5 +100,13 @@ public class ElevatorArmSubsystem extends SubsystemBase{
             () -> io.setSpeed(speed),
             () -> io.stop()
         );
+    }
+
+    public boolean hasCoralBool() {
+        return inputs.middleCoralSensor && !inputs.backCoralSensor;
+    }
+
+    public boolean hasPartialCoralBool() {
+        return inputs.frontCoralSensor || inputs.middleCoralSensor || inputs.backCoralSensor;
     }
 }
