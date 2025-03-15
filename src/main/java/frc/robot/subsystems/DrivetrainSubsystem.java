@@ -272,10 +272,10 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         gyroRateSignal = trackSignal(getPigeon2().getAngularVelocityZWorld());
 
         double translationMaxSpeed = MAX_SPEED * 0.8;
-        double translationP = 4; // was 4
+        double translationP = 4;
         double translationI = 0.0;
         double translationD = 0.3; // was 0.15 most of  the  time, 0.3 hasn't shown huge difference
-        double translationKV = 0.5;
+        double translationKV = 0.5; // EXPERIMENT: Try less kV
         double translationKA = 0;
 
         if (Robot.isSimulation()) {
@@ -283,7 +283,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
             translationP = 6;
             translationI = 0.0;
             translationD = 0.6;
-            translationKV = 1;
+            translationKV = 0.5;
             translationKA = 0;
         }
 

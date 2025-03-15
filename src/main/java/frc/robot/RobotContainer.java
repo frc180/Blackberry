@@ -124,6 +124,10 @@ public class RobotContainer {
     @Logged(name = "Reef - At")
     public Trigger atReef = null;
 
+    // Debug
+    public Trigger atReefXY;
+    public Trigger atReefAngle;
+
     public static RobotContainer instance;
 
     public RobotContainer() {
@@ -265,11 +269,25 @@ public class RobotContainer {
                         Degrees.of(4)
         ));
 
-        atReef = drivetrain.targetingReef().and(drivetrain.withinTargetPoseTolerance(
-                        Inches.of(1),
-                        Inches.of(1),
-                        Degrees.of(2)
-        ));
+        // EXPERIMENT - less tolerance for atReef
+        atReefXY = drivetrain.withinTargetPoseTolerance(
+                        Inches.of(1 * 0.75),
+                        Inches.of(1 * 0.75),
+                        null
+        );
+
+        atReefAngle = drivetrain.withinTargetPoseTolerance(
+                        null,
+                        null,
+                        Degrees.of(2 * 0.75)
+        );
+
+        atReef = drivetrain.targetingReef().and(atReefXY).and(atReefAngle);
+        // atReef = drivetrain.targetingReef().and(drivetrain.withinTargetPoseTolerance(
+        //                 Inches.of(1),
+        //                 Inches.of(1),
+        //                 Degrees.of(2)
+        // ));
 
         // Auto triggers
         final Trigger autoCoralIntake = autonomous.and(Auto::isCoralIntaking);
@@ -587,25 +605,20 @@ public class RobotContainer {
         driverNet.and(drivetrain.withinTargetHeadingTolerance(5).debounce(0.1)).whileTrue(
             Commands.parallel(
                 elevator.setPosition(ElevatorSubsystem.NET),
-                elevatorArmPivot.netScorePosition()//.alongWith(drivetrain.targetHeadingContinuous(0.0, HeadingTarget.GYRO))
-                // Commands.either(
-                //     elevatorArmPivot.netScorePosition().alongWith(drivetrain.targetHeadingContinuous(0.0, HeadingTarget.GYRO)),
-                //     elevatorArmPivot.netScoreBackwardsPosition().alongWith(drivetrain.targetHeadingContinuous(180.0, HeadingTarget.GYRO)),
-                //     () -> Math.abs(drivetrain.getGyroscopeDegreesWrapped()) <= 90
-                // )
+                elevatorArmPivot.netScorePosition()
             )
         ).onFalse(Commands.sequence(
-            Commands.either(
-                elevatorArmAlgae.runSpeed(-1).withTimeout(0.5),
-                Commands.none(),
-                () -> elevator.isElevatorInPosition() && elevatorArmAlgae.hadAlgae.getAsBoolean()
-            ),
+            // Commands.either(
+            //     elevatorArmAlgae.runSpeed(-1).withTimeout(0.5),
+            //     Commands.none(),
+            //     () -> elevator.isElevatorInPosition() && elevatorArmAlgae.hadAlgae.getAsBoolean()
+            // ),
             elevator.stow().alongWith(elevatorArmPivot.stowPosition())
         ));
 
-        // EXPERIMENT - attempt to lob algae into the net by releasing while moving the elevator 
+        // Lob algae into the net by releasing while moving the elevator 
         driverNet.and(elevatorArmPivot::isElevatorArmInScoringPosition)
-                 .and(() -> elevator.getTargetPosition() == ElevatorSubsystem.NET && elevator.getTargetErrorInches() < 30) // 36 worked
+                 .and(() -> elevator.getTargetPosition() == ElevatorSubsystem.NET && elevator.getTargetErrorInches() < 32) // 36 worked but low, 30 worked but high
                  .onTrue(
                     elevatorArmAlgae.runSpeed(-1)
                                     .withTimeout(0.5)

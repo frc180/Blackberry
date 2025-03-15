@@ -65,7 +65,6 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
     @NotLogged
     private double lastPositionSyncTime = 0;
     private double positionDisagreement = 0;
-    private boolean shouldResync = false;
     private double absoluteRatio = 0;
     private double absoluteRatioFiltered = 0;
     private double absoluteRatioSamples = 0;
@@ -104,10 +103,9 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
 
         absoluteRatio = inputs.position / getAbsolutePosition();
         positionDisagreement = getAbsolutePosition() - inputs.position;
-        shouldResync = Math.abs(positionDisagreement) > RESYNC_THRESHOLD;
 
         double currentTime = Timer.getFPGATimestamp();
-        if (firstPeriodic || (enabled && !wasEnabled)){// || currentTime - lastPositionSyncTime > 0.5) {
+        if (firstPeriodic) {// || (enabled && !wasEnabled)){// || currentTime - lastPositionSyncTime > 0.5) {
             io.zero(getAbsolutePosition());
             homed = true;
             firstPeriodic = false;

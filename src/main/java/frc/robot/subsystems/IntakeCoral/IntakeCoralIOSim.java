@@ -32,7 +32,7 @@ public class IntakeCoralIOSim implements IntakeCoralIO {
     public void update(IntakeIOInputs inputs) {
         IntakeCoralPivotSubsystem coralIntake = RobotContainer.instance.intakeCoralPivot;
         boolean intakeDeployed = coralIntake.getTargetPosition() == IntakeCoralPivotSubsystem.extend && coralIntake.isAtTarget();
-        boolean intakeReady = intakeDeployed && rollerSpeed > 0;
+        boolean intakeReady = intakeDeployed;// && rollerSpeed > 0;
 
         if (intakeSim != null) {
             if (intakeReady) {

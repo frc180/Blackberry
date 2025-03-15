@@ -6,8 +6,6 @@ package frc.robot.subsystems.elevator;
 
 import static edu.wpi.first.units.Units.*;
 import java.util.function.BooleanSupplier;
-
-import com.ctre.phoenix6.Orchestra;
 import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.NotLogged;
@@ -15,6 +13,7 @@ import edu.wpi.first.epilogue.Logged.Importance;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -24,6 +23,7 @@ import frc.robot.util.simulation.SimVisuals;
 
 @Logged
 public class ElevatorSubsystem extends SubsystemBase {
+    public static final boolean LIVE_TUNING_ENABLED = true;
     // Distance presets, with 0 being the bottom of the elevator
     public static final Distance L1 = Inches.of(2.5);
     public static final Distance L2 = Meters.of(0.302).plus(Inches.of(1));
@@ -45,6 +45,8 @@ public class ElevatorSubsystem extends SubsystemBase {
     private Alert notHomedAlert = new Alert("Elevator not homed!", AlertType.kWarning);
 
     private Distance targetPosition = ZERO;
+    @NotLogged
+    private double adjustedTargetPosition = ZERO.in(Meters);
     private boolean hasHomed = false;
 
     private Trigger atLowerLimitDebounced = new Trigger(this::isAtLowerLimit).debounce(0.1);
@@ -71,6 +73,8 @@ public class ElevatorSubsystem extends SubsystemBase {
         inputs = new ElevatorIOInputs();
         io = new ElevatorIOTalonFX();
         io.zero();
+
+        initTuningFields();
     }
 
     @Override
@@ -197,7 +201,8 @@ public class ElevatorSubsystem extends SubsystemBase {
     }
 
     public double getTargetErrorMeters() {
-        return targetPosition.in(Meters) - inputs.position;
+        // return targetPosition.in(Meters) - inputs.position;
+        return adjustedTargetPosition - inputs.position;
     }
 
     @Logged(importance = Importance.CRITICAL)
@@ -226,7 +231,8 @@ public class ElevatorSubsystem extends SubsystemBase {
     public void setPositionDirect(Distance position) {
         targetPosition = position;
         if (!softStowLogic()) {
-            io.setPosition(position.in(Meters));
+            adjustedTargetPosition = position.in(Meters) + getTuningAdjustment(position);
+            io.setPosition(adjustedTargetPosition);
         }
     }
 
@@ -247,5 +253,33 @@ public class ElevatorSubsystem extends SubsystemBase {
             default:
                 return STOW;
         }
+    }
+
+    private double getTuningAdjustment(Distance position) {
+        if (!LIVE_TUNING_ENABLED) return 0;
+
+        String key = null;
+        if (position == L4) {
+            key = "Elevator/L4";
+        } else if (position == L3) {
+            key = "Elevator/L3";
+        } else if (position == L2) {
+            key = "Elevator/L2";
+        } else if (position == L1) {
+            key = "Elevator/L1";
+        }
+        if (key == null) return 0;
+        
+        double adjustmentInches = SmartDashboard.getNumber(key, 0);
+        return adjustmentInches * 0.0254;
+    }
+
+    private void initTuningFields() {
+        if (!LIVE_TUNING_ENABLED) return;
+
+        SmartDashboard.putNumber("Elevator/L4", 0);
+        SmartDashboard.putNumber("Elevator/L3", 0);
+        SmartDashboard.putNumber("Elevator/L2", 0);
+        SmartDashboard.putNumber("Elevator/L1", 0);
     }
 }

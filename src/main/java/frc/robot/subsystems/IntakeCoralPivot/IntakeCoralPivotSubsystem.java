@@ -41,7 +41,6 @@ public class IntakeCoralPivotSubsystem extends SubsystemBase {
     // private CoralPivotState state = CoralPivotState.MANUAL;
     private double targetPosition = -1;
     private boolean firstPeriodic = true;
-    private Trigger isStallingDebounce = new Trigger(this::isStalling).debounce(0.1);
 
     @NotLogged
     public final Trigger atTarget = new Trigger(this::isAtTarget);
@@ -57,8 +56,9 @@ public class IntakeCoralPivotSubsystem extends SubsystemBase {
             io = new IntakeCoralPivotIOTalonFXS();
         }
 
-        // Unused for now, may be utilized to PID off the string potentiometer
-        profiledPID = new ProfiledPIDController(30, 0, 0, new Constraints(99, 99));
+        double kP = 30;
+        if (Robot.isSimulation()) kP = 5;
+        profiledPID = new ProfiledPIDController(kP, 0, 0, new Constraints(99, 99));
         SmartDashboard.putData("CoralPivotPID", profiledPID);
     }
 
