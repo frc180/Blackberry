@@ -39,7 +39,8 @@ public class LEDSubsystem extends SubsystemBase {
     public final LarsonAnimation yellowLarson;
     public final StrobeAnimation greenStrobe;
 
-    private final int NUM_LEDS = 8 + 60;
+    private final int STRIP_LENGTH = 49;
+    private final int NUM_LEDS = 8 + STRIP_LENGTH;
     private final int STRIP_OFFSET = 0;
     private final int NO_CANDLE_OFFSET = 8;
     private final CANdle candle;
@@ -52,7 +53,7 @@ public class LEDSubsystem extends SubsystemBase {
         CANdleConfiguration config = new CANdleConfiguration();
         config.disableWhenLOS = false;
         config.statusLedOffWhenActive = true;
-        config.brightnessScalar = 0.4;
+        config.brightnessScalar = 0.3; // was 0.4
         config.v5Enabled = true;
         config.stripType = LEDStripType.GRB;
         config.vBatOutputMode = VBatOutputMode.Off;
@@ -66,8 +67,8 @@ public class LEDSubsystem extends SubsystemBase {
         yellowFade = fade(YELLOW, 0.25);
         whiteFade = fade(WHITE, 1);
 
-        blueTwinkle = twinkle(BLUE, 0.25, TwinklePercent.Percent88);
-        redTwinkle = twinkle(RED, 0.25, TwinklePercent.Percent88);
+        blueTwinkle = twinkle(BLUE, 0.25, TwinklePercent.Percent64);
+        redTwinkle = twinkle(RED, 0.25, TwinklePercent.Percent64);
 
         yellowFlow = colorFlow(YELLOW, 0.5, Direction.Forward);
         yellowLarson = larson(YELLOW, 0.5, 3, BounceMode.Front);
@@ -96,6 +97,7 @@ public class LEDSubsystem extends SubsystemBase {
 
     public void setColor(LEDColor color) {
         if (color != currentColor) {
+            candle.clearAnimation(0);
             ErrorCode code = candle.setLEDs(color.r, color.g, color.b, color.w, STRIP_OFFSET, NUM_LEDS);
             if (code == ErrorCode.OK) {
                 currentColor = color;
@@ -107,8 +109,9 @@ public class LEDSubsystem extends SubsystemBase {
 
     public void setSplitColor(LEDColor top, LEDColor bottom) {
         if (top != currentColor || bottom != currentSplitColor) {
-            ErrorCode code1 = candle.setLEDs(bottom.r, bottom.g, bottom.b, bottom.w, 0, 38);
-            ErrorCode code2 = candle.setLEDs(top.r, top.g, top.b, top.w, 38, 30);
+            candle.clearAnimation(0);
+            ErrorCode code1 = candle.setLEDs(bottom.r, bottom.g, bottom.b, bottom.w, 0, 24);
+            ErrorCode code2 = candle.setLEDs(top.r, top.g, top.b, top.w, 24, 25);
             if (code1 == ErrorCode.OK && code2 == ErrorCode.OK) {
                 currentColor = top;
                 currentSplitColor = bottom;

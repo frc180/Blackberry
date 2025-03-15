@@ -1,5 +1,8 @@
 package frc.robot;
 
+import static edu.wpi.first.units.Units.*;
+
+import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -29,6 +32,7 @@ public final class Auto {
     private static final Transform2d HP_STATION_TRANSFORM = new Transform2d(0, 0, Rotation2d.fromDegrees(150));
     
     private static boolean coralIntaking = false;
+    public static boolean leftSide = true;
     public static AutoState state = AutoState.IDLE;
     public static CoralScoringPosition previousCoralScoringPosition = null; 
     public static List<CoralScoringPosition> coralScoringPositions = new ArrayList<>();
@@ -52,6 +56,16 @@ public final class Auto {
             new CoralScoringPosition(19, 4, false),
             new CoralScoringPosition(19, 4, true),
             new CoralScoringPosition(20, 4, !firstBranchLeft)
+        );
+    }
+
+    public static List<CoralScoringPosition> rightBarge5(boolean firstBranchLeft) {
+        return List.of(
+            new CoralScoringPosition(22, 4, firstBranchLeft),
+            new CoralScoringPosition(17, 4, false),
+            new CoralScoringPosition(17, 4, true),
+            new CoralScoringPosition(18, 4, true),
+            new CoralScoringPosition(18, 4, false)
         );
     }
 
@@ -91,7 +105,7 @@ public final class Auto {
     public static Command driveToHPStation() {
         return Commands.either(
             driveToHPStationFar(),
-            driveToHPStationClose().withMaxSpeed(0.7), // TEMPORARY speed limit
+            driveToHPStationClose(), // TEMPORARY speed limit
             () -> {
                 CoralScoringPosition previous = previousCoralScoringPosition;
                 return previous != null && previous.isFarTag();
@@ -112,12 +126,14 @@ public final class Auto {
 
     private static final Pose2d leftBlueHPStation = new Pose2d(SimLogic.blueHPCoralPose.getTranslation(), Rotation2d.kZero);
     private static final Pose2d leftRedHPStation = new Pose2d(SimLogic.redHPCoralPose.getTranslation(), Rotation2d.kZero);
+    private static final Pose2d rightBlueHPStation = new Pose2d(leftBlueHPStation.getX(), FlippingUtil.fieldSizeY - leftBlueHPStation.getY(), Rotation2d.kZero);
+    private static final Pose2d rightRedHPStation = new Pose2d(leftRedHPStation.getX(), FlippingUtil.fieldSizeY - leftRedHPStation.getY(), Rotation2d.kZero);
     private static final Translation2d hpStationDriveFarOffset = new Translation2d(3, -0.5);
 
     private static Command driveToHPStationFar() {
         DrivetrainSubsystem drivetrain = RobotContainer.instance.drivetrain;
         return Commands.defer(() -> {
-            double sign = Robot.isBlue() ? 1 : -1;
+            double sign = (leftSide ? 1 : -1) * (Robot.isBlue() ? 1 : -1);
 
             // Pose2d hpStation = new Pose2d((Robot.isBlue() ? SimLogic.blueHPCoralPose : SimLogic.redHPCoralPose).getTranslation(), Rotation2d.kZero);
             // Translation2d end = hpStation.getTranslation().plus(new Translation2d(3 * sign, -0.5 * sign));
@@ -162,6 +178,18 @@ public final class Auto {
         );
     }
 
+    private static final double pushDistance = Inches.of(6).in(Meters);
+    private static final double pushDistanceThreshold = Inches.of(1).in(Meters);
+
+    public static Command partnerPush() {
+        var drivetrain = RobotContainer.instance.drivetrain;
+        return new DriveToPose(drivetrain, () -> {
+            double dir = Robot.isBlue() ? 1 : -1;
+            Pose2d robotPose = drivetrain.getPose();
+            return new Pose2d(robotPose.getTranslation().plus(new Translation2d(pushDistance * dir, 0)), robotPose.getRotation());
+        }).until(drivetrain.withinTargetPoseDistance(pushDistanceThreshold)).withTimeout(2);
+    }
+
     public static Command setState(AutoState newState) {
         return Commands.runOnce(() -> Auto.state = newState);
     }
@@ -172,9 +200,10 @@ public final class Auto {
      * @param coralScoringPositions The list of coral scoring positions to be used in autonomous
      * @param simAutoStart The starting pose for the robot in simulation
      */
-    public static Command configureAuto(List<CoralScoringPosition> coralScoringPositions, Pose2d simAutoStart) {
+    public static Command configureAuto(List<CoralScoringPosition> coralScoringPositions, boolean left, Pose2d simAutoStart) {
         return Commands.runOnce(() -> {
             setCoralScoringPositions(coralScoringPositions);
+            leftSide = left;
             if (Robot.isSimulation()) {
                 Pose2d start = simAutoStart;
                 if (Robot.isRed()) start = FlippingUtil.flipFieldPose(start);
@@ -183,9 +212,9 @@ public final class Auto {
         });
     }
 
-    public static Command bargeCoralAuto(List<CoralScoringPosition> coralScoringPositions, Pose2d simStart) {
+    public static Command bargeCoralAuto(List<CoralScoringPosition> coralScoringPositions, boolean left, Pose2d simStart) {
         return Commands.parallel(
-            Auto.configureAuto(coralScoringPositions, simStart),
+            Auto.configureAuto(coralScoringPositions, left, simStart),
             (driveToNextCoralPose())
         );
     }

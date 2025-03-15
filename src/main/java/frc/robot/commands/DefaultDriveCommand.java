@@ -54,7 +54,7 @@ public class DefaultDriveCommand extends Command {
                 previousHeadingType = null;
             }
 
-            // applyCoralAngleAimAssist();
+            applyCoralAngleAimAssist();
 
             Double targetHeadingDegrees = m_drivetrainSubsystem.getTargetHeading();
             if (targetHeadingDegrees != null) {

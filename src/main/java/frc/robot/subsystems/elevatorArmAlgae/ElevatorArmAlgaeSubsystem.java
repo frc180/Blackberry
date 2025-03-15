@@ -14,7 +14,7 @@ public class ElevatorArmAlgaeSubsystem extends SubsystemBase {
 
     // protected static final double FAR_OBJECT_THRESHOLD = 0.28; // was 0.23 which is probably too low
     // protected static final double CLOSE_OBJECT_THRESHOLD = 0.2;
-    protected static final double HAS_ALGAE_THRESHOLD = 0.14;
+    protected static final double HAS_ALGAE_THRESHOLD = 0.14; // was 0.14
     protected static final double HAS_ALGAE_CLOSE_THRESHOLD = 0.1;
 
     ElevatorArmAlgaeIO io;
@@ -70,7 +70,7 @@ public class ElevatorArmAlgaeSubsystem extends SubsystemBase {
                 if (distanceFiltered < HAS_ALGAE_CLOSE_THRESHOLD) {
                     io.setSpeed(0.05);
                 } else if (hasAlgae.getAsBoolean()) {
-                    io.setSpeed(0.05);
+                    io.setSpeed(0.05); // was 0.05
                 } else if (hadAlgae.getAsBoolean()) { // } else if (closeAlgaeDebounced.getAsBoolean() ) {
                     io.setSpeed(indexSpeed);
                 } else {

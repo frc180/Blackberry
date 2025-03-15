@@ -42,7 +42,7 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
     public static final double receivingHP = Units.degreesToRotations(42.1); //idk this number yet
     public static final double algaeReceive = Units.degreesToRotations(-70);
     public static final double horizontal = 0;
-    public static final double PROCESSOR = Units.degreesToRotations(-17);
+    public static final double PROCESSOR = Units.degreesToRotations(-30);
 
     public static final double netScore = Units.degreesToRotations(5 + 3);
     public static final double netScoreBackwards = Units.degreesToRotations(46.01);
@@ -105,7 +105,7 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
         positionDisagreement = getAbsolutePosition() - inputs.position;
 
         double currentTime = Timer.getFPGATimestamp();
-        if (firstPeriodic) {// || (enabled && !wasEnabled)){// || currentTime - lastPositionSyncTime > 0.5) {
+        if (firstPeriodic || (!enabled && currentTime - lastPositionSyncTime > 0.5)) {
             io.zero(getAbsolutePosition());
             homed = true;
             firstPeriodic = false;

@@ -17,6 +17,8 @@ public interface IntakeCoralIO {
 
     public void setSpeed(double speed);
 
+    public void setBottomRollerSpeed(double speed);
+
     public default void simulationPeriodic() {}
 
 }

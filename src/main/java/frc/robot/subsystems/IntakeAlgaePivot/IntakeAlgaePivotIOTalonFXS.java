@@ -26,6 +26,8 @@ public class IntakeAlgaePivotIOTalonFXS implements IntakeAlgaePivotIO {
     final double radToRotations = 1 / (2 * Math.PI);
     final double absoluteEncoderResolution = 2048;
 
+    final double absoluteOffset = 0;
+
     TalonFX pivotMotorA, pivotMotorB;
     List<TalonFX> pivotMotors;
     MotionMagicVoltage motionMagicControl;
@@ -50,7 +52,14 @@ public class IntakeAlgaePivotIOTalonFXS implements IntakeAlgaePivotIO {
 
         TalonFXConfiguration configuration = new TalonFXConfiguration();
         configuration.Feedback.SensorToMechanismRatio = intakeArmGearing;
-        if (Robot.isSimulation()) {
+        if (Robot.isReal()) {
+            configuration.Slot0.kP = 0;
+            configuration.Slot0.kI = 0;
+            configuration.Slot0.kD = 0;
+            configuration.Slot0.kG = 0;
+            configuration.Slot0.kV = 0;
+            configuration.Slot0.kA = 0;
+        } else  {
             configuration.Slot0.kP = 36;
             configuration.Slot0.kI = 0;
             configuration.Slot0.kD = 0;
@@ -108,7 +117,7 @@ public class IntakeAlgaePivotIOTalonFXS implements IntakeAlgaePivotIO {
         inputs.position = positionSignal.getValueAsDouble();
         inputs.voltage = voltageSignal.getValueAsDouble();
         inputs.target = targetSignal.getValueAsDouble();
-        inputs.absoluteEncoderPosition = absoluteEncoder.get() / absoluteEncoderResolution;
+        inputs.absolutePosition = absoluteEncoder.get() - absoluteOffset;
     }
 
     // Simulation only
@@ -143,5 +152,10 @@ public class IntakeAlgaePivotIOTalonFXS implements IntakeAlgaePivotIO {
     public void stopMotor() {
         pivotMotorA.stopMotor();
         // pivotMotorB.stopMotor();
+    }
+
+    @Override
+    public void zero(double offset) {
+        pivotMotorA.setPosition(offset, 0);
     }
 }

@@ -64,6 +64,13 @@ public class IntakeCoralSubsystem extends SubsystemBase {
         );
     }
 
+    public Command runBottomRollerSpeed(double speed) {
+        return runEnd(
+            () -> io.setBottomRollerSpeed(speed),
+            () -> io.setBottomRollerSpeed(0)
+        );
+    }
+
     public boolean hasCoralBool() {
         return inputs.coralSensorConnected && inputs.coralDistance < 0.28;
     }

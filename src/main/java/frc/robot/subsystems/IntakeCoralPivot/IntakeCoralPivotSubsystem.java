@@ -3,7 +3,6 @@ package frc.robot.subsystems.IntakeCoralPivot;
 import static edu.wpi.first.units.Units.*;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.NotLogged;
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.util.Units;
@@ -28,8 +27,8 @@ public class IntakeCoralPivotSubsystem extends SubsystemBase {
     
     //presets for intake positions
     // potentiometer units
-    public static final double stow = .03;
-    public static final double extend = .121; // .122
+    public static final double stow = .06; // stalls
+    public static final double extend = .120; //.121; // .122
 
     private static final double IN_POSITION_TOLERANCE = Units.degreesToRotations(3);
 
@@ -56,7 +55,7 @@ public class IntakeCoralPivotSubsystem extends SubsystemBase {
             io = new IntakeCoralPivotIOTalonFXS();
         }
 
-        double kP = 30;
+        double kP = 0; // was 30
         if (Robot.isSimulation()) kP = 5;
         profiledPID = new ProfiledPIDController(kP, 0, 0, new Constraints(99, 99));
         SmartDashboard.putData("CoralPivotPID", profiledPID);

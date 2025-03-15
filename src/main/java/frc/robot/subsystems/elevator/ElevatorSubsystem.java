@@ -23,7 +23,7 @@ import frc.robot.util.simulation.SimVisuals;
 
 @Logged
 public class ElevatorSubsystem extends SubsystemBase {
-    public static final boolean LIVE_TUNING_ENABLED = true;
+    public static final boolean LIVE_TUNING_ENABLED = false;
     // Distance presets, with 0 being the bottom of the elevator
     public static final Distance L1 = Inches.of(2.5);
     public static final Distance L2 = Meters.of(0.302).plus(Inches.of(1));
@@ -230,8 +230,8 @@ public class ElevatorSubsystem extends SubsystemBase {
 
     public void setPositionDirect(Distance position) {
         targetPosition = position;
+        adjustedTargetPosition = position.in(Meters) + getTuningAdjustment(position);
         if (!softStowLogic()) {
-            adjustedTargetPosition = position.in(Meters) + getTuningAdjustment(position);
             io.setPosition(adjustedTargetPosition);
         }
     }

@@ -32,6 +32,8 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.util.StatusSignals;
 import frc.robot.util.simulation.SimLogic;
 import frc.robot.util.simulation.SimVisuals;
@@ -47,6 +49,12 @@ public class Robot extends TimedRobot {
   private static boolean isBlueAlliance = false;
 
   private Command m_autonomousCommand;
+  private Command partnerPush = null;
+  private boolean shouldPartnerPush = false;
+  @NotLogged
+  private final Trigger nullTrigger = new Trigger(() -> false);
+  @NotLogged
+  private Trigger didPartnerPush = new Trigger(() -> shouldPartnerPush && !partnerPush.isScheduled());
 
   @Logged(name = "RobotContainer")
   private final RobotContainer robotContainer;
@@ -100,6 +108,8 @@ public class Robot extends TimedRobot {
   public void robotInit() {
     // Make sure Pathplanner is loaded and ready to go
     FollowPathCommand.warmupCommand().schedule();
+    partnerPush = Auto.partnerPush();
+    didPartnerPush.onTrue(Commands.runOnce(() -> m_autonomousCommand.schedule()));
   }
 
   @Override
@@ -161,10 +171,15 @@ public class Robot extends TimedRobot {
       SimLogic.intakeHasAlgae = false;
     }
   
+    shouldPartnerPush = robotContainer.shouldAutoPush();
     m_autonomousCommand = robotContainer.getAutonomousCommand();
 
     if (m_autonomousCommand != null) {
-      m_autonomousCommand.schedule();
+      if (shouldPartnerPush) {
+        partnerPush.schedule();
+      } else {
+        m_autonomousCommand.schedule();
+      }
     }
     wasEverEnabled = true;
   }

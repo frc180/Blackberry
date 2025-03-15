@@ -79,7 +79,7 @@ public class IntakeCoralIOSpark implements IntakeCoralIO {
     @Override
     public void setSpeed(double speed) {
         motor.setVoltage(speed * 12);
-        bottomRoller.setControl(voltageControl.withOutput(speed * 12));
+        setBottomRollerSpeed(speed);
     }
 
     private LaserCan configureLaser(LaserCan laser) {
@@ -92,5 +92,10 @@ public class IntakeCoralIOSpark implements IntakeCoralIO {
             return null;
         }
         return laser;
+    }
+
+    @Override
+    public void setBottomRollerSpeed(double speed) {
+        bottomRoller.setControl(voltageControl.withOutput(speed * 12));
     }
 }

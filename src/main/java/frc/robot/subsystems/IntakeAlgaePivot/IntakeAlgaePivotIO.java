@@ -10,7 +10,7 @@ public interface IntakeAlgaePivotIO {
         double position;
         double voltage;
         double target;
-        double absoluteEncoderPosition;
+        double absolutePosition;
     }
 
     public void update(IntakeAlgaePivotIOInputs inputs);
@@ -24,4 +24,6 @@ public interface IntakeAlgaePivotIO {
     public void setSpeed(double speed);
 
     public void stopMotor();
+
+    public void zero(double offset);
 }

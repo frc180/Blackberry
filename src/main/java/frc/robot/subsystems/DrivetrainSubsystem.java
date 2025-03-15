@@ -113,6 +113,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     /** Swerve request to apply during robot-centric path following */
     private final SwerveRequest.ApplyRobotSpeeds m_pathApplyRobotSpeeds = new SwerveRequest.ApplyRobotSpeeds();
     private final SwerveRequest.ApplyRobotSpeeds applyClosedLoopSpeeds = new SwerveRequest.ApplyRobotSpeeds().withDriveRequestType(DriveRequestType.Velocity);
+    private final SwerveRequest.SwerveDriveBrake brakeRequest = new SwerveRequest.SwerveDriveBrake();
 
     private final SwerveModuleStateRequest moduleStateRequest = new SwerveModuleStateRequest();
 
@@ -271,11 +272,11 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         gyroAngleSignal = trackSignal(getPigeon2().getYaw());
         gyroRateSignal = trackSignal(getPigeon2().getAngularVelocityZWorld());
 
-        double translationMaxSpeed = MAX_SPEED * 0.8;
-        double translationP = 4;
+        double translationMaxSpeed = MAX_SPEED * 0.8; // EXPERIMENT: uncap or change to 0.9
+        double translationP = 4.25;
         double translationI = 0.0;
-        double translationD = 0.3; // was 0.15 most of  the  time, 0.3 hasn't shown huge difference
-        double translationKV = 0.5; // EXPERIMENT: Try less kV
+        double translationD = 0.15; // was 0.15 most of the time, 0.3 hasn't shown huge difference
+        double translationKV = 0.25;
         double translationKA = 0;
 
         if (Robot.isSimulation()) {
@@ -355,6 +356,10 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     public void driveWithSetpoints(ChassisSpeeds speeds) {
         previousSetpoint = setpointGenerator.generateSetpoint(previousSetpoint, speeds, Constants.LOOP_TIME);
         setControl(moduleStateRequest.withModuleStates(previousSetpoint.moduleStates()));
+    }
+
+    public Command brake() {
+        return run(() -> setControl(brakeRequest));
     }
 
     @NotLogged
@@ -516,7 +521,8 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
      */
     public ChassisSpeeds experimentalCalculateSpeeds(Pose2d currentPose, Pose2d endPose, TrapezoidProfile profile, TrapezoidProfile.Constraints constraints) {
         boolean initializing = driveToPoseStart == null;
-        if (!initializing && (intermediatePose == null || intermediatePose.getTranslation().getDistance(endPose.getTranslation()) > 0.5)) {
+        boolean replanning = !initializing && (intermediatePose == null || intermediatePose.getTranslation().getDistance(endPose.getTranslation()) > 0.5);
+        if (replanning) {
             initializing = true;
             driveToPoseTimerOffset = Constants.LOOP_TIME;
         } else {
@@ -538,11 +544,15 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
 
         if (initializing) {        
             driveToPoseStartState.position = distance;
-            driveToPoseStartState.velocity = MathUtil.clamp(
-                Helpers.velocityTowards(driveToPoseStart, getFieldRelativeSpeeds(), endPose.getTranslation()),
-                -constraints.maxVelocity, 
-                0
-            );
+            if (replanning) {
+                driveToPoseStartState.velocity = -getVelocity();
+            } else {
+                driveToPoseStartState.velocity = MathUtil.clamp(
+                    Helpers.velocityTowards(driveToPoseStart, getFieldRelativeSpeeds(), endPose.getTranslation()),
+                    -constraints.maxVelocity, 
+                    0
+                );
+            }
         }
 
         // Calculate the setpoint (i.e. current distance along the path) we should be targeting
@@ -700,8 +710,13 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     }
 
     public boolean isBelowSpeed(double metersPerSecond) {
+        return Math.abs(getVelocity()) < metersPerSecond;
+    }
+
+    @NotLogged
+    public double getVelocity() {
         ChassisSpeeds speeds = getState().Speeds;
-        return Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond) < metersPerSecond;
+        return Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond);
     }
 
     private void configureAutoBuilder() {

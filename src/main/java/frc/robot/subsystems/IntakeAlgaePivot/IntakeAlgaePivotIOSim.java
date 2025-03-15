@@ -52,4 +52,9 @@ public class IntakeAlgaePivotIOSim implements IntakeAlgaePivotIO {
     public void setSpeed(double speed) {
         this.speed = speed;
     }
+
+    @Override
+    public void zero(double offset) {
+        // Do nothing
+    }
 }

@@ -1,7 +1,6 @@
 package frc.robot.subsystems.elevatorArm;
 
 import frc.robot.RobotContainer;
-import frc.robot.subsystems.IntakeCoralPivot.IntakeCoralPivotSubsystem;
 import frc.robot.subsystems.elevatorArmPivot.ElevatorArmPivotSubsystem;
 import frc.robot.util.simulation.SimLogic;
 
@@ -20,7 +19,6 @@ public class ElevatorArmIOSim implements ElevatorArmIO{
     @Override
     public void update(ElevatorArmIOInputs inputs) {
         ElevatorArmPivotSubsystem armPivot = RobotContainer.instance.elevatorArmPivot;
-        IntakeCoralPivotSubsystem intakeCoralPivot = RobotContainer.instance.intakeCoralPivot;
         readyForCoral = SimLogic.intakeHasCoral && armPivot.isAtReceivingPosition();// && intakeCoralPivot.isAtTarget();
 
         boolean armHasCoralPrevious = SimLogic.armHasCoral;

@@ -2,9 +2,12 @@ package frc.robot.subsystems.IntakeAlgaePivot;
 
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.NotLogged;
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Robot;
@@ -19,9 +22,11 @@ public class IntakeAlgaePivotSubsystem extends SubsystemBase {
 
     private static final double IN_POSITION_TOLERANCE = Units.degreesToRotations(3);
 
-    public IntakeAlgaePivotIO io;
-    private IntakeAlgaePivotIOInputs inputs;
-
+    private final IntakeAlgaePivotIO io;
+    private final IntakeAlgaePivotIOInputs inputs;
+    private final ProfiledPIDController profiledPID;
+    
+    private boolean firstPeriodic = true;
     private double targetPosition = stow;
 
     public IntakeAlgaePivotSubsystem() {
@@ -33,12 +38,28 @@ public class IntakeAlgaePivotSubsystem extends SubsystemBase {
         } else {
             io = new IntakeAlgaePivotIOTalonFXS();
         }
+
+        profiledPID = new ProfiledPIDController(0, 0, 0, new Constraints(99, 99));
+        SmartDashboard.putData("AlgaePivotPID", profiledPID);
     }
 
     @Override
     public void periodic() {
         // This method will be called once per scheduler run
         io.update(inputs);
+
+        if (firstPeriodic) {
+            io.zero(inputs.absolutePosition);
+            firstPeriodic = false;
+        }
+        // if (firstPeriodic) {
+        //     profiledPID.reset(inputs.absoluteEncoderPosition);
+        //     targetPosition = inputs.absoluteEncoderPosition;
+        //     firstPeriodic = false;
+        // }
+
+        // double output = profiledPID.calculate(inputs.absoluteEncoderPosition, targetPosition);
+        // io.setSpeed(output);
     }
 
     @Override

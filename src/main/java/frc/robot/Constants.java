@@ -41,6 +41,7 @@ public class Constants {
 
     //sensor channels
     public static final int DIO_INTAKE_ALGAE_ENCODER = 0;
+    public static final int DIO_INTAKE_CORAL_ENCODER = 1;
     public static final int DIO_ELEVATOR_BOTTOM_LIMIT = 9;
 
     public static final int INTAKE_ALGAE_SENSOR = 7;

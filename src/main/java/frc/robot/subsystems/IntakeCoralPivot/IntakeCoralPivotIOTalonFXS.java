@@ -17,6 +17,7 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.AnalogPotentiometer;
+import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import frc.robot.Constants;
 import frc.robot.Robot;
 
@@ -33,13 +34,15 @@ public class IntakeCoralPivotIOTalonFXS implements IntakeCoralPivotIO {
     TalonFXS motor;
     MotionMagicExpoVoltage motionMagicControl;
     VoltageOut voltageControl;
+
     AnalogPotentiometer potentiometer;
+    DutyCycleEncoder absoluteEncoder;
 
     // Status signals
     StatusSignal<Angle> positionSignal;
     StatusSignal<Voltage> voltageSignal;
     StatusSignal<Double> targetSignal;
-    StatusSignal<Current> supplyCurrentSignal;
+    // StatusSignal<Current> supplyCurrentSignal;
     StatusSignal<Current> torqueCurrentSignal;
 
     // Simulation-only variables
@@ -85,7 +88,7 @@ public class IntakeCoralPivotIOTalonFXS implements IntakeCoralPivotIO {
         positionSignal = trackSignal(motor.getPosition());
         voltageSignal = trackSignal(motor.getMotorVoltage());
         targetSignal = trackSignal(motor.getClosedLoopReference());
-        supplyCurrentSignal = trackSignal(motor.getSupplyCurrent());
+        // supplyCurrentSignal = trackSignal(motor.getSupplyCurrent());
         torqueCurrentSignal = trackSignal(motor.getTorqueCurrent());
 
         potentiometer = new AnalogPotentiometer(
@@ -93,6 +96,8 @@ public class IntakeCoralPivotIOTalonFXS implements IntakeCoralPivotIO {
             1,
             0
         );
+
+        absoluteEncoder = new DutyCycleEncoder(Constants.DIO_INTAKE_CORAL_ENCODER);
 
         if (Robot.isReal()) return;
 
@@ -104,10 +109,11 @@ public class IntakeCoralPivotIOTalonFXS implements IntakeCoralPivotIO {
         inputs.position = positionSignal.getValueAsDouble();
         inputs.voltage = voltageSignal.getValueAsDouble();
         inputs.target = targetSignal.getValueAsDouble();
-        inputs.supplyCurrent = supplyCurrentSignal.getValueAsDouble();
+        // inputs.supplyCurrent = supplyCurrentSignal.getValueAsDouble();
         inputs.torqueCurrent = torqueCurrentSignal.getValueAsDouble();
         if (Robot.isReal()) {
-            inputs.absolutePosition = (potentiometer.get() * POTENTIOMETER_SCALAR) - POTENTIOMETER_OFFSET;
+            // inputs.absolutePosition = (potentiometer.get() * POTENTIOMETER_SCALAR) - POTENTIOMETER_OFFSET;
+            inputs.absolutePosition = (absoluteEncoder.get() * POTENTIOMETER_SCALAR) - POTENTIOMETER_OFFSET;
         } else {
             inputs.absolutePosition = simulatedPosition;
         }
