@@ -9,6 +9,7 @@ import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.GravityTypeValue;
+import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.math.system.plant.DCMotor;
@@ -28,10 +29,9 @@ public class IntakeAlgaePivotIOTalonFXS implements IntakeAlgaePivotIO {
 
     final double absoluteOffset = 0;
 
-    TalonFX pivotMotorA, pivotMotorB;
-    List<TalonFX> pivotMotors;
+    TalonFX pivotMotor, winchMotor;
     MotionMagicVoltage motionMagicControl;
-    VoltageOut voltageControl;
+    VoltageOut voltageControl, winchVoltageControl;
     Follower followerControl;
     DutyCycleEncoder absoluteEncoder;
 
@@ -41,14 +41,12 @@ public class IntakeAlgaePivotIOTalonFXS implements IntakeAlgaePivotIO {
     StatusSignal<Double> targetSignal;
 
     // Simulation-only variables
-    TalonFXSimState pivotMotorASim, pivotMotorBSim;
-    List<TalonFXSimState> pivotMotorSims;
+    TalonFXSimState pivotMotorASim;
     SingleJointedArmSim intakeSim;
 
     public IntakeAlgaePivotIOTalonFXS() {
-        pivotMotorA = new TalonFX(Constants.INTAKE_ALGAE_PIVOT_TALON_A, Constants.CANIVORE);
-        pivotMotorB = new TalonFX(Constants.INTAKE_ALGAE_PIVOT_TALON_B, Constants.CANIVORE);
-        pivotMotors = List.of(pivotMotorA, pivotMotorB);
+        pivotMotor = new TalonFX(Constants.INTAKE_ALGAE_PIVOT_TALON, Constants.CANIVORE);
+        winchMotor = new TalonFX(Constants.INTAKE_ALGAE_WINCH_TALON, Constants.CANIVORE);
 
         TalonFXConfiguration configuration = new TalonFXConfiguration();
         configuration.Feedback.SensorToMechanismRatio = intakeArmGearing;
@@ -71,33 +69,32 @@ public class IntakeAlgaePivotIOTalonFXS implements IntakeAlgaePivotIO {
         // configuration.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         configuration.MotionMagic.MotionMagicCruiseVelocity = 999;
         configuration.MotionMagic.MotionMagicAcceleration = 999;
+        configuration.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         configuration.MotionMagic.MotionMagicJerk = 0;
         
+        pivotMotor.getConfigurator().apply(configuration);
+        pivotMotor.setNeutralMode(NeutralModeValue.Brake);
 
-        //pivotMotor.setNeutralMode(NeutralModeValue.Brake);
-        //pivotMotor.getConfigurator().apply(configuration);
-        pivotMotors.forEach(motor -> {
-            motor.getConfigurator().apply(configuration);
-            motor.setNeutralMode(NeutralModeValue.Coast);
-        });
+        configuration = new TalonFXConfiguration();
+        configuration.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+        winchMotor.getConfigurator().apply(configuration);
+        winchMotor.setNeutralMode(NeutralModeValue.Brake);
 
         motionMagicControl = new MotionMagicVoltage(0);
         voltageControl = new VoltageOut(0);
-        followerControl = new Follower(Constants.INTAKE_ALGAE_PIVOT_TALON_A, true);
-        pivotMotorB.setControl(followerControl);
+        winchVoltageControl = new VoltageOut(0);
+        followerControl = new Follower(Constants.INTAKE_ALGAE_PIVOT_TALON, true);
 
         absoluteEncoder = new DutyCycleEncoder(Constants.DIO_INTAKE_ALGAE_ENCODER);
 
-        positionSignal = trackSignal(pivotMotorA.getPosition());
-        voltageSignal = trackSignal(pivotMotorA.getMotorVoltage());
-        targetSignal = trackSignal(pivotMotorA.getClosedLoopReference());
+        positionSignal = trackSignal(pivotMotor.getPosition());
+        voltageSignal = trackSignal(pivotMotor.getMotorVoltage());
+        targetSignal = trackSignal(pivotMotor.getClosedLoopReference());
 
         //for simulation
         if (Robot.isReal()) return;
 
-        pivotMotorASim = pivotMotorA.getSimState();
-        pivotMotorBSim = pivotMotorB.getSimState();
-        pivotMotorSims = List.of(pivotMotorASim, pivotMotorBSim);
+        pivotMotorASim = pivotMotor.getSimState();
 
         intakeSim = new SingleJointedArmSim(
             DCMotor.getNeo550(2),
@@ -126,36 +123,53 @@ public class IntakeAlgaePivotIOTalonFXS implements IntakeAlgaePivotIO {
         intakeSim.setInput(pivotMotorASim.getMotorVoltage());
         intakeSim.update(Constants.LOOP_TIME);
 
-        pivotMotorSims.forEach(motorSim -> {
-            motorSim.setRawRotorPosition(intakeSim.getAngleRads() * radToRotations * intakeArmGearing); 
-            motorSim.setRotorVelocity(intakeSim.getVelocityRadPerSec() * radToRotations * intakeArmGearing);
-            motorSim.setSupplyVoltage(12);
-        });
+        pivotMotorASim.setRawRotorPosition(intakeSim.getAngleRads() * radToRotations * intakeArmGearing); 
+        pivotMotorASim.setRotorVelocity(intakeSim.getVelocityRadPerSec() * radToRotations * intakeArmGearing);
+        pivotMotorASim.setSupplyVoltage(12);
     }
 
     @Override
     public void setPosition(double encoderPosition) {
-        pivotMotorA.setControl(motionMagicControl.withPosition(encoderPosition));
+        pivotMotor.setControl(motionMagicControl.withPosition(encoderPosition));
     }
 
     @Override
     public void setSpeed(double speed) {
-        pivotMotorA.setControl(voltageControl.withOutput(speed * 12));
+        pivotMotor.setControl(voltageControl.withOutput(speed * 12));
+    }
+
+    @Override
+    public void setWinchSpeed(double speed) {
+        winchMotor.setControl(winchVoltageControl.withOutput(speed  * 12));
     }
 
     public void runMotorTest() {
         System.out.println("algae intake pivot running");
-        pivotMotorA.set(0.25); //pivotMotorB is follower
+        pivotMotor.set(0.25); //pivotMotorB is follower
     }
 
     @Override
     public void stopMotor() {
-        pivotMotorA.stopMotor();
+        pivotMotor.stopMotor();
         // pivotMotorB.stopMotor();
     }
 
     @Override
     public void zero(double offset) {
-        pivotMotorA.setPosition(offset, 0);
+        pivotMotor.setPosition(offset, 0);
+    }
+
+
+    @Override
+    public void brakeMode() {
+        pivotMotor.setNeutralMode(NeutralModeValue.Brake);
+        winchMotor.setNeutralMode(NeutralModeValue.Brake);
+    }
+
+
+    @Override
+    public void coastMode() {
+        pivotMotor.setNeutralMode(NeutralModeValue.Coast);
+        winchMotor.setNeutralMode(NeutralModeValue.Coast);
     }
 }

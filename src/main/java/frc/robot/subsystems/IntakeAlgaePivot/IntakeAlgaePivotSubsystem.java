@@ -9,6 +9,7 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Robot;
 import frc.robot.subsystems.IntakeAlgaePivot.IntakeAlgaePivotIO.IntakeAlgaePivotIOInputs;
@@ -17,8 +18,9 @@ import frc.robot.subsystems.IntakeAlgaePivot.IntakeAlgaePivotIO.IntakeAlgaePivot
 public class IntakeAlgaePivotSubsystem extends SubsystemBase {
     
     public static final double extend = Units.degreesToRotations(55);
-    public static final double stow = Units.degreesToRotations(90);
-    public static final double climbReady = 0; //on the floor
+    public static final double stow = .499;
+    public static final double up = .463;
+    public static final double climbReady = .1502;
 
     private static final double IN_POSITION_TOLERANCE = Units.degreesToRotations(3);
 
@@ -33,8 +35,8 @@ public class IntakeAlgaePivotSubsystem extends SubsystemBase {
         inputs = new IntakeAlgaePivotIOInputs();
 
         if (Robot.isReal()) {
-            // io = new IntakeAlgaePivotIOTalonFXS();
-            io = new IntakeAlgaePivotIOSim();
+            io = new IntakeAlgaePivotIOTalonFXS();
+            // io = new IntakeAlgaePivotIOSim();
         } else {
             io = new IntakeAlgaePivotIOTalonFXS();
         }
@@ -97,14 +99,47 @@ public class IntakeAlgaePivotSubsystem extends SubsystemBase {
         );
     }
 
-    public Command test() {
-        return this.run(() -> {
-          io.runMotorTest();
+    public Command runWinchSpeed(double speed) {
+        return runEnd(
+            () -> io.setWinchSpeed(speed),
+            () -> io.setWinchSpeed(0)
+        );
+    }
+
+    public Command climb() {
+        double climbSpeed = 0.10;
+        return Commands.sequence(
+            run(() -> io.setWinchSpeed(climbSpeed)).withTimeout(0.1),
+            runEnd(
+                () -> {
+                    io.setSpeed(-climbSpeed);
+                    io.setWinchSpeed(climbSpeed);
+                },
+                () -> {
+                    io.setSpeed(0);
+                    io.setWinchSpeed(0);
+                }
+            ).until(this::shouldStopClimb)
+        ).finallyDo(interrupted -> {
+            io.setSpeed(0);
+            io.setWinchSpeed(0);
         });
     }
 
+    public Command brakeMode() {
+        return Commands.runOnce(io::brakeMode).ignoringDisable(true);
+    }
+
+    public Command coastMode() {
+        return Commands.runOnce(io::coastMode).ignoringDisable(true);
+    }
+
+    public boolean shouldStopClimb() {
+        return inputs.absolutePosition > up;
+    }
+
     public Command stop() {
-        return this.run (() -> {
+        return run(() -> {
             io.stopMotor();
         });
     }

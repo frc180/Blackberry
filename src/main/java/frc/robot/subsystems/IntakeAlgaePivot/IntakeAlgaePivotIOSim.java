@@ -54,7 +54,22 @@ public class IntakeAlgaePivotIOSim implements IntakeAlgaePivotIO {
     }
 
     @Override
+    public void setWinchSpeed(double speed) {
+        // TODO
+    }
+
+    @Override
     public void zero(double offset) {
+        // Do nothing
+    }
+
+    @Override
+    public void brakeMode() {
+        // Do nothing
+    }
+
+    @Override
+    public void coastMode() {
         // Do nothing
     }
 }

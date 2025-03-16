@@ -23,7 +23,13 @@ public interface IntakeAlgaePivotIO {
 
     public void setSpeed(double speed);
 
+    public void setWinchSpeed(double speed);
+
     public void stopMotor();
 
     public void zero(double offset);
+
+    public void brakeMode();
+
+    public void coastMode();
 }

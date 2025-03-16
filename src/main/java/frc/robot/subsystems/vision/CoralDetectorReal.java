@@ -32,9 +32,6 @@ public class CoralDetectorReal implements CoralDetector {
     // to allow switching without a timeout
     private final static double SIMILAR_CORAL_THRESHOLD = 0.75;
 
-    // Experimental
-    private final static double CORAL_FURTHER_THRESHOLD = 0.6;
-
     private static final double ALGAE_AVOID_THRESHOLD_DEGREES = 4;
 
     private double lastDetectionTime = 0;
@@ -136,11 +133,10 @@ public class CoralDetectorReal implements CoralDetector {
             }
 
             double robotDist = coralPose.getTranslation().getDistance(robotPose.getTranslation());
-            if (recentLastDetection != null && !auto) {
-                double distDiff = coralPose.getTranslation().getDistance(recentLastDetection.getTranslation());
-                if (distDiff > SIMILAR_CORAL_THRESHOLD) continue;
-                // if (robotDist > lastDetectionDistance + CORAL_FURTHER_THRESHOLD) continue;
-            }
+            // if (recentLastDetection != null && !auto) {
+            //     double distDiff = coralPose.getTranslation().getDistance(recentLastDetection.getTranslation());
+            //     if (distDiff > SIMILAR_CORAL_THRESHOLD) continue;
+            // }
 
             lastDetection = coralPose;
             lastDetectionTime = Timer.getFPGATimestamp();

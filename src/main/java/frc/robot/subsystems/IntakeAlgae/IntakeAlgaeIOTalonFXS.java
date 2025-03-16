@@ -22,14 +22,14 @@ public class IntakeAlgaeIOTalonFXS implements IntakeAlgaeIO {
         intakeMotor.setNeutralMode(NeutralModeValue.Brake);
         // intakeMotor.optimizeBusUtilization(10, 0.1);
 
-        sensor = new DigitalInput(Constants.INTAKE_ALGAE_SENSOR);
+        // sensor = new DigitalInput(Constants.INTAKE_ALGAE_SENSOR);
 
         voltageControl = new VoltageOut(0);
     }
 
     @Override
     public void update(IntakeAlgaeIOInputs inputs) {
-        inputs.hasAlgae = sensor.get();
+        inputs.hasAlgae = false;//sensor.get();
     }
     
     @Override

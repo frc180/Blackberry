@@ -46,6 +46,8 @@ public class DefaultDriveCommand extends Command {
     public void execute() {
         gyroRotation = m_drivetrainSubsystem.getGyroscopeRotation();
         rotationSpeed = m_rotationSupplier.getAsDouble();
+
+        applyCoralAngleAimAssist();
     
         if (Math.abs(rotationSpeed) < 0.02) {
             // If we were manually rotating and have stopped, save this heading as our new target
@@ -53,8 +55,6 @@ public class DefaultDriveCommand extends Command {
                 m_drivetrainSubsystem.setTargetHeading(null); // Use this to disable heading control after rotating until a preset is pressed again
                 previousHeadingType = null;
             }
-
-            applyCoralAngleAimAssist();
 
             Double targetHeadingDegrees = m_drivetrainSubsystem.getTargetHeading();
             if (targetHeadingDegrees != null) {
@@ -80,7 +80,7 @@ public class DefaultDriveCommand extends Command {
             speeds = new ChassisSpeeds(inputs.x, inputs.y, rotationSpeed);
         }
 
-        applyCoralAimAssist(speeds, inputs);
+        // applyCoralAimAssist(speeds, inputs);
         m_drivetrainSubsystem.drive(speeds);
     }
 
@@ -93,13 +93,13 @@ public class DefaultDriveCommand extends Command {
     // ======================= Game Specific Helper Methods =======================
 
     private boolean shouldApplyCoralAssist() {
-        return false;
-        // if (!RobotContainer.instance.coralIntakeTrigger.getAsBoolean() || 
-        //     RobotContainer.instance.vision.getCoralPickupPose() == null ||
-        //     RobotContainer.instance.robotHasCoral.getAsBoolean()) {
-        //     return false;
-        // }
-        // return true;
+        // return false;
+        if (!RobotContainer.instance.coralIntakeTrigger.getAsBoolean() || 
+            RobotContainer.instance.vision.getCoralPickupPose() == null ||
+            RobotContainer.instance.robotHasCoral.getAsBoolean()) {
+            return false;
+        }
+        return true;
     }
 
     private void applyCoralAngleAimAssist() {

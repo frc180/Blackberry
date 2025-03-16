@@ -219,6 +219,9 @@ public class RobotContainer {
             }));
         }
 
+        SmartDashboard.putData("Climber Coast", intakeAlgaePivot.coastMode());
+        SmartDashboard.putData("Climber Brake", intakeAlgaePivot.brakeMode());
+
         configureBindings();
 
         // drivetrain.singCommand("enemy").schedule();
@@ -415,7 +418,7 @@ public class RobotContainer {
 
         //climbing sequence
         // driverReadyClimb.whileTrue(intakeAlgaePivot.readyClimb());
-        driverStartClimb.whileTrue(intakeAlgaePivot.stow()); //didnt put any onFalse commands because once we climb we physically cannot un-climb
+        driverStartClimb.whileTrue(intakeAlgaePivot.climb());
 
         //processor alignment
         // driverProcessor.whileTrue(new DriveToPose(drivetrain, () -> vision.getProcessorPose(Robot.isBlue()))
@@ -646,7 +649,7 @@ public class RobotContainer {
 
         // Lob algae into the net by releasing while moving the elevator 
         driverNet.and(elevatorArmPivot::isElevatorArmInScoringPosition)
-                 .and(() -> elevator.getTargetPosition() == ElevatorSubsystem.NET && elevator.getTargetErrorInches() < 32) // 36 worked but low, 30 worked but high
+                 .and(() -> elevator.getTargetPosition() == ElevatorSubsystem.NET && elevator.getTargetErrorInches() < 30) // 36 worked but low, 30 worked but high
                  .onTrue(
                     elevatorArmAlgae.runSpeed(-1)
                                     .withTimeout(0.5)
@@ -729,21 +732,23 @@ public class RobotContainer {
 
         //using the doneIntaking & hasCoral triggers to pass on to arm
 
-        testController.button(1).whileTrue(intakeAlgaePivot.runSpeed(0.50));
-        testController.button(2).whileTrue(intakeAlgaePivot.runSpeed(-0.50));
-        testController.button(3).whileTrue(intakeAlgae.runSpeed(0.5));
-        testController.button(4).whileTrue(intakeAlgae.runSpeed(-0.5));
+        testController.button(1).whileTrue(intakeAlgaePivot.runSpeed(0.25));
+        testController.button(2).whileTrue(intakeAlgaePivot.runSpeed(-0.25));
+        //testController.button(3).whileTrue(intakeAlgae.runSpeed(0.5));
+        //testController.button(4).whileTrue(intakeAlgae.runSpeed(-0.5));
+        testController.button(3).whileTrue(intakeAlgaePivot.runWinchSpeed(0.25));
+        testController.button(4).whileTrue(intakeAlgaePivot.runWinchSpeed(-0.25));
 
-        // testController.button(5).whileTrue(elevatorArmPivot.calculateAbsoluteRatio());
+        testController.button(5).whileTrue(intakeAlgaePivot.climb());
 
         // testController.button(5).whileTrue(Auto.driveToCoral().until(robotHasCoral));
 
 
-        testController.button(6).whileTrue(intakeCoralPivot.runSpeed(0.25));
-        testController.button(7).whileTrue(intakeCoralPivot.runSpeed(-0.25));
+        testController.button(7).whileTrue(intakeCoralPivot.runSpeed(0.25));
+        testController.button(8).whileTrue(intakeCoralPivot.runSpeed(-0.25));
 
-        testController.button(8).whileTrue(intakeCoral.runBottomRollerSpeed(0.5));
-        testController.button(9).whileTrue(intakeCoral.runBottomRollerSpeed(-0.5));
+        testController.button(9).whileTrue(intakeCoral.runBottomRollerSpeed(0.5));
+        testController.button(10).whileTrue(intakeCoral.runBottomRollerSpeed(-0.5));
 
 
         // testController.button(6).whileTrue(intakeCoralPivot.zero(Degrees.of(90)));
@@ -838,7 +843,7 @@ public class RobotContainer {
     }
 
     private Command coralEject() {
-        Command l4CoralEject = elevatorArm.runSpeed(0.4).until(elevatorArm.hasNoCoral) //was .425
+        Command l4CoralEject = elevatorArm.runSpeed(0.45).until(elevatorArm.hasNoCoral) //was .4
                                           .andThen(Commands.waitSeconds(0.2));
         Command l1CoralEject = elevatorArm.runSpeed(0.33).until(elevatorArm.hasNoCoral);
         Command coralEject = elevatorArm.runSpeed(0.35).until(elevatorArm.hasNoCoral)
