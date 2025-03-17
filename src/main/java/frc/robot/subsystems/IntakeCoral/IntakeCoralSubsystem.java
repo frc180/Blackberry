@@ -72,6 +72,6 @@ public class IntakeCoralSubsystem extends SubsystemBase {
     }
 
     public boolean hasCoralBool() {
-        return inputs.coralSensorConnected && inputs.coralDistance < 0.28;
+        return inputs.coralSensorConnected && inputs.coralDistance < 0.25;
     }
 }

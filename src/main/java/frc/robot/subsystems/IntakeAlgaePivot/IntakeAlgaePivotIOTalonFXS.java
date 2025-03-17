@@ -73,7 +73,7 @@ public class IntakeAlgaePivotIOTalonFXS implements IntakeAlgaePivotIO {
         configuration.MotionMagic.MotionMagicJerk = 0;
         
         pivotMotor.getConfigurator().apply(configuration);
-        pivotMotor.setNeutralMode(NeutralModeValue.Brake);
+        pivotMotor.setNeutralMode(NeutralModeValue.Coast); // was brake
 
         configuration = new TalonFXConfiguration();
         configuration.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;

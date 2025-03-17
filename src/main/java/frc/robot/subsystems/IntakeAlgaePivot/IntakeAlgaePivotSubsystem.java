@@ -107,7 +107,7 @@ public class IntakeAlgaePivotSubsystem extends SubsystemBase {
     }
 
     public Command climb() {
-        double climbSpeed = 0.10;
+        double climbSpeed = 0.25;
         return Commands.sequence(
             run(() -> io.setWinchSpeed(climbSpeed)).withTimeout(0.1),
             runEnd(

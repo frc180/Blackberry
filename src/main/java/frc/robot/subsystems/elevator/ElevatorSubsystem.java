@@ -33,11 +33,12 @@ public class ElevatorSubsystem extends SubsystemBase {
     public static final Distance STOW = Inches.of(0);
     public static final Distance ZERO = Meters.of(0);
     public static final Distance receiveHP = Inches.of(1.5); //idk if this is right i guesstimated
+    public static final Distance CLIMB = Inches.of(12);
 
     protected static final double SOFT_UPPER_LIMIT = Meters.of(1.48).in(Meters);
     protected static final double SOFT_LOWER_LIMIT = 0;
     private static final double IN_POSITION_METERS = Inches.of(0.5).in(Meters);// Inches.of(1).in(Meters); // TODO: lower tolerance?
-    private static final double STOW_INTERMEDIATE = Inches.of(2).in(Meters);
+    private static final double STOW_INTERMEDIATE = Inches.of(0.5).in(Meters);
     private static final boolean SOFT_STOW_ENABLED = true;
 
     private ElevatorIO io;
@@ -134,6 +135,10 @@ public class ElevatorSubsystem extends SubsystemBase {
 
     public Command zero() {
         return setPosition(ZERO).withName("zero");
+    }
+
+    public Command climbHeight() {
+        return setPosition(CLIMB);
     }
 
     public Command setPosition(Distance position) {
