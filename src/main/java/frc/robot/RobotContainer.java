@@ -153,7 +153,7 @@ public class RobotContainer {
         leds = new LEDSubsystem();
 
         Pose2d leftBargeSimStart = new Pose2d(7, 5.5, Rotation2d.fromDegrees(180 + 60));
-        Pose2d rightBargeSimStart = new Pose2d(7, FlippingUtil.fieldSizeY - 5.5, Rotation2d.fromDegrees(180 + 60));
+        Pose2d rightBargeSimStart = new Pose2d(7, FlippingUtil.fieldSizeY - 5.5, Rotation2d.fromDegrees(120));
         Command leftBargeLeft = Auto.bargeCoralAuto(
             Auto.leftBarge5(true),
             true,
@@ -175,21 +175,16 @@ public class RobotContainer {
             leftBargeSimStart
         );
         Command rightBargeLeft = Auto.bargeCoralAuto(Auto.rightBarge5(true), false, rightBargeSimStart);
+        Command rightBargeRight = Auto.bargeCoralAuto(Auto.rightBarge5(false), false, rightBargeSimStart);
 
-        if (Robot.isReal()) {
-            autoChooser.setDefaultOption("Do Nothing", Commands.none());
-            autoChooser.addOption("Left Barge - 1st Left", leftBargeLeft);
-            autoChooser.addOption("Left Barge - 1st Right", leftBargeRight);
-            autoChooser.addOption("Left Barge No Front - 1st Left", leftBargeLeftNoFront);
-            autoChooser.addOption("Left Barge No Front - 1st Right", leftBargeRightNoFront);
-        } else {
-            autoChooser.setDefaultOption("Left Barge - 1st Left", leftBargeLeft);
-            autoChooser.addOption("Left Barge - 1st Right", leftBargeRight);
-            autoChooser.addOption("Left Barge No Front - 1st Left", leftBargeLeftNoFront);
-            autoChooser.addOption("Left Barge No Front - 1st Right", leftBargeRightNoFront);
-            autoChooser.addOption("Right Barge - 1st Left", rightBargeLeft);
-            autoChooser.addOption("Do Nothing", Commands.none());
-        }
+        autoChooser.setDefaultOption("Do Nothing", Commands.none());
+        autoChooser.addOption("Left Barge - 1st Left", leftBargeLeft);
+        autoChooser.addOption("Left Barge - 1st Right", leftBargeRight);
+        autoChooser.addOption("Left Barge No Front - 1st Left", leftBargeLeftNoFront);
+        autoChooser.addOption("Left Barge No Front - 1st Right", leftBargeRightNoFront);
+        autoChooser.addOption("Right Barge - 1st Left", rightBargeLeft);
+        autoChooser.addOption("Right Barge - 1st Right", rightBargeRight);
+
         SmartDashboard.putData("Auto Mode", autoChooser);
 
         pushChooser.setDefaultOption("No SPAM Ram", false);
@@ -702,7 +697,7 @@ public class RobotContainer {
 
         Command coralTrackingDelay = Commands.either(
             Commands.waitSeconds(0.5),
-            Commands.waitSeconds(0.25),
+            Commands.none(), //Commands.waitSeconds(0.25),
             () -> Auto.previousCoralScoringPosition.isFrontMiddle()
         );
 

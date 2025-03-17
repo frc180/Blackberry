@@ -1,8 +1,6 @@
 package frc.robot;
 
 import static edu.wpi.first.units.Units.*;
-
-import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -29,7 +27,9 @@ public final class Auto {
         SCORING
     }
 
-    private static final Transform2d HP_STATION_TRANSFORM = new Transform2d(0, 0, Rotation2d.fromDegrees(150));
+    private static final Transform2d LEFT_HP_STATION_TRANSFORM = new Transform2d(0, 0, Rotation2d.fromDegrees(150));
+    private static final Transform2d RIGHT_HP_STATION_TRANSFORM = new Transform2d(0, 0, Rotation2d.fromDegrees(210));
+
     
     private static boolean coralIntaking = false;
     public static boolean leftSide = true;
@@ -64,8 +64,8 @@ public final class Auto {
             new CoralScoringPosition(22, 4, firstBranchLeft),
             new CoralScoringPosition(17, 4, false),
             new CoralScoringPosition(17, 4, true),
-            new CoralScoringPosition(18, 4, true),
-            new CoralScoringPosition(18, 4, false)
+            new CoralScoringPosition(18, 4, false),
+            new CoralScoringPosition(18, 4, true)
         );
     }
 
@@ -116,7 +116,20 @@ public final class Auto {
     private static DriveToPose driveToHPStationClose() {
         return new DriveToPose(RobotContainer.instance.drivetrain, () -> {
                                     Pose2d robotPose = RobotContainer.instance.drivetrain.getPose();
-                                    Pose2d hpStation = (Robot.isBlue() ? SimLogic.blueHPCoralPose : SimLogic.redHPCoralPose).transformBy(HP_STATION_TRANSFORM);
+
+                                    Pose2d hpStation;
+                                    if (Robot.isBlue()) {
+                                        hpStation = leftSide ? leftBlueHPStation : rightBlueHPStation;
+                                        hpStation = new Pose2d(hpStation.getTranslation(), hpStation.getRotation().rotateBy(Rotation2d.k180deg));
+                                    } else {
+                                        hpStation = leftSide ? leftRedHPStation : rightRedHPStation;
+                                    }
+                                    hpStation = hpStation.transformBy(leftSide ? LEFT_HP_STATION_TRANSFORM : RIGHT_HP_STATION_TRANSFORM);
+                                    // hpStation = hpStation.transformBy(HP_STATION_TRANSFORM);
+                                    // if (!leftSide) {
+                                    //     hpStation = new Pose2d(hpStation.getTranslation(), hpStation.getRotation().rotateBy(Rotation2d.kCCW_90deg));
+                                    // }
+
                                     double distance = robotPose.getTranslation().getDistance(hpStation.getTranslation());
                                     double targetDistance = distance - 1.5;
                                     Translation2d target = robotPose.getTranslation().interpolate(hpStation.getTranslation(), targetDistance / distance);
@@ -128,26 +141,35 @@ public final class Auto {
     private static final Pose2d leftRedHPStation = new Pose2d(SimLogic.redHPCoralPose.getTranslation(), Rotation2d.kZero);
     private static final Pose2d rightBlueHPStation = new Pose2d(leftBlueHPStation.getX(), FlippingUtil.fieldSizeY - leftBlueHPStation.getY(), Rotation2d.kZero);
     private static final Pose2d rightRedHPStation = new Pose2d(leftRedHPStation.getX(), FlippingUtil.fieldSizeY - leftRedHPStation.getY(), Rotation2d.kZero);
-    private static final Translation2d hpStationDriveFarOffset = new Translation2d(3, -0.5);
+    
+    private static final Translation2d leftHpStationDriveFarOffset = new Translation2d(3, -0.5);
+    private static final Translation2d rightHpStationDriveFarOffset = new Translation2d(3, 0.5);
 
     private static Command driveToHPStationFar() {
         DrivetrainSubsystem drivetrain = RobotContainer.instance.drivetrain;
         return Commands.defer(() -> {
             double sign = (leftSide ? 1 : -1) * (Robot.isBlue() ? 1 : -1);
 
-            // Pose2d hpStation = new Pose2d((Robot.isBlue() ? SimLogic.blueHPCoralPose : SimLogic.redHPCoralPose).getTranslation(), Rotation2d.kZero);
-            // Translation2d end = hpStation.getTranslation().plus(new Translation2d(3 * sign, -0.5 * sign));
-            Pose2d hpStation = Robot.isBlue() ? leftBlueHPStation : leftRedHPStation;
-            Translation2d end;
+            // Pose2d hpStation = Robot.isBlue() ? leftBlueHPStation : leftRedHPStation;
+            Pose2d hpStation;
             if (Robot.isBlue()) {
-                end = hpStation.getTranslation().plus(hpStationDriveFarOffset);
+                hpStation = leftSide ? leftBlueHPStation : rightBlueHPStation;
             } else {
-                end = hpStation.getTranslation().minus(hpStationDriveFarOffset);
+                hpStation = leftSide ? leftRedHPStation : rightRedHPStation;
             }
+            Translation2d end;
+            Translation2d offset = leftSide ? leftHpStationDriveFarOffset : rightHpStationDriveFarOffset;
+            if (Robot.isBlue()) {
+                end = hpStation.getTranslation().plus(offset);
+            } else {
+                end = hpStation.getTranslation().minus(offset);
+            }
+            double endAngle = 160;
+            if (Robot.isBlue()) endAngle -= 180;
             List<Pose2d> pathA = List.of(
                 new Pose2d(drivetrain.getPose().getTranslation(), Rotation2d.fromDegrees(90 * sign)),
                 new Pose2d(end, Rotation2d.kZero),
-                new Pose2d(end, Rotation2d.fromDegrees(160 - (Robot.isBlue() ? 180 : 0)))
+                new Pose2d(end, Rotation2d.fromDegrees(endAngle))
             );
             return drivetrain.followPath(pathA, 0, true);
         }, Set.of(drivetrain));
@@ -178,8 +200,8 @@ public final class Auto {
         );
     }
 
-    private static final double pushDistance = Inches.of(6).in(Meters);
-    private static final double pushDistanceThreshold = Inches.of(1).in(Meters);
+    private static final double pushDistance = Inches.of(18).in(Meters);
+    private static final double pushDistanceThreshold = Inches.of(15).in(Meters);
 
     public static Command partnerPush() {
         var drivetrain = RobotContainer.instance.drivetrain;

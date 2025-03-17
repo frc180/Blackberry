@@ -73,8 +73,10 @@ public class IntakeCoralPivotSubsystem extends SubsystemBase {
             firstPeriodic = false;
         }
 
-        // double output = profiledPID.calculate(inputs.absolutePosition, targetPosition);
-        // io.setSpeed(output);
+        if (Robot.isSimulation()) {
+            double output = profiledPID.calculate(inputs.absolutePosition, targetPosition);
+            io.setSpeed(output);
+        }
 
         // if (state == CoralPivotState.SLAMMING && isStallingDebounce.getAsBoolean()) {
         //     state = CoralPivotState.HOLD;
