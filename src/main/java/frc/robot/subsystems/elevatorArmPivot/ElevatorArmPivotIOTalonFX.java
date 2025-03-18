@@ -161,7 +161,7 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO {
     public void zero(double rotations) {
         // armPivotMotor.setPosition(rotations);
         // EXPERIMENTAL
-        armPivotMotor.setPosition(rotations, 0);
+        armPivotMotor.setPosition(rotations);
     }
 
     @Override

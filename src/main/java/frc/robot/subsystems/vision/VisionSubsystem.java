@@ -116,15 +116,16 @@ public class VisionSubsystem extends SubsystemBase {
     private final CoralDetectorReal coralDetectorReal;
     private final SingleTagSolver singleTagSolver = new SingleTagSolver();
 
+    private final double APRILTAG_THICKNESS = 0; // Meters. Adjust me for fields where the Apriltags are not stickers
     private final Distance reefBackDistance = Meters.of(0.55).plus(Inches.of(0.5));
     private final Distance reefSideDistance = Field.REEF_BRANCH_SEPARATION.div(2); // field measurement based
 
-    private final Transform2d leftReefTransform = new Transform2d(reefBackDistance.in(Meters), -reefSideDistance.in(Meters), Rotation2d.k180deg);
-    private final Transform2d rightReefTransform = new Transform2d(reefBackDistance.in(Meters), reefSideDistance.in(Meters), Rotation2d.k180deg);
+    private final Transform2d leftReefTransform = new Transform2d(reefBackDistance.in(Meters) - APRILTAG_THICKNESS, -reefSideDistance.in(Meters), Rotation2d.k180deg);
+    private final Transform2d rightReefTransform = new Transform2d(reefBackDistance.in(Meters) - APRILTAG_THICKNESS, reefSideDistance.in(Meters), Rotation2d.k180deg);
     private final Transform2d processorTransform = new Transform2d(0.55, 0.0, Rotation2d.fromDegrees(90));
 
     // Apply a position transform, then a rotation transform
-    private final Transform2d leftL1ReefTransform = new Transform2d(0.7, 0, Rotation2d.k180deg);
+    private final Transform2d leftL1ReefTransform = new Transform2d(0.7 - APRILTAG_THICKNESS, 0, Rotation2d.k180deg);
     private final Transform2d rightL1ReefTransform = leftL1ReefTransform;
     private final Transform2d leftL1ReefRotation = new Transform2d(0, 0, Rotation2d.fromDegrees(30));
     private final Transform2d rightL1ReefRotation = new Transform2d(0, 0, Rotation2d.fromDegrees(-30));

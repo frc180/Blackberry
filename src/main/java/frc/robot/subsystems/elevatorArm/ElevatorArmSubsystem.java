@@ -19,6 +19,8 @@ public class ElevatorArmSubsystem extends SubsystemBase{
     @NotLogged
     public final Trigger hasPartialCoral;
     public final Trigger hasNoCoral;
+    @NotLogged
+    public final Trigger hasEnteringCoral;
 
     @NotLogged
     final double slowIndexSpeed = 0.04; // 0.05
@@ -35,6 +37,7 @@ public class ElevatorArmSubsystem extends SubsystemBase{
         hasCoral = new Trigger(this::hasCoralBool);
         hasPartialCoral = new Trigger(this::hasPartialCoralBool);
         hasNoCoral = hasPartialCoral.negate();
+        hasEnteringCoral = new Trigger(this::hasEnteringCoralBool);
     }
 
     @Override
@@ -108,5 +111,9 @@ public class ElevatorArmSubsystem extends SubsystemBase{
 
     public boolean hasPartialCoralBool() {
         return inputs.frontCoralSensor || inputs.middleCoralSensor || inputs.backCoralSensor;
+    }
+
+    public boolean hasEnteringCoralBool() {
+        return inputs.backCoralSensor && !inputs.middleCoralSensor && !inputs.frontCoralSensor;
     }
 }

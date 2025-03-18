@@ -124,6 +124,8 @@ public class RobotContainer {
     public Trigger coralIntakeTrigger = new Trigger(() -> false);
     public Trigger driverRightReef = new Trigger(() -> false);
     public Trigger driverLeftReef = new Trigger(() -> false);
+    @NotLogged
+    public Trigger driverAlgaeDescore = new Trigger(() -> false);
     @Logged(name = "Reef - Near")
     public Trigger nearReef = null;
     @Logged(name = "Reef - At")
@@ -241,13 +243,15 @@ public class RobotContainer {
         final Trigger driverL2 = driverController.leftBumper().and(coralMode);
         final Trigger driverL3 = driverController.rightTrigger().and(coralMode);
         final Trigger driverL4 = driverController.rightBumper().and(coralMode);
-        final Trigger driverAlgaeDescore = driverController.a().and(coralMode);
+        driverAlgaeDescore = driverController.a().and(coralMode);
         driverLeftReef = driverController.x().and(coralMode);
         driverRightReef = driverController.b().and(coralMode).or(driverAlgaeDescore);
         final Trigger driverAnyReef = driverLeftReef.or(driverRightReef);
         //algae
-        final Trigger driverProcessor = algaeMode.and(driverController.b());
+        // final Trigger driverProcessor = algaeMode.and(driverController.b());
+        final Trigger driverProcessor = new Trigger(() -> false);
         final Trigger driverNet = algaeMode.and(driverController.x());
+        final Trigger driverNetSlow = algaeMode.and(driverController.b());
         final Trigger driverSpitAlgae = algaeMode.and(driverSpit);
         final Trigger driverIntakeAlgae = algaeMode.and(driverController.leftTrigger());
         //climb (must be in algae mode)
@@ -361,6 +365,7 @@ public class RobotContainer {
                 }
             }
         ).withDynamicTarget(true));
+         //.withIntermediatePoses(DriveToCoralPose.ALGAE_INTERMEDIATE));
 
         // Ensure we reset if we cancelled mid-score previously
         driverAnyReef.onTrue(Commands.runOnce(() -> Robot.currentlyScoringCoral = false));
@@ -473,6 +478,8 @@ public class RobotContainer {
             new RumbleCommand(0.5).withTimeout(0.3)
         ));
 
+        autonomous.or(teleop).onTrue(intakeCoral.runBottomRollerSpeed(-1).withTimeout(1));
+
 
         // Make the robot point towards the closest side of the reef
         teleop.and(coralMode).and(elevatorArm.hasCoral).and(elevatorArmAlgae.hadAlgae.negate())
@@ -516,7 +523,8 @@ public class RobotContainer {
             }
         });
 
-        Trigger reefDeployAllowed = teleop.or(elevatorArm.hasPartialCoral);
+        Trigger reefDeployAllowed = teleop.and(elevatorArm.hasEnteringCoral.negate())
+                                            .or(autonomous.and(elevatorArm.hasPartialCoral));
         Trigger isScoringCoral = new Trigger(() -> Robot.currentlyScoringCoral);
 
         // Trigger nearReefModified = nearReef;
@@ -623,7 +631,7 @@ public class RobotContainer {
                         .and(elevatorArmPivot.isAt(ElevatorArmPivotSubsystem.L1_SCORE))
                        .whileTrue(elevatorArmAlgae.runSpeed(-1));
 
-        driverNet.whileTrue(drivetrain.targetHeadingContinuous(0.0, HeadingTarget.GYRO))
+        driverNet.or(driverNetSlow).whileTrue(drivetrain.targetHeadingContinuous(0.0, HeadingTarget.GYRO))
                  .onFalse(drivetrain.targetHeading(null, HeadingTarget.POSE));
 
         // Start moving to score algae in net
@@ -633,14 +641,9 @@ public class RobotContainer {
                 elevator.setPosition(ElevatorSubsystem.NET),
                 elevatorArmPivot.netScorePosition()
             )
-        ).onFalse(Commands.sequence(
-            // Commands.either(
-            //     elevatorArmAlgae.runSpeed(-1).withTimeout(0.5),
-            //     Commands.none(),
-            //     () -> elevator.isElevatorInPosition() && elevatorArmAlgae.hadAlgae.getAsBoolean()
-            // ),
-            elevator.stow().alongWith(elevatorArmPivot.stowPosition())
-        ));
+        ).onFalse(elevator.stow().alongWith(elevatorArmPivot.stowPosition()));
+
+        Command hasCoralAfterAlgaeRumble =  new RumbleCommand(1).withTimeout(2);
 
         // Lob algae into the net by releasing while moving the elevator 
         driverNet.and(elevatorArmPivot::isElevatorArmInScoringPosition)
@@ -648,8 +651,27 @@ public class RobotContainer {
                  .onTrue(
                     elevatorArmAlgae.runSpeed(-1)
                                     .withTimeout(1)
-                                    .andThen(elevator.runOnce(() -> elevator.setPositionDirect(ElevatorSubsystem.STOW))
+                                    .andThen(elevator.runOnce(() -> {
+                                        elevator.setPositionDirect(ElevatorSubsystem.STOW);
+                                        if (elevatorArm.hasPartialCoralBool()) {
+                                            hasCoralAfterAlgaeRumble.schedule();
+                                        }
+                                    })
                 ).withInterruptBehavior(InterruptionBehavior.kCancelIncoming));
+
+        driverNetSlow.and(drivetrain.withinTargetHeadingTolerance(5).debounce(0.1)).whileTrue(
+            Commands.parallel(
+                elevator.setPosition(ElevatorSubsystem.NET),
+                elevatorArmPivot.netScorePosition()
+            )
+        ).onFalse(Commands.sequence(
+            Commands.either(
+                elevatorArmAlgae.runSpeed(-1).withTimeout(0.5),
+                Commands.none(),
+                () -> elevator.isElevatorInPosition() && elevatorArmAlgae.hadAlgae.getAsBoolean()
+            ),
+            elevator.stow().alongWith(elevatorArmPivot.stowPosition())
+        ));
 
         if (leds != null) {
             leds.setDefaultCommand(leds.run(() -> {
@@ -674,10 +696,11 @@ public class RobotContainer {
                 //     leds.setAnimation(Robot.isBlue() ? leds.blueTwinkle : leds.redTwinkle);
                 // }
 
-                if (elevatorArm.hasPartialCoralBool()) {
+                if (elevatorArm.hasPartialCoralBool() && !elevatorArm.hasEnteringCoralBool()) {
                     leds.setAnimation(leds.whiteFade);
                     return;
                 }
+
                 var primaryColor = Robot.isBlue() ? leds.BLUE : leds.RED;
                 var topColor = robotHasAlgae.getAsBoolean() ? leds.ALGAE : primaryColor;
                 var bottomColor = primaryColor;

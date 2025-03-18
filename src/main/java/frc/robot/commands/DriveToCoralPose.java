@@ -33,13 +33,17 @@ public class DriveToCoralPose extends DriveToPose {
         // withProfileOverride(drivetrain.driveToPoseProfileSlow, drivetrain.driveToPoseConstraintsSlow);
     }
 
+    final static double ALGAE_OFFSET = -Inches.of(6).in(Meters);
     // WIP nicer pathing to prevent arm collisions with reef or algae
-    private static Function<Pose2d, Pose2d> ALGAE_INTERMEDIATE = (Pose2d target) -> {
-        ElevatorSubsystem elevator = RobotContainer.instance.elevator;
+    public static Function<Pose2d, Pose2d> ALGAE_INTERMEDIATE = (Pose2d target) -> {
+        if (!RobotContainer.instance.driverAlgaeDescore.getAsBoolean()) {
+            return target;
+        }
 
+        ElevatorSubsystem elevator = RobotContainer.instance.elevator;
         double offset = 0;
         if (!elevator.isElevatorInScoringPosition()) {
-            offset = -Inches.of(6).in(Meters);
+            offset = ALGAE_OFFSET;
         }
 
         if (offset != 0) {

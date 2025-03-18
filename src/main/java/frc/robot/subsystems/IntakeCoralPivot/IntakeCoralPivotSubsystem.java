@@ -27,8 +27,9 @@ public class IntakeCoralPivotSubsystem extends SubsystemBase {
     
     //presets for intake positions
     // potentiometer units
-    public static final double stow = .06; // stalls
-    public static final double extend = .120; //.121; // .122
+    private static final double full_stow = .245;
+    public static final double stow = .434;
+    public static final double extend = .851; //.121; // .122
 
     private static final double IN_POSITION_TOLERANCE = Units.degreesToRotations(3);
 
@@ -55,7 +56,7 @@ public class IntakeCoralPivotSubsystem extends SubsystemBase {
             io = new IntakeCoralPivotIOTalonFXS();
         }
 
-        double kP = 0; // was 30
+        double kP = 10; // was 30
         if (Robot.isSimulation()) kP = 5;
         profiledPID = new ProfiledPIDController(kP, 0, 0, new Constraints(99, 99));
         SmartDashboard.putData("CoralPivotPID", profiledPID);
@@ -73,10 +74,8 @@ public class IntakeCoralPivotSubsystem extends SubsystemBase {
             firstPeriodic = false;
         }
 
-        if (Robot.isSimulation()) {
-            double output = profiledPID.calculate(inputs.absolutePosition, targetPosition);
-            io.setSpeed(output);
-        }
+        double output = profiledPID.calculate(inputs.absolutePosition, targetPosition);
+        io.setSpeed(output);
 
         // if (state == CoralPivotState.SLAMMING && isStallingDebounce.getAsBoolean()) {
         //     state = CoralPivotState.HOLD;

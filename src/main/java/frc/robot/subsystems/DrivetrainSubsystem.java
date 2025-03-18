@@ -95,7 +95,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     }
 
     public static final double MAX_SPEED = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // Meters per second desired top speed
-    public static final double MAX_SPEED_ACCEL = Robot.isReal() ? 6 : 6; // EXPERIMENT: was 5
+    public static final double MAX_SPEED_ACCEL = Robot.isReal() ? 5 : 6; // EXPERIMENT: was 5
     public static final double MAX_ANGULAR_RATE = 3 * Math.PI; // 3/4 of a rotation per second max angular velocity (1.5 * Math.PI)
     public static final double MAX_ANGULAR_ACCEL = MAX_ANGULAR_RATE * 8; // was * 4
 
@@ -273,9 +273,9 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         gyroRateSignal = trackSignal(getPigeon2().getAngularVelocityZWorld());
 
         double translationMaxSpeed = MAX_SPEED * 0.8; // EXPERIMENT: uncap or change to 0.9
-        double translationP = 4.5;
+        double translationP = 4;
         double translationI = 0.0;
-        double translationD = 0.15;
+        double translationD = 0.1; // was .15
         double translationKV = 0.25;
         double translationKA = 0;
 

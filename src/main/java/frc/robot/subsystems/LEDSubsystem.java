@@ -35,7 +35,7 @@ public class LEDSubsystem extends SubsystemBase {
     public final RainbowAnimation rainbow;
     public final SingleFadeAnimation blueFade, redFade, yellowFade, whiteFade;
     public final TwinkleAnimation blueTwinkle, redTwinkle;
-    public final ColorFlowAnimation yellowFlow;
+    public final ColorFlowAnimation blueFlow, redFlow, yellowFlow;
     public final LarsonAnimation yellowLarson;
     public final StrobeAnimation greenStrobe;
 
@@ -53,7 +53,7 @@ public class LEDSubsystem extends SubsystemBase {
         CANdleConfiguration config = new CANdleConfiguration();
         config.disableWhenLOS = false;
         config.statusLedOffWhenActive = true;
-        config.brightnessScalar = 0.3; // was 0.4
+        config.brightnessScalar = 0.2; // was 0.3
         config.v5Enabled = true;
         config.stripType = LEDStripType.GRB;
         config.vBatOutputMode = VBatOutputMode.Off;
@@ -70,6 +70,8 @@ public class LEDSubsystem extends SubsystemBase {
         blueTwinkle = twinkle(BLUE, 0.25, TwinklePercent.Percent64);
         redTwinkle = twinkle(RED, 0.25, TwinklePercent.Percent64);
 
+        blueFlow = colorFlow(BLUE, 1, Direction.Forward);
+        redFlow = colorFlow(RED, 1, Direction.Forward);
         yellowFlow = colorFlow(YELLOW, 0.5, Direction.Forward);
         yellowLarson = larson(YELLOW, 0.5, 3, BounceMode.Front);
 
