@@ -37,8 +37,10 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotState;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -117,6 +119,8 @@ public class RobotContainer {
     @NotLogged
     private final SendableChooser<Boolean> pushChooser = new SendableChooser<Boolean>();
 
+    public final Command autoDoNothing;
+
 
     public Trigger robotHasCoral = new Trigger(() -> false);
     public Trigger robotHasAlgae = new Trigger(() -> false);
@@ -154,6 +158,8 @@ public class RobotContainer {
         coralIndexer = new CoralIndexerSubsystem();
         leds = new LEDSubsystem();
 
+        autoDoNothing = Commands.none().withName("Do Nothing");
+
         Pose2d leftBargeSimStart = new Pose2d(7, 5.5, Rotation2d.fromDegrees(180 + 60));
         Pose2d rightBargeSimStart = new Pose2d(7, FlippingUtil.fieldSizeY - 5.5, Rotation2d.fromDegrees(120));
         Command leftBargeLeft = Auto.bargeCoralAuto(
@@ -179,7 +185,7 @@ public class RobotContainer {
         Command rightBargeLeft = Auto.bargeCoralAuto(Auto.rightBarge5(true), false, rightBargeSimStart);
         Command rightBargeRight = Auto.bargeCoralAuto(Auto.rightBarge5(false), false, rightBargeSimStart);
 
-        autoChooser.setDefaultOption("Do Nothing", Commands.none());
+        autoChooser.setDefaultOption("Do Nothing", autoDoNothing);
         autoChooser.addOption("Left Barge - 1st Left", leftBargeLeft);
         autoChooser.addOption("Left Barge - 1st Right", leftBargeRight);
         autoChooser.addOption("Left Barge No Front - 1st Left", leftBargeLeftNoFront);
@@ -523,8 +529,12 @@ public class RobotContainer {
             }
         });
 
-        Trigger reefDeployAllowed = teleop.and(elevatorArm.hasEnteringCoral.negate())
-                                            .or(autonomous.and(elevatorArm.hasPartialCoral));
+        Trigger autoHasCoral = autonomous.and(elevatorArm.hasPartialCoral);
+        Trigger reefDeployAllowed = elevatorArm.hasEnteringCoral.negate()
+                                        .and(teleop.or(autoHasCoral));
+                                        
+        // Trigger reefDeployAllowed = teleop.and(elevatorArm.hasEnteringCoral.negate())
+        //                                     .or(autonomous.and(elevatorArm.hasPartialCoral));
         Trigger isScoringCoral = new Trigger(() -> Robot.currentlyScoringCoral);
 
         // Trigger nearReefModified = nearReef;
@@ -576,8 +586,6 @@ public class RobotContainer {
                                                                 boolean blockableTarget = elevatorTarget == ElevatorSubsystem.L1 || elevatorTarget == ElevatorSubsystem.L2;
                                                                 return blockableTarget && driverRightReef.getAsBoolean();
                                                              });
-                                                             //.or(() -> elevator.getTargetPosition() == ElevatorSubsystem.L1 && driverRightReef.getAsBoolean())
-                                                             //.or(() -> elevator.getTargetPosition() == ElevatorSubsystem.L2 && driverRightReef.getAsBoolean());
 
         // Coral scoring sequence - kCancelIncoming means nothing else will be able to stop this command until it finishes
         atReef.and(elevator.inReefPosition)
@@ -690,11 +698,6 @@ public class RobotContainer {
                     }
                     return;
                 }
-                // if (elevatorArm.hasPartialCoralBool()) {
-                //     leds.setAnimation(leds.whiteFade);
-                // } else {
-                //     leds.setAnimation(Robot.isBlue() ? leds.blueTwinkle : leds.redTwinkle);
-                // }
 
                 if (elevatorArm.hasPartialCoralBool() && !elevatorArm.hasEnteringCoralBool()) {
                     leds.setAnimation(leds.whiteFade);

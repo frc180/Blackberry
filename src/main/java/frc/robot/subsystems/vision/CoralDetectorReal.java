@@ -44,6 +44,7 @@ public class CoralDetectorReal implements CoralDetector {
 
     // Additional flags for viewing in logs
     private boolean newCoralValue = false;
+    private boolean returningCloseDetection = false;
     private boolean rejectionAlgae = false;
     private boolean rejectionOutsideField = false;
 
@@ -79,6 +80,7 @@ public class CoralDetectorReal implements CoralDetector {
     @Override
     public Pose2d getCoralPose(Pose2d robotPose, RawDetection[] detections) {
         newCoralValue = false;
+        returningCloseDetection = false;
         rejectionAlgae = false;
         rejectionOutsideField = false;
         sortedDetections.clear();
@@ -94,6 +96,7 @@ public class CoralDetectorReal implements CoralDetector {
         // If the last detected coral was very close to the robot, wait a bit in case
         // we're trying to intake it
         if (recentLastDetection != null && auto && lastDetectionClose()) {
+            returningCloseDetection = true;
             return recentLastDetection;
         }
 

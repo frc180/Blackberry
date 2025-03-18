@@ -1,6 +1,7 @@
 package frc.robot.subsystems.IntakeAlgaePivot;
 
 import edu.wpi.first.math.controller.PIDController;
+import frc.robot.Robot;
 
 public class IntakeAlgaePivotIOSim implements IntakeAlgaePivotIO {
     
@@ -16,6 +17,8 @@ public class IntakeAlgaePivotIOSim implements IntakeAlgaePivotIO {
 
     @Override
     public void update(IntakeAlgaePivotIOInputs inputs) {
+        if (Robot.isReal()) return;
+
         if (usingPID) {
             speed = pid.calculate(position, target);
             speed = Math.max(-1, Math.min(1, speed));

@@ -3,6 +3,8 @@ package frc.robot.subsystems.IntakeAlgae;
 import static edu.wpi.first.units.Units.Inches;
 import org.ironmaple.simulation.IntakeSimulation;
 import org.ironmaple.simulation.IntakeSimulation.IntakeSide;
+
+import frc.robot.Robot;
 import frc.robot.RobotContainer;
 import frc.robot.subsystems.IntakeAlgaePivot.IntakeAlgaePivotSubsystem;
 import frc.robot.subsystems.elevatorArmAlgae.ElevatorArmAlgaeSubsystem;
@@ -48,6 +50,8 @@ public class IntakeAlgaeIOSim implements IntakeAlgaeIO {
 
     @Override
     public void update(IntakeAlgaeIOInputs inputs) {
+        if (Robot.isReal()) return;
+
         IntakeAlgaePivotSubsystem algaePivot = RobotContainer.instance.intakeAlgaePivot;
         ElevatorArmAlgaeSubsystem armAlgae = RobotContainer.instance.elevatorArmAlgae;
         boolean ableToIntake = algaePivot.getTargetPosition() == algaePivot.extend && algaePivot.isAtTarget() && rollerSpeed > 0;
@@ -84,6 +88,5 @@ public class IntakeAlgaeIOSim implements IntakeAlgaeIO {
     @Override
     public void runMotorTest() {
         System.out.println("intake algae test");
-
     }
 }

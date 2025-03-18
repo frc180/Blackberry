@@ -61,6 +61,8 @@ public class Robot extends TimedRobot {
   private final CANBus canivoreBus = new CANBus(Constants.CANIVORE);
 
   private final Alert canivoreUsageAlert = new Alert("CANivore bus usage high (> 80%) ", AlertType.kWarning);
+  private final Alert noAutoAlert = new Alert("Setup - No auto selected!", AlertType.kWarning);
+  private final Alert noCoralAlert = new Alert("Setup - No coral detected!", AlertType.kWarning);
 
 
 //   @Logged(name = "CANivore Bus Utilization")
@@ -154,7 +156,11 @@ public class Robot extends TimedRobot {
   public void disabledInit() {}
 
   @Override
-  public void disabledPeriodic() {}
+  public void disabledPeriodic() {
+    noCoralAlert.set(!robotContainer.robotHasCoral.getAsBoolean());
+    Command selectedAuto = robotContainer.getAutonomousCommand();
+    noAutoAlert.set(selectedAuto == null || selectedAuto == robotContainer.autoDoNothing);
+  }
 
   @Override
   public void disabledExit() {}
