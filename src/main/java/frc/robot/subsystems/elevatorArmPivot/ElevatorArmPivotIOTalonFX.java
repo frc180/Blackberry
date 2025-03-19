@@ -60,7 +60,7 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO {
             // config.Slot0.kV = 0;
             // config.Slot0.kA = 0;
         } else {
-            config.Slot0.kP = 100;
+            config.Slot0.kP = 1000;
             config.Slot0.kI = 0;
             config.Slot0.kD = 0;
             config.Slot0.kG = 0;
@@ -158,8 +158,6 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO {
 
     @Override
     public void zero(double rotations) {
-        // armPivotMotor.setPosition(rotations);
-        // EXPERIMENTAL
         armPivotMotor.setPosition(rotations);
     }
 

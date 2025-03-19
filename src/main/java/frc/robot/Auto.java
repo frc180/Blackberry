@@ -9,6 +9,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -36,6 +37,7 @@ public final class Auto {
     public static AutoState state = AutoState.IDLE;
     public static CoralScoringPosition previousCoralScoringPosition = null; 
     public static List<CoralScoringPosition> coralScoringPositions = new ArrayList<>();
+    public static double startTime = 0;
 
     public static final Trigger intakingState = new Trigger(() -> state == AutoState.INTAKING);
     public static final Trigger scoringState = new Trigger(() -> state == AutoState.SCORING);
@@ -74,6 +76,7 @@ public final class Auto {
     public static void init() {
         state = AutoState.IDLE;
         coralIntaking = false;
+        startTime = Timer.getFPGATimestamp();
     }
 
     public static boolean isCoralIntaking() {

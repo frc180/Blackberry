@@ -40,6 +40,7 @@ import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotState;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -402,11 +403,7 @@ public class RobotContainer {
             .whileTrue(intakeCoral.runSpeed(1));
 
             
-        // if (Robot.isSimulation()) {
-            // coralIntakeTrigger.onFalse(intakeCoralPivot.stow());
-        // }
-
-        // driverIntake.debounce(10, DebounceType.kFalling).onTrue(intakeCoralPivot.stow());
+        // coralIntakeTrigger.onFalse(intakeCoralPivot.stow());
 
         driverIntake.and(driverL1).whileTrue(intakeCoral.runSpeed(-1).alongWith(coralIndexer.runSpeed(-1), intakeCoralPivot.stow()));
 
@@ -416,10 +413,6 @@ public class RobotContainer {
 
         elevatorArm.setDefaultCommand(elevatorArm.passiveIndex());
         elevatorArmAlgae.setDefaultCommand(elevatorArmAlgae.passiveIndex());
-        
-        //noticed that sometimes when we have a coral the intake doesnt go back to the stow position to tansfer to the arm
-        // intakeCoral.hasCoral.and(elevatorArmPivot.elevatorArmInPosition).and(intakeCoralPivot.atStowPosition)
-        //     .onTrue(intakeCoral.intake().alongWith(elevatorArm.intakeAndIndex()));
         
         // Notify driver we've intaken a coral
         driverIntake.and(elevatorArm.hasCoral)
@@ -495,6 +488,16 @@ public class RobotContainer {
         ));
 
         autonomous.or(teleop).onTrue(intakeCoral.runBottomRollerSpeed(-1).withTimeout(1));
+
+        // EXPERIMENT - Stop elevator from slamming into the top if auto ends while elevator is moving up    
+        autonomous.and(() -> Timer.getFPGATimestamp() - Auto.startTime >= 14.9)
+                  .and(() -> !elevator.isElevatorInPosition() && elevator.getTargetErrorMeters() > 0)
+                    .onTrue(
+                        elevator.stow().alongWith(elevatorArmPivot.receivePosition())
+                                .until(teleop.or(disabled))
+                                .withInterruptBehavior(InterruptionBehavior.kCancelIncoming)
+                    );
+
 
 
         // Make the robot point towards the closest side of the reef

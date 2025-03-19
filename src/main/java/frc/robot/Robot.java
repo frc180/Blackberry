@@ -14,15 +14,10 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
-
 import org.ironmaple.simulation.SimulatedArena;
-
 import com.ctre.phoenix6.CANBus;
-import com.ctre.phoenix6.CANBus.CANBusStatus;
 import com.pathplanner.lib.commands.FollowPathCommand;
 import com.pathplanner.lib.util.FlippingUtil;
-
 import edu.wpi.first.epilogue.Epilogue;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;

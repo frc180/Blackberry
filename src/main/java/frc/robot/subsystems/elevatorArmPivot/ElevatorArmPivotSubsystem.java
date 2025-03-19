@@ -30,8 +30,7 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
     // TODO: read manually from robot
     protected static final Angle FORWARD_LIMIT = Degrees.of(60.7);
     protected static final Angle REVERSE_LIMIT = Degrees.of(-20);
-    // protected static final Angle HARD_STOP_OFFSET = Degrees.of(60.46875 + 3.955078125 + 2.109375 - 2.63671875);
-    protected static final Angle HARD_STOP_OFFSET = Rotations.of(1.165 - 0.003);
+    protected static final Angle HARD_STOP_OFFSET = Degrees.of(60.46875 + 3.955078125 + 2.109375 - 2.63671875);
     private static final double RESYNC_THRESHOLD = Degrees.of(1).in(Rotations);
 
     public static final double L4_SCORE = Units.degreesToRotations(-13); // -16
@@ -229,7 +228,7 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
             Distance elevatorTarget = elevator.getTargetPosition();
             // double targetError = elevator.getTargetErrorMeters();
 
-            // Experimental - prevent arm from sticking out until we're past any levels that may
+            // Prevent arm from sticking out until we're past any levels that may
             // contain algae that'd collide with the arm
             // if (targetError > MAX_ERROR_THRESHOLD) {
             //     setArmPositionDirect(receiving);
