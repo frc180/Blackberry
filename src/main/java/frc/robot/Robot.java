@@ -21,6 +21,7 @@ import org.ironmaple.simulation.SimulatedArena;
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.CANBus.CANBusStatus;
 import com.pathplanner.lib.commands.FollowPathCommand;
+import com.pathplanner.lib.util.FlippingUtil;
 
 import edu.wpi.first.epilogue.Epilogue;
 import edu.wpi.first.wpilibj.Alert;
@@ -63,6 +64,7 @@ public class Robot extends TimedRobot {
   private final Alert canivoreUsageAlert = new Alert("CANivore bus usage high (> 80%) ", AlertType.kWarning);
   private final Alert noAutoAlert = new Alert("Setup - No auto selected!", AlertType.kWarning);
   private final Alert noCoralAlert = new Alert("Setup - No coral detected!", AlertType.kWarning);
+  private final Alert wrongSideAutoAlert = new Alert("Setup - Auto side does not match robot position!", AlertType.kError);
 
 
 //   @Logged(name = "CANivore Bus Utilization")
@@ -160,6 +162,11 @@ public class Robot extends TimedRobot {
     noCoralAlert.set(!robotContainer.robotHasCoral.getAsBoolean());
     Command selectedAuto = robotContainer.getAutonomousCommand();
     noAutoAlert.set(selectedAuto == null || selectedAuto == robotContainer.autoDoNothing);
+    Pose2d robotPose = robotContainer.drivetrain.getPose();
+    boolean robotLeft = (robotPose.getY() > FlippingUtil.fieldSizeY / 2);
+    if (Robot.isRed()) robotLeft = !robotLeft;
+    boolean autoLeft = selectedAuto.getName().contains("Left");
+    wrongSideAutoAlert.set(robotLeft != autoLeft);
   }
 
   @Override

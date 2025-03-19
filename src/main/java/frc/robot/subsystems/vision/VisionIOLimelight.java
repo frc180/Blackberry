@@ -117,7 +117,7 @@ public class VisionIOLimelight implements VisionIO {
         } else {
             inputs.scoringPoseEstimate = LimelightHelpers.getBotPoseEstimate_wpiBlue(SCORING_LIMELIGHT);
             inputs.frontPoseEstimate = LimelightHelpers.getBotPoseEstimate_wpiBlue(FRONT_LIMEIGHT);
-            inputs.frontPoseEstimateMT2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(FRONT_LIMEIGHT);
+            // inputs.frontPoseEstimateMT2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(FRONT_LIMEIGHT);
         }
 
         if (inputs.scoringPoseEstimate != null) {

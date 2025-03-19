@@ -27,9 +27,10 @@ public class IntakeCoralPivotSubsystem extends SubsystemBase {
     
     //presets for intake positions
     // potentiometer units
-    private static final double full_stow = .245;
-    public static final double stow = .434;
-    public static final double extend = .851; //.121; // .122
+
+    public static final double extend = .819;
+    public static final double stow = extend - .417;
+    // public static final double stow = .434;
 
     private static final double IN_POSITION_TOLERANCE = Units.degreesToRotations(3);
 

@@ -20,7 +20,6 @@ import edu.wpi.first.wpilibj.AnalogPotentiometer;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 import frc.robot.Constants;
 import frc.robot.Robot;
-import frc.robot.subsystems.elevatorArm.ElevatorArmIOTalonFX;
 
 public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO {
     final double PIVOT_GEARING = 128;
@@ -48,7 +47,7 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO {
         armPivotMotor = new TalonFX(Constants.ELEVATOR_ARM_PIVOT_TALON, Constants.CANIVORE);
         TalonFXConfiguration config = new TalonFXConfiguration();
         if (Robot.isReal()) {
-            config.Slot0.kP = 220;
+            config.Slot0.kP = 2000; // was 220, 880 works, 1300 works, 1500,
             config.Slot0.kI = 0;
             config.Slot0.kD = 0;
             config.Slot0.kG = 0.23;

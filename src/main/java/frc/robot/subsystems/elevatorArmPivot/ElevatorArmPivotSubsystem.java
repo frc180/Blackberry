@@ -35,7 +35,7 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
     private static final double RESYNC_THRESHOLD = Degrees.of(1).in(Rotations);
 
     public static final double L4_SCORE = Units.degreesToRotations(-13); // -16
-    public static final double L3_SCORE = Units.degreesToRotations(-6);
+    public static final double L3_SCORE = Units.degreesToRotations(-6 - 2); // was -6,
     public static final double L2_SCORE = L3_SCORE;
     public static final double L1_SCORE = Units.degreesToRotations(-1);
     
@@ -49,7 +49,7 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
     public static final double netScore = Units.degreesToRotations(8);
     public static final double netScoreBackwards = Units.degreesToRotations(46.01);
 
-    private static final double IN_POSITION_TOLERANCE = Units.degreesToRotations(2);
+    private static final double IN_POSITION_TOLERANCE = Units.degreesToRotations(0.6); // was 2, -> 1
 
     private final Alert notHomedAlert = new Alert("Arm Pivot is not homed!", AlertType.kWarning);
 
@@ -61,12 +61,11 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
     private boolean isHoming = false;
     private boolean homed = false;
 
-    private double absoluteScalar = Robot.isReal() ? (2.29 * .967): 4;
-    private double absoluteOffset = Robot.isReal() ? -.751 : 30 * 4; // was  -0.701
+    private double absoluteScalar = Robot.isReal() ? (2.29 * .967) : 4;
+    private double absoluteOffset = Robot.isReal() ? -.6245 + .005 : 30 * 4;
 
     @NotLogged
     private double lastPositionSyncTime = 0;
-    private double positionDisagreement = 0;
     private double absoluteRatio = 0;
     private double absoluteRatioFiltered = 0;
     private double absoluteRatioSamples = 0;
@@ -92,8 +91,10 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
 
     @NotLogged
     boolean firstPeriodic = true;
+    @NotLogged 
+    boolean wasEverEnabled = false;
     @NotLogged
-    boolean wasEnabled = false;
+    boolean absPosValid = false;
 
     @Override
     public void periodic() {
@@ -104,14 +105,17 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
         notHomedAlert.set(!homed);
 
         absoluteRatio = inputs.position / getAbsolutePosition();
-        positionDisagreement = getAbsolutePosition() - inputs.position;
 
         double currentTime = Timer.getFPGATimestamp();
-        if (firstPeriodic || (!enabled && currentTime - lastPositionSyncTime > 0.5)) {
-            io.zero(getAbsolutePosition());
-            homed = true;
-            firstPeriodic = false;
-            lastPositionSyncTime = currentTime;
+        double absPos = getAbsolutePosition();
+        absPosValid = true;//Math.abs(inputs.absolutePosition) > 0.23;
+        if (absPosValid) {
+            if (firstPeriodic || (!enabled && !wasEverEnabled && currentTime - lastPositionSyncTime > 0.5)) {
+                io.zero(getAbsolutePosition());
+                homed = true;
+                firstPeriodic = false;
+                lastPositionSyncTime = currentTime;
+            }
         }
 
         // if (firstPeriodic) {
@@ -120,7 +124,9 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
         //     firstPeriodic = false;
         // }
 
-        wasEnabled = enabled;
+        if (!wasEverEnabled) {
+            wasEverEnabled = enabled;
+        }
 
         // if (pidMode) {
         //     setArmPositionDirect(targetPosition);
@@ -326,6 +332,10 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
 
     public double getTargetDegrees() {
         return Units.rotationsToDegrees(targetPosition);
+    }
+
+    public double getErrorDegrees() {
+        return getTargetDegrees() - getDegrees();
     }
 
     public double getAbsolutePosition() {

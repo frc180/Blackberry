@@ -7,10 +7,10 @@ public interface ElevatorArmAlgaeIO {
 
     @Logged
     public class ElevatorArmAlgaeInputs {
-        public boolean hasAlgae;
         public double speed;
         public double distance;
         public double temperature;
+        public double distanceSignalStrength;
     }
 
     public void setSpeed(double speed);

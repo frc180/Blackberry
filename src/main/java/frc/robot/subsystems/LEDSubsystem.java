@@ -17,7 +17,6 @@ import com.ctre.phoenix.led.ColorFlowAnimation.Direction;
 import com.ctre.phoenix.led.LarsonAnimation.BounceMode;
 import com.ctre.phoenix.led.TwinkleAnimation.TwinklePercent;
 import com.ctre.phoenix.led.TwinkleOffAnimation.TwinkleOffPercent;
-
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
@@ -33,7 +32,7 @@ public class LEDSubsystem extends SubsystemBase {
     public final LEDColor ALGAE = new LEDColor(0, 255, 30, 255);
 
     public final RainbowAnimation rainbow;
-    public final SingleFadeAnimation blueFade, redFade, yellowFade, whiteFade;
+    public final SingleFadeAnimation blueFade, redFade, yellowFade, whiteFade, yellowFadeFast;
     public final TwinkleAnimation blueTwinkle, redTwinkle;
     public final ColorFlowAnimation blueFlow, redFlow, yellowFlow;
     public final LarsonAnimation yellowLarson;
@@ -66,6 +65,7 @@ public class LEDSubsystem extends SubsystemBase {
         redFade = fade(RED, 0.25);
         yellowFade = fade(YELLOW, 0.25);
         whiteFade = fade(WHITE, 1);
+        yellowFadeFast = fade(YELLOW, 1);
 
         blueTwinkle = twinkle(BLUE, 0.25, TwinklePercent.Percent64);
         redTwinkle = twinkle(RED, 0.25, TwinklePercent.Percent64);

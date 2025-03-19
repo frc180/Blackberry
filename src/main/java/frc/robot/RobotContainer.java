@@ -325,7 +325,7 @@ public class RobotContainer {
             axis *= DrivetrainSubsystem.MAX_SPEED;
             // Temporary slowdown logic for net scoring, until we add real driver acceleration limiting that is tied
             // to elevator height
-            if (driverNet.getAsBoolean()) axis *= 0.25;
+            if (driverNet.getAsBoolean() || driverNetSlow.getAsBoolean()) axis *= 0.25;
             return axis;
          };
 
@@ -389,9 +389,15 @@ public class RobotContainer {
         coralIntakeTrigger
             .whileTrue(elevatorArmPivot.receivePosition().alongWith(elevator.stow(), intakeCoralPivot.extend()));
 
-        coralIntakeTrigger.and(elevatorArmPivot::isAtReceivingPosition).and(elevator::isElevatorInPosition)
-            .whileTrue(coralIndexer.runSpeed(0.5).alongWith(elevatorArm.intakeAndIndex(), intakeCoral.runSpeed(1)));
+        Trigger coralIntakeReady = coralIntakeTrigger.and(elevatorArmPivot::isAtReceivingPosition).and(elevator::isElevatorInPosition);
 
+        coralIntakeReady
+            .whileTrue(coralIndexer.runSpeed(0.5).alongWith(elevatorArm.intakeAndIndex()));
+
+        coralIntakeReady.and(elevatorArm.hasNoCoral)
+            .whileTrue(intakeCoral.runSpeed(1));
+
+            
         // if (Robot.isSimulation()) {
             // coralIntakeTrigger.onFalse(intakeCoralPivot.stow());
         // }
@@ -655,7 +661,7 @@ public class RobotContainer {
 
         // Lob algae into the net by releasing while moving the elevator 
         driverNet.and(elevatorArmPivot::isElevatorArmInScoringPosition)
-                 .and(() -> elevator.getTargetPosition() == ElevatorSubsystem.NET && elevator.getTargetErrorInches() < 34) // 36 worked but low, 30 too high?
+                 .and(() -> elevator.getTargetPosition() == ElevatorSubsystem.NET && elevator.getTargetErrorInches() < 33) // 34 has been working but can be low sometimes
                  .onTrue(
                     elevatorArmAlgae.runSpeed(-1)
                                     .withTimeout(1)
@@ -685,6 +691,11 @@ public class RobotContainer {
             leds.setDefaultCommand(leds.run(() -> {
                 if (!vision.isScoringCameraConnected()) {
                     leds.setAnimation(leds.rainbow);
+                    return;
+                }
+
+                if (!vision.isFrontCameraConnected()) {
+                    leds.setAnimation(leds.yellowFadeFast);
                     return;
                 }
 

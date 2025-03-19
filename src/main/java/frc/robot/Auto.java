@@ -238,7 +238,7 @@ public final class Auto {
         return Commands.parallel(
             Auto.configureAuto(coralScoringPositions, left, simStart),
             (driveToNextCoralPose())
-        );
+        ).withName(left ? "Left Barge" : "Right Barge");
     }
 
     public static CoralScoringPosition nextCoralScoringPosition() {

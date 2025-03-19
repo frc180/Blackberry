@@ -11,8 +11,8 @@ public interface IntakeCoralPivotIO {
         double velocity;
         double voltage;
         double target;
-        double supplyCurrent;
-        double torqueCurrent;
+        //double supplyCurrent;
+        //double torqueCurrent;
         double absolutePosition;
     }
     

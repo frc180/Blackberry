@@ -31,8 +31,11 @@ public class ElevatorArmAlgaeIOTalonFX implements ElevatorArmAlgaeIO {
     TalonFXS motor;
     CANrange canrange;
     VoltageOut voltageControl;
+
+    // Status signals
     StatusSignal<Temperature> temperatureSignal;
     StatusSignal<Distance> distanceSignal;
+    StatusSignal<Double> signalStengthSignal;
 
     // Simulation-only variables
     TalonFXSSimState motorSim;
@@ -57,6 +60,7 @@ public class ElevatorArmAlgaeIOTalonFX implements ElevatorArmAlgaeIO {
         canrange.getConfigurator().apply(rangeConfig);
 
         distanceSignal = trackSignal(canrange.getDistance());
+        signalStengthSignal = trackSignal(canrange.getSignalStrength());
         temperatureSignal = trackSignal(motor.getDeviceTemp());
 
         // ParentDevice.optimizeBusUtilizationForAll(10.0, motor, canrange);
@@ -71,8 +75,9 @@ public class ElevatorArmAlgaeIOTalonFX implements ElevatorArmAlgaeIO {
     public void update(ElevatorArmAlgaeInputs inputs) {
         double distance = distanceSignal.getValueAsDouble();
         inputs.distance = distance;
-        inputs.hasAlgae = distance < 0.1;
+        // inputs.hasAlgae = distance < 0.1;
         inputs.temperature = temperatureSignal.getValueAsDouble();
+        inputs.distanceSignalStrength = signalStengthSignal.getValueAsDouble();
     }
 
     @Override

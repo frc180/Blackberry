@@ -57,7 +57,7 @@ public class ElevatorArmAlgaeIOSim implements ElevatorArmAlgaeIO{
             }
         }
 
-        inputs.hasAlgae = SimLogic.armHasAlgae;
+        // inputs.hasAlgae = SimLogic.armHasAlgae;
     }
 
     @Override
