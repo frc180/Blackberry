@@ -111,8 +111,7 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
         absPosValid = true;//Math.abs(inputs.absolutePosition) > 0.23;
         if (absPosValid) {
             if (firstPeriodic || (!enabled && !wasEverEnabled && currentTime - lastPositionSyncTime > 0.5)) {
-                io.zero(getAbsolutePosition());
-                homed = true;
+                syncAbsolute();
                 firstPeriodic = false;
                 lastPositionSyncTime = currentTime;
             }
@@ -131,6 +130,11 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
         // if (pidMode) {
         //     setArmPositionDirect(targetPosition);
         // }
+    }
+
+    public void syncAbsolute() {
+        io.zero(getAbsolutePosition());
+        homed = true;
     }
 
     @Override

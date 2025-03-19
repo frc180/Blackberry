@@ -46,7 +46,7 @@ public class IntakeAlgaePivotIOTalonFXS implements IntakeAlgaePivotIO {
 
     public IntakeAlgaePivotIOTalonFXS() {
         pivotMotor = new TalonFX(Constants.INTAKE_ALGAE_PIVOT_TALON, Constants.CANIVORE);
-        winchMotor = new TalonFX(Constants.INTAKE_ALGAE_WINCH_TALON, Constants.CANIVORE);
+        winchMotor = new TalonFX(Constants.CLIMBER_WINCH_TALON, Constants.CANIVORE);
 
         TalonFXConfiguration configuration = new TalonFXConfiguration();
         configuration.Feedback.SensorToMechanismRatio = intakeArmGearing;

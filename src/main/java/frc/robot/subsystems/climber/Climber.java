@@ -3,17 +3,25 @@ package frc.robot.subsystems.climber;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Robot;
 import frc.robot.subsystems.climber.ClimberIO.ClimberInputs;
 
 @Logged
 public class Climber extends SubsystemBase {
     
+    private static final double DEPLOYED = 0.5;
+    private static final double MAX_CLIMB = 0.2;
+
     private final ClimberIO io;
     private final ClimberInputs inputs;
 
     public Climber() {
         inputs = new ClimberInputs();
-        io = new ClimberIOSim();
+        if (Robot.isReal()) {
+            io = new ClimberIOSim();
+        } else {
+            io = new ClimberIOSim();
+        }
     }
 
     /**
@@ -39,10 +47,10 @@ public class Climber extends SubsystemBase {
     }
 
     public boolean isDeployed() {
-        return inputs.jointPosition > 0.5;
+        return inputs.jointPosition > DEPLOYED;
     }
 
     public boolean shouldStopClimbing() {
-        return inputs.jointPosition < 0.2;
+        return inputs.jointPosition < MAX_CLIMB;
     }
 }

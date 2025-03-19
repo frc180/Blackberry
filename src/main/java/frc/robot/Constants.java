@@ -16,7 +16,7 @@ public class Constants {
 
     public static final int INTAKE_ALGAE_TALON = 18;
     public static final int INTAKE_ALGAE_PIVOT_TALON = 13;
-    public static final int INTAKE_ALGAE_WINCH_TALON = 14;
+    public static final int CLIMBER_WINCH_TALON = 14;
 
     public static final int ELEVATOR_ARM_ALGAE = 20;
 

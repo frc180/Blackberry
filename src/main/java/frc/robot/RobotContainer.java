@@ -63,6 +63,7 @@ import frc.robot.subsystems.IntakeAlgae.IntakeAlgaeSubsystem;
 import frc.robot.subsystems.IntakeAlgaePivot.IntakeAlgaePivotSubsystem;
 import frc.robot.subsystems.IntakeCoral.IntakeCoralSubsystem;
 import frc.robot.subsystems.IntakeCoralPivot.IntakeCoralPivotSubsystem;
+import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.coralIndexer.CoralIndexerSubsystem;
 import frc.robot.subsystems.elevator.ElevatorSubsystem;
 import frc.robot.subsystems.vision.VisionSubsystem;
@@ -112,6 +113,8 @@ public class RobotContainer {
     public final ElevatorArmAlgaeSubsystem elevatorArmAlgae;
     @Logged(name = "Coral Indexer")
     public final CoralIndexerSubsystem coralIndexer;
+    @Logged(name = "Climber")
+    public final Climber climber;
     public final LEDSubsystem leds;
 
     @NotLogged
@@ -156,6 +159,7 @@ public class RobotContainer {
         elevatorArm = new ElevatorArmSubsystem();
         elevatorArmAlgae = new ElevatorArmAlgaeSubsystem();
         coralIndexer = new CoralIndexerSubsystem();
+        climber = new Climber();
         leds = new LEDSubsystem();
 
         autoDoNothing = Commands.none().withName("Do Nothing");
@@ -762,28 +766,40 @@ public class RobotContainer {
 
         // ====================== TEST CONTROLS ======================
 
-        testController.button(1).whileTrue(intakeAlgaePivot.runSpeed(0.25));
-        testController.button(2).whileTrue(intakeAlgaePivot.runSpeed(-0.25));
+        testController.button(1).onTrue(elevator.home());
+
+        testController.button(2).onTrue(Commands.runOnce(() -> elevatorArmPivot.syncAbsolute()));
+
+
+        testController.button(6).whileTrue(climber.runSpeed(0.1));
+        testController.button(7).whileTrue(climber.runSpeed(-0.1));
+
+        testController.button(9).whileTrue(climber.deploy());
+        testController.button(10).whileTrue(climber.climb());
+
+
+        // testController.button(1).whileTrue(intakeAlgaePivot.runSpeed(0.25));
+        // testController.button(2).whileTrue(intakeAlgaePivot.runSpeed(-0.25));
         //testController.button(3).whileTrue(intakeAlgae.runSpeed(0.5));
         //testController.button(4).whileTrue(intakeAlgae.runSpeed(-0.5));
-        testController.button(3).whileTrue(intakeAlgaePivot.runWinchSpeed(0.75));
+        // testController.button(3).whileTrue(intakeAlgaePivot.runWinchSpeed(0.75));
 
-        testController.button(4).whileTrue(elevatorArmPivot.horizontalPosition().alongWith(elevator.climbHeight()));
-        testController.button(5).whileTrue(intakeAlgaePivot.climb());
+        // testController.button(4).whileTrue(elevatorArmPivot.horizontalPosition().alongWith(elevator.climbHeight()));
+        // testController.button(5).whileTrue(intakeAlgaePivot.climb());
 
         // testController.button(5).whileTrue(Auto.driveToCoral().until(robotHasCoral));
 
 
-        testController.button(7).whileTrue(intakeCoralPivot.runSpeed(0.25));
-        testController.button(8).whileTrue(intakeCoralPivot.runSpeed(-0.25));
+        // testController.button(7).whileTrue(intakeCoralPivot.runSpeed(0.25));
+        // testController.button(8).whileTrue(intakeCoralPivot.runSpeed(-0.25));
 
         // testController.button(9).whileTrue(intakeCoral.runBottomRollerSpeed(0.5));
         // testController.button(10).whileTrue(intakeCoral.runBottomRollerSpeed(-0.5));
 
 
         // testController.button(6).whileTrue(intakeCoralPivot.zero(Degrees.of(90)));
-        testController.button(9).whileTrue(intakeCoralPivot.stow());
-        testController.button(10).whileTrue(intakeCoralPivot.extend());
+        // testController.button(9).whileTrue(intakeCoralPivot.stow());
+        // testController.button(10).whileTrue(intakeCoralPivot.extend());
 
         // testController.button(9).whileTrue(elevatorArmAlgae.intakeAndIndex(0.25));
         // testController.button(10).whileTrue(elevatorArmAlgae.runSpeed(-1));
