@@ -86,6 +86,10 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
         } else {
             io = new ElevatorArmPivotIOTalonFX();
         }
+
+        if (RobotContainer.POSING_MODE) {
+            setDefaultCommand(matchElevatorPreset().ignoringDisable(true));
+        }
     }
 
     @NotLogged

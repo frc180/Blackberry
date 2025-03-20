@@ -21,27 +21,24 @@
 package frc.robot;
 
 import static edu.wpi.first.units.Units.*;
-import java.util.List;
 import java.util.Map;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import com.pathplanner.lib.util.FlippingUtil;
+import com.spamrobotics.util.Helpers;
 import com.spamrobotics.util.JoystickInputs;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.NotLogged;
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.Distance;
-import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -59,7 +56,6 @@ import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.DrivetrainSubsystem;
 import frc.robot.subsystems.LEDSubsystem;
 import frc.robot.subsystems.DrivetrainSubsystem.HeadingTarget;
-import frc.robot.subsystems.DrivetrainSubsystem.PoseTarget;
 import frc.robot.subsystems.IntakeAlgae.IntakeAlgaeSubsystem;
 import frc.robot.subsystems.IntakeAlgaePivot.IntakeAlgaePivotSubsystem;
 import frc.robot.subsystems.IntakeCoral.IntakeCoralSubsystem;
@@ -82,6 +78,8 @@ public class RobotContainer {
      * Set this to false to disable MapleSim in simulation
      */
     private static final boolean USE_MAPLESIM = true;
+    
+    public static final boolean POSING_MODE = true;
 
     public static final boolean MAPLESIM = USE_MAPLESIM && Robot.isSimulation();
     public static final double DEADBAND = 0.025;
@@ -142,6 +140,7 @@ public class RobotContainer {
     // Debug
     public Trigger atReefXY;
     public Trigger atReefAngle;
+    public Trigger posingAtReef = new Trigger(() -> false);
 
     public static RobotContainer instance;
 
@@ -233,6 +232,9 @@ public class RobotContainer {
         configureBindings();
 
         // drivetrain.singCommand("enemy").schedule();
+        if (POSING_MODE) {
+            SmartDashboard.putNumber("Posing/Level", 4);
+        }
     }
 
     private void configureBindings() {
@@ -320,6 +322,12 @@ public class RobotContainer {
         //                 Inches.of(1),
         //                 Degrees.of(2)
         // ));
+
+        if (POSING_MODE) {
+            posingAtReef = new Trigger(() -> {
+                return Helpers.withinTolerance(drivetrain.getPose(), vision.getClosestReefPose(), Inches.of(1 * 0.75), Inches.of(1 * 0.75), Degrees.of(2 * 0.75));
+            });
+        }
 
         // Auto triggers
         final Trigger autoCoralIntake = autonomous.and(Auto::isCoralIntaking);

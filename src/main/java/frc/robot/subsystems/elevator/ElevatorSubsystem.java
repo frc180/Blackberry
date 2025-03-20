@@ -19,6 +19,7 @@ import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.RobotContainer;
 import frc.robot.subsystems.elevator.ElevatorIO.ElevatorIOInputs;
 import frc.robot.util.simulation.SimVisuals;
 
@@ -97,10 +98,14 @@ public class ElevatorSubsystem extends SubsystemBase {
         //     hasHomed = true;
         // }
 
-
         notHomedAlert.set(!hasHomed);
 
         softStowLogic();
+
+        if (RobotContainer.POSING_MODE) {
+            int level = (int) SmartDashboard.getNumber("Posing/Level", 4);
+            setPositionDirect(levelToPosition(level));
+        }
     }
 
     @Override
