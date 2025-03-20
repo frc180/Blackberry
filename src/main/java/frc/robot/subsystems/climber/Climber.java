@@ -2,41 +2,52 @@ package frc.robot.subsystems.climber;
 
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Robot;
 import frc.robot.subsystems.climber.ClimberIO.ClimberInputs;
+import frc.robot.commands.RumbleCommand;
 
 @Logged
 public class Climber extends SubsystemBase {
-    
-    private static final double DEPLOYED = 0.5;
-    private static final double MAX_CLIMB = 0.2;
 
+    private static final double DEPLOYED = 0.4;
+    private static final double INCREASE_POWER_THRESHOLD = .135; //.13?
+    private static final double MAX_CLIMB = 0.11;
+    
     private final ClimberIO io;
     private final ClimberInputs inputs;
 
     public Climber() {
         inputs = new ClimberInputs();
         if (Robot.isReal()) {
-            io = new ClimberIOSim();
+            io = new ClimberIOTalonFX();
+            // io = new ClimberIOSim();
         } else {
             io = new ClimberIOSim();
         }
     }
 
-    /**
-     * "driver activates deploy, winch retracts at low power until until it sees motion
-     * on joint encoder indicating mechanism has been released."
-     */
-    public Command deploy() {
-        return runSpeed(0.1).until(this::isDeployed);
+    @Override
+    public void periodic() {
+        io.update(inputs);
     }
 
-    /**
-     * "winch retracts while held until driver releases or until max retract angle is achieved. ""
-     */
+    public Command deploy() {
+        return runSpeed(0.05).until(this::isDeployed);
+    }
+
+    final Command climbDoneRumble = new RumbleCommand(1).withTimeout(2);
+
     public Command climb() {
-        return runSpeed(-0.5).until(this::shouldStopClimbing);
+        return runEnd(
+            () -> {
+                // io.setSpeed(shouldIncreaseClimbPower() ? 1 : 0.3);
+                io.setSpeed(0.3);
+            },
+            () -> io.setSpeed(0)
+        ).until(this::shouldStopClimbing)
+        .andThen(Commands.runOnce(() -> climbDoneRumble.schedule()));
     }
 
     public Command runSpeed(double speed) {
@@ -52,5 +63,9 @@ public class Climber extends SubsystemBase {
 
     public boolean shouldStopClimbing() {
         return inputs.jointPosition < MAX_CLIMB;
+    }
+
+    public boolean shouldIncreaseClimbPower() {
+        return inputs.jointPosition < INCREASE_POWER_THRESHOLD;
     }
 }

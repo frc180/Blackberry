@@ -19,7 +19,7 @@ public class ClimberIOTalonFX implements ClimberIO {
         config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         winchMotor = new TalonFX(Constants.CLIMBER_WINCH_TALON, Constants.CANIVORE);
         winchMotor.getConfigurator().apply(config);
-        winchMotor.setNeutralMode(NeutralModeValue.Brake);
+        winchMotor.setNeutralMode(NeutralModeValue.Coast);
 
         absoluteEncoder = new DutyCycleEncoder(Constants.DIO_INTAKE_ALGAE_ENCODER);
 

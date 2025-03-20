@@ -60,7 +60,7 @@ public class Robot extends TimedRobot {
   private final Alert noAutoAlert = new Alert("Setup - No auto selected!", AlertType.kWarning);
   private final Alert noCoralAlert = new Alert("Setup - No coral detected!", AlertType.kWarning);
   private final Alert wrongSideAutoAlert = new Alert("Setup - Auto side does not match robot position!", AlertType.kError);
-
+  private final Alert indexerSensorAlert = new Alert("Setup - Coral indexer sensor is triggered!", AlertType.kWarning);
 
 //   @Logged(name = "CANivore Bus Utilization")
 //   float canivoreBusUtilization = 0;
@@ -162,6 +162,8 @@ public class Robot extends TimedRobot {
     if (Robot.isRed()) robotLeft = !robotLeft;
     boolean autoLeft = selectedAuto.getName().contains("Left");
     wrongSideAutoAlert.set(robotLeft != autoLeft);
+
+    // indexerSensorAlert.set(robotContainer.intakeCoral.hasCoral.getAsBoolean());
   }
 
   @Override

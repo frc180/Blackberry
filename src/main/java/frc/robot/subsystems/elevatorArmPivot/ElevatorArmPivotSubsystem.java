@@ -43,9 +43,9 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
     public static final double algaeReceive = Units.degreesToRotations(-70);
     public static final double horizontal = 0;
     public static final double PROCESSOR = Units.degreesToRotations(-30);
-    public static final double CLIMB = Units.degreesToRotations(98); // 101 is hard stop
+    public static final double CLIMB = Units.degreesToRotations(-37.2); // 101 is hard stop
 
-    public static final double netScore = Units.degreesToRotations(8);
+    public static final double netScore = Units.degreesToRotations(8 - 2);
     public static final double netScoreBackwards = Units.degreesToRotations(46.01);
 
     private static final double IN_POSITION_TOLERANCE = Units.degreesToRotations(0.6); // was 2, -> 1
@@ -278,11 +278,11 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
     }
 
     public Command brakeMode() {
-        return Commands.runOnce(io::brakeMode);
+        return Commands.runOnce(io::brakeMode).ignoringDisable(true);
     }
 
     public Command coastMode() {
-        return Commands.runOnce(io::coastMode);
+        return Commands.runOnce(io::coastMode).ignoringDisable(true);
     }
 
     public Trigger isTargeting(double target) {

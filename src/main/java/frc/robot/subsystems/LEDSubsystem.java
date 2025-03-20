@@ -39,7 +39,8 @@ public class LEDSubsystem extends SubsystemBase {
     public final StrobeAnimation greenStrobe;
 
     private final int STRIP_LENGTH = 49;
-    private final int NUM_LEDS = 8 + STRIP_LENGTH;
+    private final int STRIP_2_LENGTH = 47;
+    private final int NUM_LEDS = 8 + STRIP_LENGTH + STRIP_2_LENGTH;
     private final int STRIP_OFFSET = 0;
     private final int NO_CANDLE_OFFSET = 8;
     private final CANdle candle;
@@ -73,7 +74,7 @@ public class LEDSubsystem extends SubsystemBase {
         blueFlow = colorFlow(BLUE, 1, Direction.Forward);
         redFlow = colorFlow(RED, 1, Direction.Forward);
         yellowFlow = colorFlow(YELLOW, 0.5, Direction.Forward);
-        yellowLarson = larson(YELLOW, 0.5, 3, BounceMode.Front);
+        yellowLarson = larson(YELLOW, 0.5, 5, BounceMode.Front);
 
         greenStrobe = strobe(GREEN, 1);
     }
@@ -87,8 +88,12 @@ public class LEDSubsystem extends SubsystemBase {
     }
 
     public void setAnimation(Animation animation) {
+        setAnimation(animation, 0);
+    }
+
+    public void setAnimation(Animation animation, int slot) {
         if (animation != currentAnimation) {
-            ErrorCode code = candle.animate(animation);
+            ErrorCode code = candle.animate(animation, slot);
             if (code == ErrorCode.OK) {
                 currentAnimation = animation;
                 currentColor = null;
@@ -114,7 +119,11 @@ public class LEDSubsystem extends SubsystemBase {
             candle.clearAnimation(0);
             ErrorCode code1 = candle.setLEDs(bottom.r, bottom.g, bottom.b, bottom.w, 0, 24);
             ErrorCode code2 = candle.setLEDs(top.r, top.g, top.b, top.w, 24, 25);
-            if (code1 == ErrorCode.OK && code2 == ErrorCode.OK) {
+
+            ErrorCode code3 =  candle.setLEDs(top.r, top.g, top.b, top.w, 49, 23);
+            ErrorCode code4 =  candle.setLEDs(bottom.r, bottom.g, bottom.b, bottom.w, 72, 24);
+
+            if (code1 == ErrorCode.OK && code2 == ErrorCode.OK && code3 == ErrorCode.OK && code4 == ErrorCode.OK) {
                 currentColor = top;
                 currentSplitColor = bottom;
                 currentAnimation = null;

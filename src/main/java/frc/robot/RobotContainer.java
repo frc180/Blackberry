@@ -266,8 +266,8 @@ public class RobotContainer {
         final Trigger driverSpitAlgae = algaeMode.and(driverSpit);
         final Trigger driverIntakeAlgae = algaeMode.and(driverController.leftTrigger());
         //climb (must be in algae mode)
-        final Trigger driverReadyClimb = algaeMode.and(driverController.leftStick().and(driverController.rightStick())); // left/right stick is M1 and M2
-        final Trigger driverStartClimb = algaeMode.and(driverController.start());
+        final Trigger driverReadyClimb = driverController.leftStick().and(driverController.rightStick()); // left/right stick is M1 and M2
+        final Trigger driverStartClimb = driverController.start();
 
         // More complex triggers
         robotHasCoral = intakeCoral.hasCoral.or(elevatorArm.hasPartialCoral);
@@ -348,7 +348,6 @@ public class RobotContainer {
     
         drivetrain.setDefaultCommand(new DefaultDriveCommand(drivetrain, joystickInputsSupplier, rotationSupplier));
         driverController.back().onTrue(Commands.runOnce(drivetrain::zeroGyroscope));
-        // driverController.start().whileTrue(drivetrain.wheelRadiusCharacterization(1));
 
         // Coral reef auto-aligns
         driverLeftReef.whileTrue(new DriveToCoralPose(
@@ -426,8 +425,12 @@ public class RobotContainer {
             .whileTrue(intakeAlgae.runSpeed(-1));
 
         //climbing sequence
-        // driverReadyClimb.whileTrue(intakeAlgaePivot.readyClimb());
-        driverStartClimb.whileTrue(intakeAlgaePivot.climb());
+        // driverReadyClimb.onTrue(climber.deploy());
+
+        Command readyClimb = elevatorArmPivot.climbPosition().alongWith(elevator.climbHeight(), intakeCoralPivot.extremeStow());
+
+        driverReadyClimb.whileTrue(readyClimb);
+        driverStartClimb.whileTrue(climber.climb());
 
         //processor alignment
         // driverProcessor.whileTrue(new DriveToPose(drivetrain, () -> vision.getProcessorPose(Robot.isBlue()))
@@ -470,6 +473,9 @@ public class RobotContainer {
 
         driverProcessor.and(elevatorArmAlgae.hasAlgae.negate())
                        .whileTrue(new RumbleCommand(1));
+
+        
+        disabled.onTrue(elevatorArmPivot.coastMode());
 
         teleop.onTrue(Commands.sequence(
             elevatorArmPivot.brakeMode(),
@@ -777,7 +783,9 @@ public class RobotContainer {
         testController.button(6).whileTrue(climber.runSpeed(0.1));
         testController.button(7).whileTrue(climber.runSpeed(-0.1));
 
-        testController.button(9).whileTrue(climber.deploy());
+        testController.button(8).whileTrue(readyClimb);
+
+        // testController.button(9).whileTrue(climber.deploy());
         testController.button(10).whileTrue(climber.climb());
 
 
