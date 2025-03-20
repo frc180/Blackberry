@@ -76,7 +76,7 @@ public class LEDSubsystem extends SubsystemBase {
         yellowFlow = colorFlow(YELLOW, 0.5, Direction.Forward);
         yellowLarson = larson(YELLOW, 0.5, 5, BounceMode.Front);
 
-        greenStrobe = strobe(GREEN, 1);
+        greenStrobe = strobe(GREEN, 0.25);
     }
 
     public Command animate(Animation animation) {

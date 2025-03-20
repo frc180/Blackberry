@@ -710,6 +710,14 @@ public class RobotContainer {
 
         if (leds != null) {
             leds.setDefaultCommand(leds.run(() -> {
+                if (POSING_MODE) {
+                    if (elevator.isElevatorInPosition() && elevatorArmPivot.isInPosition()) {
+                        leds.setAnimation(leds.greenStrobe);
+                    } else {
+                        leds.setSplitColor(leds.BLUE, leds.RED);
+                    }
+                    return;
+                }
                 if (!vision.isScoringCameraConnected()) {
                     leds.setAnimation(leds.rainbow);
                     return;

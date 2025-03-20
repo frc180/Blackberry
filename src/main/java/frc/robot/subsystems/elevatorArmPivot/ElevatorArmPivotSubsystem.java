@@ -63,7 +63,6 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
     private double absoluteScalar = Robot.isReal() ? (2.29 * .967) : 4;
     private double absoluteOffset = Robot.isReal() ? -.6245 + .005 : 30 * 4;
 
-    @NotLogged
     private double lastPositionSyncTime = 0;
     private double absoluteRatio = 0;
     private double absoluteRatioFiltered = 0;
@@ -113,7 +112,7 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
         double absPos = getAbsolutePosition();
         absPosValid = true;//Math.abs(inputs.absolutePosition) > 0.23;
         if (absPosValid) {
-            if (firstPeriodic || (!enabled && !wasEverEnabled && currentTime - lastPositionSyncTime > 0.5)) {
+            if (firstPeriodic || (!enabled && !wasEverEnabled && !RobotContainer.POSING_MODE && currentTime - lastPositionSyncTime > 0.5)) {
                 syncAbsolute();
                 firstPeriodic = false;
                 lastPositionSyncTime = currentTime;
