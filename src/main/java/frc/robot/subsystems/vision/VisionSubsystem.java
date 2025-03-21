@@ -117,7 +117,7 @@ public class VisionSubsystem extends SubsystemBase {
     private final SingleTagSolver singleTagSolver = new SingleTagSolver();
 
     private final double APRILTAG_THICKNESS = 0; // Meters. Adjust me for fields where the Apriltags are not stickers
-    private final Distance reefBackDistance = Meters.of(0.55).plus(Inches.of(0.5));
+    private final Distance reefBackDistance = Meters.of(0.55).plus(Inches.of(0.5 - 1));
     private final Distance reefSideDistance = Field.REEF_BRANCH_SEPARATION.div(2); // field measurement based
 
     private final Transform2d leftReefTransform = new Transform2d(reefBackDistance.in(Meters) - APRILTAG_THICKNESS, -reefSideDistance.in(Meters), Rotation2d.k180deg);
@@ -134,7 +134,7 @@ public class VisionSubsystem extends SubsystemBase {
     private final Transform2d rightL1ReefRotation = new Transform2d(0, 0, Rotation2d.fromDegrees(0)); // was 30
 
     // 1.25 inches closer (forward) than standard, applied on top of left/right reef transforms
-    private final Transform2d algaeReefTransform = new Transform2d(Inches.of(0.75 + 0.5).in(Meters), 0, Rotation2d.kZero); // was 0.75, sometimes just too far off
+    private final Transform2d algaeReefTransform = new Transform2d(Inches.of(0.75 + 0.5 - 1).in(Meters), 0, Rotation2d.kZero); // was 0.75, sometimes just too far off
 
     private final Pose2d redProcessorPose;
     private final Pose2d blueProcessorPose;

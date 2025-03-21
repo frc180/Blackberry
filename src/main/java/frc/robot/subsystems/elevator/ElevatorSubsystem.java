@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -52,7 +53,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     private double adjustedTargetPosition = ZERO.in(Meters);
     private boolean hasHomed = false;
 
-    private Trigger atLowerLimitDebounced = new Trigger(this::isAtLowerLimit).debounce(0.1);
+    private Trigger atLowerLimitDebounced = new Trigger(this::isAtLowerLimit).debounce(0.3);
 
     @NotLogged
     public Trigger elevatorInPosition = new Trigger(this::isElevatorInPosition);
@@ -98,7 +99,7 @@ public class ElevatorSubsystem extends SubsystemBase {
         //     hasHomed = true;
         // }
 
-        // notHomedAlert.set(!hasHomed);
+        notHomedAlert.set(!hasHomed);
 
         softStowLogic();
 
@@ -130,8 +131,13 @@ public class ElevatorSubsystem extends SubsystemBase {
 
     public Command home() {
         return runOnce(() -> hasHomed = false)
-                .andThen(runSpeed(-0.03).until(atLowerLimitDebounced))
-                .andThen(runOnce(() -> io.zero()));
+                .andThen(
+                    Commands.waitUntil(atLowerLimitDebounced)
+                            .andThen(Commands.runOnce(() -> io.zero()))
+                            .deadlineFor(runSpeed(-0.03))
+                );
+                // .andThen(runSpeed(-0.03).until(atLowerLimitDebounced))
+                // .andThen(runOnce(() -> io.zero()));
     }
 
     public Command stow() {
@@ -227,7 +233,6 @@ public class ElevatorSubsystem extends SubsystemBase {
     private boolean softStowLogic() {
         if (targetPosition != STOW || !SOFT_STOW_ENABLED) return false;
 
-        // if (atLowerLimitDebounced.getAsBoolean()) {
         if (atLowerLimitDebounced.getAsBoolean() || isElevatorInPosition()) {
             io.stopMotor();
         } else if (inputs.position > STOW_INTERMEDIATE + IN_POSITION_METERS) {

@@ -709,6 +709,18 @@ public class RobotContainer {
 
         Command hasCoralAfterAlgaeRumble =  new RumbleCommand(1).withTimeout(2);
 
+        // Rehome elevator
+        algaeMode.and(driverController.leftStick()).whileTrue(Commands.sequence(
+            elevator.home(),
+            new RumbleCommand(1).withTimeout(2) 
+        ));
+
+        // Rehome arm
+        algaeMode.and(driverController.rightStick()).whileTrue(Commands.sequence(
+            Commands.runOnce(() -> elevatorArmPivot.syncAbsolute()),
+            new RumbleCommand(1).withTimeout(2) 
+        ));
+
         // Lob algae into the net by releasing while moving the elevator 
         driverNet.and(elevatorArmPivot::isElevatorArmInScoringPosition)
                  .and(() -> elevator.getTargetPosition() == ElevatorSubsystem.NET && elevator.getTargetErrorInches() < 33) // 34 has been working but can be low sometimes
@@ -826,11 +838,17 @@ public class RobotContainer {
         testController.button(2).onTrue(Commands.runOnce(() -> elevatorArmPivot.syncAbsolute()));
 
 
-        testController.button(6).whileTrue(climber.runSpeed(0.1));
-        testController.button(7).whileTrue(climber.runSpeed(-0.1));
+        testController.button(6).whileTrue(elevator.stow().alongWith(elevatorArmPivot.receivePosition()));
+        testController.button(7).whileTrue(elevator.setPosition(ElevatorSubsystem.L4).alongWith(elevatorArmPivot.matchElevatorPreset()));
+
+
+        testController.button(10).whileTrue(elevator.home());
+
+        // testController.button(6).whileTrue(climber.runSpeed(0.1));
+        // testController.button(7).whileTrue(climber.runSpeed(-0.1));
 
         // testController.button(8).whileTrue(readyClimb);
-        testController.button(9).whileTrue(readyClimb);
+        // testController.button(9).whileTrue(readyClimb);
         // testController.button(10).whileTrue(climber.climb());
 
 
@@ -945,10 +963,10 @@ public class RobotContainer {
     }
 
     private Command coralEject() {
-        Command l4CoralEject = elevatorArm.runSpeed(0.425).until(elevatorArm.hasNoCoral) // was .45, was .4 before
+        Command l4CoralEject = elevatorArm.runSpeed(0.32).until(elevatorArm.hasNoCoral) // was .425, .45, was .4 before
                                           .andThen(Commands.waitSeconds(0.2));
         Command l1CoralEject = elevatorArm.runSpeed(0.33 - 0.05 - 0.03).until(elevatorArm.hasNoCoral);
-        Command coralEject = elevatorArm.runSpeed(0.325).until(elevatorArm.hasNoCoral) // 0.35
+        Command coralEject = elevatorArm.runSpeed(0.3).until(elevatorArm.hasNoCoral) // was 0.325
                                         .andThen(Commands.waitSeconds(0.2)); // could maybe be slightly less delay (0.1)?
 
         return Commands.select(Map.of(
