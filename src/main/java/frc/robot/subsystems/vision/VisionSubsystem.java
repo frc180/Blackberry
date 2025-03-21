@@ -127,8 +127,8 @@ public class VisionSubsystem extends SubsystemBase {
     // Apply a position transform, then a rotation transform
     private final Transform2d leftL1ReefTransform = new Transform2d(0.7 - APRILTAG_THICKNESS, 0, Rotation2d.k180deg);
     private final Transform2d rightL1ReefTransform = leftL1ReefTransform;
-    private final Transform2d leftL1ReefRotation = new Transform2d(0, 0, Rotation2d.fromDegrees(30));
-    private final Transform2d rightL1ReefRotation = new Transform2d(0, 0, Rotation2d.fromDegrees(-30));
+    private final Transform2d leftL1ReefRotation = new Transform2d(0, 0, Rotation2d.fromDegrees(28)); // was 30
+    private final Transform2d rightL1ReefRotation = new Transform2d(0, 0, Rotation2d.fromDegrees(-28)); // was 30
 
     // 1.25 inches closer (forward) than standard, applied on top of left/right reef transforms
     private final Transform2d algaeReefTransform = new Transform2d(Inches.of(0.75 + 0.5).in(Meters), 0, Rotation2d.kZero); // was 0.75, sometimes just too far off

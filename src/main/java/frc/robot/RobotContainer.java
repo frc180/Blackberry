@@ -79,7 +79,7 @@ public class RobotContainer {
      */
     private static final boolean USE_MAPLESIM = true;
     
-    public static final boolean POSING_MODE = true;
+    public static final boolean POSING_MODE = false;
 
     public static final boolean MAPLESIM = USE_MAPLESIM && Robot.isSimulation();
     public static final double DEADBAND = 0.025;
@@ -123,15 +123,16 @@ public class RobotContainer {
 
     public final Command autoDoNothing;
 
-
-    public Trigger robotHasCoral = new Trigger(() -> false);
-    public Trigger robotHasAlgae = new Trigger(() -> false);
     @NotLogged
-    public Trigger coralIntakeTrigger = new Trigger(() -> false);
-    public Trigger driverRightReef = new Trigger(() -> false);
-    public Trigger driverLeftReef = new Trigger(() -> false);
+    private final Trigger falseTrigger = new Trigger(() -> false);
+    public Trigger robotHasCoral = falseTrigger;
+    public Trigger robotHasAlgae = falseTrigger;
     @NotLogged
-    public Trigger driverAlgaeDescore = new Trigger(() -> false);
+    public Trigger coralIntakeTrigger = falseTrigger;
+    public Trigger driverRightReef = falseTrigger;
+    public Trigger driverLeftReef = falseTrigger;
+    @NotLogged
+    public Trigger driverAlgaeDescore = falseTrigger;
     @Logged(name = "Reef - Near")
     public Trigger nearReef = null;
     @Logged(name = "Reef - At")
@@ -140,7 +141,7 @@ public class RobotContainer {
     // Debug
     public Trigger atReefXY;
     public Trigger atReefAngle;
-    public Trigger posingAtReef = new Trigger(() -> false);
+    public Trigger posingAtReef = falseTrigger;
 
     public static RobotContainer instance;
 
@@ -289,8 +290,8 @@ public class RobotContainer {
 
         nearReef = drivetrain.targetingReef().and(
                     drivetrain.withinTargetPoseTolerance(         
-                        Meters.of(0.7), // 0.75 low, 1 high
-                        Meters.of(0.7), // 0.75 low, 1 high
+                        Meters.of(0.35), // 0.7 was too aggressive at orlando
+                        Meters.of(0.35), // 0.7 was too aggressive at orlando
                         Degrees.of(90)
                     ).or(l1_2_3NearReef)
         );
@@ -435,7 +436,7 @@ public class RobotContainer {
         //climbing sequence
         // driverReadyClimb.onTrue(climber.deploy());
 
-        Command readyClimb = elevatorArmPivot.climbPosition().alongWith(elevator.climbHeight(), intakeCoralPivot.extremeStow());
+        Command readyClimb = elevatorArmPivot.climbPosition().alongWith(climber.deploy(), elevator.climbHeight(), intakeCoralPivot.extremeStow());
 
         driverReadyClimb.whileTrue(readyClimb);
         driverStartClimb.whileTrue(climber.climb());
@@ -799,10 +800,9 @@ public class RobotContainer {
         testController.button(6).whileTrue(climber.runSpeed(0.1));
         testController.button(7).whileTrue(climber.runSpeed(-0.1));
 
-        testController.button(8).whileTrue(readyClimb);
-
-        // testController.button(9).whileTrue(climber.deploy());
-        testController.button(10).whileTrue(climber.climb());
+        // testController.button(8).whileTrue(readyClimb);
+        testController.button(9).whileTrue(readyClimb);
+        // testController.button(10).whileTrue(climber.climb());
 
 
         // testController.button(1).whileTrue(intakeAlgaePivot.runSpeed(0.25));
@@ -916,10 +916,10 @@ public class RobotContainer {
     }
 
     private Command coralEject() {
-        Command l4CoralEject = elevatorArm.runSpeed(0.45).until(elevatorArm.hasNoCoral) //was .4
+        Command l4CoralEject = elevatorArm.runSpeed(0.425).until(elevatorArm.hasNoCoral) // was .45, was .4 before
                                           .andThen(Commands.waitSeconds(0.2));
-        Command l1CoralEject = elevatorArm.runSpeed(0.33).until(elevatorArm.hasNoCoral);
-        Command coralEject = elevatorArm.runSpeed(0.30).until(elevatorArm.hasNoCoral) // 0.35
+        Command l1CoralEject = elevatorArm.runSpeed(0.33 - 0.05 - 0.03).until(elevatorArm.hasNoCoral);
+        Command coralEject = elevatorArm.runSpeed(0.325).until(elevatorArm.hasNoCoral) // 0.35
                                         .andThen(Commands.waitSeconds(0.2)); // could maybe be slightly less delay (0.1)?
 
         return Commands.select(Map.of(

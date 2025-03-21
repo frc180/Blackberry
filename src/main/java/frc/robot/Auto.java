@@ -240,6 +240,7 @@ public final class Auto {
     public static Command bargeCoralAuto(List<CoralScoringPosition> coralScoringPositions, boolean left, Pose2d simStart) {
         return Commands.parallel(
             Auto.configureAuto(coralScoringPositions, left, simStart),
+            RobotContainer.instance.intakeCoralPivot.extend(),
             (driveToNextCoralPose())
         ).withName(left ? "Left Barge" : "Right Barge");
     }

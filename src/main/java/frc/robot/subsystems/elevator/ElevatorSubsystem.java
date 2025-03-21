@@ -98,7 +98,7 @@ public class ElevatorSubsystem extends SubsystemBase {
         //     hasHomed = true;
         // }
 
-        notHomedAlert.set(!hasHomed);
+        // notHomedAlert.set(!hasHomed);
 
         softStowLogic();
 

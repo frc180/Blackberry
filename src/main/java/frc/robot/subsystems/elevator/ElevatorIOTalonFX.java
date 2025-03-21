@@ -22,6 +22,7 @@ import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.simulation.ElevatorSim;
 import frc.robot.Constants;
 import frc.robot.Robot;
+import frc.robot.RobotContainer;
 
 public class ElevatorIOTalonFX implements ElevatorIO {
 
@@ -84,7 +85,11 @@ public class ElevatorIOTalonFX implements ElevatorIO {
         // config.MotionMagic.MotionMagicCruiseVelocity = 999;
         // config.MotionMagic.MotionMagicAcceleration = 8;
         motors.forEach(motor -> {
-            motor.setNeutralMode(NeutralModeValue.Brake);
+            if (RobotContainer.POSING_MODE) {
+                motor.setNeutralMode(NeutralModeValue.Coast);
+            } else {
+                motor.setNeutralMode(NeutralModeValue.Brake);
+            }
             motor.getConfigurator().apply(config);
         });
 
