@@ -26,7 +26,7 @@ public class IntakeCoralPivotSubsystem extends SubsystemBase {
     // }
     
     //presets for intake positions
-    public static final double extend = .83;
+    public static final double extend = .822;
     public static final double stow = extend - .417;
     public static final double EXTREME_STOW = stow - .1;
     // public static final double stow = .434;

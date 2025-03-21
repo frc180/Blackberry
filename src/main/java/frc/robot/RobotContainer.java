@@ -123,6 +123,8 @@ public class RobotContainer {
 
     public final Command autoDoNothing;
 
+    public boolean climbDeployedBool = false;
+
     @NotLogged
     private final Trigger falseTrigger = new Trigger(() -> false);
     public Trigger robotHasCoral = falseTrigger;
@@ -137,6 +139,7 @@ public class RobotContainer {
     public Trigger nearReef = null;
     @Logged(name = "Reef - At")
     public Trigger atReef = null;
+    public final Trigger climbDeployed = new Trigger(() -> climbDeployedBool);
 
     // Debug
     public Trigger atReefXY;
@@ -167,6 +170,9 @@ public class RobotContainer {
 
         Pose2d leftBargeSimStart = new Pose2d(7, 5.5, Rotation2d.fromDegrees(180 + 60));
         Pose2d rightBargeSimStart = new Pose2d(7, FlippingUtil.fieldSizeY - 5.5, Rotation2d.fromDegrees(120));
+
+        Pose2d middleBargeSimStart = new Pose2d(7, FlippingUtil.fieldSizeY / 2, Rotation2d.fromDegrees(180));
+
         Command leftBargeLeft = Auto.bargeCoralAuto(
             Auto.leftBarge5(true),
             true,
@@ -190,6 +196,12 @@ public class RobotContainer {
         Command rightBargeLeft = Auto.bargeCoralAuto(Auto.rightBarge5(true), false, rightBargeSimStart);
         Command rightBargeRight = Auto.bargeCoralAuto(Auto.rightBarge5(false), false, rightBargeSimStart);
 
+        Command rightBargeLeftNoFront = Auto.bargeCoralAuto(Auto.rightBargeAvoidFront(true), false, rightBargeSimStart);
+        Command rightBargeRightNoFront = Auto.bargeCoralAuto(Auto.rightBargeAvoidFront(false), false, rightBargeSimStart);
+
+        Command middleBargeLeft = Auto.bargeCoralAuto(Auto.middleBarge(true), true, middleBargeSimStart);
+        Command middleBargeRight = Auto.bargeCoralAuto(Auto.middleBarge(false), true, middleBargeSimStart);
+
         autoChooser.setDefaultOption("Do Nothing", autoDoNothing);
         autoChooser.addOption("Left Barge - 1st Left", leftBargeLeft);
         autoChooser.addOption("Left Barge - 1st Right", leftBargeRight);
@@ -197,6 +209,12 @@ public class RobotContainer {
         autoChooser.addOption("Left Barge No Front - 1st Right", leftBargeRightNoFront);
         autoChooser.addOption("Right Barge - 1st Left", rightBargeLeft);
         autoChooser.addOption("Right Barge - 1st Right", rightBargeRight);
+        autoChooser.addOption("Right Barge No Front - 1st Left", rightBargeLeftNoFront);
+        autoChooser.addOption("Right Barge No Front - 1st Right", rightBargeRightNoFront);
+
+        autoChooser.addOption("Middle Barge - 1st Left", middleBargeLeft);
+        autoChooser.addOption("Middle Barge - 1st Right", middleBargeRight);
+
 
         SmartDashboard.putData("Auto Mode", autoChooser);
 
@@ -340,6 +358,8 @@ public class RobotContainer {
             // Temporary slowdown logic for net scoring, until we add real driver acceleration limiting that is tied
             // to elevator height
             if (driverNet.getAsBoolean() || driverNetSlow.getAsBoolean()) axis *= 0.25;
+
+            if (climbDeployedBool) axis *= 0.5;
             return axis;
          };
 
@@ -436,7 +456,12 @@ public class RobotContainer {
         //climbing sequence
         // driverReadyClimb.onTrue(climber.deploy());
 
-        Command readyClimb = elevatorArmPivot.climbPosition().alongWith(climber.deploy(), elevator.climbHeight(), intakeCoralPivot.extremeStow());
+        Command readyClimb = elevatorArmPivot.climbPosition().alongWith(
+                                climber.deploy(),
+                                elevator.climbHeight(),
+                                intakeCoralPivot.extremeStow(),
+                                Commands.runOnce(() -> climbDeployedBool = true)
+                            );
 
         driverReadyClimb.whileTrue(readyClimb);
         driverStartClimb.whileTrue(climber.climb());
@@ -516,7 +541,10 @@ public class RobotContainer {
 
 
         // Make the robot point towards the closest side of the reef
-        teleop.and(coralMode).and(elevatorArm.hasCoral).and(elevatorArmAlgae.hadAlgae.negate())
+        teleop.and(coralMode)
+                .and(elevatorArm.hasCoral)
+                .and(elevatorArmAlgae.hadAlgae.negate())
+                .and(climbDeployed.negate())
             .whileTrue(drivetrain.targetHeadingContinuous(() -> {
                 Pose2d reefPose = vision.getClosestReefPose();
                 return reefPose != null ? reefPose.getRotation().getDegrees() : null;
@@ -660,11 +688,11 @@ public class RobotContainer {
 
         // Outtaking algae without trying to score it
         driverSpitAlgae.and(driverProcessor.negate())
-                        .whileTrue(elevatorArmPivot.setPosition(ElevatorArmPivotSubsystem.L1_SCORE))
+                        .whileTrue(elevatorArmPivot.setPosition(ElevatorArmPivotSubsystem.horizontal))
                        .onFalse(elevatorArmPivot.stowPosition());
 
         driverSpitAlgae.and(driverProcessor.negate())
-                        .and(elevatorArmPivot.isAt(ElevatorArmPivotSubsystem.L1_SCORE))
+                        .and(elevatorArmPivot.isAt(ElevatorArmPivotSubsystem.horizontal))
                        .whileTrue(elevatorArmAlgae.runSpeed(-1));
 
         driverNet.or(driverNetSlow).whileTrue(drivetrain.targetHeadingContinuous(0.0, HeadingTarget.GYRO))
@@ -719,6 +747,7 @@ public class RobotContainer {
                     }
                     return;
                 }
+
                 if (!vision.isScoringCameraConnected()) {
                     leds.setAnimation(leds.rainbow);
                     return;

@@ -71,6 +71,21 @@ public final class Auto {
         );
     }
 
+    public static List<CoralScoringPosition> rightBargeAvoidFront(boolean firstBranchLeft) {
+        return List.of(
+            new CoralScoringPosition(22, 4, firstBranchLeft),
+            new CoralScoringPosition(17, 4, false),
+            new CoralScoringPosition(17, 4, true),
+            new CoralScoringPosition(22, 4, !firstBranchLeft)
+        );
+    }
+
+    public static List<CoralScoringPosition> middleBarge(boolean firstBranchLeft) {
+        return List.of(
+            new CoralScoringPosition(21, 4, firstBranchLeft)
+        );
+    }
+
     private Auto() {}
     
     public static void init() {
