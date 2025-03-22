@@ -32,7 +32,7 @@ public class CoralDetectorReal implements CoralDetector {
     // to allow switching without a timeout
     private final static double SIMILAR_CORAL_THRESHOLD = 0.75;
 
-    private static final double ALGAE_AVOID_THRESHOLD_DEGREES = 4;
+    private static final double ALGAE_AVOID_THRESHOLD_DEGREES = 4.5; // was .4
 
     private double lastDetectionTime = 0;
     private double lastDetectionDistance = 0;
@@ -107,7 +107,11 @@ public class CoralDetectorReal implements CoralDetector {
                 algaeDetections.add(detection);
             }
         }
-        sortedDetections.sort(detectionTXYComparator);
+        if (auto) {
+            sortedDetections.sort(detectionTYComparator);
+        } else {
+            sortedDetections.sort(detectionTXYComparator);
+        }
         // sortedDetections.sort(detectionTYComparator);
 
         Pose2d basePose = robotPose.transformBy(VisionSubsystem.ROBOT_TO_INTAKE_CAMERA_2D);

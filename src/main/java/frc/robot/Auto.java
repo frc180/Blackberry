@@ -9,6 +9,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -218,8 +219,11 @@ public final class Auto {
         );
     }
 
-    private static final double pushDistance = Inches.of(18).in(Meters);
-    private static final double pushDistanceThreshold = Inches.of(15).in(Meters);
+    private static final Distance PUSH_AMOUNT = Inches.of(15);
+    private static final Distance PUSH_POSE_DIST = Inches.of(60);
+
+    private static final double pushDistance = PUSH_POSE_DIST.in(Meters);
+    private static final double pushDistanceThreshold = PUSH_POSE_DIST.minus(PUSH_AMOUNT).in(Meters);
 
     public static Command partnerPush() {
         var drivetrain = RobotContainer.instance.drivetrain;

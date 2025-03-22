@@ -701,7 +701,7 @@ public class RobotContainer {
         // Start moving to score algae in net
         driverNet.and(drivetrain.withinTargetHeadingTolerance(5).debounce(0.1)).whileTrue(
             Commands.parallel(
-                drivetrain.brake(),
+                // drivetrain.brake(),
                 elevator.setPosition(ElevatorSubsystem.NET),
                 elevatorArmPivot.netScorePosition()
             )

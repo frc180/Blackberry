@@ -6,7 +6,7 @@ import frc.robot.util.LimelightHelpers.RawDetection;
 
 public interface CoralDetector {
 
-    public static final double MARGIN = 0.15;
+    public static final double MARGIN = 0.125; // was .15
     
     public Pose2d getCoralPose(Pose2d robotPose, RawDetection[] detections);
 

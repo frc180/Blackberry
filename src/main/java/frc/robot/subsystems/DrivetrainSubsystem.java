@@ -275,7 +275,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         double translationMaxSpeed = MAX_SPEED * 0.8; // EXPERIMENT: uncap or change to 0.9
         double translationP = 5.5; // was 4.5, 4.25, 4.0
         double translationI = 0.0;
-        double translationD = 0.1; // was .15
+        double translationD = 0.3; // was .15, .3
         double translationKV = 0.25;
         double translationKA = 0;
 
@@ -524,11 +524,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         boolean replanning = !initializing && (intermediatePose == null || intermediatePose.getTranslation().getDistance(endPose.getTranslation()) > 0.5);
         if (replanning) {
             initializing = true;
-            driveToPoseTimerOffset = Constants.LOOP_TIME;
-        } else {
-            driveToPoseTimerOffset = 0;
         }
-
         intermediatePose = endPose;
         
         if (initializing) {
@@ -536,6 +532,11 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
             yPid.reset();
             driveToPoseStart = currentPose;
             driveToPoseTimer.restart();
+            // if (replanning) {
+                driveToPoseTimerOffset = Constants.LOOP_TIME;
+            // } else {
+            //     driveToPoseTimerOffset = 0;
+            // }
         }
 
         Translation2d normDirStartToEnd = endPose.getTranslation().minus(driveToPoseStart.getTranslation());
@@ -567,8 +568,6 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         // ChassisSpeeds speeds = getState().Speeds;
         double xTargetVelocity = normDirStartToEnd.getX() * -setpoint.velocity;
         double yTargetVelocity = normDirStartToEnd.getY() * -setpoint.velocity;
-        // xOutput += xyFeedforward.calculateWithVelocities(speeds.vxMetersPerSecond, xTargetVelocity);
-        // yOutput += xyFeedforward.calculateWithVelocities(speeds.vyMetersPerSecond, yTargetVelocity);
         xOutput += xyFeedforward.calculate(xTargetVelocity);
         yOutput += xyFeedforward.calculate(yTargetVelocity);
 
