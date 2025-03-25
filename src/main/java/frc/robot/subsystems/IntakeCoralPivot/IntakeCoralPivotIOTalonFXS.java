@@ -46,7 +46,7 @@ public class IntakeCoralPivotIOTalonFXS implements IntakeCoralPivotIO {
 
     // Simulation-only variables
     TalonFXSSimState motorSim = null;
-    double simulatedPosition = Units.degreesToRotations(90);
+    double simulatedPosition = IntakeCoralPivotSubsystem.EXTREME_STOW;
     
     public IntakeCoralPivotIOTalonFXS() {
         TalonFXSConfiguration config = new TalonFXSConfiguration();

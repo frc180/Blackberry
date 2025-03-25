@@ -78,25 +78,26 @@ public abstract class SimLogic {
         SwerveDriveSimulation swerveSim = rc.drivetrain.getDriveSim();
         Pose2d simRobotPose = swerveSim.getSimulatedDriveTrainPose();
         double coralAngle;
-        double heightOffset;
+        double heightOffset = 0.6;
+        double xOffset;
         if (rc.elevator.getTargetPosition() == ElevatorSubsystem.L4) {
             coralAngle = -90;
-            heightOffset = 0.6;
+            xOffset = 0.6;
         } else {
-            coralAngle = -35;
-            heightOffset = 0.6;
+            coralAngle = rc.elevatorArmPivot.getDegrees();
+            xOffset = 0.4;
         }
         Distance coralHeight = Meters.of(rc.elevator.getPositionMeters() + heightOffset);
     
         SimulatedArena.getInstance().addGamePieceProjectile(new ReefscapeCoralOnFly(
             simRobotPose.getTranslation(),
             // The scoring mechanism position on the robot
-            new Translation2d(0.6, 0),
+            new Translation2d(xOffset, 0),
             swerveSim.getDriveTrainSimulatedChassisSpeedsFieldRelative(),
             simRobotPose.getRotation(),
             coralHeight,
             // The initial speed of the coral
-            MetersPerSecond.of(1),
+            MetersPerSecond.of(2),
             Degrees.of(coralAngle))
         );
     }
@@ -130,7 +131,7 @@ public abstract class SimLogic {
     
         SimulatedArena.getInstance().addGamePieceProjectile(new ReefscapeAlgaeOnFly(
             simRobotPose.getTranslation(),
-            new Translation2d(0, 0), // scoring mechanism position on the robot
+            new Translation2d(-0.1, 0), // scoring mechanism position on the robot
             swerveSim.getDriveTrainSimulatedChassisSpeedsFieldRelative(),
             simRobotPose.getRotation().rotateBy(forwards ? Rotation2d.kZero : Rotation2d.k180deg),
             ElevatorSubsystem.NET, // outtake height
