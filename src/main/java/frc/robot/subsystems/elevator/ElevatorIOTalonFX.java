@@ -3,8 +3,6 @@ package frc.robot.subsystems.elevator;
 import static edu.wpi.first.units.Units.Meters;
 import static frc.robot.util.StatusSignals.trackSignal;
 import java.util.List;
-
-import com.ctre.phoenix6.Orchestra;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;

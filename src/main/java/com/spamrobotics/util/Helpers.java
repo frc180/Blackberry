@@ -2,7 +2,6 @@ package com.spamrobotics.util;
 
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
-
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -11,6 +10,8 @@ import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
 import frc.robot.subsystems.DrivetrainSubsystem;
@@ -152,5 +153,17 @@ public class Helpers {
 
     public static Rotation2d headingTo(Pose2d currentPose, Translation2d target) {
         return target.minus(currentPose.getTranslation()).getAngle().minus(Rotation2d.kPi);
-      }
+    }
+
+    // Numbers pulled from https://store.ctr-electronics.com/products/minion-brushless-motor
+    public static DCMotor getMinion(int numMotors) {
+        return new DCMotor(
+            12,
+            3.1,
+            200.46,
+            1.43,
+            Units.rotationsPerMinuteToRadiansPerSecond(7200),
+            numMotors
+        );
+    }
 }

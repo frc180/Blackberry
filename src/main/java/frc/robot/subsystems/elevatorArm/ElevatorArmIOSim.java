@@ -53,6 +53,7 @@ public class ElevatorArmIOSim implements ElevatorArmIO{
         inputs.backCoralSensor = backCoral;
         inputs.middleCoralSensor = middleCoral;
         inputs.frontCoralSensor = frontCoral;
+        inputs.velocity = rollerSpeed * 1000;
     }
 
     @Override
@@ -68,12 +69,6 @@ public class ElevatorArmIOSim implements ElevatorArmIO{
     @Override
     public void setSpeed(double speed) {
         rollerSpeed = speed;
-    }
-
-    @Override
-    public void runMotorTest() {
-        System.out.println("elevator arm test");
-
     }
 
     private boolean coralAtSensor(double sensorPosition) {

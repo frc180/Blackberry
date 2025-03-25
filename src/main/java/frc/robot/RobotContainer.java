@@ -443,6 +443,7 @@ public class RobotContainer {
                         .onFalse(elevatorArmPivot.stowPosition().alongWith(elevator.stow()));
 
         elevatorArm.setDefaultCommand(elevatorArm.passiveIndex());
+        // elevatorArm.setDefaultCommand(elevatorArm.runSpeed(0.5));
         elevatorArmAlgae.setDefaultCommand(elevatorArmAlgae.passiveIndex());
         
         // Notify driver we've intaken a coral
@@ -620,6 +621,12 @@ public class RobotContainer {
         // the range where we are near the reef
         l4Advance.whileTrue(elevator.setPosition(ElevatorSubsystem.L4_ADVANCE).alongWith(elevatorArmPivot.matchElevatorPreset()));
 
+        // FOR TUNING - Track exit velocity of coral
+        isScoringCoral.and(elevatorArm.hasNoCoral).onTrue(
+            Commands.runOnce(() -> {
+                SmartDashboard.putNumber("Coral " + (SimLogic.coralScored + 1) + " Eject Velocity", elevatorArm.getVelocity());
+            })
+        );
  
         BooleanSupplier shouldObtainAlgae = () -> {
             return elevator.isTargetingReefAlgaePosition() && 
@@ -631,11 +638,6 @@ public class RobotContainer {
         Command obtainAlgae = elevatorArmAlgae.intakeAndIndex(1)
                                               .until(elevatorArmAlgae.hasAlgae.or(driverAlgaeDescore.negate()))
                                               .withTimeout(3);
-        // Command obtainAlgae = Commands.either(
-        //     elevatorArmAlgae.intakeAndIndex(0.5).until(elevatorArmAlgae.hasAlgae.or(driverAnyReef.negate())),
-        //     Commands.none(),
-        //     shouldObtainAlgae
-        // );
 
         Command scoringSequence = Commands.either(
             obtainAlgae.andThen(coralEject().deadlineFor(elevatorArmAlgae.passiveIndex())),
@@ -670,11 +672,11 @@ public class RobotContainer {
                             Auto.coralScoringPositions.remove(0);
                         }
                     }
+                    SimLogic.coralScored++;
+                    SmartDashboard.putNumber("Coral/" + SimLogic.coralScored, Timer.getFPGATimestamp() - Auto.startTime);
                     if (Robot.isSimulation()) {
                         SimLogic.spawnHumanPlayerCoral();
                         SimLogic.intakeHasCoral = false;
-                        SimLogic.coralScored++;
-                        SmartDashboard.putNumber("Coral/" + SimLogic.coralScored, Timer.getFPGATimestamp() - Auto.startTime);
                     }
                 })
             ).withInterruptBehavior(InterruptionBehavior.kCancelIncoming)

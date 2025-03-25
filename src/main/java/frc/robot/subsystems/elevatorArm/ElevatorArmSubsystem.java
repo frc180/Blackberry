@@ -31,7 +31,8 @@ public class ElevatorArmSubsystem extends SubsystemBase{
             io = new ElevatorArmIOTalonFX();
             // io = new ElevatorArmIOSim();
         } else {
-            io = new ElevatorArmIOSim();
+            io = new ElevatorArmIOTalonFX();
+            // io = new ElevatorArmIOSim();
         }
 
         hasCoral = new Trigger(this::hasCoralBool);
@@ -43,6 +44,11 @@ public class ElevatorArmSubsystem extends SubsystemBase{
     @Override
     public void periodic() {
         io.update(inputs);
+    }
+
+    @Override
+    public void simulationPeriodic() {
+        io.simulationPeriodic();
     }
 
     public Command intakeAndIndex() {
@@ -115,5 +121,9 @@ public class ElevatorArmSubsystem extends SubsystemBase{
 
     public boolean hasEnteringCoralBool() {
         return inputs.backCoralSensor && !inputs.middleCoralSensor && !inputs.frontCoralSensor;
+    }
+
+    public double getVelocity() {
+        return inputs.velocity;
     }
 }
