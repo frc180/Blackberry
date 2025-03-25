@@ -275,7 +275,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         double translationMaxSpeed = MAX_SPEED * 0.8; // EXPERIMENT: uncap or change to 0.9
         double translationP = 5.5; // was 4.5, 4.25, 4.0
         double translationI = 0.0;
-        double translationD = 0.3; // was .15, .3
+        double translationD = 0.3; // was .15
         double translationKV = 0.25;
         double translationKA = 0;
 
@@ -453,8 +453,6 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
 
         // Reset variables for experimental pose following too
         driveToPoseStart = null;
-        xPid.reset();
-        yPid.reset();
     }
 
     public void resetHeadingPID(HeadingTarget type) {
@@ -528,12 +526,16 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         intermediatePose = endPose;
         
         if (initializing) {
-            xPid.reset();
-            yPid.reset();
+            // EXPERIMENT - only reset PIDs when not replanning
+            // if (!replanning) {
+                xPid.reset();
+                yPid.reset();
+            // }
             driveToPoseStart = currentPose;
             driveToPoseTimer.restart();
+            driveToPoseTimerOffset = Constants.LOOP_TIME;
             // if (replanning) {
-                driveToPoseTimerOffset = Constants.LOOP_TIME;
+            //    driveToPoseTimerOffset = Constants.LOOP_TIME;
             // } else {
             //     driveToPoseTimerOffset = 0;
             // }

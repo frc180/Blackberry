@@ -549,8 +549,9 @@ public class VisionSubsystem extends SubsystemBase {
         if (coralPickupPose == null && coralPoseValid) {
             Translation2d robotPosition = RobotContainer.instance.drivetrain.getPose().getTranslation();
             Translation2d coralPosition = coralPose.getTranslation();
+            double pickupOffset = RobotContainer.instance.coralIntakeReady.getAsBoolean() ? 0.6 : 0.9;
             double centerDistance = robotPosition.getDistance(coralPosition);
-            double pickupDistance = centerDistance - 0.6;
+            double pickupDistance = centerDistance - pickupOffset;
 
             Translation2d pickupPosition = robotPosition.interpolate(coralPosition, pickupDistance / centerDistance);
             double radiansToCoral = Math.atan2(coralPosition.getY() - robotPosition.getY(), coralPosition.getX() - robotPosition.getX());

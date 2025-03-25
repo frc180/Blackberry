@@ -39,6 +39,7 @@ import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.simulation.ElevatorSim;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -131,6 +132,8 @@ public class RobotContainer {
     public Trigger robotHasAlgae = falseTrigger;
     @NotLogged
     public Trigger coralIntakeTrigger = falseTrigger;
+    @NotLogged
+    public Trigger coralIntakeReady = falseTrigger;
     public Trigger driverRightReef = falseTrigger;
     public Trigger driverLeftReef = falseTrigger;
     @NotLogged
@@ -299,12 +302,15 @@ public class RobotContainer {
 
         final Trigger targetingL2_3 = driverL2.or(driverL3);
         final Trigger reefAlgaeTarget = driverRightReef.and(targetingL2_3);
+        final Trigger targetingL4 = driverL4.or(Auto.targetingLevel(4));
 
-        Trigger l1_2_3NearReef = targetingL2_3.or(driverL1).and(drivetrain.withinTargetPoseTolerance(
+        Trigger generousNearReef = drivetrain.withinTargetPoseTolerance(
             Meters.of(1.25),
             Meters.of(1.25),
             Degrees.of(90)
-        ));
+        );
+
+        Trigger l1_2_3NearReef = targetingL2_3.or(driverL1).and(generousNearReef);
 
         nearReef = drivetrain.targetingReef().and(
                     drivetrain.withinTargetPoseTolerance(         
@@ -314,15 +320,17 @@ public class RobotContainer {
                     ).or(l1_2_3NearReef)
         );
 
-
-
+        // EXPERIMENT - Partially deploy for L4 early to be faster while avoiding instability
+        // Trigger l4Advance = targetingL4.and(drivetrain.targetingReef()).and(generousNearReef);
+        Trigger l4Advance = falseTrigger;
+        
+        // Used for right L2 and L1, where the vision target is blocked if we deploy too early
         Trigger almostAtReef = drivetrain.targetingReef().and(drivetrain.withinTargetPoseTolerance(
                         Inches.of(3), 
                         Inches.of(3),
                         Degrees.of(4)
         ));
 
-        // EXPERIMENT - less tolerance for atReef
         atReefXY = drivetrain.withinTargetPoseTolerance(
                         Inches.of(1 * 0.75),
                         Inches.of(1 * 0.75),
@@ -336,11 +344,6 @@ public class RobotContainer {
         );
 
         atReef = drivetrain.targetingReef().and(atReefXY).and(atReefAngle);
-        // atReef = drivetrain.targetingReef().and(drivetrain.withinTargetPoseTolerance(
-        //                 Inches.of(1),
-        //                 Inches.of(1),
-        //                 Degrees.of(2)
-        // ));
 
         if (POSING_MODE) {
             posingAtReef = new Trigger(() -> {
@@ -411,8 +414,10 @@ public class RobotContainer {
 
         // Driver Coral Intake
         coralIntakeTrigger = driverIntake.and(driverSpit.negate())
-                                .or(autoCoralIntake);
-                                //.and(elevatorArm.hasCoral.negate());
+                                         .or(autoCoralIntake);
+        
+        coralIntakeReady = coralIntakeTrigger.and(elevatorArmPivot::isAtReceivingPosition)
+                                             .and(elevator::isElevatorInPosition);
 
         // "Drive-thru" loading directly into the arm
         // driverIntake
@@ -421,8 +426,6 @@ public class RobotContainer {
 
         coralIntakeTrigger
             .whileTrue(elevatorArmPivot.receivePosition().alongWith(elevator.stow(), intakeCoralPivot.extend()));
-
-        Trigger coralIntakeReady = coralIntakeTrigger.and(elevatorArmPivot::isAtReceivingPosition).and(elevator::isElevatorInPosition);
 
         coralIntakeReady
             .whileTrue(coralIndexer.runSpeed(0.5).alongWith(elevatorArm.intakeAndIndex()));
@@ -435,7 +438,7 @@ public class RobotContainer {
 
         driverIntake.and(driverL1).whileTrue(intakeCoral.runSpeed(-1).alongWith(coralIndexer.runSpeed(-1), intakeCoralPivot.stow()));
 
-        //intaking from the human player station (need elevator height, elevator arm pivot setpoint, intake and index with a negative idle speed)
+        //intaking from the human player station 
         driverIntakeHP.whileTrue(elevatorArmPivot.receiveHPposition().alongWith(elevator.setPosition(ElevatorSubsystem.receiveHP), elevatorArm.reverseIntakeAndIndex()))
                         .onFalse(elevatorArmPivot.stowPosition().alongWith(elevator.stow()));
 
@@ -529,7 +532,7 @@ public class RobotContainer {
 
         autonomous.or(teleop).onTrue(intakeCoral.runBottomRollerSpeed(-1).withTimeout(1));
 
-        // EXPERIMENT - Stop elevator from slamming into the top if auto ends while elevator is moving up    
+        // Stop elevator from slamming into the top if auto ends while elevator is moving up    
         autonomous.and(() -> Timer.getFPGATimestamp() - Auto.startTime >= 14.9)
                   .and(() -> !elevator.isElevatorInPosition() && elevator.getTargetErrorMeters() > 0)
                     .onTrue(
@@ -612,6 +615,10 @@ public class RobotContainer {
         // Start intaking algae earlier when going to descore
         finalReefTrigger.and(driverAlgaeDescore)
             .whileTrue(elevatorArmAlgae.intakeAndIndex(1));
+
+        // Move elevator partially up when approaching reef targeting L4, but not yet at
+        // the range where we are near the reef
+        l4Advance.whileTrue(elevator.setPosition(ElevatorSubsystem.L4_ADVANCE).alongWith(elevatorArmPivot.matchElevatorPreset()));
 
  
         BooleanSupplier shouldObtainAlgae = () -> {
@@ -726,7 +733,7 @@ public class RobotContainer {
                  .and(() -> elevator.getTargetPosition() == ElevatorSubsystem.NET && elevator.getTargetErrorInches() < 33) // 34 has been working but can be low sometimes
                  .onTrue(
                     elevatorArmAlgae.runSpeed(-1)
-                                    .withTimeout(1)
+                                    .withTimeout(0.75) // EXPERIMENT: 1 second was too long
                                     .andThen(elevator.runOnce(() -> {
                                         elevator.setPositionDirect(ElevatorSubsystem.STOW);
                                         if (elevatorArm.hasPartialCoralBool()) {

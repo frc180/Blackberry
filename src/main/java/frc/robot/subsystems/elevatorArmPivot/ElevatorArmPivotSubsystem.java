@@ -238,7 +238,7 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
             //     return;
             // }
 
-            if (elevatorTarget == ElevatorSubsystem.L4) {
+            if (elevatorTarget == ElevatorSubsystem.L4 || elevatorTarget == ElevatorSubsystem.L4_ADVANCE) {
                 setArmPositionDirect(L4_SCORE);
             } else if (elevatorTarget == ElevatorSubsystem.L3) {
                 setArmPositionDirect(L3_SCORE);

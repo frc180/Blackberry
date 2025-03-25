@@ -13,6 +13,7 @@ import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.commands.DriveToCoralPose;
 import frc.robot.commands.DriveToPose;
@@ -279,6 +280,14 @@ public final class Auto {
     public static void setCoralScoringPositions(List<CoralScoringPosition> positions) {
         coralScoringPositions.clear();
         positions.forEach(position -> coralScoringPositions.add(position.getFlippedIfNeeded()));
+    }
+
+    public static Trigger targetingLevel(int level) {
+        return RobotModeTriggers.autonomous().and(() -> {
+            CoralScoringPosition position = Auto.nextCoralScoringPosition();
+            if (position != null && position.level == level) return true;
+            return false;
+        });
     }
 
     // =========== Helper Methods ===========
