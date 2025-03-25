@@ -593,11 +593,8 @@ public class RobotContainer {
         Trigger reefDeployAllowed = elevatorArm.hasEnteringCoral.negate()
                                         .and(teleop.or(autoHasCoral));
                                         
-        // Trigger reefDeployAllowed = teleop.and(elevatorArm.hasEnteringCoral.negate())
-        //                                     .or(autonomous.and(elevatorArm.hasPartialCoral));
-        Trigger isScoringCoral = new Trigger(() -> Robot.currentlyScoringCoral);
 
-        // Trigger nearReefModified = nearReef;
+        Trigger isScoringCoral = new Trigger(() -> Robot.currentlyScoringCoral);
 
         Trigger rightL2 = driverRightReef.and(driverL2);
         Trigger nearReefModified = nearReef.and(rightL2.negate())
@@ -607,7 +604,9 @@ public class RobotContainer {
         //                                     .or(almostAtReef.debounce(0.1));
 
         
-        Trigger finalReefTrigger = nearReefModified.and(reefDeployAllowed).or(isScoringCoral);
+        Trigger finalReefTrigger = nearReefModified.and(reefDeployAllowed)
+                                                    .or(isScoringCoral)
+                                                    .or(testMode);
 
         finalReefTrigger
             .whileTrue(chosenElevatorHeight.alongWith(elevatorArmPivot.matchElevatorPreset()))

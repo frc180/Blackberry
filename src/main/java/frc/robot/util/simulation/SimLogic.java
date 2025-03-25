@@ -91,7 +91,7 @@ public abstract class SimLogic {
         SimulatedArena.getInstance().addGamePieceProjectile(new ReefscapeCoralOnFly(
             simRobotPose.getTranslation(),
             // The scoring mechanism position on the robot
-            new Translation2d(0.65, 0),
+            new Translation2d(0.6, 0),
             swerveSim.getDriveTrainSimulatedChassisSpeedsFieldRelative(),
             simRobotPose.getRotation(),
             coralHeight,

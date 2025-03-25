@@ -29,6 +29,8 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Field;
@@ -161,6 +163,7 @@ public class VisionSubsystem extends SubsystemBase {
 
     private PoseEstimate poseEstimate = null;
     private PoseEstimateSource poseEstimateSource = PoseEstimateSource.NONE;
+    private boolean allowPoseEstimates = true;
     private Pose3d scoringCameraPosition = Pose3d.kZero;
     private Pose3d frontCameraPosition = Pose3d.kZero;
     private Pose3d backCameraPosition = Pose3d.kZero;
@@ -603,6 +606,16 @@ public class VisionSubsystem extends SubsystemBase {
 
         }
         return isReefVisible;
+    }
+
+    /**
+     * Blocks pose estimates from updating the robot's position while this command is running.
+     */
+    public Command blockPoseEstimates() {
+        return Commands.runEnd(
+            () -> allowPoseEstimates = false,
+            () -> allowPoseEstimates = true
+        );
     }
 
     private void cameraTemperatureAlert(Alert alert, String cameraName, double temperature) {

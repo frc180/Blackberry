@@ -196,20 +196,12 @@ public final class Auto {
     }
 
     public static DriveToPose driveToCoral() {
-        DrivetrainSubsystem drivetrain = RobotContainer.instance.drivetrain;
-        VisionSubsystem vision = RobotContainer.instance.vision;
+        var drivetrain = RobotContainer.instance.drivetrain;
+        var vision = RobotContainer.instance.vision;
 
         return new DriveToPose(drivetrain, () -> {
             Pose2d coralPose = vision.getCoralPickupPose();
             return coralPose == null ? drivetrain.getPose() : coralPose;
-
-            // Translation2d robotTranslation = robotPose.getTranslation();
-            // Translation2d coralTranslation = coralPose.getTranslation();
-
-            // // Calculate the angle in radians to the coral
-            // double angleToCoral = Math.atan2(coralTranslation.getY() - robotTranslation.getY(), coralTranslation.getX() - robotTranslation.getX());
-
-            // return new Pose2d(coralPose.getTranslation(), new Rotation2d(angleToCoral + Math.PI));
         }).withDynamicTarget(true);
     }
 
@@ -228,11 +220,15 @@ public final class Auto {
 
     public static Command partnerPush() {
         var drivetrain = RobotContainer.instance.drivetrain;
+        var vision = RobotContainer.instance.vision;
         return new DriveToPose(drivetrain, () -> {
             double dir = Robot.isBlue() ? 1 : -1;
             Pose2d robotPose = drivetrain.getPose();
             return new Pose2d(robotPose.getTranslation().plus(new Translation2d(pushDistance * dir, 0)), robotPose.getRotation());
-        }).until(drivetrain.withinTargetPoseDistance(pushDistanceThreshold)).withTimeout(2);
+        })
+        .until(drivetrain.withinTargetPoseDistance(pushDistanceThreshold))
+        .withTimeout(2)
+        .deadlineFor(vision.blockPoseEstimates());
     }
 
     public static Command setState(AutoState newState) {
