@@ -292,11 +292,26 @@ public final class Auto {
 
     // =========== Helper Methods ===========
 
+    // private static Command driveToNextCoralPose() {
+    //     return new DriveToCoralPose(
+    //         () -> nextCoralScoringPosition().tag,
+    //         (tag) -> nextCoralScoringPosition().getPose()
+    //     ).withIntermediatePoses(DriveToCoralPose.AVOID_BIG_DIAGONAL)
+    //     .alongWith(setState(AutoState.SCORING));
+    // }
+
     private static Command driveToNextCoralPose() {
-        return new DriveToCoralPose(
-            () -> nextCoralScoringPosition().tag,
-            (tag) -> nextCoralScoringPosition().getPose()
-        ).withIntermediatePoses(DriveToCoralPose.AVOID_BIG_DIAGONAL)
-        .alongWith(setState(AutoState.SCORING));
+        return Commands.defer(() -> {
+            DriveToPose drivePose = new DriveToCoralPose(
+                () -> nextCoralScoringPosition().tag,
+                (tag) -> nextCoralScoringPosition().getPose()
+            );
+
+            if (nextCoralScoringPosition().isFrontMiddle()) {
+                drivePose.withIntermediatePoses(DriveToCoralPose.AVOID_BIG_DIAGONAL);
+            }
+
+            return drivePose.alongWith(setState(AutoState.SCORING));
+        }, Set.of(RobotContainer.instance.drivetrain));
     }
 }

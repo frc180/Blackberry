@@ -184,6 +184,7 @@ public class Robot extends TimedRobot {
       SimLogic.intakeHasCoral = false;
       SimLogic.armHasAlgae = false;
       SimLogic.intakeHasAlgae = false;
+      SimLogic.coralScored = 0;
     }
   
     shouldPartnerPush = robotContainer.shouldAutoPush();

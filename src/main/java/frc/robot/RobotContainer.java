@@ -172,7 +172,7 @@ public class RobotContainer {
         autoDoNothing = Commands.none().withName("Do Nothing");
 
         Pose2d leftBargeSimStart = new Pose2d(7, 5.5, Rotation2d.fromDegrees(180 + 60));
-        Pose2d rightBargeSimStart = new Pose2d(7, FlippingUtil.fieldSizeY - 5.5, Rotation2d.fromDegrees(120));
+        Pose2d rightBargeSimStart = new Pose2d(7, FlippingUtil.fieldSizeY - 6.5, Rotation2d.fromDegrees(120));
 
         Pose2d middleBargeSimStart = new Pose2d(7, FlippingUtil.fieldSizeY / 2, Rotation2d.fromDegrees(180));
 
@@ -673,6 +673,8 @@ public class RobotContainer {
                     if (Robot.isSimulation()) {
                         SimLogic.spawnHumanPlayerCoral();
                         SimLogic.intakeHasCoral = false;
+                        SimLogic.coralScored++;
+                        SmartDashboard.putNumber("Coral/" + SimLogic.coralScored, Timer.getFPGATimestamp() - Auto.startTime);
                     }
                 })
             ).withInterruptBehavior(InterruptionBehavior.kCancelIncoming)

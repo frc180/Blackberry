@@ -30,6 +30,7 @@ public abstract class SimLogic {
     public static boolean armHasCoral = false;
     public static boolean intakeHasAlgae = false;
     public static boolean armHasAlgae = false;
+    public static int coralScored = 0;
 
     public static double armCoralPosition = -1;
 
