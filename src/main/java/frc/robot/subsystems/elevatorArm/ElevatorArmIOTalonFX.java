@@ -36,7 +36,7 @@ public class ElevatorArmIOTalonFX implements ElevatorArmIO {
 
     // TODO: Measure this on the robot
     static final double VELOCITY_RPS_12V = Robot.isReal() ? 0 : 30.1875;
-    static final double GEAR_RATIO = 4;
+    static final double GEAR_RATIO = Robot.isReal() ? 2.25 : 4; 
     
     final TalonFXS rollerMotor;
     final CANdi candiA, candiB;

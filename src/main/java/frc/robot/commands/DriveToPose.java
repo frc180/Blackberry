@@ -10,6 +10,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.Robot;
 import frc.robot.subsystems.DrivetrainSubsystem;
 import frc.robot.subsystems.DrivetrainSubsystem.HeadingTarget;
 import frc.robot.subsystems.DrivetrainSubsystem.PoseTarget;
@@ -175,7 +176,11 @@ public class DriveToPose extends Command {
         double maxSpeedMeters = DrivetrainSubsystem.MAX_SPEED * maxSpeed;
         speeds.vxMetersPerSecond = MathUtil.clamp(speeds.vxMetersPerSecond, -maxSpeedMeters, maxSpeedMeters);
         speeds.vyMetersPerSecond = MathUtil.clamp(speeds.vyMetersPerSecond, -maxSpeedMeters, maxSpeedMeters);
-        drivetrain.drive(speeds);
+        if (Robot.isSimulation()) {
+            drivetrain.driveClosedLoop(speeds);
+        } else {
+            drivetrain.drive(speeds);
+        }
     }
 
     @Override

@@ -6,15 +6,12 @@ import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.Robot;
 import frc.robot.subsystems.elevatorArmAlgae.ElevatorArmAlgaeIO.ElevatorArmAlgaeInputs;
 
 @Logged
 public class ElevatorArmAlgaeSubsystem extends SubsystemBase {
 
-    // protected static final double FAR_OBJECT_THRESHOLD = 0.28; // was 0.23 which is probably too low
-    // protected static final double CLOSE_OBJECT_THRESHOLD = 0.2;
-    protected static final double HAS_ALGAE_THRESHOLD = 0.16; // was 0.14
+    protected static final double HAS_ALGAE_THRESHOLD = 0.3; // was 0.16 at Orlando
     protected static final double HAS_ALGAE_CLOSE_THRESHOLD = 0.1;
 
     ElevatorArmAlgaeIO io;
@@ -24,21 +21,12 @@ public class ElevatorArmAlgaeSubsystem extends SubsystemBase {
     private double distanceFiltered = 0;
 
     public final Trigger hasAlgae, hadAlgae;
-    // public final Trigger closeAlgae, closeAlgaeDebounced;
 
 
     public ElevatorArmAlgaeSubsystem() {
         inputs = new ElevatorArmAlgaeInputs();
-        if (Robot.isReal()) {
-            io = new ElevatorArmAlgaeIOTalonFX();
-            // io = new ElevatorArmAlgaeIOSim();
-        } else {
-            io = new ElevatorArmAlgaeIOTalonFX();
-        }
-
-        // farAlgae = new Trigger(() -> distanceFiltered > FAR_OBJECT_THRESHOLD);
-        // closeAlgae = new Trigger(() -> distanceFiltered < CLOSE_OBJECT_THRESHOLD);
-        // closeAlgaeDebounced = closeAlgae.debounce(1, DebounceType.kFalling);
+        io = new ElevatorArmAlgaeIOTalonFX();
+        // io = new ElevatorArmAlgaeIOTalonFXS();
 
         hasAlgae = new Trigger(() -> distanceFiltered < HAS_ALGAE_THRESHOLD);
         hadAlgae = hasAlgae.debounce(1.5, DebounceType.kFalling);
@@ -68,9 +56,9 @@ public class ElevatorArmAlgaeSubsystem extends SubsystemBase {
         return runEnd(
             () -> {
                 if (distanceFiltered < HAS_ALGAE_CLOSE_THRESHOLD) {
-                    io.setSpeed(0.07);
+                    io.setSpeed(0.25);
                 } else if (hasAlgae.getAsBoolean()) {
-                    io.setSpeed(0.07); // was 0.05
+                    io.setSpeed(0.25); // was 0.05
                 } else if (hadAlgae.getAsBoolean()) { // } else if (closeAlgaeDebounced.getAsBoolean() ) {
                     io.setSpeed(indexSpeed);
                 } else {

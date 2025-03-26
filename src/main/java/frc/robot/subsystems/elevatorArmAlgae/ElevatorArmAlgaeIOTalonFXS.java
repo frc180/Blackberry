@@ -3,17 +3,19 @@ package frc.robot.subsystems.elevatorArmAlgae;
 import static frc.robot.util.StatusSignals.trackSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANrangeConfiguration;
-import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.configs.TalonFXSConfiguration;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.CANrange;
-import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.hardware.TalonFXS;
 import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.MotorArrangementValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.UpdateModeValue;
 import com.ctre.phoenix6.sim.CANrangeSimState;
-import com.ctre.phoenix6.sim.TalonFXSimState;
+import com.ctre.phoenix6.sim.TalonFXSSimState;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.units.measure.Temperature;
 import frc.robot.Constants;
 import frc.robot.Field;
 import frc.robot.Robot;
@@ -24,26 +26,27 @@ import frc.robot.subsystems.elevator.ElevatorSubsystem;
 import frc.robot.subsystems.elevatorArmPivot.ElevatorArmPivotSubsystem;
 import frc.robot.util.simulation.SimLogic;
 
-public class ElevatorArmAlgaeIOTalonFX implements ElevatorArmAlgaeIO {
+public class ElevatorArmAlgaeIOTalonFXS implements ElevatorArmAlgaeIO {
 
-    TalonFX motor;
+    TalonFXS motor;
     CANrange canrange;
     VoltageOut voltageControl;
 
     // Status signals
-    // StatusSignal<Temperature> temperatureSignal;
+    StatusSignal<Temperature> temperatureSignal;
     StatusSignal<Distance> distanceSignal;
     StatusSignal<Double> signalStengthSignal;
 
     // Simulation-only variables
-    TalonFXSimState motorSim;
+    TalonFXSSimState motorSim;
     CANrangeSimState canrangeSim;
     double algaeDistance = -1;
     
-    public ElevatorArmAlgaeIOTalonFX() {
-        TalonFXConfiguration config = new TalonFXConfiguration();
+    public ElevatorArmAlgaeIOTalonFXS() {
+        TalonFXSConfiguration config = new TalonFXSConfiguration();
+        config.Commutation.MotorArrangement = MotorArrangementValue.Minion_JST;
         config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-        motor = new TalonFX(Constants.ELEVATOR_ARM_ALGAE, Constants.CANIVORE);
+        motor = new TalonFXS(Constants.ELEVATOR_ARM_ALGAE, Constants.CANIVORE);
         motor.getConfigurator().apply(config);
         motor.setNeutralMode(NeutralModeValue.Brake);
         voltageControl = new VoltageOut(0);
@@ -58,7 +61,7 @@ public class ElevatorArmAlgaeIOTalonFX implements ElevatorArmAlgaeIO {
 
         distanceSignal = trackSignal(canrange.getDistance());
         signalStengthSignal = trackSignal(canrange.getSignalStrength());
-        // temperatureSignal = trackSignal(motor.getDeviceTemp());
+        temperatureSignal = trackSignal(motor.getDeviceTemp());
 
         // ParentDevice.optimizeBusUtilizationForAll(10.0, motor, canrange);
         
@@ -70,8 +73,10 @@ public class ElevatorArmAlgaeIOTalonFX implements ElevatorArmAlgaeIO {
 
     @Override
     public void update(ElevatorArmAlgaeInputs inputs) {
-        inputs.distance = distanceSignal.getValueAsDouble();;
-        // inputs.temperature = temperatureSignal.getValueAsDouble();
+        double distance = distanceSignal.getValueAsDouble();
+        inputs.distance = distance;
+        // inputs.hasAlgae = distance < 0.1;
+        inputs.temperature = temperatureSignal.getValueAsDouble();
         inputs.distanceSignalStrength = signalStengthSignal.getValueAsDouble();
     }
 

@@ -95,7 +95,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     }
 
     public static final double MAX_SPEED = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // Meters per second desired top speed
-    public static final double MAX_SPEED_ACCEL = Robot.isReal() ? 5 : 6;
+    public static final double MAX_SPEED_ACCEL = Robot.isReal() ? 5 : 7;
     public static final double MAX_ANGULAR_RATE = 3 * Math.PI; // 3/4 of a rotation per second max angular velocity (1.5 * Math.PI)
     public static final double MAX_ANGULAR_ACCEL = MAX_ANGULAR_RATE * 8; // was * 4
 
@@ -274,31 +274,27 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
 
         double translationMaxSpeed = MAX_SPEED * 0.8; // EXPERIMENT: uncap or change to 0.9
         double translationP = 5.5; // was 4.5, 4.25, 4.0
-        double translationI = 0.0;
         double translationD = 0.3; // was .15
         double translationKV = 0.25;
-        double translationKA = 0;
 
         if (Robot.isSimulation()) {
             translationMaxSpeed = MAX_SPEED * 0.8;
-            translationP = 6;
-            translationI = 0.0;
-            translationD = 0.6;
-            translationKV = 0.5;
-            translationKA = 0;
+            translationP = 3.5;
+            translationD = 0;
+            translationKV = 0.75;
         }
 
-        xyFeedforward = new SimpleMotorFeedforward(0, translationKV, translationKA);
+        xyFeedforward = new SimpleMotorFeedforward(0, translationKV, 0);
 
         driveToPoseConstraints = new TrapezoidProfile.Constraints(translationMaxSpeed, MAX_SPEED_ACCEL);
         driveToPoseProfile = new TrapezoidProfile(driveToPoseConstraints);
         driveToPoseConstraintsSlow = new TrapezoidProfile.Constraints(translationMaxSpeed, MAX_SPEED_ACCEL * 0.5);
         driveToPoseProfileSlow = new TrapezoidProfile(driveToPoseConstraintsSlow);
-        xPid = new PIDController(translationP, translationI, translationD);
-        yPid = new PIDController(translationP, translationI, translationD);
+        xPid = new PIDController(translationP, 0, translationD);
+        yPid = new PIDController(translationP, 0, translationD);
 
-        xProfiledPid = new ProfiledPIDController(translationP, translationI, translationD, driveToPoseConstraints);
-        yProfiledPid = new ProfiledPIDController(translationP, translationI, translationD, driveToPoseConstraints);
+        xProfiledPid = new ProfiledPIDController(translationP, 0, translationD, driveToPoseConstraints);
+        yProfiledPid = new ProfiledPIDController(translationP, 0, translationD, driveToPoseConstraints);
         
 
         rotationProfiledPid = new ProfiledPIDController(5, 0., 0,
@@ -318,7 +314,6 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         SmartDashboard.putData("Drivetrain X PID", xPid);
         SmartDashboard.putData("Drivetrain Y PID", yPid);
         SmartDashboard.putNumber("Drivetrain XY Feedforward", translationKV);
-        SmartDashboard.putNumber("Drivetrain XY kA", translationKA);
 
         setpointGenerator = new SwerveSetpointGenerator(
             config, // The robot configuration. This is the same config used for generating trajectories and running path following commands.
@@ -335,13 +330,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         zeroGyroscope();
     }
 
-    public void drive(ChassisSpeeds speeds) {
-        if (driveWithSetpointGenerator) {
-            driveWithSetpoints(speeds);
-            return;
-        }
-        
-        // Helpers.discretizeOverwrite(speeds, Constants.LOOP_TIME);
+    public void drive(ChassisSpeeds speeds) {        
         speeds = ChassisSpeeds.discretize(speeds, Constants.LOOP_TIME);
         setControl(m_pathApplyRobotSpeeds.withSpeeds(speeds));
     }
@@ -574,8 +563,11 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         yOutput += xyFeedforward.calculate(yTargetVelocity);
 
         // Ensure X and Y outputs are within the max velocity constraints (note: this stops the PID from helping catch up if we're behind)
-        xOutput = MathUtil.clamp(xOutput, -constraints.maxVelocity, constraints.maxVelocity);
-        yOutput = MathUtil.clamp(yOutput, -constraints.maxVelocity, constraints.maxVelocity);
+        // xOutput = MathUtil.clamp(xOutput, -constraints.maxVelocity, constraints.maxVelocity);
+        // yOutput = MathUtil.clamp(yOutput, -constraints.maxVelocity, constraints.maxVelocity);
+
+        xOutput = MathUtil.clamp(xOutput, -MAX_SPEED, MAX_SPEED);
+        yOutput = MathUtil.clamp(yOutput, -MAX_SPEED, MAX_SPEED);
 
         double thetaOutput = calculateHeadingPID(currentPose.getRotation(), endPose.getRotation().getDegrees());
 

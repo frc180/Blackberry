@@ -166,4 +166,16 @@ public class Helpers {
             numMotors
         );
     }
+
+    // Numbers pulled from https://wcproducts.com/blogs/wcp-blog/kraken-x44
+    public static DCMotor getKrakenX44(int numMotors) {
+        return new DCMotor(
+            12,
+            4.05,
+            275,
+            1.4,
+            Units.rotationsPerMinuteToRadiansPerSecond(7530),
+            numMotors
+        );
+    }
 }

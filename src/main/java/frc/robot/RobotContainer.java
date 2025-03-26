@@ -218,6 +218,9 @@ public class RobotContainer {
         autoChooser.addOption("Middle Barge - 1st Left", middleBargeLeft);
         autoChooser.addOption("Middle Barge - 1st Right", middleBargeRight);
 
+        autoChooser.addOption("Drive straight", drivetrain.run(() -> {
+            drivetrain.drive(new ChassisSpeeds(0, 1, 0));
+        }));
 
         SmartDashboard.putData("Auto Mode", autoChooser);
 
@@ -614,7 +617,7 @@ public class RobotContainer {
 
         // Start intaking algae earlier when going to descore
         finalReefTrigger.and(driverAlgaeDescore)
-            .whileTrue(elevatorArmAlgae.intakeAndIndex(1));
+            .whileTrue(elevatorArmAlgae.intakeAndIndex(0.5)); // ALGAE GRAB - was 1
 
         // Move elevator partially up when approaching reef targeting L4, but not yet at
         // the range where we are near the reef
@@ -634,7 +637,7 @@ public class RobotContainer {
                     //(elevatorArmAlgae.farAlgae.getAsBoolean());
         };
 
-        Command obtainAlgae = elevatorArmAlgae.intakeAndIndex(1)
+        Command obtainAlgae = elevatorArmAlgae.intakeAndIndex(0.5) // ALGAE GRAB - was 1
                                               .until(elevatorArmAlgae.hasAlgae.or(driverAlgaeDescore.negate()))
                                               .withTimeout(3);
 
@@ -733,7 +736,7 @@ public class RobotContainer {
 
         // Lob algae into the net by releasing while moving the elevator 
         driverNet.and(elevatorArmPivot::isElevatorArmInScoringPosition)
-                 .and(() -> elevator.getTargetPosition() == ElevatorSubsystem.NET && elevator.getTargetErrorInches() < 33) // 34 has been working but can be low sometimes
+                 .and(() -> elevator.getTargetPosition() == ElevatorSubsystem.NET && elevator.getTargetErrorInches() < 35) // 33 good but high
                  .onTrue(
                     elevatorArmAlgae.runSpeed(-1)
                                     .withTimeout(0.75) // EXPERIMENT: 1 second was too long
