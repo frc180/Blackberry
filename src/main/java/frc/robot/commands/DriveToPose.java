@@ -166,9 +166,9 @@ public class DriveToPose extends Command {
         // ChassisSpeeds speeds = drivetrain.calculateChassisSpeeds(currentPose, iterationTarget);
         ChassisSpeeds speeds;
         if (profileOverride != null) {
-            speeds = drivetrain.experimentalCalculateSpeeds(currentPose, iterationTarget, profileOverride, constraintsOverride);
+            speeds = drivetrain.driveProfiled(currentPose, iterationTarget, profileOverride, constraintsOverride);
         } else {
-            speeds = drivetrain.experimentalCalculateSpeeds(currentPose, iterationTarget);
+            speeds = drivetrain.driveProfiled(currentPose, iterationTarget);
         }
         if (additionalSpeedsSupplier != null) {
             Helpers.addChassisSpeedsOverwrite(speeds, additionalSpeedsSupplier.get());
@@ -176,11 +176,13 @@ public class DriveToPose extends Command {
         double maxSpeedMeters = DrivetrainSubsystem.MAX_SPEED * maxSpeed;
         speeds.vxMetersPerSecond = MathUtil.clamp(speeds.vxMetersPerSecond, -maxSpeedMeters, maxSpeedMeters);
         speeds.vyMetersPerSecond = MathUtil.clamp(speeds.vyMetersPerSecond, -maxSpeedMeters, maxSpeedMeters);
-        if (true || Robot.isSimulation()) {
-            drivetrain.driveClosedLoop(speeds);
-        } else {
-            drivetrain.drive(speeds);
-        }
+
+        drivetrain.driveClosedLoop(speeds);
+        // if (Robot.isSimulation()) {
+        //     drivetrain.driveClosedLoop(speeds);
+        // } else {
+        //     drivetrain.drive(speeds);
+        // }
     }
 
     @Override

@@ -73,8 +73,8 @@ public class ElevatorIOTalonFX implements ElevatorIO {
             config.Slot0.kG = 0.4031;
             config.Slot0.kV = 0.55;
             config.Slot0.kA = 0.0017552;
-            config.MotionMagic.MotionMagicExpo_kV = 0.78;
-            config.MotionMagic.MotionMagicExpo_kA = 0.5;
+            config.MotionMagic.MotionMagicExpo_kV = 2;   // 0.78;
+            config.MotionMagic.MotionMagicExpo_kA = 1.4; // 0.5;
         }
         config.Slot0.GravityType = GravityTypeValue.Elevator_Static;
         config.MotionMagic.MotionMagicCruiseVelocity = 0; // Unlimited cruise velocity

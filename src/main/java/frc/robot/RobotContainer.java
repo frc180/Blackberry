@@ -311,7 +311,7 @@ public class RobotContainer {
         Trigger generousNearReef = drivetrain.withinTargetPoseTolerance(
             Meters.of(1.25),
             Meters.of(1.25),
-            Degrees.of(90)
+            Degrees.of(45)
         );
 
         Trigger l1_2_3NearReef = targetingL2_3.or(driverL1).and(generousNearReef);
@@ -320,7 +320,7 @@ public class RobotContainer {
                     drivetrain.withinTargetPoseTolerance(         
                         Meters.of(0.35), // 0.7 was too aggressive at orlando
                         Meters.of(0.35), // 0.7 was too aggressive at orlando
-                        Degrees.of(90)
+                        Degrees.of(45)
                     ).or(l1_2_3NearReef)
         );
 

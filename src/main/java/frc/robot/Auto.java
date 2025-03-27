@@ -303,7 +303,8 @@ public final class Auto {
                 (tag) -> nextCoralScoringPosition().getPose()
             );
 
-            if (nextCoralScoringPosition().isFrontMiddle()) {
+            var nextPos = nextCoralScoringPosition();
+            if (nextPos.isFrontMiddle() || nextPos.isFarTag()) {
                 drivePose.withIntermediatePoses(DriveToCoralPose.AVOID_BIG_DIAGONAL);
             }
 

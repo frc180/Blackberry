@@ -81,7 +81,7 @@ public class CoralDetectorSim implements CoralDetector {
         }
 
         if (bestCoral == null) return null;
-        double noise = 0.05;
+        double noise = 0.1;
         return bestCoral.transformBy(new Transform2d(randomRange(-noise, noise), randomRange(-noise, noise), Rotation2d.kZero));
     }
 

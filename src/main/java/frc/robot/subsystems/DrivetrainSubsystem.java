@@ -7,16 +7,11 @@ import java.util.Optional;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
-
 import com.ctre.phoenix6.Orchestra;
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.Utils;
-import com.ctre.phoenix6.configs.AudioConfigs;
-import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
-import com.ctre.phoenix6.configs.TalonFXConfigurator;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
-import com.ctre.phoenix6.swerve.SwerveModule;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
@@ -57,7 +52,6 @@ import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
@@ -74,7 +68,6 @@ import frc.robot.Robot;
 import frc.robot.RobotContainer;
 import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
-import frc.robot.subsystems.vision.VisionSubsystem;
 import frc.robot.util.simulation.MapleSimSwerveDrivetrain;
 
 /**
@@ -102,13 +95,6 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     private static final double kSimLoopPeriod = 0.005; // 5 ms
     private Notifier m_simNotifier = null;
     private double m_lastSimTime;
-
-    /* Blue alliance sees forward as 0 degrees (toward red alliance wall) */
-    private static final Rotation2d kBlueAlliancePerspectiveRotation = Rotation2d.kZero;
-    /* Red alliance sees forward as 180 degrees (toward blue alliance wall) */
-    private static final Rotation2d kRedAlliancePerspectiveRotation = Rotation2d.k180deg;
-    /* Keep track if we've ever applied the operator perspective before or not */
-    private boolean m_hasAppliedOperatorPerspective = false;
 
     /** Swerve request to apply during robot-centric path following */
     private final SwerveRequest.ApplyRobotSpeeds m_pathApplyRobotSpeeds = new SwerveRequest.ApplyRobotSpeeds().withDriveRequestType(DriveRequestType.OpenLoopVoltage);
@@ -274,15 +260,19 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         gyroRateSignal = trackSignal(getPigeon2().getAngularVelocityZWorld());
 
         double translationMaxSpeed = MAX_SPEED * 0.8; // EXPERIMENT: uncap or change to 0.9
-        double translationP = 3.5; // 3 or 3.5 with new ff, 5.5 at orlando
-        double translationD = 0; // .3 at orlando
-        double translationKV = 0.75;
+        
+        // double translationP = 3.5; // 3 or 3.5 with new ff, 5.5 at orlando
+        // double translationD = 0; // .3 at orlando
+        // double translationKV = 0.75;
+        double translationP = 0;
+        double translationD = 0;
+        double translationKV = 1;
 
         if (Robot.isSimulation()) {
             translationMaxSpeed = MAX_SPEED * 0.8;
-            translationP = 3.5;
+            translationP = 2;
             translationD = 0;
-            translationKV = 0.75;
+            translationKV = 1;
         }
 
         xyFeedforward = new SimpleMotorFeedforward(0, translationKV, 0);
@@ -495,13 +485,14 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     final TrapezoidProfile.State driveToPoseGoalState = new State(0, 0);
     final Timer driveToPoseTimer = new Timer();
     Pose2d driveToPoseStart = null;
+    private double driveToPoseTimerOffset = 0;
+    private Pose2d profiledIntermediatePose = Pose2d.kZero;
 
     public ChassisSpeeds experimentalCalculateSpeeds(Pose2d currentPose, Pose2d endPose) {
         return experimentalCalculateSpeeds(currentPose, endPose, driveToPoseProfile, driveToPoseConstraints);
     }
 
-    private double driveToPoseTimerOffset = 0;
-
+    
     /**
      * Experimental method for driving to a pose using a trapezoidal profile, treating the drivetrain as a one-dimensional
      * mechanism instead of applying the profile to the X and Y axes separately.
@@ -509,7 +500,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
      */
     public ChassisSpeeds experimentalCalculateSpeeds(Pose2d currentPose, Pose2d endPose, TrapezoidProfile profile, TrapezoidProfile.Constraints constraints) {
         boolean initializing = driveToPoseStart == null;
-        boolean replanning = !initializing && (intermediatePose == null || intermediatePose.getTranslation().getDistance(endPose.getTranslation()) > 0.5);
+        boolean replanning = !initializing && (intermediatePose == null || intermediatePose.getTranslation().getDistance(endPose.getTranslation()) > 0.15);
         if (replanning) {
             initializing = true;
         }
@@ -517,18 +508,13 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         
         if (initializing) {
             // EXPERIMENT - only reset PIDs when not replanning
-            // if (!replanning) {
+            if (!replanning) {
                 xPid.reset();
                 yPid.reset();
-            // }
+            }
             driveToPoseStart = currentPose;
             driveToPoseTimer.restart();
             driveToPoseTimerOffset = Constants.LOOP_TIME;
-            // if (replanning) {
-            //    driveToPoseTimerOffset = Constants.LOOP_TIME;
-            // } else {
-            //     driveToPoseTimerOffset = 0;
-            // }
         }
 
         Translation2d normDirStartToEnd = endPose.getTranslation().minus(driveToPoseStart.getTranslation());
@@ -549,8 +535,9 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         }
 
         // Calculate the setpoint (i.e. current distance along the path) we should be targeting
-        State setpoint = profile.calculate(driveToPoseTimer.get() + driveToPoseTimerOffset, driveToPoseStartState, driveToPoseGoalState);
+        State setpoint = profile.calculate(driveToPoseTimer.get() + driveToPoseTimerOffset, driveToPoseStartState, driveToPoseGoalState);        
         Translation2d setpointTarget = endPose.getTranslation().interpolate(driveToPoseStart.getTranslation(), setpoint.position / distance);
+        profiledIntermediatePose = new Pose2d(setpointTarget, endPose.getRotation());
 
         // Use normal PIDs to calculate the feedback for the X and Y axes to reach the setpoint position
         double xOutput = xPid.calculate(currentPose.getX(), setpointTarget.getX());
@@ -569,6 +556,70 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
 
         xOutput = MathUtil.clamp(xOutput, -MAX_SPEED, MAX_SPEED);
         yOutput = MathUtil.clamp(yOutput, -MAX_SPEED, MAX_SPEED);
+
+        double thetaOutput = calculateHeadingPID(currentPose.getRotation(), endPose.getRotation().getDegrees());
+
+        return ChassisSpeeds.fromFieldRelativeSpeeds(xOutput, yOutput, thetaOutput, currentPose.getRotation());
+    }
+
+    public ChassisSpeeds driveProfiled(Pose2d currentPose, Pose2d endPose) {
+        return driveProfiled(currentPose, endPose, driveToPoseProfile, driveToPoseConstraints);
+    }
+
+    public ChassisSpeeds driveProfiled(Pose2d currentPose, Pose2d endPose, TrapezoidProfile profile, TrapezoidProfile.Constraints constraints) {
+        boolean replanning = driveToPoseStart != null;
+        intermediatePose = endPose;
+        
+        // EXPERIMENT - only reset PIDs when not replanning
+        if (!replanning) {
+            xPid.reset();
+            yPid.reset();
+        }
+        driveToPoseStart = currentPose;
+
+        // Translation2d normDirStartToEnd = endPose.getTranslation().minus(driveToPoseStart.getTranslation());
+        // double distance = normDirStartToEnd.getNorm();
+        // normDirStartToEnd = normDirStartToEnd.div(distance + 0.001);
+
+        double normDirX = endPose.getX() - driveToPoseStart.getX();
+        double normDirY = endPose.getY() - driveToPoseStart.getY();
+        double distance = Math.hypot(normDirX, normDirY);
+
+        normDirX /= (distance + 0.001);
+        normDirY /= (distance + 0.001);
+
+        
+        driveToPoseStartState.position = distance;
+        if (replanning) {
+            driveToPoseStartState.velocity = -getVelocity();
+        } else {
+            driveToPoseStartState.velocity = MathUtil.clamp(
+                Helpers.velocityTowards(driveToPoseStart, getFieldRelativeSpeeds(), endPose.getTranslation()),
+                -constraints.maxVelocity, 
+                0
+            );
+        }
+
+        // Calculate the setpoint (i.e. current distance along the path) we should be targeting
+        State setpoint = profile.calculate(Constants.LOOP_TIME * 2, driveToPoseStartState, driveToPoseGoalState);
+        Translation2d setpointTarget = endPose.getTranslation().interpolate(driveToPoseStart.getTranslation(), setpoint.position / distance);
+        
+        // For logging only
+        profiledIntermediatePose = new Pose2d(setpointTarget, endPose.getRotation());
+
+        // Use normal PIDs to calculate the feedback for the X and Y axes to reach the setpoint position
+        double xOutput = xPid.calculate(currentPose.getX(), setpointTarget.getX());
+        double yOutput = yPid.calculate(currentPose.getY(), setpointTarget.getY());
+
+        // Use feedforward for the X and Y axes to better reach the setpoint speed
+        double xTargetVelocity = normDirX * -setpoint.velocity;
+        double yTargetVelocity = normDirY * -setpoint.velocity;
+        xOutput += xyFeedforward.calculate(xTargetVelocity);
+        yOutput += xyFeedforward.calculate(yTargetVelocity);
+
+        // Ensure X and Y outputs are within the max velocity constraints (note: this stops the PID from helping catch up if we're behind)
+        xOutput = MathUtil.clamp(xOutput, -constraints.maxVelocity, constraints.maxVelocity);
+        yOutput = MathUtil.clamp(yOutput, -constraints.maxVelocity, constraints.maxVelocity);
 
         double thetaOutput = calculateHeadingPID(currentPose.getRotation(), endPose.getRotation().getDegrees());
 
