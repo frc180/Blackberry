@@ -270,7 +270,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
 
         if (Robot.isSimulation()) {
             translationMaxSpeed = MAX_SPEED * 0.8;
-            translationP = 2;
+            translationP = 0;
             translationD = 0;
             translationKV = 1;
         }
