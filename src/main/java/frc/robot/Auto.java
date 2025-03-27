@@ -33,12 +33,12 @@ public final class Auto {
     private static final Transform2d LEFT_HP_STATION_TRANSFORM = new Transform2d(0, 0, Rotation2d.fromDegrees(150));
     private static final Transform2d RIGHT_HP_STATION_TRANSFORM = new Transform2d(0, 0, Rotation2d.fromDegrees(210));
 
-    
     private static boolean coralIntaking = false;
     public static boolean leftSide = true;
     public static AutoState state = AutoState.IDLE;
     public static CoralScoringPosition previousCoralScoringPosition = null; 
     public static List<CoralScoringPosition> coralScoringPositions = new ArrayList<>();
+    public static boolean firstCoralCycle = true;
     public static double startTime = 0;
 
     public static final Trigger intakingState = new Trigger(() -> state == AutoState.INTAKING);
@@ -93,6 +93,7 @@ public final class Auto {
     public static void init() {
         state = AutoState.IDLE;
         coralIntaking = false;
+        firstCoralCycle = true;
         startTime = Timer.getFPGATimestamp();
     }
 
@@ -304,9 +305,16 @@ public final class Auto {
             );
 
             var nextPos = nextCoralScoringPosition();
-            if (nextPos.isFrontMiddle() || nextPos.isFarTag()) {
+
+            if (nextPos.isFrontMiddle()) {
                 drivePose.withIntermediatePoses(DriveToCoralPose.AVOID_BIG_DIAGONAL);
+            } else if (nextPos.isFarTag() && !firstCoralCycle) {
+                drivePose.withIntermediatePoses(DriveToCoralPose.AVOID_REEF_Y);
             }
+
+            // if (nextPos.isFrontMiddle() || (nextPos.isFarTag() && !firstCoralCycle)) {
+            //     drivePose.withIntermediatePoses(DriveToCoralPose.AVOID_BIG_DIAGONAL);
+            // }
 
             return drivePose.alongWith(setState(AutoState.SCORING));
         }, Set.of(RobotContainer.instance.drivetrain));

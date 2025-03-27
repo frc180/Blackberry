@@ -673,6 +673,7 @@ public class RobotContainer {
                         if (!Auto.coralScoringPositions.isEmpty()) {
                             Auto.previousCoralScoringPosition = Auto.coralScoringPositions.get(0);
                             Auto.coralScoringPositions.remove(0);
+                            Auto.firstCoralCycle = false;
                         }
                     }
                     SimLogic.coralScored++;

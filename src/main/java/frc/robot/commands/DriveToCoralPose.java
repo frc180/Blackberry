@@ -56,7 +56,7 @@ public class DriveToCoralPose extends DriveToPose {
     private static final double Y_DIAGONAL_THRESHOLD = Inches.of(6).in(Meters);
     private static final double X_DIAGONAL_THRESHOLD = Meters.of(1.3).in(Meters);
 
-    public static Function<Pose2d, Pose2d> AVOID_BIG_DIAGONAL = (Pose2d target) -> {
+    public static final Function<Pose2d, Pose2d> AVOID_BIG_DIAGONAL = (Pose2d target) -> {
         double frontOffset = 0;
         double sideOffset = 0;
         
@@ -69,6 +69,35 @@ public class DriveToCoralPose extends DriveToPose {
 
         if (frontOffset != 0 || sideOffset != 0) {
             target = new Pose2d(new Translation2d(target.getX() + frontOffset, target.getY() + sideOffset), target.getRotation());
+        }
+
+        return target;
+    };
+
+    final static double reefMarginAdjust = 0.5;
+    final static double reefMinY = 2.25 - reefMarginAdjust;
+    final static double reefMaxY = 5.79 + reefMarginAdjust;
+
+    public static final Function<Pose2d, Pose2d> AVOID_REEF_Y = (Pose2d target) -> {
+        double sideOffset = 0;
+        
+        Pose2d robotPose = RobotContainer.instance.drivetrain.getPose();
+        double xDiff = robotPose.getX() - target.getX();
+        if (Math.abs(xDiff) > X_DIAGONAL_THRESHOLD) {
+
+            // Check if targetY is within reef bounds
+            if (target.getY() > reefMinY && target.getY() < reefMaxY) {
+                // if targetY is within reef bounds, move to the edge of the reef
+                if (target.getY() < reefMinY + (reefMaxY - reefMinY) / 2) {
+                    sideOffset = reefMinY - target.getY();
+                } else {
+                    sideOffset = reefMaxY - target.getY();
+                }
+            }
+        }
+
+        if (sideOffset != 0) {
+            target = new Pose2d(new Translation2d(target.getX(), target.getY() + sideOffset), target.getRotation());
         }
 
         return target;
