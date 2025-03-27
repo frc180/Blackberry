@@ -21,7 +21,7 @@ public class IntakeCoralIOSim implements IntakeCoralIO {
                 "Coral",
                 RobotContainer.instance.drivetrain.getDriveSim(),
                 Inches.of(15),
-                Inches.of(6),
+                Inches.of(10),
                 IntakeSide.BACK,
                 1
             );

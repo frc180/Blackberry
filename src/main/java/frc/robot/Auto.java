@@ -9,6 +9,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -213,20 +214,52 @@ public final class Auto {
         );
     }
 
-    private static final Distance PUSH_AMOUNT = Inches.of(15);
+    private static final Distance PUSH_AMOUNT = Inches.of(12);
     private static final Distance PUSH_POSE_DIST = Inches.of(60);
 
     private static final double pushDistance = PUSH_POSE_DIST.in(Meters);
     private static final double pushDistanceThreshold = PUSH_POSE_DIST.minus(PUSH_AMOUNT).in(Meters);
 
+    // public static Command partnerPush() {
+    //     var drivetrain = RobotContainer.instance.drivetrain;
+    //     var vision = RobotContainer.instance.vision;
+    //     return new DriveToPose(drivetrain, () -> {
+    //         double dir = Robot.isBlue() ? 1 : -1;
+    //         Pose2d robotPose = drivetrain.getPose();
+    //         return new Pose2d(robotPose.getTranslation().plus(new Translation2d(pushDistance * dir, 0)), robotPose.getRotation());
+    //     })
+    //     .until(drivetrain.withinTargetPoseDistance(pushDistanceThreshold))
+    //     .withTimeout(2)
+    //     .deadlineFor(vision.blockPoseEstimates());
+    // }
+
     public static Command partnerPush() {
         var drivetrain = RobotContainer.instance.drivetrain;
         var vision = RobotContainer.instance.vision;
-        return new DriveToPose(drivetrain, () -> {
+        
+        return Commands.defer(() -> {
             double dir = Robot.isBlue() ? 1 : -1;
             Pose2d robotPose = drivetrain.getPose();
-            return new Pose2d(robotPose.getTranslation().plus(new Translation2d(pushDistance * dir, 0)), robotPose.getRotation());
-        })
+            Pose2d targetPose = new Pose2d(robotPose.getTranslation().plus(new Translation2d(pushDistance * dir, 0)), robotPose.getRotation());
+
+            ChassisSpeeds speeds = ChassisSpeeds.fromFieldRelativeSpeeds(
+                0.6 * DrivetrainSubsystem.MAX_SPEED * dir,
+                0,
+                0,
+                robotPose.getRotation()
+            );
+
+            return drivetrain.runEnd(
+                () -> {
+                    drivetrain.driveClosedLoop(speeds);
+                    drivetrain.setTargetPose(targetPose);
+                },
+                () -> {
+                    drivetrain.drive(new ChassisSpeeds());
+                    drivetrain.setTargetPose(null);
+                }
+            );
+        }, Set.of(drivetrain))
         .until(drivetrain.withinTargetPoseDistance(pushDistanceThreshold))
         .withTimeout(2)
         .deadlineFor(vision.blockPoseEstimates());
