@@ -601,7 +601,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         }
 
         // Calculate the setpoint (i.e. current distance along the path) we should be targeting
-        State setpoint = profile.calculate(Constants.LOOP_TIME * 2, driveToPoseStartState, driveToPoseGoalState);
+        State setpoint = profile.calculate(Constants.LOOP_TIME * 4, driveToPoseStartState, driveToPoseGoalState);
         Translation2d setpointTarget = endPose.getTranslation().interpolate(driveToPoseStart.getTranslation(), setpoint.position / distance);
         
         // For logging only
