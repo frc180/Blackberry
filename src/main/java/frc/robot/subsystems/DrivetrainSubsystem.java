@@ -111,7 +111,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     private boolean m_hasAppliedOperatorPerspective = false;
 
     /** Swerve request to apply during robot-centric path following */
-    private final SwerveRequest.ApplyRobotSpeeds m_pathApplyRobotSpeeds = new SwerveRequest.ApplyRobotSpeeds();
+    private final SwerveRequest.ApplyRobotSpeeds m_pathApplyRobotSpeeds = new SwerveRequest.ApplyRobotSpeeds().withDriveRequestType(DriveRequestType.OpenLoopVoltage);
     private final SwerveRequest.ApplyRobotSpeeds applyClosedLoopSpeeds = new SwerveRequest.ApplyRobotSpeeds().withDriveRequestType(DriveRequestType.Velocity);
     private final SwerveRequest.SwerveDriveBrake brakeRequest = new SwerveRequest.SwerveDriveBrake();
 
@@ -160,6 +160,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     private double xPidTarget = 0;
     private double yPidTarget = 0;
     private double[] moduleSpeeds = new double[] {0, 0, 0, 0};
+    private double[] moduleGoalSpeeds = new double[] {0, 0, 0, 0};
     private double moduleSpeedAvg = 0;
 
     private boolean pigeonConnected = false;
@@ -273,9 +274,9 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         gyroRateSignal = trackSignal(getPigeon2().getAngularVelocityZWorld());
 
         double translationMaxSpeed = MAX_SPEED * 0.8; // EXPERIMENT: uncap or change to 0.9
-        double translationP = 5.5; // was 4.5, 4.25, 4.0
-        double translationD = 0.3; // was .15
-        double translationKV = 0.25;
+        double translationP = 3.5; // 3 or 3.5 with new ff, 5.5 at orlando
+        double translationD = 0; // .3 at orlando
+        double translationKV = 0.75;
 
         if (Robot.isSimulation()) {
             translationMaxSpeed = MAX_SPEED * 0.8;
@@ -858,9 +859,9 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
             zeroGyroscopeUsingPose();
         }
 
-        // double kV = SmartDashboard.getNumber("Drivetrain XY Feedforward", 0);
+        double kV = SmartDashboard.getNumber("Drivetrain XY Feedforward", 0);
         // double kA = SmartDashboard.getNumber("Drivetrain XY kA", 0);
-        // xyFeedforward.setKv(kV);
+        xyFeedforward.setKv(kV);
         // xyFeedforward.setKa(kA);
 
         SwerveDriveState state = getState();
@@ -877,10 +878,12 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         poseBuffer.addSample(Timer.getFPGATimestamp(), pose);
 
         SwerveModuleState[] moduleStates = state.ModuleStates;
+        SwerveModuleState[] moduleTargets = state.ModuleTargets;
         moduleSpeedAvg = 0;
         for (int i = 0; i < moduleStates.length; i++) {
             moduleSpeeds[i] = Math.abs(moduleStates[i].speedMetersPerSecond);
             moduleSpeedAvg += Math.abs(moduleSpeeds[i]);
+            moduleGoalSpeeds[i] = Math.abs(moduleTargets[i].speedMetersPerSecond);
         }
         moduleSpeedAvg /= moduleStates.length;
 

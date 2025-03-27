@@ -50,8 +50,8 @@ public class VisionSubsystem extends SubsystemBase {
      * and the more it'll affect the robot's position.
      */
     enum PoseEstimateSource {
-        SCORING_CAMERA(0.05),
-        FRONT_CAMERA(0.3),
+        SCORING_CAMERA(0.025), // was 0.05
+        FRONT_CAMERA(0.15), // was .3
         BACK_CAMERA(0.3),
         NONE(99);
 
@@ -128,10 +128,12 @@ public class VisionSubsystem extends SubsystemBase {
 
     // Apply a position transform, then a rotation transform
     // private final Transform2d leftL1ReefTransform = new Transform2d(0.7 - APRILTAG_THICKNESS, 0, Rotation2d.k180deg);
-    private final Transform2d leftL1ReefTransform = new Transform2d(0.55 - APRILTAG_THICKNESS, -0.03, Rotation2d.k180deg);
+
+    private final double l1BackDistance = 0.62 - Inches.of(0.5).in(Meters)- APRILTAG_THICKNESS;
+    private final Transform2d leftL1ReefTransform = new Transform2d(l1BackDistance, -0.03, Rotation2d.k180deg);
 
     // private final Transform2d rightL1ReefTransform = leftL1ReefTransform;
-    private final Transform2d rightL1ReefTransform = new Transform2d(0.55 - APRILTAG_THICKNESS, 0.03, Rotation2d.k180deg);
+    private final Transform2d rightL1ReefTransform = new Transform2d(l1BackDistance, 0.03, Rotation2d.k180deg);
     private final Transform2d leftL1ReefRotation = new Transform2d(0, 0, Rotation2d.fromDegrees(0)); // was 30
     private final Transform2d rightL1ReefRotation = new Transform2d(0, 0, Rotation2d.fromDegrees(0)); // was 30
 

@@ -49,6 +49,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandGenericHID;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.commands.DefaultDriveCommand;
 import frc.robot.commands.DriveToCoralPose;
 import frc.robot.commands.DriveToPose;
@@ -978,7 +979,7 @@ public class RobotContainer {
     private Command coralEject() {
         Command l4CoralEject = elevatorArm.runSpeed(0.32).until(elevatorArm.hasNoCoral) // was .425, .45, was .4 before
                                           .andThen(Commands.waitSeconds(0.2));
-        Command l1CoralEject = elevatorArm.runSpeed(0.33 - 0.05 - 0.03).until(elevatorArm.hasNoCoral);
+        Command l1CoralEject = elevatorArm.runSpeed(0.15).until(elevatorArm.hasNoCoral).andThen(Commands.waitSeconds(0.5));
         Command coralEject = elevatorArm.runSpeed(0.3).until(elevatorArm.hasNoCoral) // was 0.325
                                         .andThen(Commands.waitSeconds(0.2)); // could maybe be slightly less delay (0.1)?
 

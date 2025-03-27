@@ -176,7 +176,7 @@ public class DriveToPose extends Command {
         double maxSpeedMeters = DrivetrainSubsystem.MAX_SPEED * maxSpeed;
         speeds.vxMetersPerSecond = MathUtil.clamp(speeds.vxMetersPerSecond, -maxSpeedMeters, maxSpeedMeters);
         speeds.vyMetersPerSecond = MathUtil.clamp(speeds.vyMetersPerSecond, -maxSpeedMeters, maxSpeedMeters);
-        if (Robot.isSimulation()) {
+        if (true || Robot.isSimulation()) {
             drivetrain.driveClosedLoop(speeds);
         } else {
             drivetrain.drive(speeds);
