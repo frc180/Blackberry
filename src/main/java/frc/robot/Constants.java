@@ -33,6 +33,8 @@ public class Constants {
     public static final int CANDLE = 27;
     public static final int INTAKE_CORAL_ROLLER_TALON = 28;
 
+    public static final int ARM_PIVOT_CANCODER = 29; // unmapped
+
     // CAN IDs - RIO Bus
 
     public static final int INTAKE_LASERCAN = 13;

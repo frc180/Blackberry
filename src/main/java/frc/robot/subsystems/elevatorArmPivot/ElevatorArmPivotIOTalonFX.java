@@ -4,19 +4,25 @@ import static edu.wpi.first.units.Units.*;
 import static frc.robot.util.StatusSignals.trackSignal;
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.StatusSignal;
+import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
+import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.signals.SensorDirectionValue;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
+import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.AnalogPotentiometer;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 import frc.robot.Constants;
 import frc.robot.Robot;
@@ -31,20 +37,28 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO {
     MotionMagicVoltage motionMagic;
     VoltageOut voltageControl;
     NeutralModeValue neutralMode = null;
+    CANcoder cancoder;
     AnalogPotentiometer potentiometer;
 
     // Status signals
     StatusSignal<Angle> positionSignal;
     StatusSignal<Voltage> voltageSignal;
     StatusSignal<Double> targetSignal;
-    StatusSignal<AngularVelocity> velocitySignal;
+    StatusSignal<Angle> cancoderPositionSignal;
+
+    final Alert cancoderAlert = new Alert("ArmPivot CANcoder disconnected!", AlertType.kError);
 
     // Simulation-only variables
     TalonFXSimState armPivotMotorSim;
     SingleJointedArmSim armSim;
 
     public ElevatorArmPivotIOTalonFX() {
-        armPivotMotor = new TalonFX(Constants.ELEVATOR_ARM_PIVOT_TALON, Constants.CANIVORE);
+        // CANcoderConfiguration cancoderConfig = new CANcoderConfiguration();
+        // cancoderConfig.MagnetSensor.SensorDirection = SensorDirectionValue.Clockwise_Positive;
+        // // cancoderConfig.MagnetSensor.withMagnetOffset(Rotations.of(0));
+        // cancoder = new CANcoder(Constants.ARM_PIVOT_CANCODER, Constants.CANIVORE);
+        // cancoder.getConfigurator().apply(cancoderConfig);
+        
         TalonFXConfiguration config = new TalonFXConfiguration();
         if (Robot.isReal()) {
             config.Slot0.kP = 2000; // was 220, 880 works, 1300 works, 1500,
@@ -53,12 +67,6 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO {
             config.Slot0.kG = 0.23;
             config.Slot0.kV = 15;
             config.Slot0.kA = 0;
-            // config.Slot0.kP = 0;
-            // config.Slot0.kI = 0;
-            // config.Slot0.kD = 0;
-            // config.Slot0.kG = 0;
-            // config.Slot0.kV = 0;
-            // config.Slot0.kA = 0;
         } else {
             config.Slot0.kP = 1000;
             config.Slot0.kI = 0;
@@ -71,7 +79,16 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO {
         config.MotionMagic.MotionMagicAcceleration = 2;
         config.MotionMagic.MotionMagicJerk = 0;
         config.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
+
+        // Internal encoder only
         config.Feedback.SensorToMechanismRatio = PIVOT_GEARING;
+        // CANcoder and internal encoder fusion
+        // config.Feedback.FeedbackRemoteSensorID = cancoder.getDeviceID();
+        // config.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
+        // config.Feedback.SensorToMechanismRatio = 1.0;
+        // config.Feedback.RotorToSensorRatio = PIVOT_GEARING;
+
+
         config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = ElevatorArmPivotSubsystem.FORWARD_LIMIT.in(Rotations);
         config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = ElevatorArmPivotSubsystem.REVERSE_LIMIT.in(Rotations);
         // if (Robot.isReal()) {
@@ -79,6 +96,7 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO {
         //     config.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
         // }
 
+        armPivotMotor = new TalonFX(Constants.ELEVATOR_ARM_PIVOT_TALON, Constants.CANIVORE);
         armPivotMotor.getConfigurator().apply(config);
         setNeutralMode(NeutralModeValue.Coast);
 
@@ -94,7 +112,7 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO {
         positionSignal = trackSignal(armPivotMotor.getPosition());
         voltageSignal = trackSignal(armPivotMotor.getMotorVoltage());
         targetSignal = trackSignal(armPivotMotor.getClosedLoopReference());
-        velocitySignal = trackSignal(armPivotMotor.getVelocity());
+        // cancoderPositionSignal = trackSignal(cancoder.getAbsolutePosition());
 
         // armPivotMotor.optimizeBusUtilization(10, 0.1);
 
@@ -122,13 +140,16 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO {
         inputs.position = positionSignal.getValueAsDouble();
         inputs.voltage = voltageSignal.getValueAsDouble();
         inputs.target = targetSignal.getValueAsDouble();
-        inputs.velocity = velocitySignal.getValueAsDouble();
-        inputs.hardStop = false;
+        // inputs.cancoderPosition = cancoderPositionSignal.getValueAsDouble();
+
         if (Robot.isReal()) {
             inputs.absolutePosition = -potentiometer.get();
         } else {
             inputs.absolutePosition = 30 + (Units.radiansToRotations(armSim.getAngleRads()) * 0.25);
         }
+
+        // boolean cancoderDisconnected = cancoderPositionSignal.getTimestamp().getLatency() > 0.5;
+        // cancoderAlert.set(cancoderDisconnected);
     }
 
     @Override

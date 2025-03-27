@@ -73,9 +73,6 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
     public Trigger elevatorArmInPosition = new Trigger(() -> isInPosition());
     @NotLogged
     public Trigger elevatorArmInScoringPosition = new Trigger (() -> isElevatorArmInScoringPosition());
-    // @NotLogged
-    // public Trigger atHardstop = new Trigger(() -> inputs.hardStop).debounce(0.2);
-    // private Trigger atHomingHardstop = new Trigger(this::isAtHomingHardstop).debounce(0.2);
 
     public ElevatorArmPivotSubsystem() {
         inputs = new ElevatorArmPivotIOInputs();
@@ -348,13 +345,13 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
         return (inputs.absolutePosition * absoluteScalar) - absoluteOffset;
     }
 
+    public double getCancoderDegrees() {
+        return Units.rotationsToDegrees(inputs.cancoderPosition);
+    }
+
     public void zeroAbsolute() {
         absoluteOffset = (inputs.absolutePosition * absoluteScalar);
     }
-
-    // public boolean isAtHomingHardstop() {
-    //     return isHoming && inputs.hardStop;
-    // }
 
     @NotLogged
     public boolean isHomed() {
