@@ -143,14 +143,20 @@ public class ElevatorArmIOTalonFX implements ElevatorArmIO {
     public void setSpeed(double speed) {
         targetVelocity = speed * VELOCITY_RPS_12V;
         setVoltage(speed * 12);
-        // setVelocity(targetVelocity);
+        // setVelocityDirect(targetVelocity);
+    }
+
+    @Override
+    public void setVelocity(double velocityPercent) {
+        setVelocityDirect(velocityPercent * VELOCITY_RPS_12V);
     }
 
     private void setVoltage(double volts) {
         rollerMotor.setControl(voltageControl.withOutput(volts));
     }
 
-    private void setVelocity(double velocity) {
+    private void setVelocityDirect(double velocity) {
+        targetVelocity = velocity;
         rollerMotor.setControl(velocityControl.withVelocity(velocity));
     }
 

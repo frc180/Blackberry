@@ -67,6 +67,7 @@ public class ElevatorArmSubsystem extends SubsystemBase{
         return runEnd(() -> {
             // Middle sensor only means we're centered, so stop
             if (!inputs.backCoralSensor && inputs.middleCoralSensor && !inputs.frontCoralSensor) {
+            // if (!inputs.backCoralSensor && inputs.middleCoralSensor && inputs.frontCoralSensor) { // EXPERIMENT
                 io.setSpeed(0);
                 return;
             }

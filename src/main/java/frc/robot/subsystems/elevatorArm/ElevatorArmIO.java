@@ -25,4 +25,6 @@ public interface ElevatorArmIO {
     public void stop();
 
     public void setSpeed(double speed);
+
+    public void setVelocity(double velocityPercent);
 }

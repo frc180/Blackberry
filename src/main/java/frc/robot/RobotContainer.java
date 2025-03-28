@@ -314,7 +314,13 @@ public class RobotContainer {
             Degrees.of(45)
         );
 
-        Trigger l1_2_3NearReef = targetingL2_3.or(driverL1).and(generousNearReef);
+        Trigger reallyGenerousNearReef = drivetrain.withinTargetPoseTolerance(
+            Meters.of(1.25 * 2),
+            Meters.of(1.25 * 2),
+            Degrees.of(45)
+        );
+
+        Trigger l1_2_3NearReef = targetingL2_3.or(driverL1).and(reallyGenerousNearReef);
 
         nearReef = drivetrain.targetingReef().and(
                     drivetrain.withinTargetPoseTolerance(         
@@ -325,8 +331,8 @@ public class RobotContainer {
         );
 
         // EXPERIMENT - Partially deploy for L4 early to be faster while avoiding instability
-        // Trigger l4Advance = targetingL4.and(drivetrain.targetingReef()).and(generousNearReef);
-        Trigger l4Advance = falseTrigger;
+        Trigger l4Advance = targetingL4.and(drivetrain.targetingReef()).and(reallyGenerousNearReef).and(nearReef.negate());
+        // Trigger l4Advance = falseTrigger;
         
         // Used for right L2 and L1, where the vision target is blocked if we deploy too early
         Trigger almostAtReef = drivetrain.targetingReef().and(drivetrain.withinTargetPoseTolerance(
@@ -691,6 +697,18 @@ public class RobotContainer {
                 .alongWith(Commands.runOnce(() -> Robot.justScoredCoral = false))
         );
 
+
+        final Trigger manualL1 = driverL1.and(driverAnyReef.negate());
+        manualL1.whileTrue(elevator.setPosition(ElevatorSubsystem.L1).alongWith(elevatorArmPivot.matchElevatorPreset()))
+                .onFalse(elevator.stow().alongWith(elevatorArmPivot.receivePosition()));
+
+        manualL1.and(elevator.elevatorInScoringPosition)
+                .and(elevatorArmPivot.elevatorArmInScoringPosition)
+                .onTrue(Commands.sequence(
+                    l1CoralEject(),
+                    Commands.runOnce(() -> Robot.justScoredCoral = true)  
+                ));
+
         //scoring algae net
         //if arm does not have algae already (passing from algae intake to algae arm)
         // driverNet.and(intakeAlgae.hasAlgae).whileTrue(
@@ -710,13 +728,15 @@ public class RobotContainer {
                         .and(elevatorArmPivot.isAt(ElevatorArmPivotSubsystem.horizontal))
                        .whileTrue(elevatorArmAlgae.runSpeed(-1));
 
-        driverNet.or(driverNetSlow).whileTrue(drivetrain.targetHeadingContinuous(0.0, HeadingTarget.GYRO))
+        algaeMode.whileTrue(drivetrain.targetHeadingContinuous(0.0, HeadingTarget.GYRO))
                  .onFalse(drivetrain.targetHeading(null, HeadingTarget.POSE));
+
+        // driverNet.or(driverNetSlow).whileTrue(drivetrain.targetHeadingContinuous(0.0, HeadingTarget.GYRO))
+        //          .onFalse(drivetrain.targetHeading(null, HeadingTarget.POSE));
 
         // Start moving to score algae in net
         driverNet.and(drivetrain.withinTargetHeadingTolerance(5).debounce(0.1)).whileTrue(
             Commands.parallel(
-                // drivetrain.brake(),
                 elevator.setPosition(ElevatorSubsystem.NET),
                 elevatorArmPivot.netScorePosition()
             )
@@ -980,12 +1000,11 @@ public class RobotContainer {
     private Command coralEject() {
         Command l4CoralEject = elevatorArm.runSpeed(0.32).until(elevatorArm.hasNoCoral) // was .425, .45, was .4 before
                                           .andThen(Commands.waitSeconds(0.2));
-        Command l1CoralEject = elevatorArm.runSpeed(0.15).until(elevatorArm.hasNoCoral).andThen(Commands.waitSeconds(0.5));
         Command coralEject = elevatorArm.runSpeed(0.3).until(elevatorArm.hasNoCoral) // was 0.325
                                         .andThen(Commands.waitSeconds(0.2)); // could maybe be slightly less delay (0.1)?
 
         return Commands.select(Map.of(
-                1, l1CoralEject,
+                1, l1CoralEject(),
                 2, l4CoralEject,
                 3, coralEject
             ), 
@@ -999,6 +1018,12 @@ public class RobotContainer {
                 }
             }
         );
+    }
+
+    private Command l1CoralEject() {
+        // EXPERIMENT: Maybe lower L1 outtake further?
+        return elevatorArm.runSpeed(0.15).until(elevatorArm.hasNoCoral)
+                          .andThen(Commands.waitSeconds(0.5));
     }
 
 }

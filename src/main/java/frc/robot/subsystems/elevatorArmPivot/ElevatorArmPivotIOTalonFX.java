@@ -4,24 +4,21 @@ import static edu.wpi.first.units.Units.*;
 import static frc.robot.util.StatusSignals.trackSignal;
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.StatusSignal;
-import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-import com.ctre.phoenix6.signals.SensorDirectionValue;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
-import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.AnalogPotentiometer;
+import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 import frc.robot.Constants;
@@ -29,6 +26,7 @@ import frc.robot.Robot;
 
 public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO {
     final double PIVOT_GEARING = 128;
+    final double ABSOLUTE_ENCODER_RATIO = 1;
     final double radToRotations = 1 / (2 * Math.PI);
     final Angle ABSOLUTE_POSITION_OFFSET = Degrees.of(0);
 
@@ -38,6 +36,7 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO {
     VoltageOut voltageControl;
     NeutralModeValue neutralMode = null;
     CANcoder cancoder;
+    DutyCycleEncoder absoluteEncoder;
     AnalogPotentiometer potentiometer;
 
     // Status signals
@@ -100,6 +99,8 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO {
         armPivotMotor.getConfigurator().apply(config);
         setNeutralMode(NeutralModeValue.Coast);
 
+        absoluteEncoder = new DutyCycleEncoder(Constants.DIO_ARM_PIVOT_ENCODER);
+
         motionMagic = new MotionMagicVoltage(0);
         voltageControl = new VoltageOut(0);
 
@@ -141,6 +142,7 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO {
         inputs.voltage = voltageSignal.getValueAsDouble();
         inputs.target = targetSignal.getValueAsDouble();
         // inputs.cancoderPosition = cancoderPositionSignal.getValueAsDouble();
+        inputs.cancoderPosition = absoluteEncoder.get() * ABSOLUTE_ENCODER_RATIO;
 
         if (Robot.isReal()) {
             inputs.absolutePosition = -potentiometer.get();

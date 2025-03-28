@@ -80,4 +80,9 @@ public class ElevatorArmIOSim implements ElevatorArmIO{
         double coralBack = SimLogic.armCoralPosition - SimLogic.CORAL_LENGTH;
         return sensorPosition >= coralBack && sensorPosition <= coralFront;
     }
+
+    @Override
+    public void setVelocity(double velocityPercent) {
+        setSpeed(velocityPercent);
+    }
 }

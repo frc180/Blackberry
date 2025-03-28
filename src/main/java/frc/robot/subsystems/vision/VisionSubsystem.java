@@ -84,10 +84,10 @@ public class VisionSubsystem extends SubsystemBase {
     );
 
     public static final Transform3d ROBOT_TO_FRONT_CAMERA = new Transform3d(
-        Inches.of(13.998).in(Meters), // forward
-        Inches.of(-7).in(Meters), // right
+        Inches.of(13.998 + 3.5).in(Meters), // forward
+        Inches.of(-7 + 1).in(Meters), // right
         Inches.of(6.767).in(Meters),
-        new Rotation3d(0, Units.degreesToRadians(-18.1), 0) // upward tilt
+        new Rotation3d(0, Units.degreesToRadians(-15), 0) // upward tilt
     );
     
     // TODO: set real values
@@ -130,10 +130,8 @@ public class VisionSubsystem extends SubsystemBase {
     // private final Transform2d leftL1ReefTransform = new Transform2d(0.7 - APRILTAG_THICKNESS, 0, Rotation2d.k180deg);
 
     private final double l1BackDistance = 0.62 - Inches.of(0.5).in(Meters)- APRILTAG_THICKNESS;
-    private final Transform2d leftL1ReefTransform = new Transform2d(l1BackDistance, -0.03, Rotation2d.k180deg);
-
-    // private final Transform2d rightL1ReefTransform = leftL1ReefTransform;
-    private final Transform2d rightL1ReefTransform = new Transform2d(l1BackDistance, 0.03, Rotation2d.k180deg);
+    private final Transform2d leftL1ReefTransform = new Transform2d(l1BackDistance, -Inches.of(12).in(Meters), Rotation2d.k180deg);
+    private final Transform2d rightL1ReefTransform = new Transform2d(l1BackDistance, 0, Rotation2d.k180deg);
     private final Transform2d leftL1ReefRotation = new Transform2d(0, 0, Rotation2d.fromDegrees(0)); // was 30
     private final Transform2d rightL1ReefRotation = new Transform2d(0, 0, Rotation2d.fromDegrees(0)); // was 30
 
