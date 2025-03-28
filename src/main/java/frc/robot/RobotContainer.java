@@ -1008,14 +1008,12 @@ public class RobotContainer {
     }
 
     private Command coralEject() {
-        Command l4CoralEject = elevatorArm.runSpeed(0.32).until(elevatorArm.hasNoCoral) // was .425, .45, was .4 before
-                                          .andThen(Commands.waitSeconds(0.2));
         Command coralEject = elevatorArm.runSpeed(0.3).until(elevatorArm.hasNoCoral) // was 0.325
                                         .andThen(Commands.waitSeconds(0.2)); // could maybe be slightly less delay (0.1)?
 
         return Commands.select(Map.of(
                 1, l1CoralEject(),
-                2, l4CoralEject,
+                2, l4CoralEjectExperiment(),
                 3, coralEject
             ), 
             () -> {
@@ -1031,9 +1029,24 @@ public class RobotContainer {
     }
 
     private Command l1CoralEject() {
-        // EXPERIMENT: Maybe lower L1 outtake further?
+        // EXPERIMENT: Maybe lower L1 outtake further than 0.15?
         return elevatorArm.runSpeed(0.15).until(elevatorArm.hasNoCoral)
                           .andThen(Commands.waitSeconds(0.5));
+    }
+
+    private final double L4_EJECT_SPEED = 0.32;
+
+    private Command l4CoralEject() {
+        return elevatorArm.runSpeed(L4_EJECT_SPEED).until(elevatorArm.hasNoCoral)  // was .425, .45, was .4 before
+                          .andThen(Commands.waitSeconds(0.2));
+    }
+
+    // EXPERIMENT: See if moving the arm pivot to the receive position slightly before retracting helps
+    // flip bad L4 corals onto the branch, instead of falling back into the arm
+    private Command l4CoralEjectExperiment() {
+        return elevatorArm.runSpeed(L4_EJECT_SPEED).until(elevatorArm.hasNoCoral)
+                          .andThen(Commands.waitSeconds(0.1))
+                          .andThen(Commands.waitSeconds(0.1).deadlineFor(elevatorArmPivot.receivePosition()));
     }
 
 }
