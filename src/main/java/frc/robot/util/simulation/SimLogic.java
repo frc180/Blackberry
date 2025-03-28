@@ -64,8 +64,12 @@ public abstract class SimLogic {
             double rotationOffset = Math.random() * 360;
             Transform2d randomTransform = new Transform2d(xOffset, yOffset, Rotation2d.fromDegrees(rotationOffset));
 
-            SimulatedArena.getInstance().addGamePiece(new ReefscapeCoralOnField(coralPose.transformBy(randomTransform)));
+            spawnCoral(coralPose.transformBy(randomTransform));
         }
+    }
+
+    public static void spawnCoral(Pose2d pose) {
+        SimulatedArena.getInstance().addGamePiece(new ReefscapeCoralOnField(pose));
     }
 
     // TODO: tie coralAngle to the angle of the elevator arm

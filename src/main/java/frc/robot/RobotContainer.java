@@ -32,6 +32,7 @@ import com.spamrobotics.util.JoystickInputs;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.NotLogged;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -43,6 +44,7 @@ import edu.wpi.first.wpilibj.simulation.ElevatorSim;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.ScheduleCommand;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.button.CommandGenericHID;
@@ -143,6 +145,7 @@ public class RobotContainer {
     public Trigger nearReef = null;
     @Logged(name = "Reef - At")
     public Trigger atReef = null;
+    public Trigger strugglingNearReef = falseTrigger;
     public final Trigger climbDeployed = new Trigger(() -> climbDeployedBool);
 
     // Debug
@@ -309,18 +312,12 @@ public class RobotContainer {
         final Trigger targetingL4 = driverL4.or(Auto.targetingLevel(4));
 
         Trigger generousNearReef = drivetrain.withinTargetPoseTolerance(
-            Meters.of(1.25),
-            Meters.of(1.25),
+            Meters.of(2.5),
+            Meters.of(2.5),
             Degrees.of(45)
         );
 
-        Trigger reallyGenerousNearReef = drivetrain.withinTargetPoseTolerance(
-            Meters.of(1.25 * 2),
-            Meters.of(1.25 * 2),
-            Degrees.of(45)
-        );
-
-        Trigger l1_2_3NearReef = targetingL2_3.or(driverL1).and(reallyGenerousNearReef);
+        Trigger l1_2_3NearReef = targetingL2_3.or(driverL1).and(generousNearReef);
 
         nearReef = drivetrain.targetingReef().and(
                     drivetrain.withinTargetPoseTolerance(         
@@ -331,7 +328,7 @@ public class RobotContainer {
         );
 
         // EXPERIMENT - Partially deploy for L4 early to be faster while avoiding instability
-        Trigger l4Advance = targetingL4.and(drivetrain.targetingReef()).and(reallyGenerousNearReef).and(nearReef.negate());
+        Trigger l4Advance = targetingL4.and(drivetrain.targetingReef()).and(generousNearReef).and(nearReef.negate());
         // Trigger l4Advance = falseTrigger;
         
         // Used for right L2 and L1, where the vision target is blocked if we deploy too early
@@ -354,6 +351,8 @@ public class RobotContainer {
         );
 
         atReef = drivetrain.targetingReef().and(atReefXY).and(atReefAngle);
+
+        strugglingNearReef = nearReef.and(atReef.negate()).debounce(2.5, DebounceType.kRising);
 
         if (POSING_MODE) {
             posingAtReef = new Trigger(() -> {
@@ -609,10 +608,6 @@ public class RobotContainer {
         Trigger rightL2 = driverRightReef.and(driverL2);
         Trigger nearReefModified = nearReef.and(rightL2.negate())
                                             .or(almostAtReef.debounce(0.1));
-
-        // Trigger nearReefModified = nearReef.and(reefAlgaeTarget.negate())
-        //                                     .or(almostAtReef.debounce(0.1));
-
         
         Trigger finalReefTrigger = nearReefModified.and(reefDeployAllowed)
                                                     .or(isScoringCoral)
@@ -695,6 +690,13 @@ public class RobotContainer {
         justScoredCoral.and(teleop).onTrue(
             new RumbleCommand(1).withTimeout(0.5)
                 .alongWith(Commands.runOnce(() -> Robot.justScoredCoral = false))
+        );
+
+        strugglingNearReef.and(teleop).whileTrue(
+            new RumbleCommand(1)
+                .withTimeout(0.2)
+                .andThen(Commands.waitSeconds(0.2))
+                .repeatedly()
         );
 
 
@@ -865,6 +867,14 @@ public class RobotContainer {
                 vision.resetCoralDetector();
             }))
         );
+
+        if (Robot.isSimulation()) {
+            strugglingNearReef.and(autonomous).onTrue(Commands.sequence(
+                Commands.waitSeconds(0.3).deadlineFor(intakeCoralPivot.stow()),
+                drivetrain.run(() -> drivetrain.drive(new ChassisSpeeds(0, 0, 5))).withTimeout(1.5),
+                new ScheduleCommand(Auto.driveToReefWithCoral())
+            ));
+        }
 
         // ====================== TEST CONTROLS ======================
 
