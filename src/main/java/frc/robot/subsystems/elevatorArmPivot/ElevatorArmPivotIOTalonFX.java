@@ -78,7 +78,7 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO {
             config.Slot0.kA = 0;
         }
         config.MotionMagic.MotionMagicCruiseVelocity = 2.6;
-        config.MotionMagic.MotionMagicAcceleration = 2;
+        config.MotionMagic.MotionMagicAcceleration = 4; //was 2
         config.MotionMagic.MotionMagicJerk = 0;
         config.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
 
