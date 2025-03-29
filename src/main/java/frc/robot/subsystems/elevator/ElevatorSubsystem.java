@@ -29,10 +29,11 @@ public class ElevatorSubsystem extends SubsystemBase {
     public static final boolean LIVE_TUNING_ENABLED = false;
     // Distance presets, with 0 being the bottom of the elevator
     public static final Distance L1 = Inches.of(0.1); // Inches.of(2.5);
-    public static final Distance L2 = Meters.of(0.302).plus(Inches.of(1));
+    public static final Distance L2 = Meters.of(0.302).plus(Inches.of(1))
+                                                                .plus(Inches.of(0.5)); // our field-specific offset
     public static final Distance L3 = L2.plus(Inches.of(16));
     public static final Distance L4 = Meters.of(1.46);
-    public static final Distance L4_ADVANCE = L2.plus(Inches.of(10)); // was +6 - should work way up to L3ish
+    public static final Distance L4_ADVANCE = L2.plus(Inches.of(12)); // was +10
     public static final Distance NET = Meters.of(1.47).minus(Inches.of(1));
     public static final Distance STOW = Inches.of(0);
     public static final Distance ZERO = Meters.of(0);

@@ -31,7 +31,8 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
     protected static final Angle REVERSE_LIMIT = Degrees.of(-20);
     protected static final Angle HARD_STOP_OFFSET = Degrees.of(60.46875 + 3.955078125 + 2.109375 - 2.63671875);
 
-    private static final double EXPECTED_ABSOLUTE_START = HARD_STOP_OFFSET.in(Degrees);
+    // TODO: get this reading the next time the string pot is working
+    protected static final Angle HARD_STOP_STARTING_ANGLE = Degrees.of(61.61);
 
     public static final double L4_ADVANCE = Units.degreesToRotations(30); // 33 worked
     public static final double L4_SCORE = Units.degreesToRotations(-16); // was -13 orlando thus, -16 sometime before
@@ -39,7 +40,7 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
     public static final double L2_SCORE = L3_SCORE;
     public static final double L1_SCORE = Units.degreesToRotations(2.6); // Units.degreesToRotations(12);
     
-    public static final double receiving = Units.degreesToRotations(45 - 3);
+    public static final double receiving = Units.degreesToRotations(43); // was 42
     public static final double receivingHP = Units.degreesToRotations(42.1); //idk this number yet
     public static final double algaeReceive = Units.degreesToRotations(-70);
     public static final double horizontal = 0;
@@ -60,9 +61,10 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
     private boolean pidMode = false;
     private boolean isHoming = false;
     private boolean homed = false;
+    private boolean absoluteSyncAllowed = true;
 
     private double absoluteScalar = Robot.isReal() ? (2.29 * .967) : 4;
-    private double absoluteOffset = Robot.isReal() ? -.6245 + .005 : 30 * 4;
+    private double absoluteOffset = Robot.isReal() ? -.6245 + .005 + .003 : 30 * 4;
 
     private double lastPositionSyncTime = 0;
     private double absoluteRatio = 0;
@@ -95,7 +97,6 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
     boolean firstPeriodic = true;
     @NotLogged 
     boolean wasEverEnabled = false;
-    @NotLogged
     boolean absPosValid = false;
 
     @Override
@@ -107,34 +108,33 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
         notHomedAlert.set(!homed);
 
         absoluteRatio = inputs.position / getAbsolutePosition();
-
         double currentTime = Timer.getFPGATimestamp();
-        double absPos = getAbsolutePosition();
-        absPosValid = true;//Math.abs(inputs.absolutePosition) > 0.23;
-        if (absPosValid) {
-            if (firstPeriodic || (!enabled && !wasEverEnabled && !RobotContainer.POSING_MODE && currentTime - lastPositionSyncTime > 0.5)) {
-                syncAbsolute();
-                firstPeriodic = false;
-                lastPositionSyncTime = currentTime;
-            }
-        }
+        boolean firstDisable = !enabled && !wasEverEnabled;
+        boolean disableSync = firstDisable && !RobotContainer.POSING_MODE && currentTime - lastPositionSyncTime > 0.5;
+        boolean shouldSync = firstPeriodic || disableSync;
 
+        absPosValid = getAbsolutePosition() < 0.18;
+
+        if (absoluteSyncAllowed && shouldSync && absPosValid) {
+            syncAbsolute();
+            lastPositionSyncTime = currentTime;
+        } else if (!absoluteSyncAllowed && shouldSync) {
+            io.zero(HARD_STOP_STARTING_ANGLE.in(Rotations));
+            homed = true;
+            lastPositionSyncTime = currentTime;
+        }
+        
         if (!enabled && !wasEverEnabled) {
-            unexpectedStartPositionAlert.set(Math.abs(getAbsolutePosition() - .1689) > .005);
+            unexpectedStartPositionAlert.set(Math.abs(getAbsolutePosition() - .170) > .005);
         }
 
-        // if (firstPeriodic) {
-        //     io.zero(HARD_STOP_OFFSET.in(Rotations));
-        //     homed = true;
-        //     firstPeriodic = false;
-        // }
-
-        if (!wasEverEnabled) {
-            wasEverEnabled = enabled;
-        }
+        if (firstPeriodic) firstPeriodic = false;
+        if (!wasEverEnabled) wasEverEnabled = enabled;
     }
 
     public void syncAbsolute() {
+        if (!absoluteSyncAllowed) return;
+
         io.zero(getAbsolutePosition());
         homed = true;
     }

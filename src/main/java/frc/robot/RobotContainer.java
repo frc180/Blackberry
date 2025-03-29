@@ -622,18 +622,18 @@ public class RobotContainer {
 
         Trigger l4Advance = targetingL4.and(drivetrain.targetingReef())
                                         .and(generousNearReef)
-                                        .and(nearReef.negate())
+                                        .and(finalReefTrigger.negate())
                                         .and(reefDeployAllowed);
         // Trigger l4Advance = falseTrigger;
 
         // Move elevator partially up when approaching reef targeting L4, but not yet at
         // the range where we are near the reef
-        // l4Advance.whileTrue(elevator.setPosition(ElevatorSubsystem.L4_ADVANCE).alongWith(elevatorArmPivot.matchElevatorPreset()));
-        l4Advance.whileTrue(Commands.either(
-            elevator.setPosition(ElevatorSubsystem.L4_ADVANCE).alongWith(elevatorArmPivot.matchElevatorPreset()),
-            elevator.setPosition(ElevatorSubsystem.L4_ADVANCE),
-            RobotState::isTeleop
-        ));
+        l4Advance.whileTrue(elevator.setPosition(ElevatorSubsystem.L4_ADVANCE).alongWith(elevatorArmPivot.matchElevatorPreset()));
+        // l4Advance.whileTrue(Commands.either(
+        //     elevator.setPosition(ElevatorSubsystem.L4_ADVANCE).alongWith(elevatorArmPivot.matchElevatorPreset()),
+        //     elevator.setPosition(ElevatorSubsystem.L4_ADVANCE),
+        //     RobotState::isTeleop
+        // ));
 
         // FOR TUNING - Track exit velocity of coral
         isScoringCoral.and(elevatorArm.hasNoCoral).onTrue(
@@ -1060,7 +1060,7 @@ public class RobotContainer {
     private Command l4CoralEjectExperiment() {
         return elevatorArm.runSpeed(L4_EJECT_SPEED).until(elevatorArm.hasNoCoral)
                           .andThen(Commands.waitSeconds(0.1))
-                          .andThen(Commands.waitSeconds(0.2).deadlineFor(elevatorArmPivot.receivePosition()));
+                          .andThen(Commands.waitSeconds(0.2).deadlineFor(elevatorArmPivot.runSpeed(0.15)));
     }
 
 }
