@@ -64,7 +64,7 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
     private boolean absoluteSyncAllowed = true;
 
     private double absoluteScalar = Robot.isReal() ? (2.29 * .967) : 4;
-    private double absoluteOffset = Robot.isReal() ? -.6245 + .005 + .003 : 30 * 4;
+    private double absoluteOffset = Robot.isReal() ? -.617 : 30 * 4;
 
     private double lastPositionSyncTime = 0;
     private double absoluteRatio = 0;
