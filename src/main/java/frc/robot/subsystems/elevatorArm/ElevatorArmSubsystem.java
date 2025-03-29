@@ -52,7 +52,7 @@ public class ElevatorArmSubsystem extends SubsystemBase{
     }
 
     public Command intakeAndIndex() {
-        return indexCommand(0.3);
+        return indexCommand(0.2); // was 0.3
     }
 
     public Command passiveIndex() {

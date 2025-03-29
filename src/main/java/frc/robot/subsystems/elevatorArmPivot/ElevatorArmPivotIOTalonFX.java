@@ -26,10 +26,13 @@ import frc.robot.Robot;
 
 public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO {
     final double PIVOT_GEARING = 128;
-    final double ABSOLUTE_ENCODER_RATIO = 1;
     final double radToRotations = 1 / (2 * Math.PI);
-    final Angle ABSOLUTE_POSITION_OFFSET = Degrees.of(0);
 
+    final Angle POTENTIOMETER_OFFSET = Degrees.of(0);
+
+     // Converts absolute encoder units to mechanism rotations
+    final double ABSOLUTE_ENCODER_RATIO = (1.0 / 3.0) * (1-0.0482);
+    final double ABSOLUTE_ENCODER_OFFSET = Degrees.of(0).in(Rotations);
 
     TalonFX armPivotMotor;
     MotionMagicVoltage motionMagic;
@@ -107,7 +110,7 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO {
         potentiometer = new AnalogPotentiometer(
             Constants.ANALOG_ELEVATOR_ARM_PIVOT_POTENTIOMETER,
             1,
-            ABSOLUTE_POSITION_OFFSET.in(Rotations)
+            POTENTIOMETER_OFFSET.in(Rotations)
         );
 
         positionSignal = trackSignal(armPivotMotor.getPosition());
@@ -141,8 +144,8 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO {
         inputs.position = positionSignal.getValueAsDouble();
         inputs.voltage = voltageSignal.getValueAsDouble();
         inputs.target = targetSignal.getValueAsDouble();
-        // inputs.cancoderPosition = cancoderPositionSignal.getValueAsDouble();
-        inputs.cancoderPosition = absoluteEncoder.get() * ABSOLUTE_ENCODER_RATIO;
+        // inputs.cancoderRotations = cancoderPositionSignal.getValueAsDouble();
+        inputs.cancoderRotations = (absoluteEncoder.get() * ABSOLUTE_ENCODER_RATIO) + ABSOLUTE_ENCODER_OFFSET;
 
         if (Robot.isReal()) {
             inputs.absolutePosition = -potentiometer.get();

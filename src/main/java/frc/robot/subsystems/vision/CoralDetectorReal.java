@@ -185,7 +185,7 @@ public class CoralDetectorReal implements CoralDetector {
     }
 
     private double tXYCombined(RawDetection detection) {
-        return detection.tync + Math.abs(detection.txnc * 0.33);
+        return detection.tync + Math.abs(detection.txnc * 0.75);
     }
 
     private double width(RawDetection detection) {

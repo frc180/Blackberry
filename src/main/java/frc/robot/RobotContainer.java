@@ -326,10 +326,6 @@ public class RobotContainer {
                         Degrees.of(45)
                     ).or(l1_2_3NearReef)
         );
-
-        // EXPERIMENT - Partially deploy for L4 early to be faster while avoiding instability
-        Trigger l4Advance = targetingL4.and(drivetrain.targetingReef()).and(generousNearReef).and(nearReef.negate());
-        // Trigger l4Advance = falseTrigger;
         
         // Used for right L2 and L1, where the vision target is blocked if we deploy too early
         Trigger almostAtReef = drivetrain.targetingReef().and(drivetrain.withinTargetPoseTolerance(
@@ -352,7 +348,7 @@ public class RobotContainer {
 
         atReef = drivetrain.targetingReef().and(atReefXY).and(atReefAngle);
 
-        strugglingNearReef = nearReef.and(atReef.negate()).debounce(2.5, DebounceType.kRising);
+        strugglingNearReef = nearReef.and(atReef.negate()).debounce(2, DebounceType.kRising);
 
         if (POSING_MODE) {
             posingAtReef = new Trigger(() -> {
@@ -452,7 +448,7 @@ public class RobotContainer {
                         .onFalse(elevatorArmPivot.stowPosition().alongWith(elevator.stow()));
 
         elevatorArm.setDefaultCommand(elevatorArm.passiveIndex());
-        // elevatorArm.setDefaultCommand(elevatorArm.runSpeed(0.5));
+        // elevatorArm.setDefaultCommand(elevatorArm.runSpeed(1));
         elevatorArmAlgae.setDefaultCommand(elevatorArmAlgae.passiveIndex());
         
         // Notify driver we've intaken a coral
@@ -551,13 +547,16 @@ public class RobotContainer {
                                 .withInterruptBehavior(InterruptionBehavior.kCancelIncoming)
                     );
 
-
+        
+        final Trigger manualL1 = driverL1.and(driverAnyReef.negate());
+        final Trigger manualL1Recently = manualL1.debounce(0.75, DebounceType.kFalling);
 
         // Make the robot point towards the closest side of the reef
         teleop.and(coralMode)
-                .and(elevatorArm.hasCoral)
+                .and(elevatorArm.hasPartialCoral.or(intakeCoral.hasCoral)) // EXPERIMENT
                 .and(elevatorArmAlgae.hadAlgae.negate())
                 .and(climbDeployed.negate())
+                .and(manualL1Recently.negate())
             .whileTrue(drivetrain.targetHeadingContinuous(() -> {
                 Pose2d reefPose = vision.getClosestReefPose();
                 return reefPose != null ? reefPose.getRotation().getDegrees() : null;
@@ -621,9 +620,20 @@ public class RobotContainer {
         finalReefTrigger.and(driverAlgaeDescore)
             .whileTrue(elevatorArmAlgae.intakeAndIndex(0.5)); // ALGAE GRAB - was 1
 
+        Trigger l4Advance = targetingL4.and(drivetrain.targetingReef())
+                                        .and(generousNearReef)
+                                        .and(nearReef.negate())
+                                        .and(reefDeployAllowed);
+        // Trigger l4Advance = falseTrigger;
+
         // Move elevator partially up when approaching reef targeting L4, but not yet at
         // the range where we are near the reef
-        l4Advance.whileTrue(elevator.setPosition(ElevatorSubsystem.L4_ADVANCE).alongWith(elevatorArmPivot.matchElevatorPreset()));
+        // l4Advance.whileTrue(elevator.setPosition(ElevatorSubsystem.L4_ADVANCE).alongWith(elevatorArmPivot.matchElevatorPreset()));
+        l4Advance.whileTrue(Commands.either(
+            elevator.setPosition(ElevatorSubsystem.L4_ADVANCE).alongWith(elevatorArmPivot.matchElevatorPreset()),
+            elevator.setPosition(ElevatorSubsystem.L4_ADVANCE),
+            RobotState::isTeleop
+        ));
 
         // FOR TUNING - Track exit velocity of coral
         isScoringCoral.and(elevatorArm.hasNoCoral).onTrue(
@@ -636,7 +646,6 @@ public class RobotContainer {
             return elevator.isTargetingReefAlgaePosition() && 
                     driverRightReef.getAsBoolean() && 
                     driverAlgaeDescore.getAsBoolean(); 
-                    //(elevatorArmAlgae.farAlgae.getAsBoolean());
         };
 
         Command obtainAlgae = elevatorArmAlgae.intakeAndIndex(0.5) // ALGAE GRAB - was 1
@@ -666,6 +675,7 @@ public class RobotContainer {
                         .alongWith(drivetrain.runOnce(() -> drivetrain.drive(new ChassisSpeeds())))
                         .alongWith(scoringSequence),
                 Commands.runOnce(() -> {
+                    elevator.setPositionDirect(ElevatorSubsystem.STOW);
                     elevatorArmPivot.setArmPositionDirect(ElevatorArmPivotSubsystem.receiving);
                     Robot.currentlyScoringCoral = false;
                     Robot.justScoredCoral = true;
@@ -700,16 +710,20 @@ public class RobotContainer {
         );
 
 
-        final Trigger manualL1 = driverL1.and(driverAnyReef.negate());
-        manualL1.whileTrue(elevator.setPosition(ElevatorSubsystem.L1).alongWith(elevatorArmPivot.matchElevatorPreset()))
-                .onFalse(elevator.stow().alongWith(elevatorArmPivot.receivePosition()));
+        // final Trigger manualL1 = driverL1.and(driverAnyReef.negate());
+        final Trigger manualL1Ready = elevator.elevatorInScoringPosition.and(elevatorArmPivot.elevatorArmInScoringPosition);
+        final Command manualL1Score = l1CoralEject().andThen(Commands.runOnce(() -> Robot.justScoredCoral = true));
 
-        manualL1.and(elevator.elevatorInScoringPosition)
-                .and(elevatorArmPivot.elevatorArmInScoringPosition)
-                .onTrue(Commands.sequence(
-                    l1CoralEject(),
-                    Commands.runOnce(() -> Robot.justScoredCoral = true)  
-                ));
+        manualL1.whileTrue(elevator.setPosition(ElevatorSubsystem.L1).alongWith(elevatorArmPivot.matchElevatorPreset()))
+                //.onFalse(elevator.stow().alongWith(elevatorArmPivot.receivePosition()));
+                .onFalse(Commands.either(
+                    manualL1Score,
+                    Commands.none(),
+                    manualL1Ready
+                ).andThen(elevator.stow().alongWith(elevatorArmPivot.receivePosition())));
+
+        // Auto-score when holding manual l1
+        // manualL1.and(manualL1Ready).onTrue(manualL1Score);
 
         //scoring algae net
         //if arm does not have algae already (passing from algae intake to algae arm)
@@ -760,10 +774,10 @@ public class RobotContainer {
 
         // Lob algae into the net by releasing while moving the elevator 
         driverNet.and(elevatorArmPivot::isElevatorArmInScoringPosition)
-                 .and(() -> elevator.getTargetPosition() == ElevatorSubsystem.NET && elevator.getTargetErrorInches() < 35) // 33 good but high
+                 .and(() -> elevator.getTargetPosition() == ElevatorSubsystem.NET && elevator.getTargetErrorInches() < 35.5) // 35 good but high
                  .onTrue(
                     elevatorArmAlgae.runSpeed(-1)
-                                    .withTimeout(0.75) // EXPERIMENT: 1 second was too long
+                                    .withTimeout(0.5) // EXPERIMENT: 0.75, 1 second was too long
                                     .andThen(elevator.runOnce(() -> {
                                         elevator.setPositionDirect(ElevatorSubsystem.STOW);
                                         if (elevatorArm.hasPartialCoralBool()) {
@@ -1034,7 +1048,7 @@ public class RobotContainer {
                           .andThen(Commands.waitSeconds(0.5));
     }
 
-    private final double L4_EJECT_SPEED = 0.32;
+    private static final double L4_EJECT_SPEED = 0.32;
 
     private Command l4CoralEject() {
         return elevatorArm.runSpeed(L4_EJECT_SPEED).until(elevatorArm.hasNoCoral)  // was .425, .45, was .4 before
@@ -1046,7 +1060,7 @@ public class RobotContainer {
     private Command l4CoralEjectExperiment() {
         return elevatorArm.runSpeed(L4_EJECT_SPEED).until(elevatorArm.hasNoCoral)
                           .andThen(Commands.waitSeconds(0.1))
-                          .andThen(Commands.waitSeconds(0.1).deadlineFor(elevatorArmPivot.receivePosition()));
+                          .andThen(Commands.waitSeconds(0.2).deadlineFor(elevatorArmPivot.receivePosition()));
     }
 
 }

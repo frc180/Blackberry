@@ -94,9 +94,12 @@ public class DefaultDriveCommand extends Command {
 
     private boolean shouldApplyCoralAssist() {
         // return false;
-        if (!RobotContainer.instance.coralIntakeTrigger.getAsBoolean() || 
-            RobotContainer.instance.vision.getCoralPickupPose() == null ||
-            RobotContainer.instance.robotHasCoral.getAsBoolean()) {
+
+        RobotContainer rc = RobotContainer.instance;
+        if (!rc.coralIntakeTrigger.getAsBoolean() || 
+            rc.vision.getCoralPickupPose() == null ||
+            rc.elevatorArm.hasPartialCoralBool() ||
+            rc.intakeCoral.hasCoralBool()) {
             return false;
         }
         return true;

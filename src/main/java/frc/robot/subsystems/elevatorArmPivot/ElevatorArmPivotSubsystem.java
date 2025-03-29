@@ -27,12 +27,13 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
     private ElevatorArmPivotIO io;
     private ElevatorArmPivotIOInputs inputs;
 
-    // TODO: read manually from robot
     protected static final Angle FORWARD_LIMIT = Degrees.of(60.7);
     protected static final Angle REVERSE_LIMIT = Degrees.of(-20);
     protected static final Angle HARD_STOP_OFFSET = Degrees.of(60.46875 + 3.955078125 + 2.109375 - 2.63671875);
-    private static final double RESYNC_THRESHOLD = Degrees.of(1).in(Rotations);
 
+    private static final double EXPECTED_ABSOLUTE_START = HARD_STOP_OFFSET.in(Degrees);
+
+    public static final double L4_ADVANCE = Units.degreesToRotations(30); // 33 worked
     public static final double L4_SCORE = Units.degreesToRotations(-16); // was -13 orlando thus, -16 sometime before
     public static final double L3_SCORE = Units.degreesToRotations(-6 - 2); // was -6,
     public static final double L2_SCORE = L3_SCORE;
@@ -73,6 +74,8 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
     public Trigger elevatorArmInPosition = new Trigger(() -> isInPosition());
     @NotLogged
     public Trigger elevatorArmInScoringPosition = new Trigger (() -> isElevatorArmInScoringPosition());
+
+    private Alert unexpectedStartPositionAlert = new Alert("Arm Pivot sensor not in expected start position!", AlertType.kWarning);
 
     public ElevatorArmPivotSubsystem() {
         inputs = new ElevatorArmPivotIOInputs();
@@ -116,6 +119,10 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
             }
         }
 
+        if (!enabled && !wasEverEnabled) {
+            unexpectedStartPositionAlert.set(Math.abs(getAbsolutePosition() - .1689) > .005);
+        }
+
         // if (firstPeriodic) {
         //     io.zero(HARD_STOP_OFFSET.in(Rotations));
         //     homed = true;
@@ -125,10 +132,6 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
         if (!wasEverEnabled) {
             wasEverEnabled = enabled;
         }
-
-        // if (pidMode) {
-        //     setArmPositionDirect(targetPosition);
-        // }
     }
 
     public void syncAbsolute() {
@@ -235,7 +238,11 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
             //     return;
             // }
 
-            if (elevatorTarget == ElevatorSubsystem.L4 || elevatorTarget == ElevatorSubsystem.L4_ADVANCE) {
+            // if (elevatorTarget == ElevatorSubsystem.L4 || elevatorTarget == ElevatorSubsystem.L4_ADVANCE) {
+            //     setArmPositionDirect(L4_SCORE);
+            if (elevatorTarget == ElevatorSubsystem.L4_ADVANCE) {
+                setArmPositionDirect(L4_ADVANCE);
+            } else if (elevatorTarget == ElevatorSubsystem.L4) {
                 setArmPositionDirect(L4_SCORE);
             } else if (elevatorTarget == ElevatorSubsystem.L3) {
                 setArmPositionDirect(L3_SCORE);
@@ -346,7 +353,7 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
     }
 
     public double getCancoderDegrees() {
-        return Units.rotationsToDegrees(inputs.cancoderPosition);
+        return Units.rotationsToDegrees(inputs.cancoderRotations);
     }
 
     public void zeroAbsolute() {
