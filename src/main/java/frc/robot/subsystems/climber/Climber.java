@@ -34,7 +34,7 @@ public class Climber extends SubsystemBase {
     }
 
     public Command deploy() {
-        return runSpeed(0.06).until(this::isDeployed);
+        return runSpeed(0.07).until(this::isDeployed); // was 0.06, 0.05
     }
 
     final Command climbDoneRumble = new RumbleCommand(1).withTimeout(2);

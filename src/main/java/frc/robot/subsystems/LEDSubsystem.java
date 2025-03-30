@@ -71,8 +71,8 @@ public class LEDSubsystem extends SubsystemBase {
         blueTwinkle = twinkle(BLUE, 0.25, TwinklePercent.Percent64);
         redTwinkle = twinkle(RED, 0.25, TwinklePercent.Percent64);
 
-        blueFlow = colorFlow(BLUE, 1, Direction.Forward);
-        redFlow = colorFlow(RED, 1, Direction.Forward);
+        blueFlow = colorFlow(BLUE, 0.5, Direction.Forward);
+        redFlow = colorFlow(RED, 0.5, Direction.Forward);
         yellowFlow = colorFlow(YELLOW, 0.5, Direction.Forward);
         yellowLarson = larson(YELLOW, 0.5, 5, BounceMode.Front);
 

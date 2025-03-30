@@ -26,6 +26,8 @@ import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.Function;
 import java.util.function.Supplier;
+
+import com.ctre.phoenix.led.Animation;
 import com.pathplanner.lib.util.FlippingUtil;
 import com.spamrobotics.util.Helpers;
 import com.spamrobotics.util.JoystickInputs;
@@ -465,8 +467,10 @@ public class RobotContainer {
         //climbing sequence
         // driverReadyClimb.onTrue(climber.deploy());
 
+        final Command climbDeployedRumble = new ScheduleCommand(new RumbleCommand(1).withTimeout(1));
+
         Command readyClimb = elevatorArmPivot.climbPosition().alongWith(
-                                climber.deploy(),
+                                climber.deploy().andThen(climbDeployedRumble),
                                 elevator.climbHeight(),
                                 intakeCoralPivot.extremeStow(),
                                 Commands.runOnce(() -> climbDeployedBool = true)
@@ -619,14 +623,18 @@ public class RobotContainer {
             .whileTrue(chosenElevatorHeight.alongWith(elevatorArmPivot.matchElevatorPreset()))
             .onFalse(elevator.stow().alongWith(elevatorArmPivot.receivePosition()));
 
-        // Start intaking algae earlier when going to descore
+        final double algaeGrabSpeed = 0.6;  // EXPERIMENT: was 0.5, sometimes dropped, 1 was too extreme
+
+        // Algae grab from reef (start intaking algae earlier when going to descore)
         finalReefTrigger.and(driverAlgaeDescore)
-            .whileTrue(elevatorArmAlgae.intakeAndIndex(0.5)); // ALGAE GRAB - was 1
+            .whileTrue(elevatorArmAlgae.intakeAndIndex(algaeGrabSpeed));
 
         Trigger l4Advance = targetingL4.and(drivetrain.targetingReef())
                                         .and(generousNearReef)
                                         .and(finalReefTrigger.negate())
-                                        .and(reefDeployAllowed);
+                                        .and(reefDeployAllowed)
+                                        .and(elevatorArm.hasPartialCoral);
+
         // Trigger l4Advance = falseTrigger;
 
         // Move elevator partially up when approaching reef targeting L4, but not yet at
@@ -651,7 +659,7 @@ public class RobotContainer {
                     driverAlgaeDescore.getAsBoolean(); 
         };
 
-        Command obtainAlgae = elevatorArmAlgae.intakeAndIndex(0.5) // ALGAE GRAB - was 1
+        Command obtainAlgae = elevatorArmAlgae.intakeAndIndex(algaeGrabSpeed) // ALGAE GRAB - was 1
                                               .until(elevatorArmAlgae.hasAlgae.or(driverAlgaeDescore.negate()))
                                               .withTimeout(3);
 
@@ -824,13 +832,21 @@ public class RobotContainer {
                     return;
                 }
 
+                boolean doClimbAnimation = climbDeployedBool && climber.isDeployed();
+
                 if (RobotState.isDisabled()) {
                     if (!vision.hasPoseEstimates.getAsBoolean()) {
                         leds.setAnimation(leds.yellowLarson);
                     } else if (!DriverStation.isDSAttached()) {
                         leds.setAnimation(leds.yellowFade);
                     } else {
-                        leds.setAnimation(Robot.isBlue() ? leds.blueFade : leds.redFade);
+                        Animation animation;
+                        if (doClimbAnimation) {
+                            animation = Robot.isBlue() ? leds.blueFlow : leds.redFlow;
+                        } else {
+                            animation = Robot.isBlue() ? leds.blueFade : leds.redFade;
+                        }
+                        leds.setAnimation(animation);
                     }
                     return;
                 }
@@ -847,7 +863,13 @@ public class RobotContainer {
                 if (topColor != bottomColor) {
                     leds.setSplitColor(topColor, bottomColor);
                 } else {
-                    leds.setAnimation(Robot.isBlue() ? leds.blueTwinkle : leds.redTwinkle);
+                    Animation animation;
+                    if (doClimbAnimation) {
+                        animation = Robot.isBlue() ? leds.blueFlow : leds.redFlow;
+                    } else {
+                        animation = Robot.isBlue() ? leds.blueTwinkle : leds.redTwinkle;
+                    }
+                    leds.setAnimation(animation);
                 }
             }).ignoringDisable(true));
         }
