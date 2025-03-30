@@ -65,7 +65,7 @@ public class ElevatorIOTalonFX implements ElevatorIO {
             config.Slot0.kV = 3;
             config.Slot0.kA = 0;
             config.MotionMagic.MotionMagicExpo_kV = 2;
-            config.MotionMagic.MotionMagicExpo_kA = 1.4; // was 1.4, tried 1.2 but it was rocky
+            config.MotionMagic.MotionMagicExpo_kA = 1.3; // was 1.4, 1.35,
         } else {
             config.Slot0.kP = 0.97;
             config.Slot0.kI = 0;

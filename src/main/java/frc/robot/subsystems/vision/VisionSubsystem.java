@@ -131,7 +131,7 @@ public class VisionSubsystem extends SubsystemBase {
     // private final Transform2d leftL1ReefTransform = new Transform2d(0.7 - APRILTAG_THICKNESS, 0, Rotation2d.k180deg);
 
     // The "front lay down"
-    private final double l1BackDistance = 0.62 - Inches.of(0.5).in(Meters)- APRILTAG_THICKNESS;
+    private final double l1BackDistance = 0.62 - Inches.of(1.5).in(Meters)- APRILTAG_THICKNESS;
     
     // The perpendicular launch
     // private final double l1BackDistance = 0.55 - APRILTAG_THICKNESS;

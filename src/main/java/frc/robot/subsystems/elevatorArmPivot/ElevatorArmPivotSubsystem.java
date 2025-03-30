@@ -38,7 +38,7 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
     public static final double L4_SCORE = Units.degreesToRotations(-16); // was -13 orlando thus, -16 sometime before
     public static final double L3_SCORE = Units.degreesToRotations(-6 - 2); // was -6,
     public static final double L2_SCORE = L3_SCORE;
-    public static final double L1_SCORE = Units.degreesToRotations(2.6); // Units.degreesToRotations(12);
+    public static final double L1_SCORE = Units.degreesToRotations(13); // was 2.6, 12 at orlando
     
     public static final double receiving = Units.degreesToRotations(43); // was 42
     public static final double receivingHP = Units.degreesToRotations(42.1); //idk this number yet
@@ -113,7 +113,7 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
         boolean disableSync = firstDisable && !RobotContainer.POSING_MODE && currentTime - lastPositionSyncTime > 0.5;
         boolean shouldSync = firstPeriodic || disableSync;
 
-        absPosValid = getAbsolutePosition() < 0.18;
+        absPosValid = getAbsolutePosition() < 0.2;
 
         if (absoluteSyncAllowed && shouldSync && absPosValid) {
             syncAbsolute();

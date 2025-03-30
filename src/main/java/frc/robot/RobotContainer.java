@@ -280,7 +280,7 @@ public class RobotContainer {
         //coral
         final Trigger driverSpit = driverController.y();
         final Trigger driverIntake = driverController.leftTrigger().and(coralMode);
-        final Trigger driverIntakeHP = driverController.povLeft().and(coralMode); //trigger for intaking from the human player station
+        final Trigger driverIntakeHP = driverController.povRight().and(coralMode); //trigger for intaking from the human player station
         final Trigger driverL1 = driverController.y().and(coralMode);
         final Trigger driverL2 = driverController.leftBumper().and(coralMode);
         final Trigger driverL3 = driverController.rightTrigger().and(coralMode);
@@ -548,7 +548,10 @@ public class RobotContainer {
                     );
 
         
-        final Trigger manualL1 = driverL1.and(driverAnyReef.negate());
+        final Trigger manualL1 = driverController.povLeft()
+                                    .and(driverAnyReef.negate())
+                                    .and(elevatorArm.hasEnteringCoral.negate())
+                                    .and(elevatorArm.hasPartialCoral);
         final Trigger manualL1Recently = manualL1.debounce(0.75, DebounceType.kFalling);
 
         // Make the robot point towards the closest side of the reef
@@ -629,11 +632,11 @@ public class RobotContainer {
         // Move elevator partially up when approaching reef targeting L4, but not yet at
         // the range where we are near the reef
         l4Advance.whileTrue(elevator.setPosition(ElevatorSubsystem.L4_ADVANCE).alongWith(elevatorArmPivot.matchElevatorPreset()));
-        // l4Advance.whileTrue(Commands.either(
-        //     elevator.setPosition(ElevatorSubsystem.L4_ADVANCE).alongWith(elevatorArmPivot.matchElevatorPreset()),
-        //     elevator.setPosition(ElevatorSubsystem.L4_ADVANCE),
-        //     RobotState::isTeleop
-        // ));
+                // .onFalse(Commands.either(
+                //     Commands.none(),
+                //     elevator.stow().alongWith(elevatorArmPivot.receivePosition()),
+                //     drivetrain.targetingReef()
+                // ));
 
         // FOR TUNING - Track exit velocity of coral
         isScoringCoral.and(elevatorArm.hasNoCoral).onTrue(
@@ -774,7 +777,7 @@ public class RobotContainer {
 
         // Lob algae into the net by releasing while moving the elevator 
         driverNet.and(elevatorArmPivot::isElevatorArmInScoringPosition)
-                 .and(() -> elevator.getTargetPosition() == ElevatorSubsystem.NET && elevator.getTargetErrorInches() < 35.5) // 35 good but high
+                 .and(() -> elevator.getTargetPosition() == ElevatorSubsystem.NET && elevator.getTargetErrorInches() < 36.5) // 35.5 good but high
                  .onTrue(
                     elevatorArmAlgae.runSpeed(-1)
                                     .withTimeout(0.5) // EXPERIMENT: 0.75, 1 second was too long
@@ -851,6 +854,8 @@ public class RobotContainer {
 
         // ================= Autonomous Trigger Logic =================
 
+        // autonomous.onTrue(elevatorArmPivot.setPosition(ElevatorArmPivotSubsystem.L4_ADVANCE));
+
         Auto.intakingState.and(autoCoralIntake).and(intakeCoral.hasCoral)
             .onTrue(Auto.driveToReefWithCoral());
 
@@ -901,7 +906,8 @@ public class RobotContainer {
         testController.button(7).whileTrue(elevator.setPosition(ElevatorSubsystem.L4).alongWith(elevatorArmPivot.matchElevatorPreset()));
 
 
-        testController.button(10).whileTrue(elevator.home());
+        testController.button(8).whileTrue(elevatorArm.runSpeed(0.5));
+        testController.button(9).whileTrue(elevatorArm.runSpeed(1));
 
         // testController.button(6).whileTrue(climber.runSpeed(0.1));
         // testController.button(7).whileTrue(climber.runSpeed(-0.1));
@@ -1044,7 +1050,7 @@ public class RobotContainer {
 
     private Command l1CoralEject() {
         // EXPERIMENT: Maybe lower L1 outtake further than 0.15?
-        return elevatorArm.runSpeed(0.15).until(elevatorArm.hasNoCoral)
+        return elevatorArm.runSpeed(0.25).until(elevatorArm.hasNoCoral) // was .15
                           .andThen(Commands.waitSeconds(0.5));
     }
 
@@ -1060,7 +1066,7 @@ public class RobotContainer {
     private Command l4CoralEjectExperiment() {
         return elevatorArm.runSpeed(L4_EJECT_SPEED).until(elevatorArm.hasNoCoral)
                           .andThen(Commands.waitSeconds(0.1))
-                          .andThen(Commands.waitSeconds(0.2).deadlineFor(elevatorArmPivot.runSpeed(0.15)));
+                          .andThen(Commands.waitSeconds(0.15).deadlineFor(elevatorArmPivot.runSpeed(0.25))); // was .15 speed
     }
 
 }
