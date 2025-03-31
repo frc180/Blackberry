@@ -339,7 +339,7 @@ public final class Auto {
 
             var nextPos = nextCoralScoringPosition();
 
-            if (nextPos.isFrontMiddle()) {
+            if (false && nextPos.isFrontMiddle()) {
                 drivePose.withIntermediatePoses(DriveToCoralPose.AVOID_BIG_DIAGONAL);
             } else if (nextPos.isFarTag() && !firstCoralCycle) {
                 drivePose.withIntermediatePoses(DriveToCoralPose.AVOID_REEF_Y);

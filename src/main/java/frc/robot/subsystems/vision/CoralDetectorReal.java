@@ -120,13 +120,13 @@ public class CoralDetectorReal implements CoralDetector {
             double degrees = detection.txnc;
 
             // Skip any coral that are close to an algae on the X axis - these are likely lollipops
-            for (RawDetection algae : algaeDetections) {
-                if (Math.abs(degrees - algae.txnc) < ALGAE_AVOID_THRESHOLD_DEGREES) {// && detection.tync < algae.tync) {
-                    rejectionAlgae = true;
-                    break;
-                }
-            }
-            if (rejectionAlgae) continue;
+            // for (RawDetection algae : algaeDetections) {
+            //     if (Math.abs(degrees - algae.txnc) < ALGAE_AVOID_THRESHOLD_DEGREES) {// && detection.tync < algae.tync) {
+            //         rejectionAlgae = true;
+            //         break;
+            //     }
+            // }
+            // if (rejectionAlgae) continue;
 
             double distanceMeters = distanceMap.get(detection.tync);
             double radians = Units.degreesToRadians(degrees);

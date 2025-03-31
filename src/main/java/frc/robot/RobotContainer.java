@@ -832,7 +832,7 @@ public class RobotContainer {
                     return;
                 }
 
-                boolean doClimbAnimation = climbDeployedBool && climber.isDeployed();
+                boolean doClimbAnimation = climbDeployedBool;
 
                 if (RobotState.isDisabled()) {
                     if (!vision.hasPoseEstimates.getAsBoolean()) {
