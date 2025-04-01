@@ -339,8 +339,14 @@ public final class Auto {
 
             var nextPos = nextCoralScoringPosition();
 
-            if (false && nextPos.isFrontMiddle()) {
-                drivePose.withIntermediatePoses(DriveToCoralPose.AVOID_BIG_DIAGONAL);
+            if (nextPos.isFrontMiddle()) {
+                Pose2d robotPose = RobotContainer.instance.drivetrain.getPose();
+                Pose2d target = nextPos.getPose();
+                double xDiff = robotPose.getX() - target.getX();
+                boolean isFarFromMiddle = Robot.isBlue() ? xDiff > 0 : xDiff < 0;
+                if (isFarFromMiddle) {
+                    drivePose.withIntermediatePoses(DriveToCoralPose.AVOID_REEF_Y_TIGHT);
+                }
             } else if (nextPos.isFarTag() && !firstCoralCycle) {
                 drivePose.withIntermediatePoses(DriveToCoralPose.AVOID_REEF_Y);
             }

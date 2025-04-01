@@ -8,6 +8,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.units.measure.Distance;
+import frc.robot.Robot;
 import frc.robot.RobotContainer;
 import frc.robot.subsystems.DrivetrainSubsystem;
 import frc.robot.subsystems.DrivetrainSubsystem.PoseTarget;
@@ -74,32 +75,59 @@ public class DriveToCoralPose extends DriveToPose {
         return target;
     };
 
-    final static double reefMarginAdjust = 0.5;
-    final static double reefMinY = 2.25 - reefMarginAdjust;
-    final static double reefMaxY = 5.79 + reefMarginAdjust;
-
-    public static final Function<Pose2d, Pose2d> AVOID_REEF_Y = (Pose2d target) -> {
+    public static final Function<Pose2d, Pose2d> AVOID_FAR_DIAGONAL = (Pose2d target) -> {
+        double frontOffset = 0;
         double sideOffset = 0;
         
         Pose2d robotPose = RobotContainer.instance.drivetrain.getPose();
         double xDiff = robotPose.getX() - target.getX();
-        if (Math.abs(xDiff) > X_DIAGONAL_THRESHOLD) {
+        double yDiff = robotPose.getY() - target.getY();
 
-            // Check if targetY is within reef bounds
-            if (target.getY() > reefMinY && target.getY() < reefMaxY) {
-                // if targetY is within reef bounds, move to the edge of the reef
-                if (target.getY() < reefMinY + (reefMaxY - reefMinY) / 2) {
-                    sideOffset = reefMinY - target.getY();
-                } else {
-                    sideOffset = reefMaxY - target.getY();
-                }
-            }
+        boolean far = Robot.isBlue() ? xDiff > 0 : xDiff < 0;
+
+        if (far) {
+            sideOffset = yDiff;
         }
 
-        if (sideOffset != 0) {
-            target = new Pose2d(new Translation2d(target.getX(), target.getY() + sideOffset), target.getRotation());
+        if (frontOffset != 0 || sideOffset != 0) {
+            target = new Pose2d(new Translation2d(target.getX() + frontOffset, target.getY() + sideOffset), target.getRotation());
         }
 
         return target;
     };
+
+    final static double reefMarginAdjust = 0.5;
+    final static double reefMinY = 2.25 - reefMarginAdjust;
+    final static double reefMaxY = 5.79 + reefMarginAdjust;
+
+
+    public static final Function<Pose2d, Pose2d> AVOID_REEF_Y = avoidReefY(0.6);
+    public static final Function<Pose2d, Pose2d> AVOID_REEF_Y_TIGHT = avoidReefY(0.2);
+
+    public static Function<Pose2d, Pose2d> avoidReefY(double xThreshold) {
+        return (Pose2d target) -> {
+            double sideOffset = 0;
+            
+            Pose2d robotPose = RobotContainer.instance.drivetrain.getPose();
+            double xDiff = robotPose.getX() - target.getX();
+            if (Math.abs(xDiff) > xThreshold) {
+
+                // Check if targetY is within reef bounds
+                if (target.getY() > reefMinY && target.getY() < reefMaxY) {
+                    // if targetY is within reef bounds, move to the edge of the reef
+                    if (target.getY() < reefMinY + (reefMaxY - reefMinY) / 2) {
+                        sideOffset = reefMinY - target.getY();
+                    } else {
+                        sideOffset = reefMaxY - target.getY();
+                    }
+                }
+            }
+
+            if (sideOffset != 0) {
+                target = new Pose2d(new Translation2d(target.getX(), target.getY() + sideOffset), target.getRotation());
+            }
+
+            return target;
+        };
+    }
 }
