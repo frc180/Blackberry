@@ -24,17 +24,18 @@ import frc.robot.Constants;
 public class LEDSubsystem extends SubsystemBase {
 
     public final LEDColor RED = new LEDColor(50, 0, 0, 255);
-    // public final LEDColor BLUE = new LEDColor(0, 0, 255, 255); // primary blue
-    public final LEDColor BLUE = new LEDColor(21, 46, 150, 255); // navy blue, b 99
+    public final LEDColor BLUE = new LEDColor(21, 46, 150, 255); // navy blue
     public final LEDColor GREEN = new LEDColor(0, 255, 0, 255);
     public final LEDColor YELLOW = new LEDColor(255, 255, 0, 255);
     public final LEDColor WHITE = new LEDColor(255, 255, 255, 255);
     public final LEDColor ALGAE = new LEDColor(0, 255, 30, 255);
+    public final LEDColor PURPLE = new LEDColor(163, 49, 196, 255);
 
     public final RainbowAnimation rainbow;
-    public final SingleFadeAnimation blueFade, redFade, yellowFade, whiteFade, yellowFadeFast;
+    public final SingleFadeAnimation blueFade, redFade, yellowFade, whiteFade, yellowFadeFast, purpleFade;
     public final TwinkleAnimation blueTwinkle, redTwinkle;
     public final ColorFlowAnimation blueFlow, redFlow, yellowFlow;
+    public final ColorFlowAnimation blueLeftFlow, blueRightFlow;
     public final LarsonAnimation yellowLarson;
     public final StrobeAnimation greenStrobe;
 
@@ -43,9 +44,11 @@ public class LEDSubsystem extends SubsystemBase {
     private final int NUM_LEDS = 8 + STRIP_LENGTH + STRIP_2_LENGTH;
     private final int STRIP_OFFSET = 0;
     private final int NO_CANDLE_OFFSET = 8;
+
     private final CANdle candle;
 
     private Animation currentAnimation = null;
+    private Animation currentAnimation2 = null;
     private LEDColor currentColor = null;
     private LEDColor currentSplitColor = null;
 
@@ -62,9 +65,10 @@ public class LEDSubsystem extends SubsystemBase {
 
         rainbow = new RainbowAnimation(1, 1, NUM_LEDS, false, STRIP_OFFSET);
 
-        blueFade = fade(BLUE, 0.25);
-        redFade = fade(RED, 0.25);
-        yellowFade = fade(YELLOW, 0.25);
+        blueFade = fade(BLUE, 0.5);
+        redFade = fade(RED, 0.5);
+        yellowFade = fade(YELLOW, 0.5);
+        purpleFade = fade(PURPLE, 0.85);
         whiteFade = fade(WHITE, 1);
         yellowFadeFast = fade(YELLOW, 1);
 
@@ -75,6 +79,11 @@ public class LEDSubsystem extends SubsystemBase {
         redFlow = colorFlow(RED, 0.7, Direction.Forward);
         yellowFlow = colorFlow(YELLOW, 0.5, Direction.Forward);
         yellowLarson = larson(YELLOW, 0.5, 5, BounceMode.Front);
+
+        double rightStripRatio = ((double) STRIP_2_LENGTH) / ((double) STRIP_LENGTH);
+
+        blueLeftFlow = colorFlow(BLUE, 0.7, Direction.Forward, STRIP_LENGTH, NO_CANDLE_OFFSET);
+        blueRightFlow = colorFlow(BLUE, 0.7, Direction.Backward, STRIP_2_LENGTH, NO_CANDLE_OFFSET + STRIP_LENGTH);
 
         greenStrobe = strobe(GREEN, 0.25);
     }
@@ -93,30 +102,43 @@ public class LEDSubsystem extends SubsystemBase {
 
     public void setAnimation(Animation animation, int slot) {
         if (animation != currentAnimation) {
+            // clearAnimations();
             ErrorCode code = candle.animate(animation, slot);
             if (code == ErrorCode.OK) {
+                clearState();
                 currentAnimation = animation;
-                currentColor = null;
-                currentSplitColor = null;
+            }
+        }
+    }
+
+    public void setDualAnimation(Animation animation1, Animation animation2) {
+        if (currentAnimation != animation1 || currentAnimation2 != animation2) {
+            clearAnimations();
+            ErrorCode code1 = candle.animate(animation1, 0);
+            ErrorCode code2 = candle.animate(animation2, 1);
+
+            if (code1 == ErrorCode.OK && code2 == ErrorCode.OK) {
+                clearState();
+                currentAnimation = animation1;
+                currentAnimation2 = animation2;
             }
         }
     }
 
     public void setColor(LEDColor color) {
         if (color != currentColor) {
-            candle.clearAnimation(0);
+            clearAnimations();
             ErrorCode code = candle.setLEDs(color.r, color.g, color.b, color.w, STRIP_OFFSET, NUM_LEDS);
             if (code == ErrorCode.OK) {
+                clearState();
                 currentColor = color;
-                currentAnimation = null;
-                currentSplitColor = null;
             }
         }
     }
 
     public void setSplitColor(LEDColor top, LEDColor bottom) {
         if (top != currentColor || bottom != currentSplitColor) {
-            candle.clearAnimation(0);
+            clearAnimations();
             ErrorCode code1 = candle.setLEDs(bottom.r, bottom.g, bottom.b, bottom.w, 0, 24);
             ErrorCode code2 = candle.setLEDs(top.r, top.g, top.b, top.w, 24, 25);
 
@@ -124,11 +146,23 @@ public class LEDSubsystem extends SubsystemBase {
             ErrorCode code4 =  candle.setLEDs(bottom.r, bottom.g, bottom.b, bottom.w, 72, 24);
 
             if (code1 == ErrorCode.OK && code2 == ErrorCode.OK && code3 == ErrorCode.OK && code4 == ErrorCode.OK) {
+                clearState();
                 currentColor = top;
                 currentSplitColor = bottom;
-                currentAnimation = null;
             }
         }
+    }
+
+    private void clearAnimations() {
+        candle.clearAnimation(0);
+        // candle.clearAnimation(1);
+    }
+
+    private void clearState() {
+        currentAnimation = null;
+        currentAnimation2 = null;
+        currentColor = null;
+        currentSplitColor = null;
     }
 
     public SingleFadeAnimation fade(LEDColor color, double speed) {
@@ -144,7 +178,12 @@ public class LEDSubsystem extends SubsystemBase {
     }
 
     public ColorFlowAnimation colorFlow(LEDColor color, double speed, Direction direction) {
-        return new ColorFlowAnimation(color.r, color.g, color.b, color.w, speed, NUM_LEDS, direction, STRIP_OFFSET);
+        // return new ColorFlowAnimation(color.r, color.g, color.b, color.w, speed, NUM_LEDS, direction, STRIP_OFFSET);
+        return colorFlow(color, speed, direction, NUM_LEDS, STRIP_OFFSET);
+    }
+
+    public ColorFlowAnimation colorFlow(LEDColor color, double speed, Direction direction, int numLeds, int ledOffset) {
+        return new ColorFlowAnimation(color.r, color.g, color.b, color.w, speed, numLeds, direction, ledOffset);
     }
 
     public LarsonAnimation larson(LEDColor color, double speed, int size, BounceMode mode) {

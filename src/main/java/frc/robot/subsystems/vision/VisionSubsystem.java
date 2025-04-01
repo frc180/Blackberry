@@ -545,6 +545,10 @@ public class VisionSubsystem extends SubsystemBase {
         return inputs.frontCameraConnected;
     }
 
+    public boolean isBackCameraConnected() {
+        return inputs.backCameraConnected;
+    }
+
     /**
      * Returns the position of the closest detected coral, or null
      */

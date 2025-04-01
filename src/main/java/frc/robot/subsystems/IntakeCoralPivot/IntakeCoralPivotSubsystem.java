@@ -21,7 +21,8 @@ public class IntakeCoralPivotSubsystem extends SubsystemBase {
 
     //presets for intake positions
     // public static final double extend = .822; // without spacers, OG value
-    public static final double extend = .803; // with spacers
+    // public static final double extend = .803; // with spacers
+    public static final double extend = .778; // experiment: no ccoral deflection
     public static final double stow = extend - .417;
     public static final double EXTREME_STOW = stow - .1;
 

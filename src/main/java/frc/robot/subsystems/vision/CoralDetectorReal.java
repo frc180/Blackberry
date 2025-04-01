@@ -26,7 +26,7 @@ public class CoralDetectorReal implements CoralDetector {
     private final MutDistance coralDistance;
 
     // How close to the robot a detected coral has to be to be considered "close" (i.e. intakeable)
-    private final static double CLOSE_CORAL_DISTANCE = 0.6;
+    private final static double CLOSE_CORAL_DISTANCE = 0.8; // was 0.6 meters
     private final static double CLOSE_CORAL_TX = 10;
     // How close two detected coral have to be to each other to be considered the same/close enough 
     // to allow switching without a timeout
@@ -169,9 +169,11 @@ public class CoralDetectorReal implements CoralDetector {
 
     private Pose2d getRecentLastDetection() {
         boolean lastClose = lastDetectionClose();
-        if (RobotState.isAutonomous() && lastClose) return lastDetection;
+        boolean auto = RobotState.isAutonomous();
+        // if (RobotState.isAutonomous() && lastClose) return lastDetection;
 
         double timeoutSeconds = lastClose ? 3 : 0.5;
+        if (auto && lastClose) timeoutSeconds = 1;
         if (Timer.getFPGATimestamp() - lastDetectionTime < timeoutSeconds) {
             return lastDetection;
         }

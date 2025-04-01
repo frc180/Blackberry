@@ -369,7 +369,8 @@ public class RobotContainer {
             // to elevator height
             if (driverNet.getAsBoolean() || driverNetSlow.getAsBoolean()) axis *= 0.25;
 
-            if (climbDeployedBool) axis *= 0.5;
+            // Slow down a little bit when climbing or scoring L1 manually
+            if (climbDeployedBool || driverController.povLeft().getAsBoolean()) axis *= 0.5;
             return axis;
          };
 
@@ -757,20 +758,7 @@ public class RobotContainer {
 
         algaeMode.whileTrue(drivetrain.targetHeadingContinuous(0.0, HeadingTarget.GYRO))
                  .onFalse(drivetrain.targetHeading(null, HeadingTarget.POSE));
-
-        // driverNet.or(driverNetSlow).whileTrue(drivetrain.targetHeadingContinuous(0.0, HeadingTarget.GYRO))
-        //          .onFalse(drivetrain.targetHeading(null, HeadingTarget.POSE));
-
-        // Start moving to score algae in net
-        driverNet.and(drivetrain.withinTargetHeadingTolerance(5).debounce(0.1)).whileTrue(
-            Commands.parallel(
-                elevator.setPosition(ElevatorSubsystem.NET),
-                elevatorArmPivot.netScorePosition()
-            )
-        ).onFalse(elevator.stow().alongWith(elevatorArmPivot.stowPosition()));
-
-        Command hasCoralAfterAlgaeRumble =  new RumbleCommand(1).withTimeout(2);
-
+                 
         // Rehome elevator
         algaeMode.and(driverController.leftStick()).whileTrue(Commands.sequence(
             elevator.home(),
@@ -783,9 +771,22 @@ public class RobotContainer {
             new RumbleCommand(1).withTimeout(2) 
         ));
 
+        // driverNet.or(driverNetSlow).whileTrue(drivetrain.targetHeadingContinuous(0.0, HeadingTarget.GYRO))
+        //          .onFalse(drivetrain.targetHeading(null, HeadingTarget.POSE));
+
+        // Start moving to score algae in net
+        driverNet.and(drivetrain.withinTargetHeadingTolerance(5).debounce(0.1)).whileTrue(
+            Commands.parallel(
+                elevator.setPosition(ElevatorSubsystem.NET_THROW),
+                elevatorArmPivot.netScorePosition()
+            )
+        ).onFalse(elevator.stow().alongWith(elevatorArmPivot.stowPosition()));
+
+        Command hasCoralAfterAlgaeRumble =  new RumbleCommand(1).withTimeout(2);
+
         // Lob algae into the net by releasing while moving the elevator 
         driverNet.and(elevatorArmPivot::isElevatorArmInScoringPosition)
-                 .and(() -> elevator.getTargetPosition() == ElevatorSubsystem.NET && elevator.getTargetErrorInches() < 36.5) // 35.5 good but high
+                 .and(() -> elevator.getTargetPosition() == ElevatorSubsystem.NET_THROW && elevator.getTargetErrorInches() < 36.5 + 12) // 35.5 good but high
                  .onTrue(
                     elevatorArmAlgae.runSpeed(-1)
                                     .withTimeout(0.5) // EXPERIMENT: 0.75, 1 second was too long
@@ -813,6 +814,13 @@ public class RobotContainer {
 
         if (leds != null) {
             leds.setDefaultCommand(leds.run(() -> {
+
+                // temporary test code
+                // if (true) {
+                //     leds.setDualAnimation(leds.blueLeftFlow, leds.blueRightFlow);
+                //     return;
+                // }
+
                 if (POSING_MODE) {
                     if (elevator.isElevatorInPosition() && elevatorArmPivot.isInPosition()) {
                         leds.setAnimation(leds.greenStrobe);
@@ -832,10 +840,17 @@ public class RobotContainer {
                     return;
                 }
 
+                // if (!vision.isBackCameraConnected()) {
+                //     leds.setAnimation(leds.greenStrobe);
+                //     return;
+                // }
+
                 boolean doClimbAnimation = climbDeployedBool;
 
                 if (RobotState.isDisabled()) {
-                    if (!vision.hasPoseEstimates.getAsBoolean()) {
+                    if (!elevatorArmPivot.isHomed()) {
+                        leds.setAnimation(leds.greenStrobe);
+                    } else if (!vision.hasPoseEstimates.getAsBoolean()) {
                         leds.setAnimation(leds.yellowLarson);
                     } else if (!DriverStation.isDSAttached()) {
                         leds.setAnimation(leds.yellowFade);
@@ -848,6 +863,11 @@ public class RobotContainer {
                         }
                         leds.setAnimation(animation);
                     }
+                    return;
+                }
+
+                if (drivetrain.isTargetingReefPose()) {
+                    leds.setAnimation(leds.purpleFade);
                     return;
                 }
 
