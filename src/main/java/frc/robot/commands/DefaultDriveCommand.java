@@ -127,7 +127,7 @@ public class DefaultDriveCommand extends Command {
         ChassisSpeeds coralSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(xFeedback, yFeedback, 0, currentPose.getRotation());
 
         Translation2d coralTranslation = coralPose.getTranslation();
-        Translation2d rayStart = m_drivetrainSubsystem.getPose().getTranslation();
+        Translation2d rayStart = currentPose.getTranslation();
         Translation2d rayEnd = rayStart.plus(new Translation2d(-inputs.x * 1000, -inputs.y * 1000));
 
         double aimAngle = Helpers.angleToPoint(coralTranslation, rayStart, rayEnd);
