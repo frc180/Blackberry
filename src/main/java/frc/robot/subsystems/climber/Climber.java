@@ -11,9 +11,8 @@ import frc.robot.commands.RumbleCommand;
 @Logged
 public class Climber extends SubsystemBase {
 
-    private static final double DEPLOYED = 0.4;
-    private static final double MAX_CLIMB = 0.11;
-    // private static final double INCREASE_POWER_THRESHOLD = .135;
+    private static final double DEPLOYED = 0.73;
+    private static final double MAX_CLIMB = 0.413;
     
     private final ClimberIO io;
     private final ClimberInputs inputs;

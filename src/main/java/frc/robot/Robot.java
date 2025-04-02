@@ -134,7 +134,7 @@ public class Robot extends TimedRobot {
 
   @Override
   public void disabledInit() {
-    robotContainer.climbDeployedBool = false;
+    // robotContainer.climbDeployedBool = false;
   }
 
   @Override
@@ -200,6 +200,7 @@ public class Robot extends TimedRobot {
     if (currentDrive != null) {
       currentDrive.cancel();
     }
+    robotContainer.vision.setAllowPoseEstimates(true);
     wasEverEnabled = true;
   }
 

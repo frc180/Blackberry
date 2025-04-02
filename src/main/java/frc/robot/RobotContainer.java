@@ -760,10 +760,10 @@ public class RobotContainer {
                  .onFalse(drivetrain.targetHeading(null, HeadingTarget.POSE));
                  
         // Rehome elevator
-        algaeMode.and(driverController.leftStick()).whileTrue(Commands.sequence(
-            elevator.home(),
-            new RumbleCommand(1).withTimeout(2) 
-        ));
+        // algaeMode.and(driverController.leftStick()).whileTrue(Commands.sequence(
+        //     elevator.home(),
+        //     new RumbleCommand(1).withTimeout(2) 
+        // ));
 
         // Rehome arm
         algaeMode.and(driverController.rightStick()).whileTrue(Commands.sequence(
@@ -848,20 +848,16 @@ public class RobotContainer {
                 boolean doClimbAnimation = climbDeployedBool;
 
                 if (RobotState.isDisabled()) {
-                    if (!elevatorArmPivot.isHomed()) {
+                    if (doClimbAnimation) {
+                        leds.setAnimation(Robot.isBlue() ? leds.blueFlow : leds.redFlow);
+                    } else if (!elevatorArmPivot.isHomed()) {
                         leds.setAnimation(leds.greenStrobe);
                     } else if (!vision.hasPoseEstimates.getAsBoolean()) {
                         leds.setAnimation(leds.yellowLarson);
                     } else if (!DriverStation.isDSAttached()) {
                         leds.setAnimation(leds.yellowFade);
                     } else {
-                        Animation animation;
-                        if (doClimbAnimation) {
-                            animation = Robot.isBlue() ? leds.blueFlow : leds.redFlow;
-                        } else {
-                            animation = Robot.isBlue() ? leds.blueFade : leds.redFade;
-                        }
-                        leds.setAnimation(animation);
+                        leds.setAnimation(Robot.isBlue() ? leds.blueFade : leds.redFade);
                     }
                     return;
                 }

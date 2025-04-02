@@ -113,7 +113,7 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
         boolean disableSync = firstDisable && !RobotContainer.POSING_MODE && currentTime - lastPositionSyncTime > 0.5;
         boolean shouldSync = firstPeriodic || disableSync;
 
-        absPosValid = getAbsolutePosition() < 0.2;
+        absPosValid = getAbsolutePosition() < 0.25; // 0.2
 
         if (absoluteSyncAllowed && shouldSync && absPosValid) {
             syncAbsolute();
@@ -125,7 +125,7 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
         }
         
         if (!enabled && !wasEverEnabled) {
-            unexpectedStartPositionAlert.set(Math.abs(getAbsolutePosition() - .170) > .005);
+            unexpectedStartPositionAlert.set(Math.abs(getAbsolutePosition() - .164) > .005);
         }
 
         if (firstPeriodic) firstPeriodic = false;

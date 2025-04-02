@@ -635,6 +635,10 @@ public class VisionSubsystem extends SubsystemBase {
         );
     }
 
+    public void setAllowPoseEstimates(boolean allow) {
+        allowPoseEstimates = allow;
+    }
+
     private void cameraTemperatureAlert(Alert alert, String cameraName, double temperature) {
         if (temperature >= BAD_CAMERA_TEMP) {
             int roundedtemp = (int) Math.round(temperature);
