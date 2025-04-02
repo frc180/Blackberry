@@ -113,6 +113,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     @NotLogged
     private boolean driveWithSetpointGenerator = false;
 
+    private SwerveDriveState cachedState = null;
     private Rotation2d gyroOffset = new Rotation2d();
     private Double targetHeading = null;
     private HeadingTarget targetHeadingType = HeadingTarget.POSE;
@@ -417,7 +418,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
 
     @NotLogged
     public ChassisSpeeds getFieldRelativeSpeeds() {
-        return getFieldRelativeSpeeds(getState());
+        return getFieldRelativeSpeeds(getCachedState());
     }
 
     public ChassisSpeeds getFieldRelativeSpeeds(SwerveDriveState state) {
@@ -425,7 +426,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     }
 
     public void resetPIDs(HeadingTarget type) {
-        SwerveDriveState state = getState();
+        SwerveDriveState state = getCachedState();
         ChassisSpeeds speeds = getFieldRelativeSpeeds(state);
         xProfiledPid.reset(state.Pose.getX(), speeds.vxMetersPerSecond);
         yProfiledPid.reset(state.Pose.getY(), speeds.vyMetersPerSecond);
@@ -679,7 +680,17 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     }
 
     public Pose2d getPose() {
-        return getState().Pose;
+        return getCachedState().Pose;
+    }
+
+    @NotLogged
+    public SwerveDriveState getCachedState() {
+        if (cachedState == null) cachedState = getState();
+        return cachedState;
+    }
+
+    public void clearCache() {
+        cachedState = null;
     }
 
     /**
@@ -760,7 +771,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
 
     @NotLogged
     public double getVelocity() {
-        ChassisSpeeds speeds = getState().Speeds;
+        ChassisSpeeds speeds = getCachedState().Speeds;
         return Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond);
     }
 
@@ -770,7 +781,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
             AutoBuilder.configure(
                 () -> getPose(),   // Supplier of current robot pose
                 this::resetPose,         // Consumer for seeding pose against auto
-                () -> getState().Speeds, // Supplier of current robot speeds
+                () -> getCachedState().Speeds, // Supplier of current robot speeds
                 (speeds, feedforwards) -> drive(speeds),
                 new PPHolonomicDriveController(
                     new PIDConstants(2.5, 0, 0), //translation
@@ -915,7 +926,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         xyFeedforward.setKv(kV);
         // xyFeedforward.setKa(kA);
 
-        SwerveDriveState state = getState();
+        SwerveDriveState state = getCachedState();
         Pose2d pose = state.Pose;
         xPosition = pose.getX();
         yPosition = pose.getY();

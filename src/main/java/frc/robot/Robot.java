@@ -116,6 +116,7 @@ public class Robot extends TimedRobot {
   @Override
   public void robotPeriodic() {
     isBlueAlliance = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue;
+    robotContainer.drivetrain.clearCache();
     StatusSignals.refreshAll();
     CommandScheduler.getInstance().run();
     SimVisuals.update();

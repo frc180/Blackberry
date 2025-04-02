@@ -331,7 +331,7 @@ public class VisionSubsystem extends SubsystemBase {
             backCameraPosition = robotPose3d.transformBy(ROBOT_TO_INTAKE_CAMERA);
         }
 
-        ChassisSpeeds speeds = RobotContainer.instance.drivetrain.getState().Speeds;
+        ChassisSpeeds speeds = RobotContainer.instance.drivetrain.getCachedState().Speeds;
         futureRobotPose = robotPose.plus(new Transform2d(speeds.vxMetersPerSecond * 0.3, speeds.vyMetersPerSecond * 0.3, Rotation2d.kZero));
 
         Entry<Integer, Pose2d> closestTagAndPose = reefProximity.closestReefPose(futureRobotPose, Robot.isBlue());
