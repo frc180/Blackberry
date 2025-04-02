@@ -126,8 +126,8 @@ public class Robot extends TimedRobot {
     // canivoreUsageAlert.set(canivoreBusUtilization > 0.8);
 
     // Get all robot component (mechanism) poses and publish them to NetworkTables
-    robotComponentPosesArray[0] = robotContainer.intakeAlgaePivot.getPose();
-    robotComponentPoses.accept(robotComponentPosesArray);
+    // robotComponentPosesArray[0] = robotContainer.intakeAlgaePivot.getPose();
+    // robotComponentPoses.accept(robotComponentPosesArray);
 
     batteryVoltage = RobotController.getBatteryVoltage();
   }
