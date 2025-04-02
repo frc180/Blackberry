@@ -2,7 +2,7 @@ package frc.robot.subsystems.climber;
 
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.ScheduleCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Robot;
 import frc.robot.subsystems.climber.ClimberIO.ClimberInputs;
@@ -12,8 +12,8 @@ import frc.robot.commands.RumbleCommand;
 public class Climber extends SubsystemBase {
 
     private static final double DEPLOYED = 0.4;
-    private static final double INCREASE_POWER_THRESHOLD = .135; //.13?
     private static final double MAX_CLIMB = 0.11;
+    // private static final double INCREASE_POWER_THRESHOLD = .135;
     
     private final ClimberIO io;
     private final ClimberInputs inputs;
@@ -22,7 +22,6 @@ public class Climber extends SubsystemBase {
         inputs = new ClimberInputs();
         if (Robot.isReal()) {
             io = new ClimberIOTalonFX();
-            // io = new ClimberIOSim();
         } else {
             io = new ClimberIOSim();
         }
@@ -47,7 +46,8 @@ public class Climber extends SubsystemBase {
             },
             () -> io.setSpeed(0)
         ).until(this::shouldStopClimbing)
-        .andThen(Commands.runOnce(() -> climbDoneRumble.schedule()));
+        .andThen(new ScheduleCommand(climbDoneRumble));
+        //.andThen(Commands.runOnce(() -> climbDoneRumble.schedule()));
     }
 
     public Command runSpeed(double speed) {
@@ -65,7 +65,7 @@ public class Climber extends SubsystemBase {
         return inputs.jointPosition < MAX_CLIMB;
     }
 
-    public boolean shouldIncreaseClimbPower() {
-        return inputs.jointPosition < INCREASE_POWER_THRESHOLD;
-    }
+    // public boolean shouldIncreaseClimbPower() {
+    //     return inputs.jointPosition < INCREASE_POWER_THRESHOLD;
+    // }
 }
