@@ -38,7 +38,7 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
     public static final double L4_SCORE = Units.degreesToRotations(-16); // was -13 orlando thus, -16 sometime before
     public static final double L3_SCORE = Units.degreesToRotations(-6 - 2); // was -6,
     public static final double L2_SCORE = L3_SCORE;
-    public static final double L1_SCORE = Units.degreesToRotations(13); // was 2.6, 12 at orlando
+    public static final double L1_SCORE = Units.degreesToRotations(13 + 1); // 13 at pit, 12 at orlando
     
     public static final double receiving = Units.degreesToRotations(43); // was 42
     public static final double receivingHP = Units.degreesToRotations(42.1); //idk this number yet

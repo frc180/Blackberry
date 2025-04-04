@@ -624,7 +624,7 @@ public class RobotContainer {
             .whileTrue(chosenElevatorHeight.alongWith(elevatorArmPivot.matchElevatorPreset()))
             .onFalse(elevator.stow().alongWith(elevatorArmPivot.receivePosition()));
 
-        final double algaeGrabSpeed = 0.6;  // EXPERIMENT: was 0.5, sometimes dropped, 1 was too extreme
+        final double algaeGrabSpeed = 1;  // EXPERIMENT: was 0.6/0.5, sometimes dropped, 1 was too extreme
 
         // Algae grab from reef (start intaking algae earlier when going to descore)
         finalReefTrigger.and(driverAlgaeDescore)
@@ -1088,7 +1088,7 @@ public class RobotContainer {
 
     private Command l1CoralEject() {
         // EXPERIMENT: Maybe lower L1 outtake further than 0.15?
-        return elevatorArm.runSpeed(0.25).until(elevatorArm.hasNoCoral) // was .15
+        return elevatorArm.runSpeed(0.30).until(elevatorArm.hasNoCoral) // was .15
                           .andThen(Commands.waitSeconds(0.5));
     }
 

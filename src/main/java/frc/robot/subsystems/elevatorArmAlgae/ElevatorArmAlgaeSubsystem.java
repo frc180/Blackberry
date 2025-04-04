@@ -56,9 +56,9 @@ public class ElevatorArmAlgaeSubsystem extends SubsystemBase {
         return runEnd(
             () -> {
                 if (distanceFiltered < HAS_ALGAE_CLOSE_THRESHOLD) {
-                    io.setSpeed(0.25);
+                    io.setSpeed(0.3); // was .25
                 } else if (hasAlgae.getAsBoolean()) {
-                    io.setSpeed(0.25); // was 0.05
+                    io.setSpeed(0.3); // was 0.25
                 } else if (hadAlgae.getAsBoolean()) { // } else if (closeAlgaeDebounced.getAsBoolean() ) {
                     io.setSpeed(indexSpeed);
                 } else {

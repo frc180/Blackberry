@@ -75,7 +75,7 @@ public class IntakeCoralPivotIOTalonFXS implements IntakeCoralPivotIO {
         config.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
 
         config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-        config.CurrentLimits.StatorCurrentLimit = 40;
+        config.CurrentLimits.StatorCurrentLimit = 30; // was 40
         config.CurrentLimits.StatorCurrentLimitEnable = true;
         motor = new TalonFXS(Constants.INTAKE_CORAL_PIVOT_TALON, Constants.CANIVORE);
         motor.getConfigurator().apply(config);
