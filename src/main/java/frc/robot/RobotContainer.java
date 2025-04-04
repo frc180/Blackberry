@@ -910,7 +910,7 @@ public class RobotContainer {
         Command autoIntakeCoral = Commands.sequence(
             autoHPDrive,
             Auto.driveToCoral()
-                //.withMaxSpeed(0.7) // TEMPORARY speed limit
+                .withMaxSpeed(.7)
                 .until(intakeCoral.hasCoral) // at this point, the command gets interrupted by the auto coral intake trigger
         ).alongWith(Auto.startCoralIntake());
                                     
@@ -1088,11 +1088,11 @@ public class RobotContainer {
 
     private Command l1CoralEject() {
         // EXPERIMENT: Maybe lower L1 outtake further than 0.15?
-        return elevatorArm.runSpeed(0.30).until(elevatorArm.hasNoCoral) // was .15
+        return elevatorArm.runSpeed(0.25).until(elevatorArm.hasNoCoral) // was .30, before .15
                           .andThen(Commands.waitSeconds(0.5));
     }
 
-    private static final double L4_EJECT_SPEED = 0.32;
+    private static final double L4_EJECT_SPEED = 0.27; // was .29,  .32
 
     private Command l4CoralEject() {
         return elevatorArm.runSpeed(L4_EJECT_SPEED).until(elevatorArm.hasNoCoral)  // was .425, .45, was .4 before

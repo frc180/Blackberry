@@ -32,7 +32,7 @@ public class CoralDetectorReal implements CoralDetector {
     // to allow switching without a timeout
     private final static double SIMILAR_CORAL_THRESHOLD = 0.75;
 
-    private static final double ALGAE_AVOID_THRESHOLD_DEGREES = 4.5; // was .4
+    private static final double ALGAE_AVOID_THRESHOLD_DEGREES = 4.5;
 
     private double lastDetectionTime = 0;
     private double lastDetectionDistance = 0;
@@ -119,14 +119,16 @@ public class CoralDetectorReal implements CoralDetector {
         for (RawDetection detection : sortedDetections) {
             double degrees = detection.txnc;
 
-            // Skip any coral that are close to an algae on the X axis - these are likely lollipops
-            // for (RawDetection algae : algaeDetections) {
-            //     if (Math.abs(degrees - algae.txnc) < ALGAE_AVOID_THRESHOLD_DEGREES) {// && detection.tync < algae.tync) {
-            //         rejectionAlgae = true;
-            //         break;
-            //     }
-            // }
-            // if (rejectionAlgae) continue;
+            if (auto) {
+                // Skip any coral that are close to an algae on the X axis - these are likely lollipops
+                for (RawDetection algae : algaeDetections) {
+                    if (Math.abs(degrees - algae.txnc) < ALGAE_AVOID_THRESHOLD_DEGREES) {// && detection.tync < algae.tync) {
+                        rejectionAlgae = true;
+                        break;
+                    }
+                }
+                if (rejectionAlgae) continue;
+            }
 
             double distanceMeters = distanceMap.get(detection.tync);
             double radians = Units.degreesToRadians(degrees);

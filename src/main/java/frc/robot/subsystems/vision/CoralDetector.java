@@ -3,11 +3,15 @@ package frc.robot.subsystems.vision;
 import com.pathplanner.lib.util.FlippingUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.RobotState;
+import frc.robot.Robot;
 import frc.robot.util.LimelightHelpers.RawDetection;
 
 public interface CoralDetector {
 
     public static final double MARGIN = 0.1; // was .125, .15
+
+    public static final double AUTO_BLUE_X = 4.8;
+    public static final double AUTO_RED_X = 12.9;
     
     public Pose2d getCoralPose(Pose2d robotPose, RawDetection[] detections);
 
@@ -15,12 +19,22 @@ public interface CoralDetector {
 
     public static boolean isValid(Pose2d coralPose) {
         // Reject coral detections that are outside the field 
-        double currMargin = RobotState.isAutonomous() ? MARGIN : 0;
+        boolean auto = RobotState.isAutonomous();
+        double currMargin = auto ? MARGIN : 0;
         if (coralPose.getX() < currMargin || 
             coralPose.getX() > FlippingUtil.fieldSizeX - currMargin || 
             coralPose.getY() < currMargin || 
             coralPose.getY() > FlippingUtil.fieldSizeY - currMargin) {
            return false;
+        }
+
+        if (auto) {
+            boolean blue = Robot.isBlue();
+            if (blue && coralPose.getX() > AUTO_BLUE_X) {
+                return false;
+            } else if (!blue && coralPose.getX() < AUTO_RED_X) {
+                return false;
+            }
         }
 
         return true;
