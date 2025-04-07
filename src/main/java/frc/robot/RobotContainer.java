@@ -785,8 +785,8 @@ public class RobotContainer {
         Command hasCoralAfterAlgaeRumble =  new RumbleCommand(1).withTimeout(2);
 
         // Lob algae into the net by releasing while moving the elevator 
-        driverNet.and(elevatorArmPivot::isElevatorArmInScoringPosition)
-                 .and(() -> elevator.getTargetPosition() == ElevatorSubsystem.NET_THROW && elevator.getTargetErrorInches() < 36.5 + 12) // 35.5 good but high
+        driverNet.and(elevatorArmPivot.isAt(ElevatorArmPivotSubsystem.netScore))
+                 .and(() -> elevator.getTargetPosition() == ElevatorSubsystem.NET_THROW && elevator.getTargetErrorInches() < 36.5 + 15) // was 36.5 + 13
                  .onTrue(
                     elevatorArmAlgae.runSpeed(-1)
                                     .withTimeout(0.5) // EXPERIMENT: 0.75, 1 second was too long
@@ -1088,7 +1088,7 @@ public class RobotContainer {
 
     private Command l1CoralEject() {
         // EXPERIMENT: Maybe lower L1 outtake further than 0.15?
-        return elevatorArm.runSpeed(0.25).until(elevatorArm.hasNoCoral) // was .30, before .15
+        return elevatorArm.runSpeed(0.27).until(elevatorArm.hasNoCoral) // was .25, .30, before .15 at orlando
                           .andThen(Commands.waitSeconds(0.5));
     }
 
