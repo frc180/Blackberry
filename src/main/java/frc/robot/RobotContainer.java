@@ -1074,7 +1074,7 @@ public class RobotContainer {
 
         return Commands.select(Map.of(
                 1, l1CoralEject(),
-                2, l4CoralEjectExperiment(),
+                2, l4CoralEjectFlip(),
                 3, coralEject
             ), 
             () -> {
@@ -1089,25 +1089,30 @@ public class RobotContainer {
         );
     }
 
+    // private Command l1CoralEject() {
+    //     return elevatorArm.runSpeed(0.27).until(elevatorArm.hasNoCoral) // was .25, .30, before .15 at orlando
+    //                       .andThen(Commands.waitSeconds(0.5));
+    // }
+
     private Command l1CoralEject() {
-        // EXPERIMENT: Maybe lower L1 outtake further than 0.15?
         return elevatorArm.runSpeed(0.27).until(elevatorArm.hasNoCoral) // was .25, .30, before .15 at orlando
                           .andThen(Commands.waitSeconds(0.5));
+                          // .andThen(Commands.waitSeconds(0.15).deadlineFor(elevatorArmPivot.runSpeed(0.25)));
     }
 
     private static final double L4_EJECT_SPEED = 0.27; // was .29,  .32
 
+    @Deprecated(since="South Florida")
     private Command l4CoralEject() {
-        return elevatorArm.runSpeed(L4_EJECT_SPEED).until(elevatorArm.hasNoCoral)  // was .425, .45, was .4 before
+        return elevatorArm.runSpeed(L4_EJECT_SPEED).until(elevatorArm.hasNoCoral) 
                           .andThen(Commands.waitSeconds(0.2));
     }
 
-    // EXPERIMENT: See if moving the arm pivot to the receive position slightly before retracting helps
-    // flip bad L4 corals onto the branch, instead of falling back into the arm
-    private Command l4CoralEjectExperiment() {
+    // Move the arm pivot up slightly before retracting helps
+    // flip bad L4 corals onto the branch
+    private Command l4CoralEjectFlip() {
         return elevatorArm.runSpeed(L4_EJECT_SPEED).until(elevatorArm.hasNoCoral)
                           .andThen(Commands.waitSeconds(0.1))
                           .andThen(Commands.waitSeconds(0.15).deadlineFor(elevatorArmPivot.runSpeed(0.25))); // was .15 speed
     }
-
 }
