@@ -64,4 +64,9 @@ public class ElevatorArmAlgaeIOSim implements ElevatorArmAlgaeIO{
     public void setSpeed(double speed) {
         this.speed = speed;
     }
+
+    @Override
+    public void setAmps(double amps) {
+        // TODO: implement
+    }
 }

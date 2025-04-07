@@ -53,10 +53,14 @@ public class ElevatorArmAlgaeSubsystem extends SubsystemBase {
     private Command indexWithIdle(double idleSpeed, double indexSpeed) {
         return runEnd(
             () -> {
+                double holdSpeed = 0.3; // was 0.25
+                double holdAmps = 20;
                 if (distanceFiltered < HAS_ALGAE_CLOSE_THRESHOLD) {
-                    io.setSpeed(0.3); // was .25
+                    io.setSpeed(holdSpeed);
+                    // io.setAmps(holdAmps);
                 } else if (hasAlgae.getAsBoolean()) {
-                    io.setSpeed(0.3); // was 0.25
+                    io.setSpeed(holdSpeed);
+                    // io.setAmps(holdAmps);
                 } else if (hadAlgae.getAsBoolean()) {
                     io.setSpeed(indexSpeed);
                 } else {

@@ -14,6 +14,8 @@ public interface ElevatorArmAlgaeIO {
     }
 
     public void setSpeed(double speed);
+
+    public void setAmps(double amps);
     
     public void stop();
 

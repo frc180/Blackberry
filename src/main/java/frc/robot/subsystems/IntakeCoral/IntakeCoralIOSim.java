@@ -29,7 +29,7 @@ public class IntakeCoralIOSim implements IntakeCoralIO {
     }
 
     // For testing behaviors when the intake fails to pick up a coral (mainly for auto)
-    int failIntakeCount = 1;
+    int failIntakeCount = 0;
 
     @Override
     public void update(IntakeIOInputs inputs) {

@@ -4,6 +4,7 @@ import static frc.robot.util.StatusSignals.trackSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANrangeConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.CANrange;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -29,6 +30,7 @@ public class ElevatorArmAlgaeIOTalonFX implements ElevatorArmAlgaeIO {
     TalonFX motor;
     CANrange canrange;
     VoltageOut voltageControl;
+    TorqueCurrentFOC torqueCurrentControl;
     double targetDutyCycle = 0;
 
     // Status signals
@@ -43,10 +45,15 @@ public class ElevatorArmAlgaeIOTalonFX implements ElevatorArmAlgaeIO {
     public ElevatorArmAlgaeIOTalonFX() {
         TalonFXConfiguration config = new TalonFXConfiguration();
         config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        // config.CurrentLimits.StatorCurrentLimit = 30;
+        // config.CurrentLimits.StatorCurrentLimitEnable = true;
+
         motor = new TalonFX(Constants.ELEVATOR_ARM_ALGAE, Constants.CANIVORE);
         motor.getConfigurator().apply(config);
-        motor.setNeutralMode(NeutralModeValue.Brake);
+        // motor.setNeutralMode(NeutralModeValue.Brake);
         voltageControl = new VoltageOut(0);
+        torqueCurrentControl = new TorqueCurrentFOC(0);
 
         CANrangeConfiguration rangeConfig = new CANrangeConfiguration();
         rangeConfig.FovParams.FOVRangeX = 6.75;
@@ -80,6 +87,12 @@ public class ElevatorArmAlgaeIOTalonFX implements ElevatorArmAlgaeIO {
     public void setSpeed(double speed) {
         targetDutyCycle = speed;
         setVoltage(speed * 12);
+    }
+
+    @Override
+    public void setAmps(double amps) {
+        targetDutyCycle = amps;
+        motor.setControl(torqueCurrentControl.withOutput(amps));
     }
 
     @Override

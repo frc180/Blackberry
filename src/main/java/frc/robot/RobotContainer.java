@@ -676,7 +676,7 @@ public class RobotContainer {
         // Coral scoring sequence - kCancelIncoming means nothing else will be able to stop this command until it finishes
         atReef.and(elevator.inReefPosition)
               .and(elevatorArmPivot.elevatorArmInScoringPosition)
-              .and(drivetrain.almostStationary)
+              .and(drivetrain.almostStationary) // EXPERIMENT: remove or increase threshold
               .and(visionScoreReady).onTrue(
             Commands.sequence(
                 Commands.runOnce(() -> Robot.currentlyScoringCoral = true)
