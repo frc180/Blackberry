@@ -29,9 +29,9 @@ public class ElevatorArmAlgaeIOTalonFX implements ElevatorArmAlgaeIO {
     TalonFX motor;
     CANrange canrange;
     VoltageOut voltageControl;
+    double targetDutyCycle = 0;
 
     // Status signals
-    // StatusSignal<Temperature> temperatureSignal;
     StatusSignal<Distance> distanceSignal;
     StatusSignal<Double> signalStengthSignal;
 
@@ -70,13 +70,15 @@ public class ElevatorArmAlgaeIOTalonFX implements ElevatorArmAlgaeIO {
 
     @Override
     public void update(ElevatorArmAlgaeInputs inputs) {
-        inputs.distance = distanceSignal.getValueAsDouble();;
+        inputs.speed = targetDutyCycle;
+        inputs.distance = distanceSignal.getValueAsDouble();
         // inputs.temperature = temperatureSignal.getValueAsDouble();
         inputs.distanceSignalStrength = signalStengthSignal.getValueAsDouble();
     }
 
     @Override
     public void setSpeed(double speed) {
+        targetDutyCycle = speed;
         setVoltage(speed * 12);
     }
 

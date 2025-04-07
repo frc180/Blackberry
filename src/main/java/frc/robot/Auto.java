@@ -14,12 +14,12 @@ import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.ScheduleCommand;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.commands.DriveToCoralPose;
 import frc.robot.commands.DriveToPose;
 import frc.robot.subsystems.DrivetrainSubsystem;
-import frc.robot.subsystems.vision.VisionSubsystem;
 import frc.robot.util.CoralScoringPosition;
 import frc.robot.util.simulation.SimLogic;
 
@@ -28,7 +28,8 @@ public final class Auto {
     public enum AutoState {
         IDLE,
         INTAKING,
-        SCORING
+        SCORING,
+        RETRYING_INTAKE
     }
 
     private static final Transform2d LEFT_HP_STATION_TRANSFORM = new Transform2d(0, 0, Rotation2d.fromDegrees(150));
@@ -40,6 +41,7 @@ public final class Auto {
     public static CoralScoringPosition previousCoralScoringPosition = null; 
     public static List<CoralScoringPosition> coralScoringPositions = new ArrayList<>();
     public static boolean firstCoralCycle = true;
+    public static boolean seenCoralThisCycle = false;
     public static double startTime = 0;
 
     public static final Trigger intakingState = new Trigger(() -> state == AutoState.INTAKING);
@@ -95,6 +97,7 @@ public final class Auto {
         state = AutoState.IDLE;
         coralIntaking = false;
         firstCoralCycle = true;
+        seenCoralThisCycle = false;
         startTime = Timer.getFPGATimestamp();
     }
 
@@ -127,7 +130,7 @@ public final class Auto {
     public static Command driveToHPStation() {
         return Commands.either(
             driveToHPStationFar(),
-            driveToHPStationClose(), // TEMPORARY speed limit
+            driveToHPStationClose(),
             () -> {
                 CoralScoringPosition previous = previousCoralScoringPosition;
                 return previous != null && previous.isFarTag();
@@ -138,25 +141,47 @@ public final class Auto {
     private static DriveToPose driveToHPStationClose() {
         return new DriveToPose(RobotContainer.instance.drivetrain, () -> {
                                     Pose2d robotPose = RobotContainer.instance.drivetrain.getPose();
-
-                                    Pose2d hpStation;
-                                    if (Robot.isBlue()) {
-                                        hpStation = leftSide ? leftBlueHPStation : rightBlueHPStation;
-                                        hpStation = new Pose2d(hpStation.getTranslation(), hpStation.getRotation().rotateBy(Rotation2d.k180deg));
-                                    } else {
-                                        hpStation = leftSide ? leftRedHPStation : rightRedHPStation;
-                                    }
-                                    hpStation = hpStation.transformBy(leftSide ? LEFT_HP_STATION_TRANSFORM : RIGHT_HP_STATION_TRANSFORM);
-                                    // hpStation = hpStation.transformBy(HP_STATION_TRANSFORM);
-                                    // if (!leftSide) {
-                                    //     hpStation = new Pose2d(hpStation.getTranslation(), hpStation.getRotation().rotateBy(Rotation2d.kCCW_90deg));
-                                    // }
+                                    Pose2d hpStation = getHPStationClosePose();
 
                                     double distance = robotPose.getTranslation().getDistance(hpStation.getTranslation());
                                     double targetDistance = distance - 1.5;
                                     Translation2d target = robotPose.getTranslation().interpolate(hpStation.getTranslation(), targetDistance / distance);
                                     return new Pose2d(target, hpStation.getRotation());
-                                });
+                                });                
+    }
+
+    public static Command retryIntake() {
+        var drivetrain = RobotContainer.instance.drivetrain;
+        var vision = RobotContainer.instance.vision;
+
+        final Command driveToCoralAgain = driveToCoral()
+                                            .alongWith(
+                                                setState(AutoState.INTAKING),
+                                                Commands.waitUntil(() -> vision.getCoralPose() != null)
+                                                        .andThen(() -> seenCoralThisCycle = true),
+                                                Commands.runOnce(() -> {
+                                                    if (Robot.isSimulation()) SimLogic.spawnHumanPlayerCoral();    
+                                                }
+                                            ));
+
+
+        return setState(AutoState.RETRYING_INTAKE).alongWith(
+            new DriveToPose(drivetrain, () -> {
+                Pose2d hpStation = getHPStationClosePose();
+                double xDir = Robot.isBlue() ? 1 : -1;
+                double yDir = (leftSide ? 1 : -1) * -xDir;
+
+                Translation2d target = hpStation.getTranslation().plus(new Translation2d(2 * xDir, 0.5 * yDir));
+
+                return new Pose2d(target, hpStation.getRotation());
+            })
+            .until(drivetrain.withinTargetPoseDistance(0.1))
+            .andThen(new ScheduleCommand(driveToCoralAgain)),
+            Commands.runOnce(() -> {
+                seenCoralThisCycle = false;
+                vision.resetCoralDetector();
+            })
+        );
     }
 
     private static final Pose2d leftBlueHPStation = new Pose2d(SimLogic.blueHPCoralPose.getTranslation(), Rotation2d.kZero);
@@ -204,7 +229,9 @@ public final class Auto {
         return new DriveToPose(drivetrain, () -> {
             Pose2d coralPose = vision.getCoralPickupPose();
             return coralPose == null ? drivetrain.getPose() : coralPose;
-        }).withDynamicTarget(true);
+        })
+        .withDynamicTarget(true)
+        .withMaxSpeed(0.7);
     }
 
     public static Command driveToReefWithCoral() {
@@ -322,13 +349,17 @@ public final class Auto {
 
     // =========== Helper Methods ===========
 
-    // private static Command driveToNextCoralPose() {
-    //     return new DriveToCoralPose(
-    //         () -> nextCoralScoringPosition().tag,
-    //         (tag) -> nextCoralScoringPosition().getPose()
-    //     ).withIntermediatePoses(DriveToCoralPose.AVOID_BIG_DIAGONAL)
-    //     .alongWith(setState(AutoState.SCORING));
-    // }
+    private static Pose2d getHPStationClosePose() {
+        Pose2d hpStation;
+        if (Robot.isBlue()) {
+            hpStation = leftSide ? leftBlueHPStation : rightBlueHPStation;
+            hpStation = new Pose2d(hpStation.getTranslation(), hpStation.getRotation().rotateBy(Rotation2d.k180deg));
+        } else {
+            hpStation = leftSide ? leftRedHPStation : rightRedHPStation;
+        }
+        hpStation = hpStation.transformBy(leftSide ? LEFT_HP_STATION_TRANSFORM : RIGHT_HP_STATION_TRANSFORM);
+        return hpStation;
+    }
 
     private static Command driveToNextCoralPose() {
         return Commands.defer(() -> {

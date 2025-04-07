@@ -14,8 +14,8 @@ public class ElevatorArmAlgaeSubsystem extends SubsystemBase {
     protected static final double HAS_ALGAE_THRESHOLD = 0.3; // was 0.16 at Orlando
     protected static final double HAS_ALGAE_CLOSE_THRESHOLD = 0.1;
 
-    ElevatorArmAlgaeIO io;
-    ElevatorArmAlgaeInputs inputs;
+    private final ElevatorArmAlgaeIO io;
+    private final ElevatorArmAlgaeInputs inputs;
 
     private final LinearFilter distanceFilter = LinearFilter.singlePoleIIR(0.1, 0.02);
     private double distanceFiltered = 0;
@@ -26,7 +26,6 @@ public class ElevatorArmAlgaeSubsystem extends SubsystemBase {
     public ElevatorArmAlgaeSubsystem() {
         inputs = new ElevatorArmAlgaeInputs();
         io = new ElevatorArmAlgaeIOTalonFX();
-        // io = new ElevatorArmAlgaeIOTalonFXS();
 
         hasAlgae = new Trigger(() -> distanceFiltered < HAS_ALGAE_THRESHOLD);
         hadAlgae = hasAlgae.debounce(1.5, DebounceType.kFalling);
@@ -35,7 +34,6 @@ public class ElevatorArmAlgaeSubsystem extends SubsystemBase {
     @Override
     public void periodic() {
         io.update(inputs);
-        // distanceFiltered = inputs.distance;
         distanceFiltered = distanceFilter.calculate(inputs.distance);
     }
     
@@ -59,7 +57,7 @@ public class ElevatorArmAlgaeSubsystem extends SubsystemBase {
                     io.setSpeed(0.3); // was .25
                 } else if (hasAlgae.getAsBoolean()) {
                     io.setSpeed(0.3); // was 0.25
-                } else if (hadAlgae.getAsBoolean()) { // } else if (closeAlgaeDebounced.getAsBoolean() ) {
+                } else if (hadAlgae.getAsBoolean()) {
                     io.setSpeed(indexSpeed);
                 } else {
                     io.setSpeed(idleSpeed);

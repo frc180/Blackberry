@@ -54,6 +54,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
+import frc.robot.Auto.AutoState;
 import frc.robot.commands.DefaultDriveCommand;
 import frc.robot.commands.DriveToCoralPose;
 import frc.robot.commands.DriveToPose;
@@ -415,7 +416,6 @@ public class RobotContainer {
                 }
             }
         ).withDynamicTarget(true));
-         //.withIntermediatePoses(DriveToCoralPose.ALGAE_INTERMEDIATE));
 
         // Ensure we reset if we cancelled mid-score previously
         driverAnyReef.onTrue(Commands.runOnce(() -> Robot.currentlyScoringCoral = false));
@@ -442,8 +442,6 @@ public class RobotContainer {
             .whileTrue(intakeCoral.runSpeed(1));
 
             
-        // coralIntakeTrigger.onFalse(intakeCoralPivot.stow());
-
         driverIntake.and(driverL1).whileTrue(intakeCoral.runSpeed(-1).alongWith(coralIndexer.runSpeed(-1), intakeCoralPivot.stow()));
 
         //intaking from the human player station 
@@ -465,8 +463,6 @@ public class RobotContainer {
         driverIntakeAlgae.and(driverSpit)
             .whileTrue(intakeAlgae.runSpeed(-1));
 
-        //climbing sequence
-        // driverReadyClimb.onTrue(climber.deploy());
 
         final Command climbDeployedRumble = new ScheduleCommand(new RumbleCommand(1).withTimeout(1));
 
@@ -899,7 +895,7 @@ public class RobotContainer {
 
         Command coralTrackingDelay = Commands.either(
             Commands.waitSeconds(0.5),
-            Commands.none(), //Commands.waitSeconds(0.25),
+            Commands.none(),
             () -> Auto.previousCoralScoringPosition.isFrontMiddle()
         );
 
@@ -910,8 +906,8 @@ public class RobotContainer {
         Command autoIntakeCoral = Commands.sequence(
             autoHPDrive,
             Auto.driveToCoral()
-                .withMaxSpeed(.7)
                 .until(intakeCoral.hasCoral) // at this point, the command gets interrupted by the auto coral intake trigger
+                .alongWith(Commands.runOnce(() -> Auto.seenCoralThisCycle = true))
         ).alongWith(Auto.startCoralIntake());
                                     
         justScoredCoral.and(autonomous).and(drivetrainAvailable).onTrue(
@@ -921,9 +917,16 @@ public class RobotContainer {
                 () -> Auto.nextCoralScoringPosition() != null
             ).alongWith(Commands.runOnce(() -> {
                 Robot.justScoredCoral = false;
+                Auto.seenCoralThisCycle = false;
                 vision.resetCoralDetector();
             }))
         );
+
+        final Trigger lostCoral = new Trigger(() -> {
+            return Auto.seenCoralThisCycle && vision.getCoralPose() == null;
+        }).debounce(1, DebounceType.kRising);
+
+        lostCoral.and(autonomous).and(Auto.intakingState).onTrue(Auto.retryIntake());
 
         if (Robot.isSimulation()) {
             strugglingNearReef.and(autonomous).onTrue(Commands.sequence(

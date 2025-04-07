@@ -28,6 +28,9 @@ public class IntakeCoralIOSim implements IntakeCoralIO {
         }
     }
 
+    // For testing behaviors when the intake fails to pick up a coral (mainly for auto)
+    int failIntakeCount = 1;
+
     @Override
     public void update(IntakeIOInputs inputs) {
         IntakeCoralPivotSubsystem coralIntake = RobotContainer.instance.intakeCoralPivot;
@@ -41,7 +44,11 @@ public class IntakeCoralIOSim implements IntakeCoralIO {
                 intakeSim.stopIntake();
             }
             if (!SimLogic.intakeHasCoral) {
-                SimLogic.intakeHasCoral = intakeSim.obtainGamePieceFromIntake();
+                if (failIntakeCount > 0) {
+                    if (intakeSim.obtainGamePieceFromIntake()) failIntakeCount--;
+                } else {
+                    SimLogic.intakeHasCoral = intakeSim.obtainGamePieceFromIntake();
+                }
             }
         } else {
             Pose2d coralPose = RobotContainer.instance.vision.getCoralPose();
