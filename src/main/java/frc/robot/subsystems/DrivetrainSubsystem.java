@@ -84,7 +84,8 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     public enum PoseTarget {
         STANDARD,
         REEF,
-        PROCESSOR
+        PROCESSOR,
+        BARGE
     }
 
     public static final double MAX_SPEED = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // Meters per second desired top speed
@@ -407,11 +408,17 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
 
     public void setTargetHeading(Double targetHeading, HeadingTarget type) {
         Double oldHeading = this.targetHeading;
+        HeadingTarget oldType = this.targetHeadingType;
+
+        if (oldType != type) {
+            resetHeadingPID(type);
+        }
+
         this.targetHeading = targetHeading == null ? null : MathUtil.inputModulus(targetHeading, -180, 180);
         targetHeadingType = type;
         if (this.targetHeading == null) {
             headingError = 0;
-        } else if (oldHeading == null || this.targetHeading == null || this.targetHeading - oldHeading != 0) {
+        } else if (oldHeading == null || this.targetHeading == null || this.targetHeading - oldHeading != 0 || oldType != type) {
             headingError = 999; // reset heading error to make sure we don't think we're at the new target immediately
         }
     }
@@ -640,6 +647,10 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         return poseTargetType == PoseTarget.PROCESSOR && targetPose != null;
     }
 
+    public boolean isTargetingBargePose() {
+        return poseTargetType == PoseTarget.BARGE && targetPose != null;
+    }
+
     @NotLogged
     public int getTargetPoseTag() {
         return targetPoseTag;
@@ -709,6 +720,11 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     @NotLogged
     public Trigger targetingProcessor() {
         return new Trigger(this::isTargetingProcessorPose);
+    }
+
+    @NotLogged
+    public Trigger targetingBarge() {
+        return new Trigger(this::isTargetingBargePose);
     }
 
     public Trigger withinTargetPoseTolerance(Distance xDistance, Distance yDistance, Angle angle) {

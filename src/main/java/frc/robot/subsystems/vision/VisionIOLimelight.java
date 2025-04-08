@@ -1,12 +1,10 @@
 package frc.robot.subsystems.vision;
 
-import com.ctre.phoenix6.StatusSignal;
 import com.spamrobotics.vision.LimelightStatus;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Robot;
 import frc.robot.RobotContainer;
 import frc.robot.subsystems.DrivetrainSubsystem;
@@ -36,8 +34,12 @@ public class VisionIOLimelight implements VisionIO {
     private final double[] blueReefTags;
     private final double[] redReefTags;
 
+    private final double[] blueBargeTags;
+    private final double[] redBargeTags;
+
     private int frontCameraImuMode = IMU_ASSIST_EXTERNALIMU;
     private boolean wasEnabled = false;
+    private boolean bargeMode = false;
     private double lastSettingsUpdate = -1;
 
     public VisionIOLimelight() {
@@ -54,6 +56,10 @@ public class VisionIOLimelight implements VisionIO {
         for (int i = 0; i < redReefTags.length; i++) {
             redReefTags[i] = VisionSubsystem.redReefTags.get(i);
         }
+
+        // 4 and 5 are on the red side, 14 and 15 are on the blue side
+        blueBargeTags = new double[] { 4, 5, 14, 15 };
+        redBargeTags = blueBargeTags;
     }
 
     @Override
@@ -66,43 +72,41 @@ public class VisionIOLimelight implements VisionIO {
         inputs.frontCameraConnected = frontLimelightStatus.isConnected();
         inputs.backCameraConnected = backLimelightStatus.isConnected();
 
-        // LimelightHelpers.setPipelineIndex(SCORING_LIMELIGHT, APRILTAG_PIPELINE);
-        // LimelightHelpers.setPipelineIndex(FRONT_LIMEIGHT, APRILTAG_PIPELINE);
-
-        // double throttle = 0;
-        // if (RobotState.isDisabled()) throttle = 200;
-        
-        // LimelightHelpers.setLimelightNTDouble("throttle_set", SCORING_LIMELIGHT, throttle);
-        // LimelightHelpers.setLimelightNTDouble("throttle_set", FRONT_LIMEIGHT, throttle);
-
         double time = Timer.getFPGATimestamp();
         if (lastSettingsUpdate == -1 || time - lastSettingsUpdate > 5) {
             setLimelightPosition(SCORING_LIMELIGHT, VisionSubsystem.ROBOT_TO_SCORING_CAMERA);
             setLimelightPosition(FRONT_LIMEIGHT, VisionSubsystem.ROBOT_TO_FRONT_CAMERA);
 
-            double[] validTags = Robot.isBlue() ? blueReefTags : redReefTags;
-            setValidTags(SCORING_LIMELIGHT, validTags);
-            setValidTags(FRONT_LIMEIGHT, validTags);
+            // double[] validTags = Robot.isBlue() ? blueReefTags : redReefTags;
+            // setValidTags(SCORING_LIMELIGHT, validTags);
+            // setValidTags(FRONT_LIMEIGHT, validTags);
 
             lastSettingsUpdate = time;
         }
- 
-        // frontCameraImuMode = (int) SmartDashboard.getNumber("Front Camera IMU Mode", frontCameraImuMode);
-        if (RobotState.isEnabled()) {
-            frontCameraImuMode = IMU_ASSIST_EXTERNALIMU;
+
+        double[] validTags;
+        if (bargeMode) {
+            validTags = Robot.isBlue() ? blueBargeTags : redBargeTags;
         } else {
-            frontCameraImuMode = IMU_MATCH_EXTERNALIMU;
+            validTags = Robot.isBlue() ? blueReefTags : redReefTags;
         }
-        LimelightHelpers.SetIMUMode(FRONT_LIMEIGHT, frontCameraImuMode);
-
-        // if (frontCameraImuMode == IMU_EXTERNALIMU_ONLY || frontCameraImuMode == IMU_MATCH_EXTERNALIMU || frontCameraImuMode == IMU_ASSIST_EXTERNALIMU) {
-        DrivetrainSubsystem drivetrain = RobotContainer.instance.drivetrain;
-        double headingDegrees = drivetrain.getGyroscopeDegrees();
-        double yawRate = drivetrain.getGyroscopeRate();
-
-        if (Robot.isRed()) headingDegrees += 180;
-        LimelightHelpers.SetRobotOrientation(FRONT_LIMEIGHT, headingDegrees, yawRate, 0, 0, 0, 0);
+        setValidTags(SCORING_LIMELIGHT, validTags);
+        setValidTags(FRONT_LIMEIGHT, validTags);
+ 
+        // EXPERIMENT: All of this is irrelevant since we don't use MegaTag2
+        // if (RobotState.isEnabled()) {
+        //     frontCameraImuMode = IMU_ASSIST_EXTERNALIMU;
+        // } else {
+        //     frontCameraImuMode = IMU_MATCH_EXTERNALIMU;
         // }
+        // LimelightHelpers.SetIMUMode(FRONT_LIMEIGHT, frontCameraImuMode);
+
+        // DrivetrainSubsystem drivetrain = RobotContainer.instance.drivetrain;
+        // double headingDegrees = drivetrain.getGyroscopeDegrees();
+        // double yawRate = drivetrain.getGyroscopeRate();
+
+        // if (Robot.isRed()) headingDegrees += 180;
+        // LimelightHelpers.SetRobotOrientation(FRONT_LIMEIGHT, headingDegrees, yawRate, 0, 0, 0, 0);
 
         inputs.scoringFiducials = LimelightHelpers.getRawFiducials(SCORING_LIMELIGHT);
         inputs.frontFiducials = LimelightHelpers.getRawFiducials(FRONT_LIMEIGHT);
@@ -140,6 +144,12 @@ public class VisionIOLimelight implements VisionIO {
         // } else {
         //     inputs.frontTemp = -1;
         // }
+    }
+
+    
+    @Override
+    public void setBargeMode(boolean bargeModeEnabled) {
+        this.bargeMode = bargeModeEnabled;
     }
 
     @Override

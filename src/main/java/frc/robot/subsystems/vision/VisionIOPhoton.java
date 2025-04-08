@@ -80,6 +80,11 @@ public class VisionIOPhoton implements VisionIO {
             inputs.scoringFiducials = inputs.emptyFiducials;
         }
     }
+    
+    @Override
+    public void setBargeMode(boolean bargeMode) {
+        // TODO: Implement
+    }
 
     @Override
     public void simulationPeriodic() {

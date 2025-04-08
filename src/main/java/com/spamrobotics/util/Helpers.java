@@ -97,13 +97,17 @@ public class Helpers {
             return false;
         }
         
-        Transform2d diff = null;
-        if (xMeters != null || yMeters != null) {
-            diff = pose.minus(targetPose);
-        }
+        // EXPERIMENT: Avoid creating 3 objects per call to this method by using "Pose2d.minus()"
+        // Transform2d diff = null;
+        // if (xMeters != null || yMeters != null) {
+        //     diff = pose.minus(targetPose);
+        // }
 
-        boolean xSatisfied = xMeters == null || Math.abs(diff.getX()) <= xMeters;
-        boolean ySatisfied = yMeters == null || Math.abs(diff.getY()) <= yMeters;
+        // boolean xSatisfied = xMeters == null || Math.abs(diff.getX()) <= xMeters;
+        // boolean ySatisfied = yMeters == null || Math.abs(diff.getY()) <= yMeters;
+
+        boolean xSatisfied = xMeters == null || Math.abs(pose.getX() - targetPose.getX()) <= xMeters;
+        boolean ySatisfied = yMeters == null || Math.abs(pose.getY() - targetPose.getY()) <= yMeters;
 
         // If we haven't met the x and y criteria, don't bother calculating any further
         if (!xSatisfied || !ySatisfied) {

@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import com.ctre.phoenix6.Utils;
+import com.pathplanner.lib.util.FlippingUtil;
+
 import java.util.Map.Entry;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
@@ -523,6 +525,19 @@ public class VisionSubsystem extends SubsystemBase {
         return closestReefPoseValid ? closestReefPose : null;
     }
 
+    private final static double BARGE_BLUE_X = 7.28;
+    private final static double BARGE_RED_X = FlippingUtil.fieldSizeX - BARGE_BLUE_X;
+
+    public Pose2d getBargePose() {
+        Pose2d robotPose = RobotContainer.instance.drivetrain.getPose();
+
+        return new Pose2d(
+            Robot.isBlue() ? BARGE_BLUE_X : BARGE_RED_X,
+            robotPose.getY(),
+            Robot.isBlue() ? Rotation2d.kZero : Rotation2d.k180deg
+        );
+    }
+
     public int getReefTagFromPose(Pose2d pose) {
         for (Entry<Integer, Pose2d> entry : leftReefHashMap.entrySet()) {
             if (entry.getValue().equals(pose)) {
@@ -632,6 +647,16 @@ public class VisionSubsystem extends SubsystemBase {
         return Commands.runEnd(
             () -> allowPoseEstimates = false,
             () -> allowPoseEstimates = true
+        );
+    }
+
+    /**
+     * Makes the robot accept pose estimates involving barge tags instead of reef tags while this command is running.
+     */
+    public Command bargeMode() {
+        return Commands.runEnd(
+            () -> io.setBargeMode(true),
+            () -> io.setBargeMode(false)
         );
     }
 
