@@ -782,9 +782,9 @@ public class RobotContainer {
 
         // Lob algae into the net by releasing while moving the elevator 
         driverNet.and(elevatorArmPivot.isAt(ElevatorArmPivotSubsystem.netScore))
-                 .and(() -> elevator.getTargetPosition() == ElevatorSubsystem.NET_THROW && elevator.getTargetErrorInches() < 36.5 + 15) // was 36.5 + 13
+                 .and(() -> elevator.getTargetPosition() == ElevatorSubsystem.NET_THROW && elevator.getTargetErrorInches() < 12) // was 36.5 + 15
                  .onTrue(
-                    elevatorArmAlgae.runSpeed(-1)
+                    elevatorArmAlgae.runSpeed(-0.8) // was -1
                                     .withTimeout(0.5) // EXPERIMENT: 0.75, 1 second was too long
                                     .andThen(elevator.runOnce(() -> {
                                         elevator.setPositionDirect(ElevatorSubsystem.STOW);
@@ -803,9 +803,10 @@ public class RobotContainer {
             Commands.either(
                 elevatorArmAlgae.runSpeed(-1).withTimeout(0.5),
                 Commands.none(),
-                () -> elevator.isElevatorInPosition() && elevatorArmAlgae.hadAlgae.getAsBoolean()
+                () -> elevator.isElevatorInPosition()// && elevatorArmAlgae.hadAlgae.getAsBoolean()
             ),
-            elevator.stow().alongWith(elevatorArmPivot.stowPosition())
+            elevatorArmPivot.stowPosition().alongWith(Commands.waitSeconds(0.1).andThen(elevator.stow()))
+            // elevator.stow().alongWith(elevatorArmPivot.stowPosition())
         ));
 
         if (leds != null) {
@@ -1095,9 +1096,9 @@ public class RobotContainer {
     // }
 
     private Command l1CoralEject() {
-        return elevatorArm.runSpeed(0.27).until(elevatorArm.hasNoCoral) // was .25, .30, before .15 at orlando
+        return elevatorArm.runSpeed(0.27).until(elevatorArm.hasNoCoral) // was .27 by end of south florida
                           .andThen(Commands.waitSeconds(0.5));
-                          // .andThen(Commands.waitSeconds(0.15).deadlineFor(elevatorArmPivot.runSpeed(0.25)));
+                          //.andThen(Commands.waitSeconds(0.15).deadlineFor(elevatorArmPivot.runSpeed(0.75)));
     }
 
     private static final double L4_EJECT_SPEED = 0.27; // was .29,  .32

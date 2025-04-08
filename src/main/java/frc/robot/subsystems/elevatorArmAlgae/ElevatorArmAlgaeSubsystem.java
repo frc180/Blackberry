@@ -3,6 +3,7 @@ package frc.robot.subsystems.elevatorArmAlgae;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -29,6 +30,8 @@ public class ElevatorArmAlgaeSubsystem extends SubsystemBase {
 
         hasAlgae = new Trigger(() -> distanceFiltered < HAS_ALGAE_THRESHOLD);
         hadAlgae = hasAlgae.debounce(1.5, DebounceType.kFalling);
+
+        SmartDashboard.putNumber("Algae Amps", 20);
     }
 
     @Override
@@ -53,8 +56,10 @@ public class ElevatorArmAlgaeSubsystem extends SubsystemBase {
     private Command indexWithIdle(double idleSpeed, double indexSpeed) {
         return runEnd(
             () -> {
-                double holdSpeed = 0.3; // was 0.25
-                double holdAmps = 20;
+                double holdSpeed = 0.4; // was 0.3
+                // double holdAmps = 20;
+                double holdAmps = SmartDashboard.getNumber("Algae Amps", 0);
+
                 if (distanceFiltered < HAS_ALGAE_CLOSE_THRESHOLD) {
                     io.setSpeed(holdSpeed);
                     // io.setAmps(holdAmps);
