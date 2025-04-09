@@ -353,7 +353,7 @@ public class RobotContainer {
 
         atReef = drivetrain.targetingReef().and(atReefXY).and(atReefAngle);
 
-        strugglingNearReef = nearReef.and(atReef.negate()).debounce(2, DebounceType.kRising);
+        strugglingNearReef = nearReef.and(atReef.negate()).debounce(1.5, DebounceType.kRising);
 
         if (POSING_MODE) {
             posingAtReef = new Trigger(() -> {
