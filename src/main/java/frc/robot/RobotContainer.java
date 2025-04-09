@@ -672,7 +672,7 @@ public class RobotContainer {
         );
 
         Command backupWithAlgae = new DriveToCoralPose(
-            () -> vision.lastReefID,
+            () -> drivetrain.getTargetPoseTag(),
             (tagID) -> vision.getReefAlgaeBackupPose(tagID, false)
         )
         .withPoseTargetType(PoseTarget.STANDARD)
