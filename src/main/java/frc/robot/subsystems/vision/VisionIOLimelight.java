@@ -33,6 +33,7 @@ public class VisionIOLimelight implements VisionIO {
 
     private final double[] blueReefTags;
     private final double[] redReefTags;
+    private final double[] allReefTags;
 
     private final double[] blueBargeTags;
     private final double[] redBargeTags;
@@ -57,6 +58,11 @@ public class VisionIOLimelight implements VisionIO {
             redReefTags[i] = VisionSubsystem.redReefTags.get(i);
         }
 
+        allReefTags = new double[VisionSubsystem.allReefTags.size()];
+        for (int i = 0; i < allReefTags.length; i++) {
+            allReefTags[i] = VisionSubsystem.allReefTags.get(i);
+        }
+
         // 4 & 5 are on the red side, 14 & 15 are on the blue side. 3 & 16 processor
         blueBargeTags = new double[] { 4, 5, 14, 15, 3, 16 };
         redBargeTags = blueBargeTags;
@@ -78,20 +84,21 @@ public class VisionIOLimelight implements VisionIO {
             setLimelightPosition(FRONT_LIMEIGHT, VisionSubsystem.ROBOT_TO_FRONT_CAMERA);
 
             // double[] validTags = Robot.isBlue() ? blueReefTags : redReefTags;
-            // setValidTags(SCORING_LIMELIGHT, validTags);
-            // setValidTags(FRONT_LIMEIGHT, validTags);
+            double[] validTags = allReefTags;
+            setValidTags(SCORING_LIMELIGHT, validTags);
+            setValidTags(FRONT_LIMEIGHT, validTags);
 
             lastSettingsUpdate = time;
         }
 
-        double[] validTags;
-        if (bargeMode) {
-            validTags = Robot.isBlue() ? blueBargeTags : redBargeTags;
-        } else {
-            validTags = Robot.isBlue() ? blueReefTags : redReefTags;
-        }
-        setValidTags(SCORING_LIMELIGHT, validTags);
-        setValidTags(FRONT_LIMEIGHT, validTags);
+        // double[] validTags;
+        // if (bargeMode) {
+        //     validTags = Robot.isBlue() ? blueBargeTags : redBargeTags;
+        // } else {
+        //     validTags = Robot.isBlue() ? blueReefTags : redReefTags;
+        // }
+        // setValidTags(SCORING_LIMELIGHT, validTags);
+        // setValidTags(FRONT_LIMEIGHT, validTags);
  
         // EXPERIMENT: All of this is irrelevant since we don't use MegaTag2
         // if (RobotState.isEnabled()) {

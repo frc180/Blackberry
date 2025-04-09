@@ -1,6 +1,8 @@
 package frc.robot.subsystems.vision;
 
 import static edu.wpi.first.units.Units.*;
+
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -73,6 +75,7 @@ public class VisionSubsystem extends SubsystemBase {
     private static final List<Integer> blueTags = List.of(12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22);
     public static final List<Integer> redReefTags = List.of(6,7,8,9,10,11);
     public static final List<Integer> blueReefTags = List.of(17, 18, 19, 20, 21, 22);
+    public static final List<Integer> allReefTags = new ArrayList<>();
 
     // Used to correct for horizontal offset of tags on the field
     private static final Map<Integer, Distance> TAG_OFFSETS = Map.of(
@@ -86,6 +89,7 @@ public class VisionSubsystem extends SubsystemBase {
         new Rotation3d(0, Units.degreesToRadians(50), 0) // downward tilt
     );
 
+    // ORIGINAL FRONT CAMERA MOUNT (Orlando & South Florida)
     // public static final Transform3d ROBOT_TO_FRONT_CAMERA = new Transform3d(
     //     Inches.of(13.998 + 3.5).in(Meters), // forward
     //     Inches.of(-7 + 1).in(Meters), // right
@@ -93,6 +97,7 @@ public class VisionSubsystem extends SubsystemBase {
     //     new Rotation3d(0, Units.degreesToRadians(-15), 0) // upward tilt
     // );
 
+    // NEW FRONT CAMERA MOUNT (Houston prep)
     public static final Transform3d ROBOT_TO_FRONT_CAMERA = new Transform3d(
         Inches.of(13.998 + 3.5).in(Meters), // forward
         Inches.of(-7 + 1).in(Meters), // right
@@ -154,6 +159,8 @@ public class VisionSubsystem extends SubsystemBase {
     // 1.25 inches closer (forward) than standard, applied on top of left/right reef transforms
     private final Transform2d algaeReefTransform = new Transform2d(Inches.of(0.75 + 0.5 - 1).in(Meters), 0, Rotation2d.kZero); // was 0.75, sometimes just too far off
 
+    private final Transform2d algaeReefBackup = new Transform2d(-0.3, 0, Rotation2d.kZero);
+
     private final Pose2d redProcessorPose;
     private final Pose2d blueProcessorPose;
 
@@ -164,6 +171,8 @@ public class VisionSubsystem extends SubsystemBase {
     private final HashMap<Integer, Pose2d> rightL1ReefHashMap = new HashMap<>();
     private final HashMap<Integer, Pose2d> leftReefAlgaePoses = new HashMap<>();
     private final HashMap<Integer, Pose2d> rightReefAlgaePoses = new HashMap<>();
+    private final HashMap<Integer, Pose2d> leftReefAlgaeBackupPoses = new HashMap<>();
+    private final HashMap<Integer, Pose2d> rightReefAlgaeBackupPoses = new HashMap<>();
 
     public int bestReefID = -1;
     public int lastReefID = -1;
@@ -214,6 +223,9 @@ public class VisionSubsystem extends SubsystemBase {
             io = new VisionIOPhoton(aprilTagFieldLayout);
         }
 
+        allReefTags.addAll(redReefTags);
+        allReefTags.addAll(blueReefTags);
+
         for (var allianceTags : List.of(redTags, blueTags)) {
             for (int tagID : allianceTags) {
                 Optional<Pose3d> pose3d = aprilTagFieldLayout.getTagPose(tagID);
@@ -240,8 +252,14 @@ public class VisionSubsystem extends SubsystemBase {
         }
 
         // Pre-calculate reef algae poses
-        leftReefHashMap.keySet().forEach(i -> leftReefAlgaePoses.put(i, calculateReefAlgaePose(i, true)));
-        rightReefHashMap.keySet().forEach(i -> rightReefAlgaePoses.put(i, calculateReefAlgaePose(i, false)));
+        leftReefHashMap.keySet().forEach(i -> {
+            leftReefAlgaePoses.put(i, calculateReefAlgaePose(i, true));
+            leftReefAlgaeBackupPoses.put(i, calculateReefAlgaeBackupPose(i, true));
+        });
+        rightReefHashMap.keySet().forEach(i -> {
+            rightReefAlgaePoses.put(i, calculateReefAlgaePose(i, false));
+            rightReefAlgaeBackupPoses.put(i, calculateReefAlgaeBackupPose(i, false));
+        });
         
         // Pre-calculate processor poses
         redProcessorPose = calculateProcessorPose(false);
@@ -342,7 +360,9 @@ public class VisionSubsystem extends SubsystemBase {
         ChassisSpeeds speeds = RobotContainer.instance.drivetrain.getCachedState().Speeds;
         futureRobotPose = robotPose.plus(new Transform2d(speeds.vxMetersPerSecond * 0.3, speeds.vyMetersPerSecond * 0.3, Rotation2d.kZero));
 
-        Entry<Integer, Pose2d> closestTagAndPose = reefProximity.closestReefPose(futureRobotPose, Robot.isBlue());
+        // EXPERIMENT: Allow targeting opponent's reef tags, which is needed for stealing algae
+        // Entry<Integer, Pose2d> closestTagAndPose = reefProximity.closestReefPose(futureRobotPose, Robot.isBlue());
+        Entry<Integer, Pose2d> closestTagAndPose = reefProximity.closestReefPose(futureRobotPose, allReefTags);
         if (closestTagAndPose == null) {
             closestReefPose = Pose2d.kZero;
             closestReefPoseValid = false;
@@ -364,28 +384,16 @@ public class VisionSubsystem extends SubsystemBase {
         } else {
             coralPoseValid = true;
         }
-        // Invalidate any previously stored coralPickUpPose - this will be recalculated if needed by getCoralPickupPose()
+        // Invalidate any previously stored coralPickUpPose - this will be recalculated if getCoralPickupPose() is called
         coralPickupPose = null;
 
-        // For now, we're just going to use the closest reef tag to the robot
-        if (false && inputs.scoringCameraConnected) {
-            bestReefID = getReefTag(inputs.scoringFiducials);
+        if (closestTagAndPose == null) {
+            bestReefID = -1;
         } else {
-            // Simulate the vision system by selecting the closest reef tag to the robot position
-            if (closestTagAndPose == null) {
-                bestReefID = -1;
-            } else {
-                bestReefID = closestTagAndPose.getKey();
-            }
+            bestReefID = closestTagAndPose.getKey();
         }
 
         if (bestReefID != -1) lastReefID = bestReefID;
-
-        // if (inputs.frontFiducials.length > 0) {
-        //     // TODO: If this seems more accurate than global pose, we need to specifically pass in the front fiducial
-        //     // that corresponds to the tag we're actively targeting, not just the first or closest one
-        //     singleTagPose = singleTagSolver.getPose(inputs.scoringTimestamp, inputs.frontFiducials[0], ROBOT_TO_FRONT_CAMERA);
-        // }
     }
 
     
@@ -459,6 +467,10 @@ public class VisionSubsystem extends SubsystemBase {
         return getReefPose(tagID, left).transformBy(algaeReefTransform);
     }
 
+    private Pose2d calculateReefAlgaeBackupPose(int tagID, boolean left) {
+        return calculateReefAlgaePose(tagID, left).transformBy(algaeReefBackup);
+    }
+
     /**
      * Generates the scoring pose of the robot relative to the processor AprilTag. This is used to pre-calculate and store all 
      * positions to prevent duplicate object creation. To access these pre-calculated poses, use {@link #getProcessorPose(boolean)}.
@@ -506,13 +518,17 @@ public class VisionSubsystem extends SubsystemBase {
         }
     }
 
-        /**
+    /**
      * Returns a right branch scoring pose of the robot relative to a reef AprilTag, closer than 
      * the standard reef pose in order to faciliate grabbing an algae.
      * @param tagID the ID of the reef AprilTag
      */
     public Pose2d getReefAlgaePose(int tagID, boolean left) {
         return (left ? leftReefAlgaePoses : rightReefAlgaePoses).get(tagID);
+    }
+
+    public Pose2d getReefAlgaeBackupPose(int tagID, boolean left) {
+        return (left ? leftReefAlgaeBackupPoses : rightReefAlgaeBackupPoses).get(tagID);
     }
 
     /**

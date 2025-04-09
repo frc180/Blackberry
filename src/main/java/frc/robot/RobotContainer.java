@@ -281,7 +281,7 @@ public class RobotContainer {
 
 
         // Driver buttons
-        //coral
+        // Coral
         final Trigger driverSpit = driverController.y();
         final Trigger driverIntake = driverController.leftTrigger().and(coralMode);
         final Trigger driverIntakeHP = driverController.povRight().and(coralMode); //trigger for intaking from the human player station
@@ -293,14 +293,13 @@ public class RobotContainer {
         driverLeftReef = driverController.x().and(coralMode);
         driverRightReef = driverController.b().and(coralMode).or(driverAlgaeDescore);
         final Trigger driverAnyReef = driverLeftReef.or(driverRightReef);
-        //algae
-        // final Trigger driverProcessor = algaeMode.and(driverController.b());
-        final Trigger driverProcessor = driverController.povUp();
-        final Trigger driverNet = algaeMode.and(driverController.x());
-        final Trigger driverNetSlow = algaeMode.and(driverController.b());
+        // Algae
+        final Trigger driverProcessor = algaeMode.and(driverController.b());
+        final Trigger driverNet = falseTrigger;                                 // algaeMode.and(driverController.x());
+        final Trigger driverNetSlow = algaeMode.and(driverController.x());      // algaeMode.and(driverController.b());
         final Trigger driverSpitAlgae = algaeMode.and(driverSpit);
         final Trigger driverIntakeAlgae = algaeMode.and(driverController.leftTrigger());
-        //climb (must be in algae mode)
+        // Climb
         final Trigger driverReadyClimb = driverController.leftStick().and(driverController.rightStick()); // left/right stick is M1 and M2
         final Trigger driverStartClimb = driverController.start();
 
@@ -661,6 +660,13 @@ public class RobotContainer {
             shouldObtainAlgae
         );
 
+        Command backupWithAlgae = new DriveToCoralPose(
+            () -> vision.lastReefID,
+            (tagID) -> vision.getReefAlgaeBackupPose(tagID, false)
+        )
+        .withPoseTargetType(PoseTarget.STANDARD)
+        .until(drivetrain.withinTargetPoseDistance(0.1));
+
         Trigger visionScoreReady = vision.poseEstimateDiffLow.or(scoringCameraDisconnected)
                                                              .or(() -> {
                                                                 Distance elevatorTarget = elevator.getTargetPosition();
@@ -677,26 +683,12 @@ public class RobotContainer {
                 Commands.runOnce(() -> Robot.currentlyScoringCoral = true)
                         .alongWith(drivetrain.runOnce(() -> drivetrain.drive(new ChassisSpeeds())))
                         .alongWith(scoringSequence),
-                Commands.runOnce(() -> {
-                    elevator.setPositionDirect(ElevatorSubsystem.STOW);
-                    elevatorArmPivot.setArmPositionDirect(ElevatorArmPivotSubsystem.receiving);
-                    Robot.currentlyScoringCoral = false;
-                    Robot.justScoredCoral = true;
+                Commands.either(
+                    backupWithAlgae.andThen(coralScoreEnd()),
+                    coralScoreEnd(),
+                    shouldObtainAlgae
+                )
 
-                    if (RobotState.isAutonomous()) {
-                        if (!Auto.coralScoringPositions.isEmpty()) {
-                            Auto.previousCoralScoringPosition = Auto.coralScoringPositions.get(0);
-                            Auto.coralScoringPositions.remove(0);
-                            Auto.firstCoralCycle = false;
-                        }
-                    }
-                    SimLogic.coralScored++;
-                    SmartDashboard.putNumber("Coral/" + SimLogic.coralScored, Timer.getFPGATimestamp() - Auto.startTime);
-                    if (Robot.isSimulation()) {
-                        SimLogic.spawnHumanPlayerCoral();
-                        SimLogic.intakeHasCoral = false;
-                    }
-                })
             ).withInterruptBehavior(InterruptionBehavior.kCancelIncoming)
         );
 
@@ -1148,6 +1140,29 @@ public class RobotContainer {
         return elevatorArm.runSpeed(L4_EJECT_SPEED).until(elevatorArm.hasNoCoral)
                           .andThen(Commands.waitSeconds(0.1))
                           .andThen(Commands.waitSeconds(0.15).deadlineFor(elevatorArmPivot.runSpeed(0.25))); // was .15 speed
+    }
+
+    private Command coralScoreEnd() {
+        return Commands.runOnce(() -> {
+            elevator.setPositionDirect(ElevatorSubsystem.STOW);
+            elevatorArmPivot.setArmPositionDirect(ElevatorArmPivotSubsystem.receiving);
+            Robot.currentlyScoringCoral = false;
+            Robot.justScoredCoral = true;
+
+            if (RobotState.isAutonomous()) {
+                if (!Auto.coralScoringPositions.isEmpty()) {
+                    Auto.previousCoralScoringPosition = Auto.coralScoringPositions.get(0);
+                    Auto.coralScoringPositions.remove(0);
+                    Auto.firstCoralCycle = false;
+                }
+            }
+            SimLogic.coralScored++;
+            SmartDashboard.putNumber("Coral/" + SimLogic.coralScored, Timer.getFPGATimestamp() - Auto.startTime);
+            if (Robot.isSimulation()) {
+                SimLogic.spawnHumanPlayerCoral();
+                SimLogic.intakeHasCoral = false;
+            }
+        });
     }
 
     /**
