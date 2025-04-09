@@ -21,6 +21,8 @@
 package frc.robot;
 
 import static edu.wpi.first.units.Units.*;
+
+import java.util.List;
 import java.util.Map;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
@@ -665,7 +667,8 @@ public class RobotContainer {
             (tagID) -> vision.getReefAlgaeBackupPose(tagID, false)
         )
         .withPoseTargetType(PoseTarget.STANDARD)
-        .until(drivetrain.withinTargetPoseDistance(0.1));
+        .until(drivetrain.withinTargetPoseDistance(0.15))
+        .withTimeout(1);
 
         Trigger visionScoreReady = vision.poseEstimateDiffLow.or(scoringCameraDisconnected)
                                                              .or(() -> {
@@ -677,7 +680,7 @@ public class RobotContainer {
         // Coral scoring sequence - kCancelIncoming means nothing else will be able to stop this command until it finishes
         atReef.and(elevator.inReefPosition)
               .and(elevatorArmPivot.elevatorArmInScoringPosition)
-              .and(drivetrain.almostStationary) // EXPERIMENT: remove or increase threshold
+              .and(drivetrain.almostStationary)
               .and(visionScoreReady).onTrue(
             Commands.sequence(
                 Commands.runOnce(() -> Robot.currentlyScoringCoral = true)
@@ -1095,6 +1098,19 @@ public class RobotContainer {
     }
 
     private Command coralEject() {
+        return Commands.either(
+            Commands.none(),
+            coralEjectGuaranteed(),
+            () -> {
+                if (RobotState.isAutonomous()) return false;
+
+                List<Integer> otherAllianceTags = Robot.isBlue() ? VisionSubsystem.redReefTags : VisionSubsystem.blueReefTags;
+                return otherAllianceTags.contains(vision.lastReefID);
+            }
+        );
+    }
+
+    private Command coralEjectGuaranteed() {
         Command coralEject = elevatorArm.runSpeed(0.3).until(elevatorArm.hasNoCoral) // was 0.325
                                         .andThen(Commands.waitSeconds(0.2)); // could maybe be slightly less delay (0.1)?
 
@@ -1115,15 +1131,9 @@ public class RobotContainer {
         );
     }
 
-    // private Command l1CoralEject() {
-    //     return elevatorArm.runSpeed(0.27).until(elevatorArm.hasNoCoral) // was .25, .30, before .15 at orlando
-    //                       .andThen(Commands.waitSeconds(0.5));
-    // }
-
     private Command l1CoralEject() {
         return elevatorArm.runSpeed(0.27).until(elevatorArm.hasNoCoral) // was .27 by end of south florida
                           .andThen(Commands.waitSeconds(0.5));
-                          //.andThen(Commands.waitSeconds(0.15).deadlineFor(elevatorArmPivot.runSpeed(0.75)));
     }
 
     private static final double L4_EJECT_SPEED = 0.27; // was .29,  .32
