@@ -1186,8 +1186,12 @@ public class RobotContainer {
     }
 
     private Command coralScoreEnd() {
+        // final Command delayedArmPivotReceive = Commands.waitSeconds(0.1).andThen(elevatorArmPivot.receivePosition());
+
         return Commands.runOnce(() -> {
             elevator.setPositionDirect(ElevatorSubsystem.STOW);
+            // EXPERIMENT: Try to delay moving the arm slightly to reduce the change of pushing the algae on the top of the branch
+            // delayedArmPivotReceive.schedule();
             elevatorArmPivot.setArmPositionDirect(ElevatorArmPivotSubsystem.receiving);
             Robot.currentlyScoringCoral = false;
             Robot.justScoredCoral = true;
