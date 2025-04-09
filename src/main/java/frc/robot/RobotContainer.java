@@ -215,6 +215,8 @@ public class RobotContainer {
         Command middleBargeLeft = Auto.bargeCoralAuto(Auto.middleBarge(true), true, middleBargeSimStart);
         Command middleBargeRight = Auto.bargeCoralAuto(Auto.middleBarge(false), true, middleBargeSimStart);
 
+        Command middleBargeAlgae = Auto.bargeCoralAuto(Auto.middleBargeWithAlgae(false), true, middleBargeSimStart);
+
         autoChooser.setDefaultOption("Do Nothing", autoDoNothing);
         autoChooser.addOption("Left Barge - 1st Left", leftBargeLeft);
         autoChooser.addOption("Left Barge - 1st Right", leftBargeRight);
@@ -227,6 +229,9 @@ public class RobotContainer {
 
         autoChooser.addOption("Middle Barge - 1st Left", middleBargeLeft);
         autoChooser.addOption("Middle Barge - 1st Right", middleBargeRight);
+        if (Robot.isSimulation()) {
+            autoChooser.addOption("Middle Barge - 1st Right & Algae", middleBargeAlgae);
+        }
 
         autoChooser.addOption("Drive straight", drivetrain.run(() -> {
             drivetrain.drive(new ChassisSpeeds(0, 1, 0));
@@ -597,6 +602,7 @@ public class RobotContainer {
             }
         });
 
+        // TODO: If algae descoring in auto is desired, autoHasCoral needs to be updated to support that
         Trigger autoHasCoral = autonomous.and(elevatorArm.hasPartialCoral);
         Trigger reefDeployAllowed = elevatorArm.hasEnteringCoral.negate()
                                         .and(teleop.or(autoHasCoral));
@@ -625,10 +631,18 @@ public class RobotContainer {
             .whileTrue(chosenElevatorHeight.alongWith(elevatorArmPivot.matchElevatorPreset()))
             .onFalse(elevator.stow().alongWith(elevatorArmPivot.receivePosition()));
 
+
+        final Trigger targetingAlgae = driverAlgaeDescore.or(() -> {
+            if (!RobotState.isAutonomous()) return false;
+            
+            CoralScoringPosition next = Auto.nextCoralScoringPosition();
+            return next != null && next.isAlgae();
+        });
+
         final double algaeGrabSpeed = 0.6;  // was 0.6/0.5, sometimes dropped, 1 was too extreme
 
         // Algae grab from reef (start intaking algae earlier when going to descore)
-        finalReefTrigger.and(driverAlgaeDescore)
+        finalReefTrigger.and(targetingAlgae)
             .whileTrue(elevatorArmAlgae.intakeAndIndex(algaeGrabSpeed));
 
         Trigger l4Advance = targetingL4.and(drivetrain.targetingReef())
@@ -657,8 +671,8 @@ public class RobotContainer {
  
         BooleanSupplier shouldObtainAlgae = () -> {
             return elevator.isTargetingReefAlgaePosition() && 
-                    driverRightReef.getAsBoolean() && 
-                    driverAlgaeDescore.getAsBoolean(); 
+                    // driverRightReef.getAsBoolean() && // EXPERIMENT: should be unnecessary
+                    targetingAlgae.getAsBoolean(); 
         };
 
         Command obtainAlgae = elevatorArmAlgae.intakeAndIndex(algaeGrabSpeed) // ALGAE GRAB - was 1
@@ -947,10 +961,20 @@ public class RobotContainer {
                 .until(intakeCoral.hasCoral) // at this point, the command gets interrupted by the auto coral intake trigger
                 .alongWith(Commands.runOnce(() -> Auto.seenCoralThisCycle = true))
         ).alongWith(Auto.startCoralIntake());
+
+
+        // Command getOrScoreCoral = Commands.either(
+        //     Auto.driveToReefWithCoral(),
+        //     autoIntakeCoral,
+        //     () -> {
+        //         var nextPos = Auto.nextCoralScoringPosition();
+        //         return nextPos != null && nextPos.isAlgae();
+        //     }
+        // );
                                     
         justScoredCoral.and(autonomous).and(drivetrainAvailable).onTrue(
             Commands.either(
-                autoIntakeCoral,
+                autoIntakeCoral, // getOrScoreCoral,
                 Commands.none(),
                 () -> Auto.nextCoralScoringPosition() != null
             ).alongWith(Commands.runOnce(() -> {
@@ -966,13 +990,13 @@ public class RobotContainer {
 
         lostCoral.and(autonomous).and(Auto.intakingState).onTrue(Auto.retryIntake());
 
-        if (Robot.isSimulation()) {
-            strugglingNearReef.and(autonomous).onTrue(Commands.sequence(
-                Commands.waitSeconds(0.3).deadlineFor(intakeCoralPivot.stow()),
-                drivetrain.run(() -> drivetrain.drive(new ChassisSpeeds(0, 0, 5))).withTimeout(1.5),
-                new ScheduleCommand(Auto.driveToReefWithCoral())
-            ));
-        }
+        // if (Robot.isSimulation()) {
+        //     strugglingNearReef.and(autonomous).onTrue(Commands.sequence(
+        //         Commands.waitSeconds(0.3).deadlineFor(intakeCoralPivot.stow()),
+        //         drivetrain.run(() -> drivetrain.drive(new ChassisSpeeds(0, 0, 5))).withTimeout(1.5),
+        //         new ScheduleCommand(Auto.driveToReefWithCoral())
+        //     ));
+        // }
 
         // ====================== TEST CONTROLS ======================
 

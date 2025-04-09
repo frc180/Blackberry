@@ -91,6 +91,13 @@ public final class Auto {
         );
     }
 
+    public static List<CoralScoringPosition> middleBargeWithAlgae(boolean firstBranchLeft) {
+        return List.of(
+            // new CoralScoringPosition(21, 4, firstBranchLeft),
+            new CoralScoringPosition(21, 2, false)
+        );
+    }
+
     private Auto() {}
     
     public static void init() {

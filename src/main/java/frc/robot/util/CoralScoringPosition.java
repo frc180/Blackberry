@@ -31,6 +31,10 @@ public class CoralScoringPosition {
         return tag == 7 || tag == 18;
     }
 
+    public boolean isAlgae() {
+        return !isLeft && level == Field.getAlgaeLevel(tag);
+    }
+
     public Pose2d getPose() {
         if (pose == null) {
             VisionSubsystem vision = RobotContainer.instance.vision;
