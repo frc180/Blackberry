@@ -553,7 +553,7 @@ public class RobotContainer {
 
         // Make the robot point towards the closest side of the reef
         teleop.and(coralMode)
-                .and(elevatorArm.hasPartialCoral.or(intakeCoral.hasCoral)) // EXPERIMENT
+                .and(elevatorArm.hasPartialCoral.or(intakeCoral.hasCoral))
                 .and(elevatorArmAlgae.hadAlgae.negate())
                 .and(climbDeployed.negate())
                 .and(manualL1Recently.negate())
@@ -604,7 +604,16 @@ public class RobotContainer {
 
         Trigger isScoringCoral = new Trigger(() -> Robot.currentlyScoringCoral);
 
-        Trigger rightL2 = driverRightReef.and(driverL2);
+        // EXPERIMENT: This extra OR statement fixes a bug that caused us to miss L2's when descoring algae - 
+        // this fixes that, but may come at the cost of making the algae grab behave differently.
+        Trigger rightL2 = driverRightReef.and(driverL2).or(() -> {
+            if (driverAlgaeDescore.getAsBoolean()) {
+                int level = Field.getAlgaeLevel(drivetrain.getTargetPoseTag());
+                return level == 2;
+            }
+            return false;
+        });
+
         Trigger nearReefModified = nearReef.and(rightL2.negate())
                                             .or(almostAtReef.debounce(0.1));
         
@@ -616,7 +625,7 @@ public class RobotContainer {
             .whileTrue(chosenElevatorHeight.alongWith(elevatorArmPivot.matchElevatorPreset()))
             .onFalse(elevator.stow().alongWith(elevatorArmPivot.receivePosition()));
 
-        final double algaeGrabSpeed = 0.6;  // EXPERIMENT: was 0.6/0.5, sometimes dropped, 1 was too extreme
+        final double algaeGrabSpeed = 0.6;  // was 0.6/0.5, sometimes dropped, 1 was too extreme
 
         // Algae grab from reef (start intaking algae earlier when going to descore)
         finalReefTrigger.and(driverAlgaeDescore)

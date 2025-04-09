@@ -578,7 +578,6 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         boolean replanning = driveToPoseStart != null;
         intermediatePose = endPose;
         
-        // EXPERIMENT - only reset PIDs when not replanning
         if (!replanning) {
             xPid.reset();
             yPid.reset();
