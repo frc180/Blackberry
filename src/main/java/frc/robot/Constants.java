@@ -49,7 +49,7 @@ public class Constants {
 
     public static final int INTAKE_ALGAE_SENSOR = 7;
 
-    public static final int ANALOG_ELEVATOR_ARM_PIVOT_POTENTIOMETER = 3;
+    public static final int ANALOG_ELEVATOR_ARM_PIVOT_POTENTIOMETER = 1; // was 3
 
     public static final int ANALOG_INTAKE_CORAL_PIVOT_POTENTIOMETER = 2;
     

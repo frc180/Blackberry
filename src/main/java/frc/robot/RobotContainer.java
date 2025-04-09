@@ -295,7 +295,7 @@ public class RobotContainer {
         final Trigger driverAnyReef = driverLeftReef.or(driverRightReef);
         //algae
         // final Trigger driverProcessor = algaeMode.and(driverController.b());
-        final Trigger driverProcessor = new Trigger(() -> false);
+        final Trigger driverProcessor = driverController.povUp();
         final Trigger driverNet = algaeMode.and(driverController.x());
         final Trigger driverNetSlow = algaeMode.and(driverController.b());
         final Trigger driverSpitAlgae = algaeMode.and(driverSpit);
@@ -477,15 +477,9 @@ public class RobotContainer {
         driverReadyClimb.whileTrue(readyClimb);
         driverStartClimb.whileTrue(climber.climb());
 
-        //processor alignment
+        // Automatic processor alignment
         // driverProcessor.whileTrue(new DriveToPose(drivetrain, () -> vision.getProcessorPose(Robot.isBlue()))
         //                                 .withPoseTargetType(PoseTarget.PROCESSOR));
-
-        // passing from algae arm to algae intake for processor (note: we've been told this is may not be possible)
-        // driverProcessor.and(elevatorArmAlgae.hasAlgae).whileTrue(Commands.parallel(
-        //     elevatorArmPivot.receiveAlgaePosition(),
-        //     elevatorArmAlgae.spit()
-        // ));
 
         // Trigger atProcessor = drivetrain.targetingProcessor()
         //                             .and(drivetrain.withinTargetPoseTolerance(
@@ -514,7 +508,7 @@ public class RobotContainer {
         driverProcessor.and(driverSpit)
                        .and(elevatorArmPivot.isAt(ElevatorArmPivotSubsystem.PROCESSOR))
                        .and(drivetrain.withinTargetHeadingTolerance(5))
-                       .whileTrue(elevatorArmAlgae.runSpeed(-1));
+                       .whileTrue(elevatorArmAlgae.runSpeed(-0.5));
 
         driverProcessor.and(elevatorArmAlgae.hasAlgae.negate())
                        .whileTrue(new RumbleCommand(1));
@@ -621,7 +615,7 @@ public class RobotContainer {
             .whileTrue(chosenElevatorHeight.alongWith(elevatorArmPivot.matchElevatorPreset()))
             .onFalse(elevator.stow().alongWith(elevatorArmPivot.receivePosition()));
 
-        final double algaeGrabSpeed = 1;  // EXPERIMENT: was 0.6/0.5, sometimes dropped, 1 was too extreme
+        final double algaeGrabSpeed = 0.6;  // EXPERIMENT: was 0.6/0.5, sometimes dropped, 1 was too extreme
 
         // Algae grab from reef (start intaking algae earlier when going to descore)
         finalReefTrigger.and(driverAlgaeDescore)
@@ -815,12 +809,12 @@ public class RobotContainer {
                 Degrees.of(3)
             ));
 
-            driverNet.and(nearBarge)
-                     .whileTrue(
-                        elevator.setPosition(ElevatorSubsystem.NET)
-                                .alongWith(elevatorArmPivot.netScorePosition())
-                     )
-                     .onFalse(netPlaceStow());
+            // driverNet.and(nearBarge)
+            //          .whileTrue(
+            //             elevator.setPosition(ElevatorSubsystem.NET)
+            //                     .alongWith(elevatorArmPivot.netScorePosition())
+            //          )
+            //          .onFalse(netPlaceStow());
 
             final Command netRumble = new RumbleCommand(1).withTimeout(2);
 

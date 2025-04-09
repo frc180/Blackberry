@@ -57,8 +57,8 @@ public class VisionIOLimelight implements VisionIO {
             redReefTags[i] = VisionSubsystem.redReefTags.get(i);
         }
 
-        // 4 and 5 are on the red side, 14 and 15 are on the blue side
-        blueBargeTags = new double[] { 4, 5, 14, 15 };
+        // 4 & 5 are on the red side, 14 & 15 are on the blue side. 3 & 16 processor
+        blueBargeTags = new double[] { 4, 5, 14, 15, 3, 16 };
         redBargeTags = blueBargeTags;
     }
 

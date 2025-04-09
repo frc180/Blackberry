@@ -68,7 +68,7 @@ public class LEDSubsystem extends SubsystemBase {
         blueFade = fade(BLUE, 0.5);
         redFade = fade(RED, 0.5);
         yellowFade = fade(YELLOW, 0.5);
-        purpleFade = fade(PURPLE, 0.85);
+        purpleFade = fade(PURPLE, 1); // was 0.85
         whiteFade = fade(WHITE, 1);
         yellowFadeFast = fade(YELLOW, 1);
 

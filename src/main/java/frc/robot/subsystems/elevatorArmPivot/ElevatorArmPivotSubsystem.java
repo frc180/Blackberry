@@ -28,7 +28,7 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
     private ElevatorArmPivotIOInputs inputs;
 
     protected static final Angle FORWARD_LIMIT = Degrees.of(60.7);
-    protected static final Angle REVERSE_LIMIT = Degrees.of(-20);
+    protected static final Angle REVERSE_LIMIT = Degrees.of(-44.6);
     protected static final Angle HARD_STOP_OFFSET = Degrees.of(60.46875 + 3.955078125 + 2.109375 - 2.63671875);
 
     // TODO: get this reading the next time the string pot is working
@@ -46,7 +46,7 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
     public static final double receivingHP = Units.degreesToRotations(42.1); //idk this number yet
     public static final double algaeReceive = Units.degreesToRotations(-70);
     public static final double horizontal = 0;
-    public static final double PROCESSOR = Units.degreesToRotations(-30);
+    public static final double PROCESSOR = Units.degreesToRotations(-40);
     public static final double CLIMB = Units.degreesToRotations(-37.2); // 101 is hard stop
 
     public static final double netScore = Units.degreesToRotations(8 - 2);
