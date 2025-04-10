@@ -4,11 +4,12 @@ import static edu.wpi.first.units.Units.*;
 import static frc.robot.util.StatusSignals.trackSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANdiConfiguration;
-import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.configs.TalonFXSConfiguration;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.CANdi;
-import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.hardware.TalonFXS;
+import com.ctre.phoenix6.signals.MotorArrangementValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.S1CloseStateValue;
 import com.ctre.phoenix6.signals.S1FloatStateValue;
@@ -17,7 +18,7 @@ import com.ctre.phoenix6.signals.S2CloseStateValue;
 import com.ctre.phoenix6.signals.S2FloatStateValue;
 import com.ctre.phoenix6.signals.S2StateValue;
 import com.ctre.phoenix6.sim.CANdiSimState;
-import com.ctre.phoenix6.sim.TalonFXSimState;
+import com.ctre.phoenix6.sim.TalonFXSSimState;
 import com.spamrobotics.util.Helpers;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
@@ -31,13 +32,13 @@ import frc.robot.RobotContainer;
 import frc.robot.subsystems.elevatorArmPivot.ElevatorArmPivotSubsystem;
 import frc.robot.util.simulation.SimLogic;
 
-public class ElevatorArmIOTalonFX implements ElevatorArmIO {
+public class ElevatorArmIOTalonFXS implements ElevatorArmIO {
 
     // TODO: Measure this on the robot
     static final double VELOCITY_RPS_12V = Robot.isReal() ? 54: 30.1875;
     static final double GEAR_RATIO = Robot.isReal() ? 2.25 : 4; 
     
-    final TalonFX rollerMotor;
+    final TalonFXS rollerMotor;
     final CANdi candiA, candiB;
     final VoltageOut voltageControl;
     final VelocityVoltage velocityControl;
@@ -50,14 +51,15 @@ public class ElevatorArmIOTalonFX implements ElevatorArmIO {
     double targetVelocity = 0;
 
     // Simulation-only variables
-    TalonFXSimState motorSimState;
+    TalonFXSSimState motorSimState;
     CANdiSimState candiASim, candiBSim;
     DCMotorSim motorSim;
 
-    public ElevatorArmIOTalonFX() {
-        TalonFXConfiguration config = new TalonFXConfiguration();
+    public ElevatorArmIOTalonFXS() {
+        TalonFXSConfiguration config = new TalonFXSConfiguration();
+        config.Commutation.MotorArrangement = MotorArrangementValue.Minion_JST;
         config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-        config.Feedback.SensorToMechanismRatio = GEAR_RATIO;
+        config.ExternalFeedback.SensorToMechanismRatio = GEAR_RATIO;
         if (Robot.isReal()) {
             config.Slot0.kP = 0;
             config.Slot0.kV = 0;
@@ -65,7 +67,7 @@ public class ElevatorArmIOTalonFX implements ElevatorArmIO {
             config.Slot0.kP = 0.15;
             config.Slot0.kV = 0.3975;
         }
-        rollerMotor = new TalonFX(Constants.ELEVATOR_ARM_TALON, Constants.CANIVORE);
+        rollerMotor = new TalonFXS(Constants.ELEVATOR_ARM_TALON, Constants.CANIVORE);
         rollerMotor.getConfigurator().apply(config);
         // rollerMotor.setNeutralMode(NeutralModeValue.Brake);
 
