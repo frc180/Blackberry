@@ -47,6 +47,7 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
     public static final double algaeReceive = Units.degreesToRotations(-70);
     public static final double horizontal = 0;
     public static final double PROCESSOR = Units.degreesToRotations(-40);
+    public static final double LOLLIPOP_INTAKE = Units.degreesToRotations(-35);
     public static final double CLIMB = Units.degreesToRotations(-37.2); // 101 is hard stop
 
     public static final double netScore = Units.degreesToRotations(8 - 2);
@@ -178,6 +179,10 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
     }
     public Command receiveHPposition() {
         return setPosition(receivingHP);
+    }
+
+    public Command lollipopIntakePosition() {
+        return setPosition(LOLLIPOP_INTAKE);
     }
 
     public Command climbPosition() {

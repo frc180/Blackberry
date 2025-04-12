@@ -8,10 +8,13 @@ public interface ClimberIO {
     @Logged
     public class ClimberInputs {
         double jointPosition = 0;
+        double grabberVelocity = 0;
     }
 
     public void update(ClimberInputs inputs);
 
     public void setSpeed(double speed);
+
+    public void setGrabberSpeed(double speed);
     
 }

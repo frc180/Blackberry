@@ -267,7 +267,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
 
         double translationMaxSpeed = MAX_SPEED * 0.8;
         // EXPERIMENT: Try kP of 1 
-        double translationP = 0.1; // was 0 at South Florida
+        double translationP = 0.15; // practiced some at 0.1, was 0 at South Florida
         double translationD = 0;
         double translationKV = 1;
 

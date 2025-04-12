@@ -50,7 +50,7 @@ public class ElevatorSubsystem extends SubsystemBase {
 
     private ElevatorIO io;
     private ElevatorIOInputs inputs;
-    private Alert notHomedAlert = new Alert("Elevator not homed!", AlertType.kWarning);
+    // private Alert notHomedAlert = new Alert("Elevator not homed!", AlertType.kWarning);
 
     private Distance targetPosition = ZERO;
     @NotLogged

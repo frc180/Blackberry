@@ -11,4 +11,9 @@ public class ClimberIOSim implements ClimberIO {
     public void setSpeed(double speed) {
         // TODO Something
     }
+
+    @Override
+    public void setGrabberSpeed(double speed) {
+        // TODO Something
+    }
 }

@@ -1,9 +1,11 @@
 package frc.robot.subsystems.climber;
 
 import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.ScheduleCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Robot;
 import frc.robot.subsystems.climber.ClimberIO.ClimberInputs;
 import frc.robot.commands.RumbleCommand;
@@ -13,10 +15,14 @@ public class Climber extends SubsystemBase {
 
     private static final double DEPLOYED = 0.73;
     private static final double MAX_CLIMB = 0.413;
-    // private static final double MAX_CLIMB = 0.357;
+    // private static final double MAX_CLIMB = 0.357; // George's super deep climb attempt
     
     private final ClimberIO io;
     private final ClimberInputs inputs;
+
+    private final Trigger grabberStalling = new Trigger(this::isGrabberStalling).debounce(1, DebounceType.kRising);
+
+    private double targetGrabberSpeed = 0;
 
     public Climber() {
         inputs = new ClimberInputs();
@@ -57,12 +63,29 @@ public class Climber extends SubsystemBase {
         );
     }
 
+    
+    public Command runGrabberSpeed(double speed) {
+        return runEnd(
+            () -> setGrabberSpeed(speed),
+            () -> setGrabberSpeed(0)
+        );
+    }
+
     public boolean isDeployed() {
         return inputs.jointPosition > DEPLOYED;
     }
 
     public boolean shouldStopClimbing() {
         return inputs.jointPosition < MAX_CLIMB;
+    }
+
+    private void setGrabberSpeed(double speed) {
+        targetGrabberSpeed = speed;
+        io.setGrabberSpeed(speed);
+    }
+
+    public boolean isGrabberStalling() {
+        return Math.abs(inputs.grabberVelocity) < 1 && targetGrabberSpeed != 0;
     }
 
     // public boolean shouldIncreaseClimbPower() {

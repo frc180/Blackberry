@@ -301,7 +301,7 @@ public class RobotContainer {
         driverRightReef = driverController.b().and(coralMode).or(driverAlgaeDescore);
         final Trigger driverAnyReef = driverLeftReef.or(driverRightReef);
         // Algae
-        final Trigger driverProcessor = algaeMode.and(driverController.b());
+        final Trigger driverProcessor = driverController.povUp();               // algaeMode.and(driverController.b());
         final Trigger driverNet = falseTrigger;                                 // algaeMode.and(driverController.x());
         final Trigger driverNetSlow = algaeMode.and(driverController.x());      // algaeMode.and(driverController.b());
         final Trigger driverSpitAlgae = algaeMode.and(driverSpit);
@@ -470,12 +470,13 @@ public class RobotContainer {
             .whileTrue(new RumbleCommand(1));
 
         //Algae Intake (using left paddle + right trigger)
-        driverIntakeAlgae.whileTrue(intakeAlgaePivot.extend().alongWith(intakeAlgae.runSpeed(1)))
-                            .onFalse(intakeAlgaePivot.stow());
+        driverIntakeAlgae.whileTrue(elevatorArmPivot.lollipopIntakePosition()
+                                    .alongWith(elevator.stow(), elevatorArmAlgae.intakeAndIndex(1)))
+                         .onFalse(elevatorArmPivot.receivePosition()
+                                    .alongWith(elevatorArmAlgae.intakeAndIndex(1).asProxy().withTimeout(1)));
 
-        driverIntakeAlgae.and(driverSpit)
-            .whileTrue(intakeAlgae.runSpeed(-1));
-
+        driverIntakeAlgae.and(elevatorArmAlgae.hasAlgae)
+                         .whileTrue(new RumbleCommand(1));
 
         final Command climbDeployedRumble = new ScheduleCommand(new RumbleCommand(1).withTimeout(1));
 
@@ -790,73 +791,32 @@ public class RobotContainer {
             new RumbleCommand(1).withTimeout(2) 
         ));
 
-        if (Robot.isReal()) {
-            algaeMode.whileTrue(drivetrain.targetHeadingContinuous(0.0, HeadingTarget.GYRO))
-                     .onFalse(drivetrain.targetHeading(null, HeadingTarget.POSE));
+        algaeMode.whileTrue(drivetrain.targetHeadingContinuous(0.0, HeadingTarget.GYRO))
+                    .onFalse(drivetrain.targetHeading(null, HeadingTarget.POSE));
 
-            // Start moving to score algae in net
-            driverNet.and(drivetrain.withinTargetHeadingTolerance(5).debounce(0.1)).whileTrue(
-                Commands.parallel(
-                    elevator.setPosition(ElevatorSubsystem.NET_THROW),
-                    elevatorArmPivot.netScorePosition()
-                )
-            ).onFalse(elevator.stow().alongWith(elevatorArmPivot.stowPosition()));
+        // Start moving to score algae in net
+        // driverNet.and(drivetrain.withinTargetHeadingTolerance(5).debounce(0.1)).whileTrue(
+        //     Commands.parallel(
+        //         elevator.setPosition(ElevatorSubsystem.NET_THROW),
+        //         elevatorArmPivot.netScorePosition()
+        //     )
+        // ).onFalse(elevator.stow().alongWith(elevatorArmPivot.stowPosition()));
 
-            Command hasCoralAfterAlgaeRumble =  new RumbleCommand(1).withTimeout(2);
+        // Command hasCoralAfterAlgaeRumble =  new RumbleCommand(1).withTimeout(2);
 
-            // Lob algae into the net by releasing while moving the elevator 
-            driverNet.and(elevatorArmPivot.isAt(ElevatorArmPivotSubsystem.netScore))
-                    .and(() -> elevator.getTargetPosition() == ElevatorSubsystem.NET_THROW && elevator.getTargetErrorInches() < 12) // was 36.5 + 15
-                    .onTrue(
-                        elevatorArmAlgae.runSpeed(-0.8) // was -1
-                                        .withTimeout(0.5) // EXPERIMENT: 0.75, 1 second was too long
-                                        .andThen(elevator.runOnce(() -> {
-                                            elevator.setPositionDirect(ElevatorSubsystem.STOW);
-                                            if (elevatorArm.hasPartialCoralBool()) {
-                                                hasCoralAfterAlgaeRumble.schedule();
-                                            }
-                                        })
-                    ).withInterruptBehavior(InterruptionBehavior.kCancelIncoming));
-        } else {
-            algaeMode.whileTrue(vision.bargeMode());
-
-            algaeMode.and(driverNet.negate())
-                     .whileTrue(drivetrain.targetHeadingContinuous(0.0, HeadingTarget.GYRO))
-                     .onFalse(drivetrain.targetHeading(null, HeadingTarget.POSE));
-
-            driverNet.whileTrue(new DriveToPose(drivetrain, () -> vision.getBargePose())
-                                    .withPoseTargetType(PoseTarget.BARGE));
-
-            Trigger nearBarge = drivetrain.targetingBarge().and(drivetrain.withinTargetPoseTolerance(
-                Meters.of(1.5), 
-                Meters.of(1.5),
-                Degrees.of(5)
-            ));
-
-            Trigger atBarge = drivetrain.targetingBarge().and(drivetrain.withinTargetPoseTolerance(
-                Inches.of(2), 
-                Inches.of(2),
-                Degrees.of(3)
-            ));
-
-            // driverNet.and(nearBarge)
-            //          .whileTrue(
-            //             elevator.setPosition(ElevatorSubsystem.NET)
-            //                     .alongWith(elevatorArmPivot.netScorePosition())
-            //          )
-            //          .onFalse(netPlaceStow());
-
-            final Command netRumble = new RumbleCommand(1).withTimeout(2);
-
-            driverNet.and(atBarge)
-                     .and(elevator.elevatorInScoringPosition)
-                     .and(elevatorArmPivot.isAt(ElevatorArmPivotSubsystem.netScore))
-                     .onTrue(Commands.sequence(
-                        elevatorArmAlgae.runSpeed(-1).withTimeout(0.5),
-                        new ScheduleCommand(drivetrain.runOnce(() -> drivetrain.drive(new ChassisSpeeds())))
-                            .alongWith(new ScheduleCommand(netRumble))
-                     ).withInterruptBehavior(InterruptionBehavior.kCancelIncoming));
-        }
+        // // Lob algae into the net by releasing while moving the elevator 
+        // driverNet.and(elevatorArmPivot.isAt(ElevatorArmPivotSubsystem.netScore))
+        //         .and(() -> elevator.getTargetPosition() == ElevatorSubsystem.NET_THROW && elevator.getTargetErrorInches() < 12) // was 36.5 + 15
+        //         .onTrue(
+        //             elevatorArmAlgae.runSpeed(-0.8) // was -1
+        //                             .withTimeout(0.5) // EXPERIMENT: 0.75, 1 second was too long
+        //                             .andThen(elevator.runOnce(() -> {
+        //                                 elevator.setPositionDirect(ElevatorSubsystem.STOW);
+        //                                 if (elevatorArm.hasPartialCoralBool()) {
+        //                                     hasCoralAfterAlgaeRumble.schedule();
+        //                                 }
+        //                             })
+        //         ).withInterruptBehavior(InterruptionBehavior.kCancelIncoming));
 
         driverNetSlow.and(drivetrain.withinTargetHeadingTolerance(5).debounce(0.1)).whileTrue(
             Commands.parallel(
@@ -1012,7 +972,8 @@ public class RobotContainer {
 
         // ====================== TEST CONTROLS ======================
 
-        testController.button(1).onTrue(elevatorArmPivot.calculateAbsoluteRatio());
+        // testController.button(1).onTrue(elevatorArmPivot.calculateAbsoluteRatio());
+        testController.button(1).whileTrue(climber.runGrabberSpeed(0.5));
 
         testController.button(2).onTrue(Commands.runOnce(() -> elevatorArmPivot.syncAbsolute()));
 
