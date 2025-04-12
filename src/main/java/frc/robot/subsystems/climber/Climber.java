@@ -13,6 +13,7 @@ public class Climber extends SubsystemBase {
 
     private static final double DEPLOYED = 0.73;
     private static final double MAX_CLIMB = 0.413;
+    // private static final double MAX_CLIMB = 0.357;
     
     private final ClimberIO io;
     private final ClimberInputs inputs;

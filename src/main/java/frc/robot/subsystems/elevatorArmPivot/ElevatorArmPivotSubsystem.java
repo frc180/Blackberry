@@ -65,8 +65,8 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
     private boolean homed = false;
     private boolean absoluteSyncAllowed = true;
 
-    private double absoluteScalar = Robot.isReal() ? (2.29 * .967) : 4;
-    private double absoluteOffset = Robot.isReal() ? -.617 : 30 * 4;
+    private double absoluteScalar = Robot.isReal() ? ((2.29 * .967) / 2) * .965 * .975 : 4;
+    private double absoluteOffset = Robot.isReal() ? -.617 - .027 + .003 : 30 * 4;
 
     private double lastPositionSyncTime = 0;
     private double absoluteRatio = 0;
@@ -110,12 +110,15 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
         notHomedAlert.set(!homed);
 
         absoluteRatio = inputs.position / getAbsolutePosition();
+        absoluteRatioFiltered = absoluteRatioFilter.calculate(absoluteRatio);
+
         double currentTime = Timer.getFPGATimestamp();
         boolean firstDisable = !enabled && !wasEverEnabled;
         boolean disableSync = firstDisable && !RobotContainer.POSING_MODE && currentTime - lastPositionSyncTime > 0.5;
         boolean shouldSync = firstPeriodic || disableSync;
 
-        absPosValid = getAbsolutePosition() < 0.25; // 0.2
+        // absPosValid = getAbsolutePosition() < 0.25; // 0.2
+        absPosValid = true;
 
         if (absoluteSyncAllowed && shouldSync && absPosValid) {
             syncAbsolute();
@@ -125,9 +128,9 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
             homed = true;
             lastPositionSyncTime = currentTime;
         }
-        
+
         if (!enabled && !wasEverEnabled) {
-            unexpectedStartPositionAlert.set(Math.abs(getAbsolutePosition() - .164) > .005);
+            unexpectedStartPositionAlert.set(Math.abs(getAbsolutePosition() - .16) > .005);
         }
 
         if (firstPeriodic) firstPeriodic = false;
@@ -195,26 +198,18 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
     //     ).withInterruptBehavior(InterruptionBehavior.kCancelIncoming);
     // }
 
-    // public Command calculateAbsoluteRatio() {
-    //     return Commands.sequence(
-    //         runOnce(() -> {
-    //             io.zero(0);
-    //             zeroAbsolute();
-    //             io.setSpeed(0.04);
-    //             absoluteRatioFiltered = 0;
-    //             absoluteRatioSamples = 0;
-    //             absoluteRatioFilter.reset();
-    //         }),
-    //         Commands.waitSeconds(0.1),
-    //         runEnd(
-    //             () -> {
-    //                 absoluteRatioSamples++;
-    //                 absoluteRatioFiltered = absoluteRatioFilter.calculate(inputs.position / getAbsolutePosition());
-    //             },
-    //             () -> io.setSpeed(0)
-    //         ).until(atHardstop)
-    //     ).ignoringDisable(true);
-    // }
+    public Command calculateAbsoluteRatio() {
+        return Commands.sequence(
+            runOnce(() -> {
+                io.zero(0);
+                zeroAbsolute();
+                // io.setSpeed(0.04);
+                absoluteRatioFiltered = 0;
+                absoluteRatioSamples = 0;
+                absoluteRatioFilter.reset();
+            })
+        ).ignoringDisable(true);
+    }
 
     public Command zero(Angle angle) {
         return zero(angle.in(Rotations));
@@ -354,9 +349,13 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
         return (inputs.absolutePosition * absoluteScalar) - absoluteOffset;
     }
 
-    public double getCancoderDegrees() {
-        return Units.rotationsToDegrees(inputs.cancoderRotations);
+    public double getAbsoluteDegrees() {
+        return Units.rotationsToDegrees(getAbsolutePosition());
     }
+
+    // public double getCancoderDegrees() {
+    //     return Units.rotationsToDegrees(inputs.cancoderRotations);
+    // }
 
     public void zeroAbsolute() {
         absoluteOffset = (inputs.absolutePosition * absoluteScalar);

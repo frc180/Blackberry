@@ -15,7 +15,6 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -32,7 +31,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     public static final Distance L1 = Meters.of(0.136).plus(Inches.of(5));
 
     public static final Distance L2 = Meters.of(0.302).plus(Inches.of(1))
-                                                                .plus(Inches.of(0.5)); // our field-specific offset
+                                                                .plus(Inches.of(0.5 + 0.5)); // our field-specific offset
     public static final Distance L3 = L2.plus(Inches.of(16));
     public static final Distance L4 = Meters.of(1.46);
     public static final Distance L4_ADVANCE = L2.plus(Inches.of(12)); // was +10
@@ -41,7 +40,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     public static final Distance STOW = Inches.of(0);
     public static final Distance ZERO = Meters.of(0);
     public static final Distance receiveHP = Inches.of(1.5);
-    public static final Distance CLIMB = Inches.of(14);
+    public static final Distance CLIMB = Inches.of(14); // OG climb was 14
 
     protected static final double SOFT_UPPER_LIMIT = Meters.of(1.48).in(Meters);
     protected static final double SOFT_LOWER_LIMIT = 0;
@@ -104,7 +103,7 @@ public class ElevatorSubsystem extends SubsystemBase {
         //     hasHomed = true;
         // }
 
-        notHomedAlert.set(!hasHomed);
+        // notHomedAlert.set(!hasHomed);
 
         softStowLogic();
 

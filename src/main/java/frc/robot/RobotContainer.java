@@ -371,11 +371,17 @@ public class RobotContainer {
 
 
         // Teleop driving
+
+        final double slowElevatorHeight = ElevatorSubsystem.L3.in(Meters);
+
         final Function<Double, Double> axisToLinearSpeed = (axis) -> {
             axis *= DrivetrainSubsystem.MAX_SPEED;
-            // Temporary slowdown logic for net scoring, until we add real driver acceleration limiting that is tied
-            // to elevator height
-            if (driverNet.getAsBoolean() || driverNetSlow.getAsBoolean()) axis *= 0.25;
+            // Slow down drivetrain when scoring in barge or elevator is high
+            if (driverNet.getAsBoolean() || 
+                driverNetSlow.getAsBoolean() ||
+                elevator.getPositionMeters() > slowElevatorHeight) {
+                    axis *= 0.25;
+            }
 
             // Slow down a little bit when climbing or scoring L1 manually
             if (climbDeployedBool || driverController.povLeft().getAsBoolean()) axis *= 0.5;
@@ -675,12 +681,17 @@ public class RobotContainer {
                     targetingAlgae.getAsBoolean(); 
         };
 
-        Command obtainAlgae = elevatorArmAlgae.intakeAndIndex(algaeGrabSpeed) // ALGAE GRAB - was 1
-                                              .until(elevatorArmAlgae.hasAlgae.or(driverAlgaeDescore.negate()))
-                                              .withTimeout(3);
+        // Command obtainAlgae = elevatorArmAlgae.intakeAndIndex(algaeGrabSpeed)
+        //                                       .until(elevatorArmAlgae.hasAlgae.or(driverAlgaeDescore.negate()))
+        //                                       .withTimeout(3);
+
+        Command obtainAlgae = Commands.race(Commands.waitUntil(elevatorArmAlgae.hasAlgae), Commands.waitSeconds(3))
+                                        .andThen(coralEject())
+                                        .deadlineFor(elevatorArmAlgae.intakeAndIndex(algaeGrabSpeed).asProxy());
 
         Command scoringSequence = Commands.either(
-            obtainAlgae.andThen(coralEject().deadlineFor(elevatorArmAlgae.passiveIndex())),
+            obtainAlgae,
+            // obtainAlgae.andThen(coralEject().deadlineFor(elevatorArmAlgae.passiveIndex())),
             coralEject(),
             shouldObtainAlgae
         );
@@ -714,6 +725,7 @@ public class RobotContainer {
                     coralScoreEnd(),
                     shouldObtainAlgae
                 )
+                // coralScoreEnd()
 
             ).withInterruptBehavior(InterruptionBehavior.kCancelIncoming)
         );
@@ -1000,7 +1012,7 @@ public class RobotContainer {
 
         // ====================== TEST CONTROLS ======================
 
-        testController.button(1).onTrue(elevator.home());
+        testController.button(1).onTrue(elevatorArmPivot.calculateAbsoluteRatio());
 
         testController.button(2).onTrue(Commands.runOnce(() -> elevatorArmPivot.syncAbsolute()));
 
@@ -1186,7 +1198,7 @@ public class RobotContainer {
     }
 
     private Command coralScoreEnd() {
-        // final Command delayedArmPivotReceive = Commands.waitSeconds(0.1).andThen(elevatorArmPivot.receivePosition());
+        final Command delayedArmPivotReceive = Commands.waitSeconds(0.1).andThen(() -> elevatorArmPivot.setArmPositionDirect(ElevatorArmPivotSubsystem.receiving));
 
         return Commands.runOnce(() -> {
             elevator.setPositionDirect(ElevatorSubsystem.STOW);
