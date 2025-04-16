@@ -66,7 +66,7 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
     private boolean homed = false;
     private boolean absoluteSyncAllowed = true;
 
-    private double absoluteScalar = Robot.isReal() ? ((2.29 * .967) / 2) * .965 * .975 : 4;
+    private double absoluteScalar = Robot.isReal() ? ((2.29 * .967) / 2) * .965 * .975 * 1.02 * .995  * .98 : 4;
     private double absoluteOffset = Robot.isReal() ? -.617 - .027 + .003 : 30 * 4;
 
     private double lastPositionSyncTime = 0;
@@ -115,6 +115,7 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
 
         double currentTime = Timer.getFPGATimestamp();
         boolean firstDisable = !enabled && !wasEverEnabled;
+        // boolean disableSync = false;
         boolean disableSync = firstDisable && !RobotContainer.POSING_MODE && currentTime - lastPositionSyncTime > 0.5;
         boolean shouldSync = firstPeriodic || disableSync;
 

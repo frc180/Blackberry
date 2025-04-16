@@ -33,7 +33,7 @@ public class ElevatorIOTalonFX implements ElevatorIO {
     MotionMagicExpoVoltage motionMagicExpoControl;
     VoltageOut voltageControl;
     Follower followerControl;
-    DigitalInput bottomLimit;
+    // DigitalInput bottomLimit;
 
     // Status signals
     StatusSignal<Angle> positionSignal;
@@ -98,7 +98,7 @@ public class ElevatorIOTalonFX implements ElevatorIO {
 
         motorB.setControl(followerControl);
 
-        bottomLimit = new DigitalInput(Constants.DIO_ELEVATOR_BOTTOM_LIMIT);
+        // bottomLimit = new DigitalInput(Constants.DIO_ELEVATOR_BOTTOM_LIMIT);
 
         positionSignal = trackSignal(motorA.getPosition());
         velocitySignal = trackSignal(motorA.getVelocity());
@@ -149,11 +149,12 @@ public class ElevatorIOTalonFX implements ElevatorIO {
         inputs.target = targetSignal.getValueAsDouble();
         inputs.dutyCycle = dutyCycleSignal.getValueAsDouble();
 
-        if (Robot.isReal()) {
-            inputs.bottomLimit = !bottomLimit.get();
-        } else {
-            inputs.bottomLimit = elevatorSim.getPositionMeters() <= 0.01;
-        }
+        inputs.bottomLimit = false;
+        // if (Robot.isReal()) {
+        //     inputs.bottomLimit = !bottomLimit.get();
+        // } else {
+        //     inputs.bottomLimit = elevatorSim.getPositionMeters() <= 0.01;
+        // }
     }
 
     // Simulation-only code which runs periodically before update() is called

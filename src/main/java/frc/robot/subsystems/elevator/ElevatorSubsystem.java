@@ -40,7 +40,8 @@ public class ElevatorSubsystem extends SubsystemBase {
     public static final Distance STOW = Inches.of(0);
     public static final Distance ZERO = Meters.of(0);
     public static final Distance receiveHP = Inches.of(1.5);
-    public static final Distance CLIMB = Inches.of(14); // OG climb was 14
+    public static final Distance CLIMB = Inches.of(15); // was 14
+    public static final Distance CLIMB_STOW = Inches.of(7);
 
     protected static final double SOFT_UPPER_LIMIT = Meters.of(1.48).in(Meters);
     protected static final double SOFT_LOWER_LIMIT = 0;
@@ -154,6 +155,10 @@ public class ElevatorSubsystem extends SubsystemBase {
 
     public Command climbHeight() {
         return setPosition(CLIMB);
+    }
+
+    public Command climbStowHeight() {
+        return setPosition(CLIMB_STOW);
     }
 
     public Command setPosition(Distance position) {

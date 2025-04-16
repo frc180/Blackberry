@@ -44,7 +44,6 @@ import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.simulation.ElevatorSim;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -55,8 +54,6 @@ import edu.wpi.first.wpilibj2.command.button.CommandGenericHID;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
-import frc.robot.Auto.AutoState;
 import frc.robot.commands.DefaultDriveCommand;
 import frc.robot.commands.DriveToCoralPose;
 import frc.robot.commands.DriveToPose;
@@ -71,6 +68,7 @@ import frc.robot.subsystems.IntakeAlgaePivot.IntakeAlgaePivotSubsystem;
 import frc.robot.subsystems.IntakeCoral.IntakeCoralSubsystem;
 import frc.robot.subsystems.IntakeCoralPivot.IntakeCoralPivotSubsystem;
 import frc.robot.subsystems.climber.Climber;
+import frc.robot.subsystems.climber.Climber.ClimberState;
 import frc.robot.subsystems.coralIndexer.CoralIndexerSubsystem;
 import frc.robot.subsystems.elevator.ElevatorSubsystem;
 import frc.robot.subsystems.vision.VisionSubsystem;
@@ -488,7 +486,16 @@ public class RobotContainer {
                             );
 
         driverReadyClimb.whileTrue(readyClimb);
-        driverStartClimb.whileTrue(climber.climb());
+        driverStartClimb.whileTrue(climber.climb().alongWith(elevator.climbStowHeight()));
+        
+        climber.hasCage
+                .and(climber.isState(ClimberState.DEPLOYED))
+                .whileTrue(new RumbleCommand(1));
+
+        // Auto climb
+        // climber.hasCage
+        //         .and(climber.isState(ClimberState.DEPLOYED))
+        //         .onTrue(climber.climb().alongWith(elevator.climbStowHeight()));
 
         // Automatic processor alignment
         // driverProcessor.whileTrue(new DriveToPose(drivetrain, () -> vision.getProcessorPose(Robot.isBlue()))
@@ -686,7 +693,7 @@ public class RobotContainer {
         //                                       .until(elevatorArmAlgae.hasAlgae.or(driverAlgaeDescore.negate()))
         //                                       .withTimeout(3);
 
-        Command obtainAlgae = Commands.race(Commands.waitUntil(elevatorArmAlgae.hasAlgae), Commands.waitSeconds(3))
+        Command obtainAlgae = Commands.race(Commands.waitUntil(elevatorArmAlgae.hasAlgae), Commands.waitSeconds(3), Commands.waitUntil(driverAlgaeDescore.negate()))
                                         .andThen(coralEject())
                                         .deadlineFor(elevatorArmAlgae.intakeAndIndex(algaeGrabSpeed).asProxy());
 
@@ -972,8 +979,8 @@ public class RobotContainer {
 
         // ====================== TEST CONTROLS ======================
 
-        // testController.button(1).onTrue(elevatorArmPivot.calculateAbsoluteRatio());
-        testController.button(1).whileTrue(climber.runGrabberSpeed(0.5));
+        testController.button(1).onTrue(elevatorArmPivot.calculateAbsoluteRatio());
+        // testController.button(1).whileTrue(climber.runGrabberSpeed(0.5));
 
         testController.button(2).onTrue(Commands.runOnce(() -> elevatorArmPivot.syncAbsolute()));
 
@@ -1138,7 +1145,7 @@ public class RobotContainer {
     }
 
     private Command l1CoralEject() {
-        return elevatorArm.runSpeed(0.27).until(elevatorArm.hasNoCoral) // was .27 by end of south florida
+        return elevatorArm.runSpeed(0.23).until(elevatorArm.hasNoCoral) // was .27 by end of south florida
                           .andThen(Commands.waitSeconds(0.5));
     }
 

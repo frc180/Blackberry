@@ -2,7 +2,9 @@ package frc.robot.subsystems.climber;
 
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ScheduleCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -13,15 +15,25 @@ import frc.robot.commands.RumbleCommand;
 @Logged
 public class Climber extends SubsystemBase {
 
-    private static final double DEPLOYED = 0.73;
-    private static final double MAX_CLIMB = 0.413;
-    // private static final double MAX_CLIMB = 0.357; // George's super deep climb attempt
+    public enum ClimberState {
+        IDLE,
+        DEPLOYED,
+        LATCHED,
+        CLIMBING
+    }
+
+    private static final double HARD_STOP = 0.584;
+
+    private static final double DEPLOYED = 0.6;
+    private static final double MAX_CLIMB =  0.815 + Units.degreesToRotations(15); //0.69 - Units.degreesToRotations(10); // old climber - 0.413;
     
     private final ClimberIO io;
     private final ClimberInputs inputs;
 
-    private final Trigger grabberStalling = new Trigger(this::isGrabberStalling).debounce(1, DebounceType.kRising);
+    public final Trigger grabberStalling;
+    public final Trigger hasCage;
 
+    private ClimberState state = ClimberState.IDLE;
     private double targetGrabberSpeed = 0;
 
     public Climber() {
@@ -31,15 +43,40 @@ public class Climber extends SubsystemBase {
         } else {
             io = new ClimberIOSim();
         }
+
+        grabberStalling = new Trigger(this::isGrabberStalling).debounce(0.75, DebounceType.kRising);
+        hasCage = new Trigger(() -> inputs.sensorA || inputs.sensorB);
+        // hasCage = new Trigger(() -> inputs.sensorB).debounce(0.25, DebounceType.kRising);
     }
 
     @Override
     public void periodic() {
         io.update(inputs);
+
+        // if (grabberStalling.getAsBoolean() && state == ClimberState.DEPLOYED) {
+        //     state = ClimberState.LATCHED;
+        // }
+        
+        // if (hasCage.getAsBoolean() && state == ClimberState.DEPLOYED) {
+        //     state = ClimberState.LATCHED;
+        // }
+
+        if (hasCage.getAsBoolean()) {
+            setGrabberSpeed(0);
+        } else {
+
+            if (state == ClimberState.DEPLOYED) {
+                setGrabberSpeed(0.5);
+            } else if (state == ClimberState.CLIMBING || state == ClimberState.LATCHED) {
+                setGrabberSpeed(0);
+            }
+        }
     }
 
     public Command deploy() {
-        return runSpeed(0.07).until(this::isDeployed); // was 0.06, 0.05
+        return runSpeed(0.1) // was 0.07
+                .until(this::isDeployed)
+                .andThen(setState(ClimberState.DEPLOYED));
     }
 
     final Command climbDoneRumble = new RumbleCommand(1).withTimeout(2);
@@ -48,12 +85,12 @@ public class Climber extends SubsystemBase {
         return runEnd(
             () -> {
                 // io.setSpeed(shouldIncreaseClimbPower() ? 1 : 0.3);
-                io.setSpeed(0.3);
+                io.setSpeed(0.3); // was 0.4
             },
             () -> io.setSpeed(0)
         ).until(this::shouldStopClimbing)
-        .andThen(new ScheduleCommand(climbDoneRumble));
-        //.andThen(Commands.runOnce(() -> climbDoneRumble.schedule()));
+        .andThen(new ScheduleCommand(climbDoneRumble))
+        .alongWith(setState(ClimberState.CLIMBING));
     }
 
     public Command runSpeed(double speed) {
@@ -71,12 +108,22 @@ public class Climber extends SubsystemBase {
         );
     }
 
+    public Command setState(ClimberState newState) {
+        return Commands.runOnce(() -> {
+            state = newState;
+        });
+    }
+
+    public Trigger isState(ClimberState state) {
+        return new Trigger(() -> this.state == state);
+    }
+
     public boolean isDeployed() {
-        return inputs.jointPosition > DEPLOYED;
+        return inputs.jointPosition < DEPLOYED;
     }
 
     public boolean shouldStopClimbing() {
-        return inputs.jointPosition < MAX_CLIMB;
+        return inputs.jointPosition > MAX_CLIMB;
     }
 
     private void setGrabberSpeed(double speed) {
@@ -85,10 +132,6 @@ public class Climber extends SubsystemBase {
     }
 
     public boolean isGrabberStalling() {
-        return Math.abs(inputs.grabberVelocity) < 1 && targetGrabberSpeed != 0;
+        return Math.abs(inputs.grabberVelocity) < 10 && targetGrabberSpeed != 0;
     }
-
-    // public boolean shouldIncreaseClimbPower() {
-    //     return inputs.jointPosition < INCREASE_POWER_THRESHOLD;
-    // }
 }

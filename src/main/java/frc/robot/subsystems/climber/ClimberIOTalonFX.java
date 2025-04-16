@@ -8,17 +8,18 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import frc.robot.Constants;
 
 public class ClimberIOTalonFX implements ClimberIO {
 
-    final TalonFX winchMotor;
+    final TalonFX winchMotor, grabberMotor;
     final DutyCycleEncoder absoluteEncoder;
+    final DigitalInput sensor, sensorB;
     final VoltageOut voltageControl, grabberVoltage;
 
-    TalonFX grabberMotor = null;
-    StatusSignal<AngularVelocity> grabberVelocity = null;
+    final StatusSignal<AngularVelocity> grabberVelocity;
 
     public ClimberIOTalonFX() {
         TalonFXConfiguration config = new TalonFXConfiguration();
@@ -33,20 +34,21 @@ public class ClimberIOTalonFX implements ClimberIO {
 
         absoluteEncoder = new DutyCycleEncoder(Constants.DIO_INTAKE_ALGAE_ENCODER);
 
+        sensor = new DigitalInput(Constants.DIO_CLIMBER_SENSOR_A);
+        sensorB = new DigitalInput(Constants.DIO_CLIMBER_SENSOR_B);
+
         voltageControl = new VoltageOut(0);
         grabberVoltage = new VoltageOut(0);
 
-        if (grabberMotor != null) {
-            grabberVelocity = trackSignal(grabberMotor.getVelocity());
-        }
+        grabberVelocity = trackSignal(grabberMotor.getVelocity());
     }
 
     @Override
     public void update(ClimberInputs inputs) {
         inputs.jointPosition = absoluteEncoder.get();
-        if (grabberVelocity != null) {
-            inputs.grabberVelocity = grabberVelocity.getValueAsDouble();
-        }
+        inputs.sensorA = !sensor.get();
+        inputs.sensorB = !sensorB.get();
+        inputs.grabberVelocity = grabberVelocity.getValueAsDouble();
     }
 
     @Override
@@ -56,8 +58,6 @@ public class ClimberIOTalonFX implements ClimberIO {
 
     @Override
     public void setGrabberSpeed(double speed) {
-        if (grabberMotor != null) {
-            grabberMotor.setControl(grabberVoltage.withOutput(speed * 12));
-        }
+        grabberMotor.setControl(grabberVoltage.withOutput(speed * 12));
     }
 }

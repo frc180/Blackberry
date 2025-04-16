@@ -90,20 +90,20 @@ public class VisionSubsystem extends SubsystemBase {
     );
 
     // ORIGINAL FRONT CAMERA MOUNT (Orlando & South Florida)
-    // public static final Transform3d ROBOT_TO_FRONT_CAMERA = new Transform3d(
-    //     Inches.of(13.998 + 3.5).in(Meters), // forward
-    //     Inches.of(-7 + 1).in(Meters), // right
-    //     Inches.of(6.767).in(Meters),
-    //     new Rotation3d(0, Units.degreesToRadians(-15), 0) // upward tilt
-    // );
-
-    // NEW FRONT CAMERA MOUNT (Houston prep)
     public static final Transform3d ROBOT_TO_FRONT_CAMERA = new Transform3d(
         Inches.of(13.998 + 3.5).in(Meters), // forward
         Inches.of(-7 + 1).in(Meters), // right
         Inches.of(6.767).in(Meters),
-        new Rotation3d(0, Units.degreesToRadians(-15 - 8), 0) // upward tilt
+        new Rotation3d(0, Units.degreesToRadians(-15), 0) // upward tilt
     );
+
+    // Experimental new front camera mount  that could see the barge (reverted due to not using barge tags)
+    // public static final Transform3d ROBOT_TO_FRONT_CAMERA = new Transform3d(
+    //     Inches.of(13.998 + 3.5).in(Meters), // forward
+    //     Inches.of(-7 + 1).in(Meters), // right
+    //     Inches.of(6.767).in(Meters),
+    //     new Rotation3d(0, Units.degreesToRadians(-15 - 8), 0) // upward tilt
+    // );
     
     public static final Transform3d ROBOT_TO_INTAKE_CAMERA = new Transform3d(
         Inches.of(-8.7).in(Meters), // forward
