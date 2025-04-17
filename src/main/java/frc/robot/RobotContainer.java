@@ -486,7 +486,7 @@ public class RobotContainer {
                             );
 
         driverReadyClimb.whileTrue(readyClimb);
-        driverStartClimb.whileTrue(climber.climb().alongWith(elevator.climbStowHeight()));
+        driverStartClimb.whileTrue(climber.climb().alongWith(elevator.climbStowHeight(), elevator.brakeMode()));
         
         climber.hasCage
                 .and(climber.isState(ClimberState.DEPLOYED))
@@ -653,7 +653,7 @@ public class RobotContainer {
             return next != null && next.isAlgae();
         });
 
-        final double algaeGrabSpeed = 0.6;  // was 0.6/0.5, sometimes dropped, 1 was too extreme
+        final double algaeGrabSpeed = 1;  // was 0.6 sometimes dropped, 1 was too extreme
 
         // Algae grab from reef (start intaking algae earlier when going to descore)
         finalReefTrigger.and(targetingAlgae)
@@ -1145,7 +1145,7 @@ public class RobotContainer {
     }
 
     private Command l1CoralEject() {
-        return elevatorArm.runSpeed(0.28).until(elevatorArm.hasNoCoral) // was .3
+        return elevatorArm.runSpeed(0.3).until(elevatorArm.hasNoCoral) // was .3 qual 1, .28 in wed practice
                           .andThen(Commands.waitSeconds(0.5));
     }
 

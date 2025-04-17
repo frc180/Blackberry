@@ -56,7 +56,7 @@ public class ElevatorArmAlgaeSubsystem extends SubsystemBase {
     private Command indexWithIdle(double idleSpeed, double indexSpeed) {
         return runEnd(
             () -> {
-                double holdSpeed = 0.4; // was 0.3
+                double holdSpeed = 0.6; // was 0.4
                 // double holdAmps = 20;
                 double holdAmps = SmartDashboard.getNumber("Algae Amps", 0);
 

@@ -83,12 +83,13 @@ public class ElevatorIOTalonFX implements ElevatorIO {
         // config.MotionMagic.MotionMagicCruiseVelocity = 999;
         // config.MotionMagic.MotionMagicAcceleration = 8;
         motors.forEach(motor -> {
-            if (RobotContainer.POSING_MODE) {
-                motor.setNeutralMode(NeutralModeValue.Coast);
-            } else {
-                motor.setNeutralMode(NeutralModeValue.Brake);
-            }
             motor.getConfigurator().apply(config);
+            motor.setNeutralMode(NeutralModeValue.Coast);
+            // if (RobotContainer.POSING_MODE) {
+            //     motor.setNeutralMode(NeutralModeValue.Coast);
+            // } else {
+            //     motor.setNeutralMode(NeutralModeValue.Brake);
+            // }
         });
 
         motionMagicControl = new MotionMagicVoltage(0);
@@ -179,5 +180,12 @@ public class ElevatorIOTalonFX implements ElevatorIO {
     @Override
     public void zero() {
         motorA.setPosition(0);
+    }
+
+    @Override
+    public void brakeMode() {
+        motors.forEach(motor -> {
+            motor.setNeutralMode(NeutralModeValue.Brake);
+        });
     }
 }

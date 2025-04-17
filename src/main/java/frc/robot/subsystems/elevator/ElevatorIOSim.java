@@ -55,4 +55,9 @@ public class ElevatorIOSim implements ElevatorIO {
     public void zero() {
         // TODO: implement
     }
+
+    @Override
+    public void brakeMode() {
+        // TODO Auto-generated method stub
+    }
 }

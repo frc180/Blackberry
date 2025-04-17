@@ -42,7 +42,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     public static final Distance receiveHP = Inches.of(1.5);
 
     public static final Distance CLIMB = Inches.of(15);
-    public static final Distance CLIMB_STOW = Inches.of(14);
+    public static final Distance CLIMB_STOW = Inches.of(14 + 1);
     // Short elevator climb
     // public static final Distance CLIMB = Inches.of(15); // was 14
     // public static final Distance CLIMB_STOW = Inches.of(7);
@@ -155,6 +155,10 @@ public class ElevatorSubsystem extends SubsystemBase {
 
     public Command zero() {
         return setPosition(ZERO).withName("zero");
+    }
+
+    public Command brakeMode() {
+        return Commands.runOnce(() -> io.brakeMode());
     }
 
     public Command climbHeight() {

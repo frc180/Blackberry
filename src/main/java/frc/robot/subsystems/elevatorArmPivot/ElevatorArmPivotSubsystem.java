@@ -132,7 +132,7 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
         }
 
         if (!enabled && !wasEverEnabled) {
-            unexpectedStartPositionAlert.set(Math.abs(getAbsolutePosition() - .16) > .005);
+            unexpectedStartPositionAlert.set(Math.abs(getAbsolutePosition() - .165) > .005);
         }
 
         if (firstPeriodic) firstPeriodic = false;
