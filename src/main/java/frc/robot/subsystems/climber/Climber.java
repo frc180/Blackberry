@@ -36,6 +36,9 @@ public class Climber extends SubsystemBase {
     private ClimberState state = ClimberState.IDLE;
     private double targetGrabberSpeed = 0;
 
+    private boolean sensorATripped = false;
+    private boolean sensorBTripped = false;
+
     public Climber() {
         inputs = new ClimberInputs();
         if (Robot.isReal()) {
@@ -45,30 +48,31 @@ public class Climber extends SubsystemBase {
         }
 
         grabberStalling = new Trigger(this::isGrabberStalling).debounce(0.75, DebounceType.kRising);
-        hasCage = new Trigger(() -> inputs.sensorA || inputs.sensorB);
-        // hasCage = new Trigger(() -> inputs.sensorB).debounce(0.25, DebounceType.kRising);
+        // hasCage = new Trigger(() -> inputs.sensorA || inputs.sensorB);
+
+        hasCage = new Trigger(this::isCageLatched);
     }
 
     @Override
     public void periodic() {
         io.update(inputs);
 
-        // if (grabberStalling.getAsBoolean() && state == ClimberState.DEPLOYED) {
-        //     state = ClimberState.LATCHED;
-        // }
-        
-        // if (hasCage.getAsBoolean() && state == ClimberState.DEPLOYED) {
-        //     state = ClimberState.LATCHED;
-        // }
-
         if (hasCage.getAsBoolean()) {
             setGrabberSpeed(0);
         } else {
-
             if (state == ClimberState.DEPLOYED) {
                 setGrabberSpeed(0.5);
             } else if (state == ClimberState.CLIMBING || state == ClimberState.LATCHED) {
                 setGrabberSpeed(0);
+            }
+        }
+
+        if (state == ClimberState.DEPLOYED) {
+            if (!sensorATripped) {
+                sensorATripped = inputs.sensorA;
+            }
+            if (!sensorBTripped) {
+                sensorBTripped = inputs.sensorB;
             }
         }
     }
@@ -133,5 +137,9 @@ public class Climber extends SubsystemBase {
 
     public boolean isGrabberStalling() {
         return Math.abs(inputs.grabberVelocity) < 10 && targetGrabberSpeed != 0;
+    }
+
+    public boolean isCageLatched() {
+        return (!inputs.sensorA && sensorATripped) && (!inputs.sensorB && sensorBTripped);
     }
 }
