@@ -1145,7 +1145,7 @@ public class RobotContainer {
     }
 
     private Command l1CoralEject() {
-        return elevatorArm.runSpeed(0.23).until(elevatorArm.hasNoCoral) // was .27 by end of south florida
+        return elevatorArm.runSpeed(0.28).until(elevatorArm.hasNoCoral) // was .3
                           .andThen(Commands.waitSeconds(0.5));
     }
 

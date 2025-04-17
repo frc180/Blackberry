@@ -28,7 +28,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     public static final boolean LIVE_TUNING_ENABLED = false;
     // Distance presets, with 0 being the bottom of the elevator
     // public static final Distance L1 = Inches.of(0.1); // South Florida L1
-    public static final Distance L1 = Meters.of(0.136).plus(Inches.of(5));
+    public static final Distance L1 = Meters.of(0.136).plus(Inches.of(5 - 2));
 
     public static final Distance L2 = Meters.of(0.302).plus(Inches.of(1))
                                                                 .plus(Inches.of(0.5 + 0.5)); // our field-specific offset
@@ -40,8 +40,12 @@ public class ElevatorSubsystem extends SubsystemBase {
     public static final Distance STOW = Inches.of(0);
     public static final Distance ZERO = Meters.of(0);
     public static final Distance receiveHP = Inches.of(1.5);
-    public static final Distance CLIMB = Inches.of(15); // was 14
-    public static final Distance CLIMB_STOW = Inches.of(7);
+
+    public static final Distance CLIMB = Inches.of(15);
+    public static final Distance CLIMB_STOW = Inches.of(14);
+    // Short elevator climb
+    // public static final Distance CLIMB = Inches.of(15); // was 14
+    // public static final Distance CLIMB_STOW = Inches.of(7);
 
     protected static final double SOFT_UPPER_LIMIT = Meters.of(1.48).in(Meters);
     protected static final double SOFT_LOWER_LIMIT = 0;
