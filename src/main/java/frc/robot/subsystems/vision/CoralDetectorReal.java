@@ -32,7 +32,7 @@ public class CoralDetectorReal implements CoralDetector {
     // to allow switching without a timeout
     private final static double SIMILAR_CORAL_THRESHOLD = 0.75;
 
-    private static final double ALGAE_AVOID_THRESHOLD_DEGREES = 4.5;
+    private static final double ALGAE_AVOID_THRESHOLD_DEGREES = 2; // 4.5;
 
     private double lastDetectionTime = 0;
     private double lastDetectionDistance = 0;

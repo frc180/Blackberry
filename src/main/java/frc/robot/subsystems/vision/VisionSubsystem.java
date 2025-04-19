@@ -91,8 +91,8 @@ public class VisionSubsystem extends SubsystemBase {
 
     // ORIGINAL FRONT CAMERA MOUNT (Orlando & South Florida)
     public static final Transform3d ROBOT_TO_FRONT_CAMERA = new Transform3d(
-        Inches.of(13.998 + 3.5).in(Meters), // forward
-        Inches.of(-7 + 1).in(Meters), // right
+        Inches.of(13.998 + 3.5 - 1).in(Meters), // forward
+        Inches.of(-7 + 1 - 1).in(Meters), // right
         Inches.of(6.767).in(Meters),
         new Rotation3d(0, Units.degreesToRadians(-15), 0) // upward tilt
     );
