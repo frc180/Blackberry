@@ -289,7 +289,8 @@ public class RobotContainer {
         // Coral
         final Trigger driverSpit = driverController.y();
         final Trigger driverIntake = driverController.leftTrigger().and(coralMode);
-        final Trigger driverIntakeHP = driverController.povRight().and(coralMode); //trigger for intaking from the human player station
+        // final Trigger driverIntakeHP = driverController.povRight().and(coralMode); // trigger for intaking from the human player station
+        final Trigger driverIntakeHP = falseTrigger;
         final Trigger driverL1 = driverController.y().and(coralMode);
         final Trigger driverL2 = driverController.leftBumper().and(coralMode);
         final Trigger driverL3 = driverController.rightTrigger().and(coralMode);
@@ -303,7 +304,8 @@ public class RobotContainer {
         final Trigger driverNet = falseTrigger;                                 // algaeMode.and(driverController.x());
         final Trigger driverNetSlow = algaeMode.and(driverController.x());      // algaeMode.and(driverController.b());
         final Trigger driverSpitAlgae = algaeMode.and(driverSpit);
-        final Trigger driverIntakeAlgae = algaeMode.and(driverController.leftTrigger());
+        // final Trigger driverIntakeAlgae = algaeMode.and(driverController.leftTrigger());
+        final Trigger driverIntakeAlgae = driverController.povRight();
         // Climb
         final Trigger driverReadyClimb = driverController.leftStick().and(driverController.rightStick()); // left/right stick is M1 and M2
         final Trigger driverStartClimb = driverController.start();
@@ -471,7 +473,7 @@ public class RobotContainer {
         driverIntakeAlgae.whileTrue(elevatorArmPivot.lollipopIntakePosition()
                                     .alongWith(elevator.stow(), elevatorArmAlgae.intakeAndIndex(1)))
                          .onFalse(elevatorArmPivot.receivePosition()
-                                    .alongWith(elevatorArmAlgae.intakeAndIndex(1).asProxy().withTimeout(1)));
+                                    .alongWith(elevatorArmAlgae.intakeAndIndex(1).asProxy().withTimeout(1.5)));
 
         driverIntakeAlgae.and(elevatorArmAlgae.hasAlgae)
                          .whileTrue(new RumbleCommand(1));
@@ -576,6 +578,7 @@ public class RobotContainer {
                 .and(elevatorArmAlgae.hadAlgae.negate())
                 .and(climbDeployed.negate())
                 .and(manualL1Recently.negate())
+                .and(driverIntakeAlgae.negate())
             .whileTrue(drivetrain.targetHeadingContinuous(() -> {
                 Pose2d reefPose = vision.getClosestReefPose();
                 return reefPose != null ? reefPose.getRotation().getDegrees() : null;

@@ -12,7 +12,7 @@ import frc.robot.subsystems.elevatorArmAlgae.ElevatorArmAlgaeIO.ElevatorArmAlgae
 @Logged
 public class ElevatorArmAlgaeSubsystem extends SubsystemBase {
 
-    protected static final double HAS_ALGAE_THRESHOLD = 0.3; // was 0.16 at Orlando
+    protected static final double HAS_ALGAE_THRESHOLD = 0.15; // was 0.3
     protected static final double HAS_ALGAE_CLOSE_THRESHOLD = 0.1;
 
     private final ElevatorArmAlgaeIO io;
