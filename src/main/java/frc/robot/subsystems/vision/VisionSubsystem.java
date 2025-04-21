@@ -205,7 +205,7 @@ public class VisionSubsystem extends SubsystemBase {
     public AprilTagFieldLayout aprilTagFieldLayout;
     public final Trigger poseEstimateDiffLow;
     @NotLogged
-    public final Trigger scoringCameraConnected, frontCameraConnected;
+    public final Trigger scoringCameraConnected;
     public final Trigger hasPoseEstimates = new Trigger(()-> poseEstimate != null).debounce(0.5);
 
     @SuppressWarnings("unused")
@@ -276,7 +276,6 @@ public class VisionSubsystem extends SubsystemBase {
                    Math.abs(poseEstimateDiffTheta) < 5;
         });
         scoringCameraConnected = new Trigger(() -> inputs.scoringCameraConnected);
-        frontCameraConnected = new Trigger(() -> inputs.frontCameraConnected);
     }
 
     boolean wasEnabled = false;
