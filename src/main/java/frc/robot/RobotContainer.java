@@ -809,34 +809,15 @@ public class RobotContainer {
             new RumbleCommand(1).withTimeout(2) 
         ));
 
-        algaeMode.whileTrue(drivetrain.targetHeadingContinuous(0.0, HeadingTarget.GYRO))
+        algaeMode.and(notDemoMode)
+                    .whileTrue(drivetrain.targetHeadingContinuous(0.0, HeadingTarget.GYRO))
                     .onFalse(drivetrain.targetHeading(null, HeadingTarget.POSE));
 
-        // Start moving to score algae in net
-        // driverNet.and(drivetrain.withinTargetHeadingTolerance(5).debounce(0.1)).whileTrue(
-        //     Commands.parallel(
-        //         elevator.setPosition(ElevatorSubsystem.NET_THROW),
-        //         elevatorArmPivot.netScorePosition()
-        //     )
-        // ).onFalse(elevator.stow().alongWith(elevatorArmPivot.stowPosition()));
+        // Scoring in the net
+        final Trigger canNetDeploy = drivetrain.withinTargetHeadingTolerance(5).debounce(0.1)
+                                               .or(demoMode);
 
-        // Command hasCoralAfterAlgaeRumble =  new RumbleCommand(1).withTimeout(2);
-
-        // // Lob algae into the net by releasing while moving the elevator 
-        // driverNet.and(elevatorArmPivot.isAt(ElevatorArmPivotSubsystem.netScore))
-        //         .and(() -> elevator.getTargetPosition() == ElevatorSubsystem.NET_THROW && elevator.getTargetErrorInches() < 12) // was 36.5 + 15
-        //         .onTrue(
-        //             elevatorArmAlgae.runSpeed(-0.8) // was -1
-        //                             .withTimeout(0.5) // EXPERIMENT: 0.75, 1 second was too long
-        //                             .andThen(elevator.runOnce(() -> {
-        //                                 elevator.setPositionDirect(ElevatorSubsystem.STOW);
-        //                                 if (elevatorArm.hasPartialCoralBool()) {
-        //                                     hasCoralAfterAlgaeRumble.schedule();
-        //                                 }
-        //                             })
-        //         ).withInterruptBehavior(InterruptionBehavior.kCancelIncoming));
-
-        driverNetSlow.and(drivetrain.withinTargetHeadingTolerance(5).debounce(0.1)).whileTrue(
+        driverNetSlow.and(canNetDeploy).whileTrue(
             Commands.parallel(
                 elevator.setPosition(ElevatorSubsystem.NET),
                 elevatorArmPivot.netScorePosition()
@@ -852,13 +833,6 @@ public class RobotContainer {
 
         if (leds != null) {
             leds.setDefaultCommand(leds.run(() -> {
-
-                // temporary test code
-                // if (true) {
-                //     leds.setDualAnimation(leds.blueLeftFlow, leds.blueRightFlow);
-                //     return;
-                // }
-
                 if (POSING_MODE) {
                     if (elevator.isElevatorInPosition() && elevatorArmPivot.isInPosition()) {
                         leds.setAnimation(leds.greenStrobe);
