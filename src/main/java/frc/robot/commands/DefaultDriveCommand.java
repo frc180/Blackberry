@@ -5,6 +5,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.Robot;
 import frc.robot.RobotContainer;
 import frc.robot.subsystems.DrivetrainSubsystem;
 import frc.robot.subsystems.DrivetrainSubsystem.HeadingTarget;
@@ -93,7 +94,7 @@ public class DefaultDriveCommand extends Command {
     // ======================= Game Specific Helper Methods =======================
 
     private boolean shouldApplyCoralAssist() {
-        // return false;
+        if (Robot.isDemoMode()) return false;
 
         RobotContainer rc = RobotContainer.instance;
         if (!rc.coralIntakeTrigger.getAsBoolean() || 
@@ -102,6 +103,7 @@ public class DefaultDriveCommand extends Command {
             rc.intakeCoral.hasCoralBool()) {
             return false;
         }
+
         return true;
     }
 

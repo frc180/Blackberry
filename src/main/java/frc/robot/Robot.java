@@ -39,6 +39,8 @@ import frc.robot.util.simulation.SimulatedAIRobot;
 @Logged
 public class Robot extends TimedRobot {
 
+  private static boolean DEMO_MODE = true;
+
   public static boolean currentlyScoringCoral = false;
   public static boolean justScoredCoral = false;
   public static boolean wasEverEnabled = false;
@@ -65,7 +67,8 @@ public class Robot extends TimedRobot {
 
   private final Alert controllerDisconnectedAlert = new Alert("Setup - Driver controller not connected!", AlertType.kError);
 
-  private final Alert posingModeAlert = new Alert("Robot is in posing mode!", AlertType.kInfo);
+  private final Alert posingModeAlert = new Alert("Robot is in Posing Mode!", AlertType.kInfo);
+  private final Alert demoModeAlert = new Alert("Robot is in Demo Mode!", AlertType.kInfo);
 
 //   @Logged(name = "CANivore Bus Utilization")
 //   float canivoreBusUtilization = 0;
@@ -156,6 +159,7 @@ public class Robot extends TimedRobot {
     // indexerSensorAlert.set(robotContainer.intakeCoral.hasCoral.getAsBoolean());
 
     posingModeAlert.set(RobotContainer.POSING_MODE);
+    demoModeAlert.set(DEMO_MODE);
   }
 
   @Override
@@ -176,18 +180,20 @@ public class Robot extends TimedRobot {
       //SimLogic.spawnCoral(new Pose2d(12.36, 3.02, Rotation2d.kCCW_90deg));
       //SimLogic.spawnCoral(new Pose2d(12.36, 3.02, Rotation2d.kCCW_90deg));
     }
+    wasEverEnabled = true;
+
+    if (Robot.isDemoMode()) return;
   
     shouldPartnerPush = robotContainer.shouldAutoPush();
     m_autonomousCommand = robotContainer.getAutonomousCommand();
 
     if (m_autonomousCommand != null) {
-      if (shouldPartnerPush) {
-        partnerPush.schedule();
-      } else {
-        m_autonomousCommand.schedule();
-      }
+        if (shouldPartnerPush) {
+            partnerPush.schedule();
+        } else {
+            m_autonomousCommand.schedule();
+        }
     }
-    wasEverEnabled = true;
   }
 
   @Override
@@ -294,6 +300,10 @@ public class Robot extends TimedRobot {
 
   public static boolean isRed() {
     return !isBlue();
+  }
+
+  public static boolean isDemoMode() {
+    return DEMO_MODE;
   }
 }
 

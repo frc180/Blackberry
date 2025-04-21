@@ -281,6 +281,8 @@ public class RobotContainer {
         final Trigger teleop = RobotModeTriggers.teleop();
         final Trigger autonomous = RobotModeTriggers.autonomous();
         final Trigger testMode = RobotModeTriggers.test();
+        final Trigger demoMode = new Trigger(Robot::isDemoMode);
+        final Trigger notDemoMode = demoMode.negate();
         final Trigger algaeMode = driverController.povDown();
         final Trigger coralMode = algaeMode.negate();
 
@@ -295,7 +297,7 @@ public class RobotContainer {
         final Trigger driverL2 = driverController.leftBumper().and(coralMode);
         final Trigger driverL3 = driverController.rightTrigger().and(coralMode);
         final Trigger driverL4 = driverController.rightBumper().and(coralMode);
-        driverAlgaeDescore = driverController.a().and(coralMode);
+        driverAlgaeDescore = driverController.a().and(coralMode).and(notDemoMode);
         driverLeftReef = driverController.x().and(coralMode);
         driverRightReef = driverController.b().and(coralMode).or(driverAlgaeDescore);
         final Trigger driverAnyReef = driverLeftReef.or(driverRightReef);
@@ -316,6 +318,9 @@ public class RobotContainer {
         final Trigger justScoredCoral = new Trigger(() -> Robot.justScoredCoral);
         final Trigger drivetrainAvailable = new Trigger(() -> drivetrain.getCurrentCommand() == drivetrain.getDefaultCommand());
         final Trigger scoringCameraDisconnected = vision.scoringCameraConnected.negate();
+        final Trigger canDriveToPose = vision.scoringCameraConnected
+                                             .and(testMode.negate())
+                                             .and(notDemoMode);
 
         final Trigger targetingL2_3 = driverL2.or(driverL3);
         final Trigger reefAlgaeTarget = driverRightReef.and(targetingL2_3);
@@ -383,8 +388,9 @@ public class RobotContainer {
                     axis *= 0.25;
             }
 
-            // Slow down a little bit when climbing or scoring L1 manually
-            if (climbDeployedBool || driverController.povLeft().getAsBoolean()) axis *= 0.5;
+            // Slow down a little bit when climbing, scoring L1 manually, or in demo mode
+            if (climbDeployedBool || driverController.povLeft().getAsBoolean() || Robot.isDemoMode()) axis *= 0.5;
+        
             return axis;
          };
 
@@ -404,7 +410,7 @@ public class RobotContainer {
         driverController.back().onTrue(Commands.runOnce(drivetrain::zeroGyroscope));
 
         // Coral reef auto-aligns
-        driverLeftReef.whileTrue(new DriveToCoralPose(
+        driverLeftReef.and(canDriveToPose).whileTrue(new DriveToCoralPose(
             () -> vision.lastReefID,
             (tagID) -> {
                 if (elevator.isTargetingReefAlgaePosition()) {
@@ -417,7 +423,7 @@ public class RobotContainer {
             }
         ).withDynamicTarget(true));
 
-        driverRightReef.whileTrue(new DriveToCoralPose(
+        driverRightReef.and(canDriveToPose).whileTrue(new DriveToCoralPose(
             () -> vision.lastReefID,
             (tagID) -> {
                 if (elevator.isTargetingReefAlgaePosition()) {
@@ -579,6 +585,7 @@ public class RobotContainer {
                 .and(climbDeployed.negate())
                 .and(manualL1Recently.negate())
                 .and(driverIntakeAlgae.negate())
+                .and(notDemoMode)
             .whileTrue(drivetrain.targetHeadingContinuous(() -> {
                 Pose2d reefPose = vision.getClosestReefPose();
                 return reefPose != null ? reefPose.getRotation().getDegrees() : null;
@@ -639,10 +646,13 @@ public class RobotContainer {
 
         Trigger nearReefModified = nearReef.and(rightL2.negate())
                                             .or(almostAtReef.debounce(0.1));
+
+        Trigger directReefControl = scoringCameraDisconnected.or(testMode).or(demoMode)
+                                            .and(driverL1.or(driverL2).or(driverL3).or(driverL4));
         
         Trigger finalReefTrigger = nearReefModified.and(reefDeployAllowed)
                                                     .or(isScoringCoral)
-                                                    .or(testMode);
+                                                    .or(directReefControl);
 
         finalReefTrigger
             .whileTrue(chosenElevatorHeight.alongWith(elevatorArmPivot.matchElevatorPreset()))
@@ -687,9 +697,7 @@ public class RobotContainer {
         );
  
         BooleanSupplier shouldObtainAlgae = () -> {
-            return elevator.isTargetingReefAlgaePosition() && 
-                    // driverRightReef.getAsBoolean() && // EXPERIMENT: should be unnecessary
-                    targetingAlgae.getAsBoolean(); 
+            return elevator.isTargetingReefAlgaePosition() && targetingAlgae.getAsBoolean(); 
         };
 
         // Command obtainAlgae = elevatorArmAlgae.intakeAndIndex(algaeGrabSpeed)
