@@ -31,6 +31,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.util.Elastic;
 import frc.robot.util.StatusSignals;
 import frc.robot.util.simulation.SimLogic;
 import frc.robot.util.simulation.SimVisuals;
@@ -57,16 +58,11 @@ public class Robot extends TimedRobot {
 
   @Logged(name = "RobotContainer")
   private final RobotContainer robotContainer;
-  private final CANBus canivoreBus = new CANBus(Constants.CANIVORE);
 
-  private final Alert canivoreUsageAlert = new Alert("CANivore bus usage high (> 80%) ", AlertType.kWarning);
   private final Alert noAutoAlert = new Alert("Setup - No auto selected!", AlertType.kWarning);
   private final Alert noCoralAlert = new Alert("Setup - No coral detected!", AlertType.kWarning);
   private final Alert wrongSideAutoAlert = new Alert("Setup - Auto side does not match robot position!", AlertType.kError);
-  private final Alert indexerSensorAlert = new Alert("Setup - Coral indexer sensor is triggered!", AlertType.kWarning);
-
   private final Alert controllerDisconnectedAlert = new Alert("Setup - Driver controller not connected!", AlertType.kError);
-
   private final Alert posingModeAlert = new Alert("Robot is in Posing Mode!", AlertType.kInfo);
   private final Alert demoModeAlert = new Alert("Robot is in Demo Mode!", AlertType.kInfo);
 
@@ -117,6 +113,8 @@ public class Robot extends TimedRobot {
     FollowPathCommand.warmupCommand().schedule();
     partnerPush = Auto.partnerPush();
     didPartnerPush.onTrue(Commands.runOnce(() -> m_autonomousCommand.schedule()));
+
+    // Elastic.selectTab("Autonomous");
   }
 
   @Override
@@ -126,10 +124,6 @@ public class Robot extends TimedRobot {
     StatusSignals.refreshAll();
     CommandScheduler.getInstance().run();
     SimVisuals.update();
-
-    // CANBusStatus busInfo = canivoreBus.getStatus();
-    // canivoreBusUtilization = busInfo.BusUtilization;
-    // canivoreUsageAlert.set(canivoreBusUtilization > 0.8);
 
     // Get all robot component (mechanism) poses and publish them to NetworkTables
     // robotComponentPosesArray[0] = robotContainer.intakeAlgaePivot.getPose();
@@ -159,7 +153,7 @@ public class Robot extends TimedRobot {
     // indexerSensorAlert.set(robotContainer.intakeCoral.hasCoral.getAsBoolean());
 
     posingModeAlert.set(RobotContainer.POSING_MODE);
-    demoModeAlert.set(DEMO_MODE);
+    demoModeAlert.set(isDemoMode());
   }
 
   @Override
@@ -213,6 +207,8 @@ public class Robot extends TimedRobot {
     }
     robotContainer.vision.setAllowPoseEstimates(true);
     wasEverEnabled = true;
+    
+    // Elastic.selectTab("Teleoperated");
   }
 
   @Override

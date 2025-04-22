@@ -302,15 +302,15 @@ public class RobotContainer {
         driverRightReef = driverController.b().and(coralMode).or(driverAlgaeDescore);
         final Trigger driverAnyReef = driverLeftReef.or(driverRightReef);
         // Algae
-        final Trigger driverProcessor = driverController.povUp();               // algaeMode.and(driverController.b());
+        final Trigger driverProcessor = driverController.povUp().and(notDemoMode);               // algaeMode.and(driverController.b());
         final Trigger driverNet = falseTrigger;                                 // algaeMode.and(driverController.x());
         final Trigger driverNetSlow = algaeMode.and(driverController.x());      // algaeMode.and(driverController.b());
         final Trigger driverSpitAlgae = algaeMode.and(driverSpit);
         // final Trigger driverIntakeAlgae = algaeMode.and(driverController.leftTrigger());
         final Trigger driverIntakeAlgae = driverController.povRight();
         // Climb
-        final Trigger driverReadyClimb = driverController.leftStick().and(driverController.rightStick()); // left/right stick is M1 and M2
-        final Trigger driverStartClimb = driverController.start();
+        final Trigger driverReadyClimb = driverController.leftStick().and(driverController.rightStick()).and(notDemoMode); // left/right stick is M1 and M2
+        final Trigger driverStartClimb = driverController.start().and(notDemoMode);
 
         // More complex triggers
         robotHasCoral = intakeCoral.hasCoral.or(elevatorArm.hasPartialCoral);
@@ -389,7 +389,11 @@ public class RobotContainer {
             }
 
             // Slow down a little bit when climbing, scoring L1 manually, or in demo mode
-            if (climbDeployedBool || driverController.povLeft().getAsBoolean() || Robot.isDemoMode()) axis *= 0.5;
+            if (climbDeployedBool || driverController.povLeft().getAsBoolean()) {
+                axis *= 0.5;
+            } else if (Robot.isDemoMode()) {
+                axis *= 0.3;
+            }
         
             return axis;
          };
@@ -477,7 +481,7 @@ public class RobotContainer {
 
         //Algae Intake (using left paddle + right trigger)
         driverIntakeAlgae.whileTrue(elevatorArmPivot.lollipopIntakePosition()
-                                    .alongWith(elevator.stow(), elevatorArmAlgae.intakeAndIndex(1)))
+                                    .alongWith(elevator.stow(), elevatorArmAlgae.intakeAndIndex(Robot.isDemoMode() ? 0.5 : 1))) // TODO: UNDO
                          .onFalse(elevatorArmPivot.receivePosition()
                                     .alongWith(elevatorArmAlgae.intakeAndIndex(1).asProxy().withTimeout(1.5)));
 
