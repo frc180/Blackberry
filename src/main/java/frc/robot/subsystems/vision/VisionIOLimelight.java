@@ -30,9 +30,6 @@ public class VisionIOLimelight implements VisionIO {
     private final double[] redReefTags;
     private final double[] allReefTags;
 
-    private final double[] blueBargeTags;
-    private final double[] redBargeTags;
-
     private int frontCameraImuMode = IMU_ASSIST_EXTERNALIMU;
     private boolean wasEnabled = false;
     private double lastSettingsUpdate = -1;
@@ -56,10 +53,6 @@ public class VisionIOLimelight implements VisionIO {
         for (int i = 0; i < allReefTags.length; i++) {
             allReefTags[i] = VisionSubsystem.allReefTags.get(i);
         }
-
-        // 4 & 5 are on the red side, 14 & 15 are on the blue side. 3 & 16 processor
-        blueBargeTags = new double[] { 4, 5, 14, 15, 3, 16 };
-        redBargeTags = blueBargeTags;
     }
 
     @Override
