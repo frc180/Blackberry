@@ -19,29 +19,28 @@ import frc.robot.Constants;
 
 public class IntakeCoralIOSpark implements IntakeCoralIO {
 
-    SparkMax motor;
-    TalonFXS bottomRoller;
-    LaserCan laserCan;
-
-    VoltageOut voltageControl;
+    final SparkMax motor;
+    final TalonFXS bottomRoller;
+    final LaserCan laserCan;
+    final VoltageOut voltageControl;
 
     double previousDistance = 0;
     double lastDistanceChangeTime = 0;
 
     public IntakeCoralIOSpark() {
-        SparkMaxConfig motorConfig = new SparkMaxConfig();
-        motorConfig.idleMode(IdleMode.kBrake)
+        SparkMaxConfig sparkConfig = new SparkMaxConfig();
+        sparkConfig.idleMode(IdleMode.kBrake)
                    .voltageCompensation(12);
 
         motor = new SparkMax(Constants.INTAKE_CORAL_SPARK, MotorType.kBrushless);
-        motor.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
+        motor.configure(sparkConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
 
         TalonFXSConfiguration talonConfig = new TalonFXSConfiguration();
         talonConfig.Commutation.MotorArrangement = MotorArrangementValue.Minion_JST;
         talonConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        talonConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         bottomRoller = new TalonFXS(Constants.INTAKE_CORAL_ROLLER_TALON, Constants.CANIVORE);
         bottomRoller.getConfigurator().apply(talonConfig);
-        bottomRoller.setNeutralMode(NeutralModeValue.Brake);
 
         voltageControl = new VoltageOut(0);
 

@@ -3,11 +3,9 @@ package frc.robot.subsystems.vision;
 import com.spamrobotics.vision.LimelightStatus;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.Timer;
 import frc.robot.Robot;
 import frc.robot.RobotContainer;
-import frc.robot.subsystems.DrivetrainSubsystem;
 import frc.robot.util.LimelightHelpers;
 import frc.robot.util.LimelightHelpers.PoseEstimate;
 
@@ -16,9 +14,6 @@ public class VisionIOLimelight implements VisionIO {
     private static final String SCORING_LIMELIGHT = "limelight";
     private static final String FRONT_LIMEIGHT = "limelight-front";
     private static final String BACK_LIMEIGHT = "limelight-back";
-
-    private static final int APRILTAG_PIPELINE = 0;
-    private static final int VIEWFINDER_PIPELINE = 1;
 
     private static final int IMU_EXTERNALIMU_ONLY = 0;   // 0 - Use external IMU yaw submitted via SetRobotOrientation() for MT2 localization. The internal IMU is ignored entirely.
     private static final int IMU_MATCH_EXTERNALIMU = 1;  // 1 - Use external IMU yaw submitted via SetRobotOrientation(), and configure the LL4 internal IMU’s fused yaw to match the submitted yaw value.

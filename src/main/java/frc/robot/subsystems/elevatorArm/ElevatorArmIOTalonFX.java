@@ -66,7 +66,6 @@ public class ElevatorArmIOTalonFX implements ElevatorArmIO {
         }
         rollerMotor = new TalonFX(Constants.ELEVATOR_ARM_TALON, Constants.CANIVORE);
         rollerMotor.getConfigurator().apply(config);
-        // rollerMotor.setNeutralMode(NeutralModeValue.Brake);
 
         voltageControl = new VoltageOut(0);
         velocityControl = new VelocityVoltage(0);
@@ -165,7 +164,7 @@ public class ElevatorArmIOTalonFX implements ElevatorArmIO {
         motorSim.setInputVoltage(motorVoltage);
         motorSim.update(Constants.LOOP_TIME);
 
-        // apply the new rotor position and velocity to the TalonFX;
+        // Apply the new rotor position and velocity to the TalonFX;
         // note that this is rotor position/velocity (before gear ratio), but
         // DCMotorSim returns mechanism position/velocity (after gear ratio)
         AngularVelocity motorVelocity = motorSim.getAngularVelocity();

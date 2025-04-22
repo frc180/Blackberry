@@ -5,14 +5,13 @@ import edu.wpi.first.epilogue.NotLogged;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.Robot;
 import frc.robot.subsystems.elevatorArm.ElevatorArmIO.ElevatorArmIOInputs;
 
 @Logged
 public class ElevatorArmSubsystem extends SubsystemBase{
 
-    ElevatorArmIO io;
-    ElevatorArmIOInputs inputs;
+    final ElevatorArmIO io;
+    final ElevatorArmIOInputs inputs;
 
     @NotLogged
     public final Trigger hasCoral;
@@ -27,13 +26,7 @@ public class ElevatorArmSubsystem extends SubsystemBase{
 
     public ElevatorArmSubsystem() {
         inputs = new ElevatorArmIOInputs();
-        if (Robot.isReal()) {
-            io = new ElevatorArmIOTalonFX();
-            // io = new ElevatorArmIOSim();
-        } else {
-            io = new ElevatorArmIOTalonFX();
-            // io = new ElevatorArmIOSim();
-        }
+        io = new ElevatorArmIOTalonFX();
 
         hasCoral = new Trigger(this::hasCoralBool);
         hasPartialCoral = new Trigger(this::hasPartialCoralBool);
@@ -67,7 +60,6 @@ public class ElevatorArmSubsystem extends SubsystemBase{
         return runEnd(() -> {
             // Middle sensor only means we're centered, so stop
             if (!inputs.backCoralSensor && inputs.middleCoralSensor && !inputs.frontCoralSensor) {
-            // if (!inputs.backCoralSensor && inputs.middleCoralSensor && inputs.frontCoralSensor) { // EXPERIMENT
                 io.setSpeed(0);
                 return;
             }

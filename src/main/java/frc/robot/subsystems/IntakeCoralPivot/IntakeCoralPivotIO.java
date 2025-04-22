@@ -25,8 +25,6 @@ public interface IntakeCoralPivotIO {
 
     public void setSpeed(double speed);
 
-    public void runMotorTest();
-
     public void stopMotor();
 
     public void zero(double rotations);

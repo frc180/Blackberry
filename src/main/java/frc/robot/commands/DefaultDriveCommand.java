@@ -40,7 +40,6 @@ public class DefaultDriveCommand extends Command {
     public void initialize() {
         manuallyRotating = false;
         m_drivetrainSubsystem.setTargetHeading(null);
-        // m_drivetrainSubsystem.setTargetHeading(m_drivetrainSubsystem.getGyroscopeRotation().getDegrees(), HeadingTarget.GYRO);
     }
 
     @Override
@@ -53,7 +52,7 @@ public class DefaultDriveCommand extends Command {
         if (Math.abs(rotationSpeed) < 0.02) {
             // If we were manually rotating and have stopped, save this heading as our new target
             if (manuallyRotating) {
-                m_drivetrainSubsystem.setTargetHeading(null); // Use this to disable heading control after rotating until a preset is pressed again
+                m_drivetrainSubsystem.setTargetHeading(null);
                 previousHeadingType = null;
             }
 
@@ -86,10 +85,7 @@ public class DefaultDriveCommand extends Command {
     }
 
     @Override
-    public void end(boolean interrupted) {
-        // if (DriverStation.isAutonomous()) return;
-        // m_drivetrainSubsystem.drive(new ChassisSpeeds(0.0, 0.0, 0.0));
-    }
+    public void end(boolean interrupted) {}
 
     // ======================= Game Specific Helper Methods =======================
 
@@ -133,7 +129,6 @@ public class DefaultDriveCommand extends Command {
         Translation2d rayEnd = rayStart.plus(new Translation2d(-inputs.x * 1000, -inputs.y * 1000));
 
         double aimAngle = Helpers.angleToPoint(coralTranslation, rayStart, rayEnd);
-        // System.out.println(aimAngle);
 
         double aimThreshold = 90;
         if (aimAngle > aimThreshold) {

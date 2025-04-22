@@ -6,8 +6,8 @@ import frc.robot.subsystems.coralIndexer.CoralIndexerIO.CoralIndexerInputs;
 
 public class CoralIndexerSubsystem extends SubsystemBase {
 
-    CoralIndexerIO io;
-    CoralIndexerInputs inputs;
+    final CoralIndexerIO io;
+    final CoralIndexerInputs inputs;
 
     public CoralIndexerSubsystem() {
         io = new CoralIndexerIOTalonFXS();

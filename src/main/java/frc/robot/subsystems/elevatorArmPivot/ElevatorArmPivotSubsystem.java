@@ -24,8 +24,8 @@ import frc.robot.util.simulation.SimVisuals;
 @Logged
 public class ElevatorArmPivotSubsystem extends SubsystemBase {
 
-    private ElevatorArmPivotIO io;
-    private ElevatorArmPivotIOInputs inputs;
+    private final ElevatorArmPivotIO io;
+    private final ElevatorArmPivotIOInputs inputs;
 
     protected static final Angle FORWARD_LIMIT = Degrees.of(60.7);
     protected static final Angle REVERSE_LIMIT = Degrees.of(-44.6);
@@ -39,16 +39,16 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
     public static final double L3_SCORE = Units.degreesToRotations(-6 - 2); // was -6,
     public static final double L2_SCORE = L3_SCORE;
     
-    public static final double L1_SCORE = Units.degreesToRotations(-16.7); // South Florida
+    public static final double L1_SCORE = Units.degreesToRotations(-16.7); // Worlds
     // public static final double L1_SCORE = Units.degreesToRotations(14); // South Florida
     
     public static final double receiving = Units.degreesToRotations(46.4); // was 43
-    public static final double receivingHP = Units.degreesToRotations(42.1); //idk this number yet
+    public static final double receivingHP = Units.degreesToRotations(42.1);
     public static final double algaeReceive = Units.degreesToRotations(-70);
     public static final double horizontal = 0;
     public static final double PROCESSOR = Units.degreesToRotations(-40);
     public static final double LOLLIPOP_INTAKE = Units.degreesToRotations(-35);
-    public static final double CLIMB = Units.degreesToRotations(-37.2); // 101 is hard stop
+    public static final double CLIMB = Units.degreesToRotations(-37.2);
 
     public static final double netScore = Units.degreesToRotations(8 - 2);
     public static final double netScoreBackwards = Units.degreesToRotations(46.01);
@@ -61,8 +61,6 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
     private Double targetPositionMin = null;
 
     private double targetPosition = 0;
-    private boolean pidMode = false;
-    private boolean isHoming = false;
     private boolean homed = false;
     private boolean absoluteSyncAllowed = true;
 
@@ -78,18 +76,13 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
     @NotLogged
     public Trigger elevatorArmInPosition = new Trigger(() -> isInPosition());
     @NotLogged
-    public Trigger elevatorArmInScoringPosition = new Trigger (() -> isElevatorArmInScoringPosition());
+    public Trigger elevatorArmInScoringPosition = new Trigger(() -> isElevatorArmInScoringPosition());
 
     private Alert unexpectedStartPositionAlert = new Alert("Arm Pivot sensor not in expected start position!", AlertType.kWarning);
 
     public ElevatorArmPivotSubsystem() {
         inputs = new ElevatorArmPivotIOInputs();
-        if (Robot.isReal()) {
-            // io = new ElevatorArmPivotIOSim();
-            io = new ElevatorArmPivotIOTalonFX();
-        } else {
-            io = new ElevatorArmPivotIOTalonFX();
-        }
+        io = new ElevatorArmPivotIOTalonFX();
 
         if (RobotContainer.POSING_MODE) {
             setDefaultCommand(matchElevatorPreset().ignoringDisable(true));
@@ -115,7 +108,6 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
 
         double currentTime = Timer.getFPGATimestamp();
         boolean firstDisable = !enabled && !wasEverEnabled;
-        // boolean disableSync = false;
         boolean disableSync = firstDisable && !RobotContainer.POSING_MODE && currentTime - lastPositionSyncTime > 0.5;
         boolean shouldSync = firstPeriodic || disableSync;
 
@@ -190,26 +182,11 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
         return setPosition(CLIMB);
     }
 
-    // public Command home() {
-    //     return Commands.sequence(
-    //         runOnce(() -> {
-    //             homed = false;
-    //             isHoming = true;
-    //         }),
-    //         runSpeed(0.04).until(atHomingHardstop),
-    //         zero(HARD_STOP_OFFSET).alongWith(Commands.runOnce(() -> {
-    //             homed = true;
-    //             isHoming = false;
-    //         }))
-    //     ).withInterruptBehavior(InterruptionBehavior.kCancelIncoming);
-    // }
-
     public Command calculateAbsoluteRatio() {
         return Commands.sequence(
             runOnce(() -> {
                 io.zero(0);
                 zeroAbsolute();
-                // io.setSpeed(0.04);
                 absoluteRatioFiltered = 0;
                 absoluteRatioSamples = 0;
                 absoluteRatioFilter.reset();
@@ -232,17 +209,7 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
         ElevatorSubsystem elevator = RobotContainer.instance.elevator;
         return run(() -> {
             Distance elevatorTarget = elevator.getTargetPosition();
-            // double targetError = elevator.getTargetErrorMeters();
 
-            // Prevent arm from sticking out until we're past any levels that may
-            // contain algae that'd collide with the arm
-            // if (targetError > MAX_ERROR_THRESHOLD) {
-            //     setArmPositionDirect(receiving);
-            //     return;
-            // }
-
-            // if (elevatorTarget == ElevatorSubsystem.L4 || elevatorTarget == ElevatorSubsystem.L4_ADVANCE) {
-            //     setArmPositionDirect(L4_SCORE);
             if (elevatorTarget == ElevatorSubsystem.L4_ADVANCE) {
                 setArmPositionDirect(L4_ADVANCE);
             } else if (elevatorTarget == ElevatorSubsystem.L4) {
@@ -266,7 +233,6 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
     public Command setSpeed(double speed) {
         return run(() -> {
             io.setSpeed(speed);
-            pidMode = false;
         });
     }
 
@@ -274,7 +240,6 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
         return runEnd(
             () -> {
                 io.setSpeed(speed);
-                pidMode = false;
             },
             () -> io.stopMotor()
         );
@@ -283,7 +248,6 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
     public Command stop() {
         return run(() -> {
             io.stopMotor();
-            pidMode = false;
         });
     }
 
@@ -300,7 +264,6 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
     }
 
     public Trigger isAt(double target) {
-        // return isTargeting(target).and(elevatorArmInPosition);
         return new Trigger(() -> targetPosition == target && isInPosition());
     }
 
@@ -311,7 +274,6 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
 
     public void setArmPositionDirect(double position) {
         targetPosition = position;
-        pidMode = true;
         if (targetPositionMin != null) position = Math.max(position, targetPositionMin);
         if (targetPositionMax != null) position = Math.min(position, targetPositionMax);
         io.setPosition(position);

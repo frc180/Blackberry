@@ -19,8 +19,6 @@ import frc.robot.subsystems.elevator.ElevatorSubsystem;
  */
 public class DriveToCoralPose extends DriveToPose {
 
-    private DrivetrainSubsystem drivetrain;
-
     /**
      * Create a new DriveToCoralPose command.
      * @param tagSupplier Supplier for the ID of the AprilTag to target.
@@ -28,10 +26,8 @@ public class DriveToCoralPose extends DriveToPose {
      */
     public DriveToCoralPose(Supplier<Integer> tagSupplier, Function<Integer, Pose2d> tagToPoseFunction) {
         super(RobotContainer.instance.drivetrain, tagToPoseFunction);
-        drivetrain = RobotContainer.instance.drivetrain;
         withPoseTargetType(PoseTarget.REEF);
         withTargetPoseTag(tagSupplier);
-        // withProfileOverride(drivetrain.driveToPoseProfileSlow, drivetrain.driveToPoseConstraintsSlow);
     }
 
     final static double ALGAE_OFFSET = -Inches.of(6).in(Meters);

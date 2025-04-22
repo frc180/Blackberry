@@ -5,9 +5,6 @@ import static edu.wpi.first.units.Units.Meters;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Rotation3d;
-import edu.wpi.first.math.geometry.Transform2d;
-import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.system.plant.DCMotor;
@@ -97,15 +94,6 @@ public class Helpers {
             return false;
         }
         
-        // EXPERIMENT: Avoid creating 3 objects per call to this method by using "Pose2d.minus()"
-        // Transform2d diff = null;
-        // if (xMeters != null || yMeters != null) {
-        //     diff = pose.minus(targetPose);
-        // }
-
-        // boolean xSatisfied = xMeters == null || Math.abs(diff.getX()) <= xMeters;
-        // boolean ySatisfied = yMeters == null || Math.abs(diff.getY()) <= yMeters;
-
         boolean xSatisfied = xMeters == null || Math.abs(pose.getX() - targetPose.getX()) <= xMeters;
         boolean ySatisfied = yMeters == null || Math.abs(pose.getY() - targetPose.getY()) <= yMeters;
 
@@ -124,39 +112,6 @@ public class Helpers {
             headingSatisfied = Math.abs(degreesDiff) <= degrees;
         }
         return headingSatisfied;
-    }
-
-    public static Transform3d toTransform3d(Distance x, Distance y, Distance z, Rotation3d rotation) {
-        return new Transform3d(x.in(Meters), y.in(Meters), z.in(Meters), rotation);
-    }
-
-    public static Transform2d toTransform2d(Distance x, Distance y, Angle angle) {
-        return new Transform2d(x.in(Meters), y.in(Meters), Rotation2d.fromDegrees(angle.in(Degrees)));
-    }
-
-    public static Transform2d toTransform2d(Translation2d translation) {
-        // return new Transform2d(translation, new Rotation2d());
-        return new Transform2d(translation, Rotation2d.kZero);
-    }
-
-    public static Transform2d toTransform2d(double x, double y) {
-        // return new Transform2d(x, y, new Rotation2d());
-        return new Transform2d(x, y, Rotation2d.kZero);
-    }
-
-    // Helper methods from https://github.com/frc6995/Robot-2025/blob/main/src/main/java/frc/robot/subsystems/drive/Pathing.java#L18
-
-    public static double velocityTowards(Pose2d currentPose, ChassisSpeeds fieldRelativeSpeeds, Translation2d targetTranslation) {
-      return pointRelativeSpeeds(currentPose, fieldRelativeSpeeds, targetTranslation)
-                .vxMetersPerSecond;
-    }
-
-    public static ChassisSpeeds pointRelativeSpeeds(Pose2d currentPose, ChassisSpeeds fieldRelativeSpeeds, Translation2d targetTranslation) {
-      return ChassisSpeeds.fromFieldRelativeSpeeds(fieldRelativeSpeeds, headingTo(currentPose, targetTranslation));
-    }
-
-    public static Rotation2d headingTo(Pose2d currentPose, Translation2d target) {
-        return target.minus(currentPose.getTranslation()).getAngle().minus(Rotation2d.kPi);
     }
 
     // Numbers pulled from https://store.ctr-electronics.com/products/minion-brushless-motor
@@ -181,5 +136,18 @@ public class Helpers {
             Units.rotationsPerMinuteToRadiansPerSecond(7530),
             numMotors
         );
+    }
+
+    // Helper methods from https://github.com/frc6995/Robot-2025/blob/main/src/main/java/frc/robot/subsystems/drive/Pathing.java#L18
+    public static double velocityTowards(Pose2d currentPose, ChassisSpeeds fieldRelativeSpeeds, Translation2d targetTranslation) {
+        return pointRelativeSpeeds(currentPose, fieldRelativeSpeeds, targetTranslation).vxMetersPerSecond;
+    }
+    
+    public static ChassisSpeeds pointRelativeSpeeds(Pose2d currentPose, ChassisSpeeds fieldRelativeSpeeds, Translation2d targetTranslation) {
+        return ChassisSpeeds.fromFieldRelativeSpeeds(fieldRelativeSpeeds, headingTo(currentPose, targetTranslation));
+    }
+    
+    public static Rotation2d headingTo(Pose2d currentPose, Translation2d target) {
+        return target.minus(currentPose.getTranslation()).getAngle().minus(Rotation2d.kPi);
     }
 }

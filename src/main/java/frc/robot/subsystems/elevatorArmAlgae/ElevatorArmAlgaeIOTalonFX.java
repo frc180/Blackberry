@@ -27,15 +27,15 @@ import frc.robot.util.simulation.SimLogic;
 
 public class ElevatorArmAlgaeIOTalonFX implements ElevatorArmAlgaeIO {
 
-    TalonFX motor;
-    CANrange canrange;
-    VoltageOut voltageControl;
-    TorqueCurrentFOC torqueCurrentControl;
+    final TalonFX motor;
+    final CANrange canrange;
+    final VoltageOut voltageControl;
+    final TorqueCurrentFOC torqueCurrentControl;
     double targetDutyCycle = 0;
 
     // Status signals
-    StatusSignal<Distance> distanceSignal;
-    StatusSignal<Double> signalStengthSignal;
+    final StatusSignal<Distance> distanceSignal;
+    final StatusSignal<Double> signalStengthSignal;
 
     // Simulation-only variables
     TalonFXSimState motorSim;
@@ -51,21 +51,18 @@ public class ElevatorArmAlgaeIOTalonFX implements ElevatorArmAlgaeIO {
 
         motor = new TalonFX(Constants.ELEVATOR_ARM_ALGAE, Constants.CANIVORE);
         motor.getConfigurator().apply(config);
-        // motor.setNeutralMode(NeutralModeValue.Brake);
         voltageControl = new VoltageOut(0);
         torqueCurrentControl = new TorqueCurrentFOC(0);
 
         CANrangeConfiguration rangeConfig = new CANrangeConfiguration();
         rangeConfig.FovParams.FOVRangeX = 6.75;
         rangeConfig.FovParams.FOVRangeY = 6.75;
-        // rangeConfig.FovParams.FOVCenterY = 11.8;
         rangeConfig.ToFParams.UpdateMode = UpdateModeValue.LongRangeUserFreq;
         canrange = new CANrange(Constants.ALGAE_ARM_CANRANGE, Constants.CANIVORE);
         canrange.getConfigurator().apply(rangeConfig);
 
         distanceSignal = trackSignal(canrange.getDistance());
         signalStengthSignal = trackSignal(canrange.getSignalStrength());
-        // temperatureSignal = trackSignal(motor.getDeviceTemp());
 
         // ParentDevice.optimizeBusUtilizationForAll(10.0, motor, canrange);
         
@@ -79,7 +76,6 @@ public class ElevatorArmAlgaeIOTalonFX implements ElevatorArmAlgaeIO {
     public void update(ElevatorArmAlgaeInputs inputs) {
         inputs.speed = targetDutyCycle;
         inputs.distance = distanceSignal.getValueAsDouble();
-        // inputs.temperature = temperatureSignal.getValueAsDouble();
         inputs.distanceSignalStrength = signalStengthSignal.getValueAsDouble();
     }
 

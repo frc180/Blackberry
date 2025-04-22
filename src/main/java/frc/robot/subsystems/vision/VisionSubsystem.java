@@ -96,14 +96,6 @@ public class VisionSubsystem extends SubsystemBase {
         Inches.of(6.767).in(Meters),
         new Rotation3d(0, Units.degreesToRadians(-15), 0) // upward tilt
     );
-
-    // Experimental new front camera mount  that could see the barge (reverted due to not using barge tags)
-    // public static final Transform3d ROBOT_TO_FRONT_CAMERA = new Transform3d(
-    //     Inches.of(13.998 + 3.5).in(Meters), // forward
-    //     Inches.of(-7 + 1).in(Meters), // right
-    //     Inches.of(6.767).in(Meters),
-    //     new Rotation3d(0, Units.degreesToRadians(-15 - 8), 0) // upward tilt
-    // );
     
     public static final Transform3d ROBOT_TO_INTAKE_CAMERA = new Transform3d(
         Inches.of(-8.7).in(Meters), // forward
@@ -130,7 +122,6 @@ public class VisionSubsystem extends SubsystemBase {
     private final ReefProximity reefProximity;
     private final CoralDetector coralDetector;
     private final CoralDetectorReal coralDetectorReal;
-    private final SingleTagSolver singleTagSolver = new SingleTagSolver();
 
     private final double APRILTAG_THICKNESS = 0; // Meters. Adjust me for fields where the Apriltags are not stickers
     private final Distance reefBackDistance = Meters.of(0.55).plus(Inches.of(0.5 - 1));
@@ -339,14 +330,6 @@ public class VisionSubsystem extends SubsystemBase {
             poseEstimateSource = PoseEstimateSource.NONE;
         }
 
-        // To test - zero out pose diffs if we haven't been getting data, to fix cases
-        // where the tag is barely obscured
-        // if (Math.abs(Timer.getFPGATimestamp() - lastPoseEstimateTime) >= 1) {
-        //     poseEstimateDiffX = 0;
-        //     poseEstimateDiffY = 0;
-        //     poseEstimateDiffTheta = 0;
-        // }
-
         if (robotPose == null) robotPose = RobotContainer.instance.drivetrain.getPose();
 
         // calculate scoring camera in 3D space, for previewing in AdvantageScope
@@ -360,7 +343,7 @@ public class VisionSubsystem extends SubsystemBase {
         ChassisSpeeds speeds = RobotContainer.instance.drivetrain.getCachedState().Speeds;
         futureRobotPose = robotPose.plus(new Transform2d(speeds.vxMetersPerSecond * 0.3, speeds.vyMetersPerSecond * 0.3, Rotation2d.kZero));
 
-        // EXPERIMENT: Allow targeting opponent's reef tags, which is needed for stealing algae
+        // Allow targeting opponent's reef tags, which is needed for stealing algae
         // Entry<Integer, Pose2d> closestTagAndPose = reefProximity.closestReefPose(futureRobotPose, Robot.isBlue());
         Entry<Integer, Pose2d> closestTagAndPose = reefProximity.closestReefPose(futureRobotPose, allReefTags);
         if (closestTagAndPose == null) {
@@ -404,25 +387,6 @@ public class VisionSubsystem extends SubsystemBase {
 
     public void resetCoralDetector() {
         coralDetector.reset();
-    }
-
-    public int getReefTag(RawFiducial[] rawFiducial) {
-        RawFiducial bestTag = null;
-        List<Integer> reefTags = Robot.isBlue() ? blueReefTags : redReefTags;
-        // for each tag detected, look for the IDs that specifically belong to a reef based on which alliance we are on
-        for(int i = 0; i< rawFiducial.length; i++) {
-            RawFiducial fiducial = rawFiducial[i];
-            if (reefTags.contains(fiducial.id)) {
-                if (bestTag == null || bestTag.distToCamera > fiducial.distToCamera) {
-                    bestTag = fiducial;
-                }
-            }
-        }
-        if (bestTag == null) {
-            return -1;
-        } else {
-            return bestTag.id;
-        }
     }
 
     private Pose2d getReefTagPose(int tagID) {

@@ -15,7 +15,6 @@ import com.ctre.phoenix6.sim.TalonFXSSimState;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Voltage;
-import edu.wpi.first.wpilibj.AnalogPotentiometer;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import frc.robot.Constants;
 import frc.robot.Robot;
@@ -30,19 +29,15 @@ public class IntakeCoralPivotIOTalonFXS implements IntakeCoralPivotIO {
     // real stow .03
 
 
-    TalonFXS motor;
-    MotionMagicExpoVoltage motionMagicControl;
-    VoltageOut voltageControl;
-
-    AnalogPotentiometer potentiometer;
-    DutyCycleEncoder absoluteEncoder;
+    final TalonFXS motor;
+    final MotionMagicExpoVoltage motionMagicControl;
+    final VoltageOut voltageControl;
+    final DutyCycleEncoder absoluteEncoder;
 
     // Status signals
-    StatusSignal<Angle> positionSignal;
-    StatusSignal<Voltage> voltageSignal;
-    StatusSignal<Double> targetSignal;
-    // StatusSignal<Current> supplyCurrentSignal;
-    // StatusSignal<Current> torqueCurrentSignal;
+    final StatusSignal<Angle> positionSignal;
+    final StatusSignal<Voltage> voltageSignal;
+    final StatusSignal<Double> targetSignal;
 
     // Simulation-only variables
     TalonFXSSimState motorSim = null;
@@ -87,14 +82,6 @@ public class IntakeCoralPivotIOTalonFXS implements IntakeCoralPivotIO {
         positionSignal = trackSignal(motor.getPosition());
         voltageSignal = trackSignal(motor.getMotorVoltage());
         targetSignal = trackSignal(motor.getClosedLoopReference());
-        // supplyCurrentSignal = trackSignal(motor.getSupplyCurrent());
-        // torqueCurrentSignal = trackSignal(motor.getTorqueCurrent());
-
-        potentiometer = new AnalogPotentiometer(
-            Constants.ANALOG_INTAKE_CORAL_PIVOT_POTENTIOMETER,
-            1,
-            0
-        );
 
         absoluteEncoder = new DutyCycleEncoder(Constants.DIO_INTAKE_CORAL_ENCODER);
 
@@ -108,11 +95,8 @@ public class IntakeCoralPivotIOTalonFXS implements IntakeCoralPivotIO {
         inputs.position = positionSignal.getValueAsDouble();
         inputs.voltage = voltageSignal.getValueAsDouble();
         inputs.target = targetSignal.getValueAsDouble();
-        // inputs.supplyCurrent = supplyCurrentSignal.getValueAsDouble();
-        // inputs.torqueCurrent = torqueCurrentSignal.getValueAsDouble();
         
         if (Robot.isReal()) {
-            // inputs.absolutePosition = (potentiometer.get() * POTENTIOMETER_SCALAR) - POTENTIOMETER_OFFSET;
             inputs.absolutePosition = (absoluteEncoder.get() * POTENTIOMETER_SCALAR) - POTENTIOMETER_OFFSET;
         } else {
             inputs.absolutePosition = simulatedPosition;
@@ -137,12 +121,6 @@ public class IntakeCoralPivotIOTalonFXS implements IntakeCoralPivotIO {
 
     public void stopMotor() {
         motor.stopMotor();
-    }
-
-    @Override
-    public void runMotorTest() {
-        System.out.println("coral intake pivot running");
-        motor.set(0.25);
     }
 
     @Override

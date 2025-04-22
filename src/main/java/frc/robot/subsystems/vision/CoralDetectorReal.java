@@ -23,7 +23,6 @@ public class CoralDetectorReal implements CoralDetector {
     private final List<RawDetection> algaeDetections;
     private final Comparator<RawDetection> detectionTYComparator;
     private final Comparator<RawDetection> detectionTXYComparator;
-    private final MutDistance coralDistance;
 
     // How close to the robot a detected coral has to be to be considered "close" (i.e. intakeable)
     private final static double CLOSE_CORAL_DISTANCE = 0.8; // was 0.6 meters
@@ -50,14 +49,6 @@ public class CoralDetectorReal implements CoralDetector {
 
     public CoralDetectorReal() {
         distanceMap = new InterpolatingDoubleTreeMap();
-        // distanceMap.put(-22.2, Inches.of(18.5).in(Meters));
-        // distanceMap.put(-14.79, Inches.of(24).in(Meters));
-        // distanceMap.put(-6.05, Inches.of(32).in(Meters));
-        // distanceMap.put(5.44, Inches.of(48).in(Meters));
-        // distanceMap.put(14.89, Inches.of(72).in(Meters));
-        // distanceMap.put(20.82, Inches.of(100).in(Meters));
-        // distanceMap.put(24.7, Inches.of(132).in(Meters));
-
         addDistance(-22.2, 18.5);
         addDistance(-14.79, 24);
         addDistance(-6.05, 32);
@@ -70,7 +61,6 @@ public class CoralDetectorReal implements CoralDetector {
         algaeDetections = new ArrayList<>();
         detectionTYComparator = (a, b) -> Double.compare(a.tync, b.tync);
         detectionTXYComparator = (a, b) -> Double.compare(tXYCombined(a), tXYCombined(b));
-        coralDistance = Meters.of(0).mutableCopy();
     }
 
     private void addDistance(double ty, double inches) {
@@ -112,7 +102,6 @@ public class CoralDetectorReal implements CoralDetector {
         } else {
             sortedDetections.sort(detectionTXYComparator);
         }
-        // sortedDetections.sort(detectionTYComparator);
 
         Pose2d basePose = robotPose.transformBy(VisionSubsystem.ROBOT_TO_INTAKE_CAMERA_2D);
 

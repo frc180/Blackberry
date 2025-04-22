@@ -472,7 +472,6 @@ public class RobotContainer {
                         .onFalse(elevatorArmPivot.stowPosition().alongWith(elevator.stow()));
 
         elevatorArm.setDefaultCommand(elevatorArm.passiveIndex());
-        // elevatorArm.setDefaultCommand(elevatorArm.runSpeed(1));
         elevatorArmAlgae.setDefaultCommand(elevatorArmAlgae.passiveIndex());
         
         // Notify driver we've intaken a coral
@@ -481,7 +480,7 @@ public class RobotContainer {
 
         //Algae Intake (using left paddle + right trigger)
         driverIntakeAlgae.whileTrue(elevatorArmPivot.lollipopIntakePosition()
-                                    .alongWith(elevator.stow(), elevatorArmAlgae.intakeAndIndex(Robot.isDemoMode() ? 0.5 : 1))) // TODO: UNDO
+                                    .alongWith(elevator.stow(), elevatorArmAlgae.intakeAndIndex(1)))
                          .onFalse(elevatorArmPivot.receivePosition()
                                     .alongWith(elevatorArmAlgae.intakeAndIndex(1).asProxy().withTimeout(1.5)));
 
@@ -781,16 +780,6 @@ public class RobotContainer {
         // Auto-score when holding manual l1
         // manualL1.and(manualL1Ready).onTrue(manualL1Score);
 
-        //scoring algae net
-        //if arm does not have algae already (passing from algae intake to algae arm)
-        // driverNet.and(intakeAlgae.hasAlgae).whileTrue(
-        //     Commands.parallel(
-        //         elevator.setPosition(ElevatorSubsystem.L1),
-        //         elevatorArmPivot.receiveAlgaePosition(),
-        //         elevatorArmAlgae.runSpeed(1)
-        //     )
-        // );
-
         // Outtaking algae without trying to score it
         driverSpitAlgae.and(driverProcessor.negate())
                         .whileTrue(elevatorArmPivot.setPosition(ElevatorArmPivotSubsystem.horizontal))
@@ -969,7 +958,6 @@ public class RobotContainer {
         // ====================== TEST CONTROLS ======================
 
         testController.button(1).onTrue(elevatorArmPivot.calculateAbsoluteRatio());
-        // testController.button(1).whileTrue(climber.runGrabberSpeed(0.5));
 
         testController.button(2).onTrue(Commands.runOnce(() -> elevatorArmPivot.syncAbsolute()));
 
@@ -981,87 +969,6 @@ public class RobotContainer {
         testController.button(8).whileTrue(elevatorArm.runSpeed(0.5));
         testController.button(9).whileTrue(elevatorArm.runSpeed(1));
 
-        // testController.button(6).whileTrue(climber.runSpeed(0.1));
-        // testController.button(7).whileTrue(climber.runSpeed(-0.1));
-
-        // testController.button(8).whileTrue(readyClimb);
-        // testController.button(9).whileTrue(readyClimb);
-        // testController.button(10).whileTrue(climber.climb());
-
-
-        // testController.button(1).whileTrue(intakeAlgaePivot.runSpeed(0.25));
-        // testController.button(2).whileTrue(intakeAlgaePivot.runSpeed(-0.25));
-        //testController.button(3).whileTrue(intakeAlgae.runSpeed(0.5));
-        //testController.button(4).whileTrue(intakeAlgae.runSpeed(-0.5));
-        // testController.button(3).whileTrue(intakeAlgaePivot.runWinchSpeed(0.75));
-
-        // testController.button(4).whileTrue(elevatorArmPivot.horizontalPosition().alongWith(elevator.climbHeight()));
-        // testController.button(5).whileTrue(intakeAlgaePivot.climb());
-
-        // testController.button(5).whileTrue(Auto.driveToCoral().until(robotHasCoral));
-
-
-        // testController.button(7).whileTrue(intakeCoralPivot.runSpeed(0.25));
-        // testController.button(8).whileTrue(intakeCoralPivot.runSpeed(-0.25));
-
-        // testController.button(9).whileTrue(intakeCoral.runBottomRollerSpeed(0.5));
-        // testController.button(10).whileTrue(intakeCoral.runBottomRollerSpeed(-0.5));
-
-
-        // testController.button(6).whileTrue(intakeCoralPivot.zero(Degrees.of(90)));
-        // testController.button(9).whileTrue(intakeCoralPivot.stow());
-        // testController.button(10).whileTrue(intakeCoralPivot.extend());
-
-        // testController.button(9).whileTrue(elevatorArmAlgae.intakeAndIndex(0.25));
-        // testController.button(10).whileTrue(elevatorArmAlgae.runSpeed(-1));
-
-
-        // testController.button(1).whileTrue(elevatorArm.runSpeed(1));
-        // testController.button(2).whileTrue(elevatorArm.runSpeed(0.5));
-        // testController.button(3).whileTrue(elevatorArm.runSpeed(0.25)); // l2 & l3 speeds
-
-
-        // testController.button(1).whileTrue(intakeAlgae.setSpeed(1)).onFalse(intakeAlgae.stopIntake());
-        // testController.button(2).whileTrue(intakeAlgae.setSpeed(-1)).onFalse(intakeAlgae.stopIntake());
-
-        // testController.button(3).whileTrue(intakeAlgaePivot.setSpeed(0.2)).onFalse(intakeAlgaePivot.stop());
-        // testController.button(4).whileTrue(intakeAlgaePivot.setSpeed(-0.2)).onFalse(intakeAlgaePivot.stop());
- 
-        // testController.button(6).onTrue(elevatorArmPivot.setPosition(elevatorArmPivot.horizontal));
-        // testController.button(7).onTrue(elevatorArmPivot.setPosition(elevatorArmPivot.receiving));
-
-        // // Stops on release since runSpeed automatically stops the motors
-        // teleop.and(testController.button(8)).whileTrue(elevator.runSpeed(0.2));
-        // teleop.and(testController.button(9)).whileTrue(elevator.runSpeed(-0.2));
-        
-        // teleop.and(testController.button(6))
-        //     .onTrue(elevator.home().andThen(new RumbleCommand(0.5).withTimeout(0.5)));
-        
-        // teleop.and(testController.button(7))
-        //     .onTrue(elevator.setPosition(ElevatorSubsystem.STOW));
-
-        // teleop.and(testController.button(8))
-        //     .onTrue(elevator.setPosition(ElevatorSubsystem.L2));
-
-        // teleop.and(testController.button(10))
-        //     .onTrue(elevator.setPosition(ElevatorSubsystem.L4));
-
-        // teleop.and(testController.button(10))
-        //     .onTrue(elevator.setPosition(ElevatorSubsystem.NET));
-
-        // Example of using DriveToPose command + allowing the position to be influenced by the driver
-        // Supplier<ChassisSpeeds> additionalSpeedsSupplier = () -> {
-        //     return new ChassisSpeeds(driverController.getLeftX() * DrivetrainSubsystem.MAX_SPEED, 0, 0);
-        // };
-        
-        // Command testDrive = new DriveToPose(drivetrain, () -> new Pose2d(14, 5, Rotation2d.fromDegrees(15)))
-        //                         .withXEndTolerance(4)
-        //                         .withHoldWithinTolerance(true)
-        //                         .withAdditionalSpeeds(additionalSpeedsSupplier);
-
-        // driverController.rightBumper().whileTrue(testDrive);
-
-        
         // ================== SysId Routines ==================
         // Run SysId routines when holding back/start and X/Y.
         // // Note that each routine should be run exactly once in a single log.
@@ -1140,12 +1047,6 @@ public class RobotContainer {
 
     private static final double L4_EJECT_SPEED = 0.27; // was .29,  .32
 
-    @Deprecated(since="South Florida")
-    private Command l4CoralEject() {
-        return elevatorArm.runSpeed(L4_EJECT_SPEED).until(elevatorArm.hasNoCoral) 
-                          .andThen(Commands.waitSeconds(0.2));
-    }
-
     // Move the arm pivot up slightly before retracting helps
     // flip bad L4 corals onto the branch
     private Command l4CoralEjectFlip() {
@@ -1155,12 +1056,8 @@ public class RobotContainer {
     }
 
     private Command coralScoreEnd() {
-        final Command delayedArmPivotReceive = Commands.waitSeconds(0.1).andThen(() -> elevatorArmPivot.setArmPositionDirect(ElevatorArmPivotSubsystem.receiving));
-
         return Commands.runOnce(() -> {
             elevator.setPositionDirect(ElevatorSubsystem.STOW);
-            // EXPERIMENT: Try to delay moving the arm slightly to reduce the change of pushing the algae on the top of the branch
-            // delayedArmPivotReceive.schedule();
             elevatorArmPivot.setArmPositionDirect(ElevatorArmPivotSubsystem.receiving);
             Robot.currentlyScoringCoral = false;
             Robot.justScoredCoral = true;

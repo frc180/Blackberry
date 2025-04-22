@@ -44,7 +44,6 @@ public class Constants {
     //sensor channels
     public static final int DIO_INTAKE_ALGAE_ENCODER = 0;
     public static final int DIO_INTAKE_CORAL_ENCODER = 1;
-    public static final int DIO_ARM_PIVOT_ENCODER = 2;
     public static final int DIO_ELEVATOR_BOTTOM_LIMIT = 9; // moved to climber
     public static final int DIO_CLIMBER_SENSOR_A = 9;
     public static final int DIO_CLIMBER_SENSOR_B = 2;
@@ -52,7 +51,4 @@ public class Constants {
     public static final int INTAKE_ALGAE_SENSOR = 7;
 
     public static final int ANALOG_ELEVATOR_ARM_PIVOT_POTENTIOMETER = 1; // was 3
-
-    public static final int ANALOG_INTAKE_CORAL_PIVOT_POTENTIOMETER = 2;
-    
 }

@@ -8,7 +8,6 @@ import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.NotLogged;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -16,7 +15,6 @@ import edu.wpi.first.networktables.StructArrayPublisher;
 import java.util.ArrayList;
 import java.util.List;
 import org.ironmaple.simulation.SimulatedArena;
-import com.ctre.phoenix6.CANBus;
 import com.pathplanner.lib.commands.FollowPathCommand;
 import com.pathplanner.lib.util.FlippingUtil;
 import edu.wpi.first.epilogue.Epilogue;
@@ -31,7 +29,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.util.Elastic;
 import frc.robot.util.StatusSignals;
 import frc.robot.util.simulation.SimLogic;
 import frc.robot.util.simulation.SimVisuals;
@@ -40,7 +37,7 @@ import frc.robot.util.simulation.SimulatedAIRobot;
 @Logged
 public class Robot extends TimedRobot {
 
-  private static boolean DEMO_MODE = true;
+  private static boolean DEMO_MODE = false;
 
   public static boolean currentlyScoringCoral = false;
   public static boolean justScoredCoral = false;
@@ -79,7 +76,6 @@ public class Robot extends TimedRobot {
   @NotLogged
   Pose3d[] robotComponentPosesArray = new Pose3d[1];
 
-  // private final boolean kUseLimelight = false;
   private List<SimulatedAIRobot> simulatedAIRobots = new ArrayList<>();
 
   public Robot() {
@@ -94,17 +90,6 @@ public class Robot extends TimedRobot {
         config.minimumImportance = Logged.Importance.DEBUG;
     });
     Epilogue.bind(this);
-
-    // Query and cache the alliance
-    // addPeriodic(() -> {
-    //     Optional<Alliance> alliance = DriverStation.getAlliance();
-    //     if (alliance.isPresent()) {
-    //         receivedValidAlliance = true;
-    //         isBlueAlliance = alliance.get() == Alliance.Blue;
-    //     } else if (!receivedValidAlliance) {
-    //         isBlueAlliance = true;
-    //     }
-    // }, 0.5);
   }
 
   @Override
@@ -149,9 +134,6 @@ public class Robot extends TimedRobot {
     wrongSideAutoAlert.set(robotLeft != autoLeft);
 
     controllerDisconnectedAlert.set(!robotContainer.driverController.isConnected());
-
-    // indexerSensorAlert.set(robotContainer.intakeCoral.hasCoral.getAsBoolean());
-
     posingModeAlert.set(RobotContainer.POSING_MODE);
     demoModeAlert.set(isDemoMode());
   }
@@ -291,7 +273,6 @@ public class Robot extends TimedRobot {
   // Helper method to simplify checking if the robot is blue or red alliance
   public static boolean isBlue() {
     return isBlueAlliance;
-    // return DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue;
   }
 
   public static boolean isRed() {

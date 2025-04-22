@@ -43,12 +43,7 @@ public class IntakeCoralPivotSubsystem extends SubsystemBase {
 
     public IntakeCoralPivotSubsystem() {
         inputs = new IntakeCoralPivotIOInputs();
-        if (Robot.isReal()) {
-            io = new IntakeCoralPivotIOTalonFXS();
-            // io = new IntakeCoralPivotIOSim();
-        } else {
-            io = new IntakeCoralPivotIOTalonFXS();
-        }
+        io = new IntakeCoralPivotIOTalonFXS();
 
         double kP = 10; // was 30
         if (Robot.isSimulation()) kP = 5;
@@ -58,7 +53,6 @@ public class IntakeCoralPivotSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
-        // This method will be called once per scheduler run
         io.update(inputs);
         SimVisuals.setCoralIntakeDegrees(getDegrees() * 0.6);
 
@@ -74,8 +68,6 @@ public class IntakeCoralPivotSubsystem extends SubsystemBase {
 
     @Override
     public void simulationPeriodic() {
-        // This method will be called once per scheduler run during simulation.
-        // Runs before periodic()
         io.simulationPeriodic();
     }
 

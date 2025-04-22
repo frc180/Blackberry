@@ -255,19 +255,6 @@ public final class Auto {
     private static final double pushDistance = PUSH_POSE_DIST.in(Meters);
     private static final double pushDistanceThreshold = PUSH_POSE_DIST.minus(PUSH_AMOUNT).in(Meters);
 
-    // public static Command partnerPush() {
-    //     var drivetrain = RobotContainer.instance.drivetrain;
-    //     var vision = RobotContainer.instance.vision;
-    //     return new DriveToPose(drivetrain, () -> {
-    //         double dir = Robot.isBlue() ? 1 : -1;
-    //         Pose2d robotPose = drivetrain.getPose();
-    //         return new Pose2d(robotPose.getTranslation().plus(new Translation2d(pushDistance * dir, 0)), robotPose.getRotation());
-    //     })
-    //     .until(drivetrain.withinTargetPoseDistance(pushDistanceThreshold))
-    //     .withTimeout(2)
-    //     .deadlineFor(vision.blockPoseEstimates());
-    // }
-
     public static Command partnerPush() {
         var drivetrain = RobotContainer.instance.drivetrain;
         var vision = RobotContainer.instance.vision;

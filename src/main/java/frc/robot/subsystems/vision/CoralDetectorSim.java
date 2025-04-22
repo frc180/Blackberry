@@ -1,7 +1,6 @@
 package frc.robot.subsystems.vision;
 
 import org.ironmaple.simulation.SimulatedArena;
-
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;

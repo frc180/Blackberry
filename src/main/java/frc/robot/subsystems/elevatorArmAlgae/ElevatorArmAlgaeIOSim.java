@@ -8,6 +8,7 @@ import frc.robot.subsystems.elevator.ElevatorSubsystem;
 import frc.robot.subsystems.elevatorArmPivot.ElevatorArmPivotSubsystem;
 import frc.robot.util.simulation.SimLogic;
 
+@Deprecated
 public class ElevatorArmAlgaeIOSim implements ElevatorArmAlgaeIO{
 
     double speed = 0;

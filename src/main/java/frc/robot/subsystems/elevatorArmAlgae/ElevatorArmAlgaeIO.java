@@ -9,7 +9,6 @@ public interface ElevatorArmAlgaeIO {
     public class ElevatorArmAlgaeInputs {
         public double speed;
         public double distance;
-        public double temperature;
         public double distanceSignalStrength;
     }
 

@@ -16,30 +16,27 @@ import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.simulation.ElevatorSim;
 import frc.robot.Constants;
 import frc.robot.Robot;
-import frc.robot.RobotContainer;
 
 public class ElevatorIOTalonFX implements ElevatorIO {
 
     final double elevatorGearing = 5;
     final double metersToMotorRotations = 1 / Meters.of(0.0382524).in(Meters);
 
-    TalonFX motorA, motorB;
-    List<TalonFX> motors;
-    MotionMagicVoltage motionMagicControl;
-    MotionMagicExpoVoltage motionMagicExpoControl;
-    VoltageOut voltageControl;
-    Follower followerControl;
-    // DigitalInput bottomLimit;
+    final TalonFX motorA, motorB;
+    final List<TalonFX> motors;
+    final MotionMagicVoltage motionMagicControl;
+    final MotionMagicExpoVoltage motionMagicExpoControl;
+    final VoltageOut voltageControl;
+    final Follower followerControl;
 
     // Status signals
-    StatusSignal<Angle> positionSignal;
-    StatusSignal<AngularVelocity> velocitySignal;
-    StatusSignal<Double> targetSignal;
-    StatusSignal<Double> dutyCycleSignal;
+    final StatusSignal<Angle> positionSignal;
+    final StatusSignal<AngularVelocity> velocitySignal;
+    final StatusSignal<Double> targetSignal;
+    final StatusSignal<Double> dutyCycleSignal;
 
     // Simulation-only variables
     TalonFXSimState motorASim, motorBSim;
@@ -52,11 +49,10 @@ public class ElevatorIOTalonFX implements ElevatorIO {
         motors = List.of(motorA, motorB);
 
         TalonFXConfiguration config = new TalonFXConfiguration();
+        config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
         config.Feedback.SensorToMechanismRatio = Robot.isReal() ? metersToMotorRotations : elevatorGearing;
         config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = ElevatorSubsystem.SOFT_UPPER_LIMIT;
-        // config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = -0.01;
         config.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
-        // config.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
         if (Robot.isReal()) {
             config.Slot0.kP = 55;
             config.Slot0.kI = 0;
@@ -73,24 +69,13 @@ public class ElevatorIOTalonFX implements ElevatorIO {
             config.Slot0.kG = 0.4031;
             config.Slot0.kV = 0.55;
             config.Slot0.kA = 0.0017552;
-            config.MotionMagic.MotionMagicExpo_kV = 2;   // 0.78;
-            config.MotionMagic.MotionMagicExpo_kA = 1.4; // 0.5;
+            config.MotionMagic.MotionMagicExpo_kV = 2;
+            config.MotionMagic.MotionMagicExpo_kA = 1.4;
         }
         config.Slot0.GravityType = GravityTypeValue.Elevator_Static;
         config.MotionMagic.MotionMagicCruiseVelocity = 0; // Unlimited cruise velocity
         config.MotionMagic.MotionMagicJerk = 0;
-        // normal MotionMagic config
-        // config.MotionMagic.MotionMagicCruiseVelocity = 999;
-        // config.MotionMagic.MotionMagicAcceleration = 8;
-        motors.forEach(motor -> {
-            motor.getConfigurator().apply(config);
-            motor.setNeutralMode(NeutralModeValue.Coast);
-            // if (RobotContainer.POSING_MODE) {
-            //     motor.setNeutralMode(NeutralModeValue.Coast);
-            // } else {
-            //     motor.setNeutralMode(NeutralModeValue.Brake);
-            // }
-        });
+        motors.forEach(motor -> motor.getConfigurator().apply(config));
 
         motionMagicControl = new MotionMagicVoltage(0);
         motionMagicExpoControl = new MotionMagicExpoVoltage(0);
@@ -99,14 +84,10 @@ public class ElevatorIOTalonFX implements ElevatorIO {
 
         motorB.setControl(followerControl);
 
-        // bottomLimit = new DigitalInput(Constants.DIO_ELEVATOR_BOTTOM_LIMIT);
-
         positionSignal = trackSignal(motorA.getPosition());
         velocitySignal = trackSignal(motorA.getVelocity());
         targetSignal = trackSignal(motorA.getClosedLoopReference());
         dutyCycleSignal = trackSignal(motorA.getDutyCycle());
-
-        // motorB.optimizeBusUtilization(10, 0.1);
 
         // Everything past this point is just for simulation setup
         if (Robot.isReal()) return;
@@ -151,14 +132,8 @@ public class ElevatorIOTalonFX implements ElevatorIO {
         inputs.dutyCycle = dutyCycleSignal.getValueAsDouble();
 
         inputs.bottomLimit = false;
-        // if (Robot.isReal()) {
-        //     inputs.bottomLimit = !bottomLimit.get();
-        // } else {
-        //     inputs.bottomLimit = elevatorSim.getPositionMeters() <= 0.01;
-        // }
     }
 
-    // Simulation-only code which runs periodically before update() is called
     @Override
     public void simulationPeriodic() {
         elevatorSim.setInput(motorASim.getMotorVoltage());
@@ -184,8 +159,6 @@ public class ElevatorIOTalonFX implements ElevatorIO {
 
     @Override
     public void brakeMode() {
-        motors.forEach(motor -> {
-            motor.setNeutralMode(NeutralModeValue.Brake);
-        });
+        motors.forEach(motor -> motor.setNeutralMode(NeutralModeValue.Brake));
     }
 }

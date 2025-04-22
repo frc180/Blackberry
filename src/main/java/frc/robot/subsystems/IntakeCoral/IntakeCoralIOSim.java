@@ -4,7 +4,6 @@ import static edu.wpi.first.units.Units.Inches;
 import org.ironmaple.simulation.IntakeSimulation;
 import org.ironmaple.simulation.IntakeSimulation.IntakeSide;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.RobotContainer;
 import frc.robot.subsystems.IntakeCoralPivot.IntakeCoralPivotSubsystem;
 import frc.robot.util.simulation.SimLogic;
@@ -16,16 +15,16 @@ public class IntakeCoralIOSim implements IntakeCoralIO {
     double rollerSpeed = 0;
 
     public IntakeCoralIOSim() {
-        if (RobotContainer.MAPLESIM) {
-            intakeSim = IntakeSimulation.OverTheBumperIntake(
-                "Coral",
-                RobotContainer.instance.drivetrain.getDriveSim(),
-                Inches.of(15),
-                Inches.of(10),
-                IntakeSide.BACK,
-                1
-            );
-        }
+        if (!RobotContainer.MAPLESIM) return;
+    
+        intakeSim = IntakeSimulation.OverTheBumperIntake(
+            "Coral",
+            RobotContainer.instance.drivetrain.getDriveSim(),
+            Inches.of(15),
+            Inches.of(10),
+            IntakeSide.BACK,
+            1
+        );
     }
 
     // For testing behaviors when the intake fails to pick up a coral (mainly for auto)
@@ -74,11 +73,8 @@ public class IntakeCoralIOSim implements IntakeCoralIO {
     @Override
     public void setSpeed(double speed) {
         rollerSpeed = speed;
-        SmartDashboard.putNumber("DEBUG Coral Requested Speed", speed);
     }
 
     @Override
-    public void setBottomRollerSpeed(double speed) {
-        // todo
-    }
+    public void setBottomRollerSpeed(double speed) {}
 }

@@ -16,7 +16,7 @@ public class ClimberIOTalonFX implements ClimberIO {
 
     final TalonFX winchMotor, grabberMotor;
     final DutyCycleEncoder absoluteEncoder;
-    final DigitalInput sensor, sensorB;
+    final DigitalInput sensorA, sensorB;
     final VoltageOut voltageControl, grabberVoltage;
 
     final StatusSignal<AngularVelocity> grabberVelocity;
@@ -24,9 +24,9 @@ public class ClimberIOTalonFX implements ClimberIO {
     public ClimberIOTalonFX() {
         TalonFXConfiguration config = new TalonFXConfiguration();
         config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
         winchMotor = new TalonFX(Constants.CLIMBER_WINCH_TALON, Constants.CANIVORE);
         winchMotor.getConfigurator().apply(config);
-        winchMotor.setNeutralMode(NeutralModeValue.Coast);
 
         config = new TalonFXConfiguration();
         grabberMotor = new TalonFX(Constants.CLIMBER_GRABBER_TALON, Constants.CANIVORE);
@@ -34,7 +34,7 @@ public class ClimberIOTalonFX implements ClimberIO {
 
         absoluteEncoder = new DutyCycleEncoder(Constants.DIO_INTAKE_ALGAE_ENCODER);
 
-        sensor = new DigitalInput(Constants.DIO_CLIMBER_SENSOR_A);
+        sensorA = new DigitalInput(Constants.DIO_CLIMBER_SENSOR_A);
         sensorB = new DigitalInput(Constants.DIO_CLIMBER_SENSOR_B);
 
         voltageControl = new VoltageOut(0);
@@ -46,7 +46,7 @@ public class ClimberIOTalonFX implements ClimberIO {
     @Override
     public void update(ClimberInputs inputs) {
         inputs.jointPosition = absoluteEncoder.get();
-        inputs.sensorA = !sensor.get();
+        inputs.sensorA = !sensorA.get();
         inputs.sensorB = !sensorB.get();
         inputs.grabberVelocity = grabberVelocity.getValueAsDouble();
     }

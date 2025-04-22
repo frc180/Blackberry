@@ -27,7 +27,6 @@ import com.pathplanner.lib.util.DriveFeedforwards;
 import com.pathplanner.lib.util.FlippingUtil;
 import com.pathplanner.lib.util.swerve.SwerveSetpoint;
 import com.pathplanner.lib.util.swerve.SwerveSetpointGenerator;
-import com.spamrobotics.swerve.SwerveModuleStateRequest;
 import com.spamrobotics.util.Helpers;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.NotLogged;
@@ -101,8 +100,6 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     private final SwerveRequest.ApplyRobotSpeeds m_pathApplyRobotSpeeds = new SwerveRequest.ApplyRobotSpeeds().withDriveRequestType(DriveRequestType.OpenLoopVoltage);
     private final SwerveRequest.ApplyRobotSpeeds applyClosedLoopSpeeds = new SwerveRequest.ApplyRobotSpeeds().withDriveRequestType(DriveRequestType.Velocity);
     private final SwerveRequest.SwerveDriveBrake brakeRequest = new SwerveRequest.SwerveDriveBrake();
-
-    private final SwerveModuleStateRequest moduleStateRequest = new SwerveModuleStateRequest();
 
     /* Swerve requests to apply during SysId characterization */
     private final SwerveRequest.SysIdSwerveTranslation m_translationCharacterization = new SwerveRequest.SysIdSwerveTranslation();
@@ -332,13 +329,6 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     public void driveClosedLoop(ChassisSpeeds speeds) {
         speeds = ChassisSpeeds.discretize(speeds, Constants.LOOP_TIME);
         setControl(applyClosedLoopSpeeds.withSpeeds(speeds));
-    }
-
-    // Allegedly results in smoother driving that causes less wheel slip due to never commanding
-    // physically impossible actions. However, so far in testing, seems to just make robot control poorly.
-    public void driveWithSetpoints(ChassisSpeeds speeds) {
-        previousSetpoint = setpointGenerator.generateSetpoint(previousSetpoint, speeds, Constants.LOOP_TIME);
-        setControl(moduleStateRequest.withModuleStates(previousSetpoint.moduleStates()));
     }
 
     public Command brake() {
@@ -855,81 +845,8 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         return m_sysIdRoutineToApply.dynamic(direction);
     }
 
-    // Adapted from https://github.com/WaltonRobotics/Reefscape/blob/bca8e2b01ee13f46fc53a4748f4cf2c9eb5de017/src/main/java/frc/robot/subsystems/Swerve.java#L308
-    public Command wheelRadiusCharacterization(double omegaDirection) {
-        final DoubleSupplier m_gyroYawRadsSupplier = () -> Units.degreesToRadians(getPigeon2().getYaw().getValueAsDouble());
-        final SlewRateLimiter m_omegaLimiter = new SlewRateLimiter(0.5);
-        final SwerveRequest.RobotCentric m_characterizationReq = new SwerveRequest.RobotCentric()
-		    .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
-        final double m_characterizationSpeed = 1.5;
-
-		var initialize = runOnce(() -> {
-			lastGyroYawRads = m_gyroYawRadsSupplier.getAsDouble();
-			accumGyroYawRads = 0;
-			currentEffectiveWheelRadius = 0;
-            averageWheelPosition = 0;
-			for (int i = 0; i < getModules().length; i++) {
-				var pos = getModules()[i].getPosition(true);
-				startWheelPositions[i] = pos.distanceMeters * TunerConstants.kDriveRotationsPerMeter;
-			}
-			m_omegaLimiter.reset(0);
-		});
-
-		var executeEnd = runEnd(
-			() -> {
-				setControl(m_characterizationReq
-					.withRotationalRate(m_omegaLimiter.calculate(m_characterizationSpeed * omegaDirection)));
-				accumGyroYawRads += MathUtil.angleModulus(m_gyroYawRadsSupplier.getAsDouble() - lastGyroYawRads);
-				lastGyroYawRads = m_gyroYawRadsSupplier.getAsDouble();
-				averageWheelPosition = 0;
-				double[] wheelPositions = new double[4];
-				for (int i = 0; i < getModules().length; i++) {
-					var pos = getModules()[i].getPosition(true);
-					wheelPositions[i] = pos.distanceMeters * TunerConstants.kDriveRotationsPerMeter;
-					averageWheelPosition += Math.abs(wheelPositions[i] - startWheelPositions[i]);
-				}
-				averageWheelPosition = averageWheelPosition / 4.0;
-				currentEffectiveWheelRadius = (accumGyroYawRads * TunerConstants.kDriveRadius) / averageWheelPosition;
-			}, () -> {
-				setControl(m_characterizationReq.withRotationalRate(0));
-				if (Math.abs(accumGyroYawRads) <= Math.PI * 2.0) {
-					System.out.println("not enough data for characterization " + accumGyroYawRads
-                    + "\navgWheelPos: " + averageWheelPosition + "radians");
-				} else {
-					System.out.println(
-						"effective wheel radius: "
-							+ currentEffectiveWheelRadius
-							+ " inches" + 
-                            "\naccumGryoYawRads: " + accumGyroYawRads + "radians" 
-                            + "\navgWheelPos: " + averageWheelPosition + "radians");
-				}
-			});
-
-		return Commands.sequence(
-			initialize, executeEnd);
-	}
-
     @Override
     public void periodic() {
-        /*
-         * Periodically try to apply the operator perspective.
-         * If we haven't applied the operator perspective before, then we should apply it regardless of DS state.
-         * This allows us to correct the perspective in case the robot code restarts mid-match.
-         * Otherwise, only check and apply the operator perspective if the DS is disabled.
-         * This ensures driving behavior doesn't change until an explicit disable event occurs during testing.
-         */
-        // if (!m_hasAppliedOperatorPerspective || DriverStation.isDisabled()) {
-        //     DriverStation.getAlliance().ifPresent(allianceColor -> {
-        //         setOperatorPerspectiveForward(
-        //             allianceColor == Alliance.Red
-        //                 ? kRedAlliancePerspectiveRotation
-        //                 : kBlueAlliancePerspectiveRotation
-        //         );
-        //         m_hasAppliedOperatorPerspective = true;
-        //     });
-        // }
-
-        // pigeonConnected = getPigeon2().isConnected();
         pigeonConnected = gyroAngleSignal.getTimestamp().getLatency() <= 0.5;
         pigeonDisconnectedAlert.set(!pigeonConnected);
 
@@ -938,18 +855,12 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         }
 
         double kV = SmartDashboard.getNumber("Drivetrain XY Feedforward", 0);
-        // double kA = SmartDashboard.getNumber("Drivetrain XY kA", 0);
         xyFeedforward.setKv(kV);
-        // xyFeedforward.setKa(kA);
 
         SwerveDriveState state = getCachedState();
         Pose2d pose = state.Pose;
         xPosition = pose.getX();
         yPosition = pose.getY();
-        // State xSetpoint = xProfiledPid.getSetpoint();
-        // State ySetpoint = yProfiledPid.getSetpoint();
-        // xPidTarget = xSetpoint.position;
-        // yPidTarget = ySetpoint.position;
         xPidTarget = xPid.getSetpoint();
         yPidTarget = yPid.getSetpoint();
 

@@ -2,15 +2,12 @@ package frc.robot.commands;
 
 import java.util.function.Function;
 import java.util.function.Supplier;
-
 import com.spamrobotics.util.Helpers;
-
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.Robot;
 import frc.robot.subsystems.DrivetrainSubsystem;
 import frc.robot.subsystems.DrivetrainSubsystem.HeadingTarget;
 import frc.robot.subsystems.DrivetrainSubsystem.PoseTarget;
@@ -163,7 +160,6 @@ public class DriveToPose extends Command {
             }
         }
 
-        // ChassisSpeeds speeds = drivetrain.calculateChassisSpeeds(currentPose, iterationTarget);
         ChassisSpeeds speeds;
         if (profileOverride != null) {
             speeds = drivetrain.driveProfiled(currentPose, iterationTarget, profileOverride, constraintsOverride);
@@ -178,11 +174,6 @@ public class DriveToPose extends Command {
         speeds.vyMetersPerSecond = MathUtil.clamp(speeds.vyMetersPerSecond, -maxSpeedMeters, maxSpeedMeters);
 
         drivetrain.driveClosedLoop(speeds);
-        // if (Robot.isSimulation()) {
-        //     drivetrain.driveClosedLoop(speeds);
-        // } else {
-        //     drivetrain.drive(speeds);
-        // }
     }
 
     @Override

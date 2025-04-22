@@ -48,12 +48,6 @@ public class IntakeCoralPivotIOSim implements IntakeCoralPivotIO{
     }
 
     @Override
-    public void runMotorTest() {
-        System.out.println("intake coral pivot test");
-
-    }
-
-    @Override
     public void stopMotor() {
         speed = 0;
     }

@@ -4,7 +4,7 @@ import edu.wpi.first.math.controller.PIDController;
 
 public class ElevatorIOSim implements ElevatorIO {
 
-    PIDController pid;
+    final PIDController pid;
     boolean usingPID = false;
     double position = 0;
     double speed = 0;
@@ -52,12 +52,8 @@ public class ElevatorIOSim implements ElevatorIO {
     }
 
     @Override
-    public void zero() {
-        // TODO: implement
-    }
+    public void zero() {}
 
     @Override
-    public void brakeMode() {
-        // TODO Auto-generated method stub
-    }
+    public void brakeMode() {}
 }

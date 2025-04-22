@@ -80,8 +80,6 @@ public class LEDSubsystem extends SubsystemBase {
         yellowFlow = colorFlow(YELLOW, 0.5, Direction.Forward);
         yellowLarson = larson(YELLOW, 0.5, 5, BounceMode.Front);
 
-        double rightStripRatio = ((double) STRIP_2_LENGTH) / ((double) STRIP_LENGTH);
-
         blueLeftFlow = colorFlow(BLUE, 0.7, Direction.Forward, STRIP_LENGTH, NO_CANDLE_OFFSET);
         blueRightFlow = colorFlow(BLUE, 0.7, Direction.Backward, STRIP_2_LENGTH, NO_CANDLE_OFFSET + STRIP_LENGTH);
 

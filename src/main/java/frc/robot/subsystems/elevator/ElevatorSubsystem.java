@@ -43,9 +43,6 @@ public class ElevatorSubsystem extends SubsystemBase {
 
     public static final Distance CLIMB = Inches.of(15);
     public static final Distance CLIMB_STOW = Inches.of(14 + 1);
-    // Short elevator climb
-    // public static final Distance CLIMB = Inches.of(15); // was 14
-    // public static final Distance CLIMB_STOW = Inches.of(7);
 
     protected static final double SOFT_UPPER_LIMIT = Meters.of(1.48).in(Meters);
     protected static final double SOFT_LOWER_LIMIT = 0;
@@ -55,7 +52,6 @@ public class ElevatorSubsystem extends SubsystemBase {
 
     private ElevatorIO io;
     private ElevatorIOInputs inputs;
-    // private Alert notHomedAlert = new Alert("Elevator not homed!", AlertType.kWarning);
 
     private Distance targetPosition = ZERO;
     @NotLogged
@@ -101,15 +97,6 @@ public class ElevatorSubsystem extends SubsystemBase {
             hasHomed = true;
         }
 
-        // if (atLowerLimitDebounced.getAsBoolean()) {
-        //     if (Math.abs(inputs.position) > 0.001) {
-        //         io.zero();
-        //     }
-        //     hasHomed = true;
-        // }
-
-        // notHomedAlert.set(!hasHomed);
-
         softStowLogic();
 
         if (RobotContainer.POSING_MODE) {
@@ -145,8 +132,6 @@ public class ElevatorSubsystem extends SubsystemBase {
                             .andThen(Commands.runOnce(() -> io.zero()))
                             .deadlineFor(runSpeed(-0.03))
                 );
-                // .andThen(runSpeed(-0.03).until(atLowerLimitDebounced))
-                // .andThen(runOnce(() -> io.zero()));
     }
 
     public Command stow() {
@@ -234,7 +219,6 @@ public class ElevatorSubsystem extends SubsystemBase {
     }
 
     public double getTargetErrorMeters() {
-        // return targetPosition.in(Meters) - inputs.position;
         return adjustedTargetPosition - inputs.position;
     }
 

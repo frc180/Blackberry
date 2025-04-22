@@ -25,7 +25,7 @@ public class Climber extends SubsystemBase {
     private static final double HARD_STOP = 0.584;
 
     private static final double DEPLOYED = 0.6;
-    private static final double MAX_CLIMB =  0.815 + Units.degreesToRotations(15); //0.69 - Units.degreesToRotations(10); // old climber - 0.413;
+    private static final double MAX_CLIMB = 0.815 + Units.degreesToRotations(15);
     
     private final ClimberIO io;
     private final ClimberInputs inputs;
@@ -48,8 +48,6 @@ public class Climber extends SubsystemBase {
         }
 
         grabberStalling = new Trigger(this::isGrabberStalling).debounce(0.75, DebounceType.kRising);
-        // hasCage = new Trigger(() -> inputs.sensorA || inputs.sensorB);
-
         hasCage = new Trigger(this::isCageLatched);
     }
 
@@ -88,7 +86,6 @@ public class Climber extends SubsystemBase {
     public Command climb() {
         return runEnd(
             () -> {
-                // io.setSpeed(shouldIncreaseClimbPower() ? 1 : 0.3);
                 io.setSpeed(0.3); // was 0.4
             },
             () -> io.setSpeed(0)
@@ -113,9 +110,7 @@ public class Climber extends SubsystemBase {
     }
 
     public Command setState(ClimberState newState) {
-        return Commands.runOnce(() -> {
-            state = newState;
-        });
+        return Commands.runOnce(() -> state = newState);
     }
 
     public Trigger isState(ClimberState state) {
