@@ -33,7 +33,5 @@ public interface VisionIO {
 
     public void update(VisionIOInputs inputs);
 
-    public void setBargeMode(boolean bargeMode);
-
     public default void simulationPeriodic() {}
 }

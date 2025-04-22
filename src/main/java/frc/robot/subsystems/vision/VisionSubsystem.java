@@ -294,14 +294,16 @@ public class VisionSubsystem extends SubsystemBase {
 
         // If we didn't get a pose estimate from the scoring camera, use the front camera's pose estimate
         if (poseEstimate == null && invalidScoring && inputs.frontCameraConnected) {
-            // poseEstimate = validatePoseEstimate(inputs.frontPoseEstimate);
             poseEstimateSource = PoseEstimateSource.FRONT_CAMERA;
 
-            if (RobotState.isEnabled() && Robot.isSimulation()) {
-                poseEstimate = validateMT2PoseEstimate(inputs.frontPoseEstimateMT2);
-            } else {
+            if (Robot.isReal()) {
                 poseEstimate = validatePoseEstimate(inputs.frontPoseEstimate);
             }
+            // if (RobotState.isEnabled() && Robot.isSimulation()) {
+            //     poseEstimate = validateMT2PoseEstimate(inputs.frontPoseEstimateMT2);
+            // } else {
+            //     poseEstimate = validatePoseEstimate(inputs.frontPoseEstimate);
+            // }
         }
      
         Pose2d robotPose = null;
@@ -633,16 +635,6 @@ public class VisionSubsystem extends SubsystemBase {
         return Commands.runEnd(
             () -> allowPoseEstimates = false,
             () -> allowPoseEstimates = true
-        );
-    }
-
-    /**
-     * Makes the robot accept pose estimates involving barge tags instead of reef tags while this command is running.
-     */
-    public Command bargeMode() {
-        return Commands.runEnd(
-            () -> io.setBargeMode(true),
-            () -> io.setBargeMode(false)
         );
     }
 

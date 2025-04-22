@@ -35,7 +35,6 @@ public class VisionIOLimelight implements VisionIO {
 
     private int frontCameraImuMode = IMU_ASSIST_EXTERNALIMU;
     private boolean wasEnabled = false;
-    private boolean bargeMode = false;
     private double lastSettingsUpdate = -1;
 
     public VisionIOLimelight() {
@@ -86,15 +85,6 @@ public class VisionIOLimelight implements VisionIO {
             lastSettingsUpdate = time;
         }
 
-        // double[] validTags;
-        // if (bargeMode) {
-        //     validTags = Robot.isBlue() ? blueBargeTags : redBargeTags;
-        // } else {
-        //     validTags = Robot.isBlue() ? blueReefTags : redReefTags;
-        // }
-        // setValidTags(SCORING_LIMELIGHT, validTags);
-        // setValidTags(FRONT_LIMEIGHT, validTags);
- 
         // EXPERIMENT: All of this is irrelevant since we don't use MegaTag2
         // if (RobotState.isEnabled()) {
         //     frontCameraImuMode = IMU_ASSIST_EXTERNALIMU;
@@ -146,12 +136,6 @@ public class VisionIOLimelight implements VisionIO {
         // } else {
         //     inputs.frontTemp = -1;
         // }
-    }
-
-    
-    @Override
-    public void setBargeMode(boolean bargeModeEnabled) {
-        this.bargeMode = bargeModeEnabled;
     }
 
     @Override
