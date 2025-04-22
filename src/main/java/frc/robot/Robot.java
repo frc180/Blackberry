@@ -42,7 +42,6 @@ public class Robot extends TimedRobot {
   public static boolean currentlyScoringCoral = false;
   public static boolean justScoredCoral = false;
   public static boolean wasEverEnabled = false;
-  private static boolean receivedValidAlliance = false;
   private static boolean isBlueAlliance = false;
 
   private Command m_autonomousCommand;
@@ -62,9 +61,6 @@ public class Robot extends TimedRobot {
   private final Alert controllerDisconnectedAlert = new Alert("Setup - Driver controller not connected!", AlertType.kError);
   private final Alert posingModeAlert = new Alert("Robot is in Posing Mode!", AlertType.kInfo);
   private final Alert demoModeAlert = new Alert("Robot is in Demo Mode!", AlertType.kInfo);
-
-//   @Logged(name = "CANivore Bus Utilization")
-//   float canivoreBusUtilization = 0;
 
   @Logged(name = "Battery Voltage")
   double batteryVoltage = 0;
@@ -125,8 +121,10 @@ public class Robot extends TimedRobot {
   @Override
   public void disabledPeriodic() {
     noCoralAlert.set(!robotContainer.robotHasCoral.getAsBoolean());
+
     Command selectedAuto = robotContainer.getAutonomousCommand();
     noAutoAlert.set(selectedAuto == null || selectedAuto == robotContainer.autoDoNothing);
+
     Pose2d robotPose = robotContainer.drivetrain.getPose();
     boolean robotLeft = (robotPose.getY() > FlippingUtil.fieldSizeY / 2);
     if (Robot.isRed()) robotLeft = !robotLeft;

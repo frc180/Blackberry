@@ -241,14 +241,6 @@ public class RobotContainer {
         pushChooser.addOption("Yes, SPAM CAN RAM", true);    
         SmartDashboard.putData("SPAM Ram?", pushChooser);
 
-        double offset = Inches.of(203).in(Meters);
-
-        // autoChooser.addOption("Drive 203 inches", Commands.sequence(
-        //     Commands.runOnce(() -> drivetrain.resetPose(new Pose2d(2,7, Rotation2d.kZero))),
-        //     new DriveToPose(drivetrain, () -> new Pose2d(2 + offset, 7, Rotation2d.kZero)).until(drivetrain.withinTargetPoseDistance(0.02)),
-        //     new DriveToPose(drivetrain, () -> new Pose2d(2, 7, Rotation2d.kZero))
-        // ));
-
         if (Robot.isSimulation()) {
             autoChooser.addOption("Drive 6 meters", Commands.sequence(
                 Commands.runOnce(() -> drivetrain.resetPose(new Pose2d(2,7, Rotation2d.kZero))),
@@ -499,34 +491,13 @@ public class RobotContainer {
         driverReadyClimb.whileTrue(readyClimb);
         driverStartClimb.whileTrue(climber.climb().alongWith(elevator.climbStowHeight(), elevator.brakeMode()));
         
-        climber.hasCage
-                .and(climber.isState(ClimberState.DEPLOYED))
-                .whileTrue(new RumbleCommand(1));
+        climber.hasCage.and(climber.isState(ClimberState.DEPLOYED))
+               .whileTrue(new RumbleCommand(1));
 
         // Auto climb
         // climber.hasCage
         //         .and(climber.isState(ClimberState.DEPLOYED))
         //         .onTrue(climber.climb().alongWith(elevator.climbStowHeight()));
-
-        // Automatic processor alignment
-        // driverProcessor.whileTrue(new DriveToPose(drivetrain, () -> vision.getProcessorPose(Robot.isBlue()))
-        //                                 .withPoseTargetType(PoseTarget.PROCESSOR));
-
-        // Trigger atProcessor = drivetrain.targetingProcessor()
-        //                             .and(drivetrain.withinTargetPoseTolerance(
-        //                                 Inches.of(1),
-        //                                 Inches.of(1),
-        //                                 Degrees.of(5)
-        //                             ));
-
-        // driverProcessor.and(atProcessor).and(intakeAlgae.hasAlgae).whileTrue(Commands.parallel(
-        //     intakeAlgae.spit(),
-        //     Commands.runOnce(() -> {
-        //         if (Robot.isSimulation()) {
-        //             SimLogic.outtakeAlgae();
-        //         }
-        //     })
-        // ));
 
         driverProcessor.whileTrue(elevatorArmPivot.processorPosition().alongWith(
                             elevator.stow(),
@@ -549,23 +520,13 @@ public class RobotContainer {
 
         teleop.onTrue(Commands.sequence(
             elevatorArmPivot.brakeMode(),
-            // Commands.either(
-            //     Commands.none(),
-            //     elevator.home(),
-            //     elevator::isHomed 
-            // ),
-            // .horizontalPosition(),
-            // Commands.either(
-            //     Commands.none(),
-            //     elevatorArmPivot.home().andThen(elevatorArmPivot.horizontalPosition()),
-            //     elevatorArmPivot::isHomed
-            // ),
             new RumbleCommand(0.5).withTimeout(0.3)
         ));
 
+        // Deploy bottom roller at start of auto or teleop
         autonomous.or(teleop).onTrue(intakeCoral.runBottomRollerSpeed(-1).withTimeout(1));
 
-        // Stop elevator from slamming into the top if auto ends while elevator is moving up    
+        // Stop elevator from slamming into the top if auto ends while elevator is moving up
         autonomous.and(() -> Timer.getFPGATimestamp() - Auto.startTime >= 14.9)
                   .and(() -> !elevator.isElevatorInPosition() && elevator.getTargetErrorMeters() > 0)
                     .onTrue(
@@ -686,11 +647,6 @@ public class RobotContainer {
         // Move elevator partially up when approaching reef targeting L4, but not yet at
         // the range where we are near the reef
         l4Advance.whileTrue(elevator.setPosition(ElevatorSubsystem.L4_ADVANCE).alongWith(elevatorArmPivot.matchElevatorPreset()));
-                // .onFalse(Commands.either(
-                //     Commands.none(),
-                //     elevator.stow().alongWith(elevatorArmPivot.receivePosition()),
-                //     drivetrain.targetingReef()
-                // ));
 
         // FOR TUNING - Track exit velocity of coral
         isScoringCoral.and(elevatorArm.hasNoCoral).onTrue(
@@ -703,9 +659,6 @@ public class RobotContainer {
             return elevator.isTargetingReefAlgaePosition() && targetingAlgae.getAsBoolean(); 
         };
 
-        // Command obtainAlgae = elevatorArmAlgae.intakeAndIndex(algaeGrabSpeed)
-        //                                       .until(elevatorArmAlgae.hasAlgae.or(driverAlgaeDescore.negate()))
-        //                                       .withTimeout(3);
 
         Command obtainAlgae = Commands.race(Commands.waitUntil(elevatorArmAlgae.hasAlgae), Commands.waitSeconds(3), Commands.waitUntil(driverAlgaeDescore.negate()))
                                         .andThen(coralEject())
@@ -713,7 +666,6 @@ public class RobotContainer {
 
         Command scoringSequence = Commands.either(
             obtainAlgae,
-            // obtainAlgae.andThen(coralEject().deadlineFor(elevatorArmAlgae.passiveIndex())),
             coralEject(),
             shouldObtainAlgae
         );
@@ -747,8 +699,6 @@ public class RobotContainer {
                     coralScoreEnd(),
                     shouldObtainAlgae
                 )
-                // coralScoreEnd()
-
             ).withInterruptBehavior(InterruptionBehavior.kCancelIncoming)
         );
 
@@ -770,15 +720,11 @@ public class RobotContainer {
         final Command manualL1Score = l1CoralEject().andThen(Commands.runOnce(() -> Robot.justScoredCoral = true));
 
         manualL1.whileTrue(elevator.setPosition(ElevatorSubsystem.L1).alongWith(elevatorArmPivot.matchElevatorPreset()))
-                //.onFalse(elevator.stow().alongWith(elevatorArmPivot.receivePosition()));
                 .onFalse(Commands.either(
                     manualL1Score,
                     Commands.none(),
                     manualL1Ready
                 ).andThen(elevator.stow().alongWith(elevatorArmPivot.receivePosition())));
-
-        // Auto-score when holding manual l1
-        // manualL1.and(manualL1Ready).onTrue(manualL1Score);
 
         // Outtaking algae without trying to score it
         driverSpitAlgae.and(driverProcessor.negate())
@@ -918,20 +864,10 @@ public class RobotContainer {
                 .until(intakeCoral.hasCoral) // at this point, the command gets interrupted by the auto coral intake trigger
                 .alongWith(Commands.runOnce(() -> Auto.seenCoralThisCycle = true))
         ).alongWith(Auto.startCoralIntake());
-
-
-        // Command getOrScoreCoral = Commands.either(
-        //     Auto.driveToReefWithCoral(),
-        //     autoIntakeCoral,
-        //     () -> {
-        //         var nextPos = Auto.nextCoralScoringPosition();
-        //         return nextPos != null && nextPos.isAlgae();
-        //     }
-        // );
-                                    
+    
         justScoredCoral.and(autonomous).and(drivetrainAvailable).onTrue(
             Commands.either(
-                autoIntakeCoral, // getOrScoreCoral,
+                autoIntakeCoral,
                 Commands.none(),
                 () -> Auto.nextCoralScoringPosition() != null
             ).alongWith(Commands.runOnce(() -> {
