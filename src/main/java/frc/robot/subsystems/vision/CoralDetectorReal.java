@@ -25,7 +25,7 @@ public class CoralDetectorReal implements CoralDetector {
     private final Comparator<RawDetection> detectionTXYComparator;
 
     // How close to the robot a detected coral has to be to be considered "close" (i.e. intakeable)
-    private final static double CLOSE_CORAL_DISTANCE = 0.8; // was 0.6 meters
+    private final static double CLOSE_CORAL_DISTANCE = 0.6; // was 0.8 at SoFlo/Houston, 0.6 meters at Orlando
     private final static double CLOSE_CORAL_TX = 10;
     // How close two detected coral have to be to each other to be considered the same/close enough 
     // to allow switching without a timeout
