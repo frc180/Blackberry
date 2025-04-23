@@ -107,16 +107,17 @@ public class ElevatorArmAlgaeIOTalonFX implements ElevatorArmAlgaeIO {
         ElevatorArmPivotSubsystem elevatorArmPivot = RobotContainer.instance.elevatorArmPivot;
         IntakeAlgaeSubsystem algaeIntake = RobotContainer.instance.intakeAlgae;
 
-        double distance = 0.28;
+        double motorVoltage = -motorSim.getMotorVoltage();
+        double distance = 0.4;
 
         // If we're already intaking an algae
         if (SimLogic.armHasAlgae) {
             if (algaeDistance != -1) {
-                algaeDistance -= 0.0025 * motorSim.getMotorVoltage();
+                algaeDistance -= 0.005 * motorVoltage;
                 algaeDistance = Math.max(algaeDistance, 0);
                 distance = algaeDistance;
             }
-            if (motorSim.getMotorVoltage() < 0) {
+            if (motorVoltage < 0) {
                 if (elevatorArmPivot.getTargetPosition() == ElevatorArmPivotSubsystem.netScore) {
                     SimLogic.netAlgae(true);
                 } else if (elevatorArmPivot.getTargetPosition() == ElevatorArmPivotSubsystem.netScoreBackwards) {
@@ -139,7 +140,7 @@ public class ElevatorArmAlgaeIOTalonFX implements ElevatorArmAlgaeIO {
                     algaeDistance = Math.min(distanceToAlgae, 1);
                     distance = algaeDistance;
 
-                    if (motorSim.getMotorVoltage() > 0) {
+                    if (motorVoltage > 0) {
                         Field.removeReefAlgae(tag);
                         SimLogic.armHasAlgae = true;
                     }
@@ -153,6 +154,8 @@ public class ElevatorArmAlgaeIOTalonFX implements ElevatorArmAlgaeIO {
                 algaeDistance = 0.1;
             }
         }
+
+        System.out.println(algaeDistance);
 
         double noise = Math.random() * 0.01 - 0.005;
         canrangeSim.setDistance(distance + noise);
