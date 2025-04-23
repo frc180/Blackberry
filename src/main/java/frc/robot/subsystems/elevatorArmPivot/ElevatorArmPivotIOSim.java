@@ -44,8 +44,8 @@ public class ElevatorArmPivotIOSim implements ElevatorArmPivotIO{
 
     @Override
     public void setSpeed(double speed) {
-        System.out.println("elevator arm pivot test");
-
+        this.speed = speed;
+        usingPID = false;
     }
 
     @Override

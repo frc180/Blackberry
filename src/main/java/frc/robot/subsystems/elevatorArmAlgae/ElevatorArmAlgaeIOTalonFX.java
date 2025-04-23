@@ -155,8 +155,6 @@ public class ElevatorArmAlgaeIOTalonFX implements ElevatorArmAlgaeIO {
             }
         }
 
-        System.out.println(algaeDistance);
-
         double noise = Math.random() * 0.01 - 0.005;
         canrangeSim.setDistance(distance + noise);
     }
