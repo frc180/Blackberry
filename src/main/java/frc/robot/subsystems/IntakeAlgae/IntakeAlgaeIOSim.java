@@ -84,9 +84,4 @@ public class IntakeAlgaeIOSim implements IntakeAlgaeIO {
 
         inputs.hasAlgae = SimLogic.intakeHasAlgae;
     }
-
-    @Override
-    public void runMotorTest() {
-        System.out.println("intake algae test");
-    }
 }

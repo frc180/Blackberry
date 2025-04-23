@@ -19,8 +19,6 @@ public interface IntakeAlgaePivotIO {
 
     public default void simulationPeriodic() {}
 
-    public void runMotorTest();
-
     public void setSpeed(double speed);
 
     public void setWinchSpeed(double speed);

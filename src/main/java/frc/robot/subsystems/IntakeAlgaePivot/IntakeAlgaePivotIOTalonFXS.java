@@ -143,11 +143,6 @@ public class IntakeAlgaePivotIOTalonFXS implements IntakeAlgaePivotIO {
         winchMotor.setControl(winchVoltageControl.withOutput(speed  * 12));
     }
 
-    public void runMotorTest() {
-        System.out.println("algae intake pivot running");
-        pivotMotor.set(0.25); //pivotMotorB is follower
-    }
-
     @Override
     public void stopMotor() {
         pivotMotor.stopMotor();

@@ -58,10 +58,4 @@ public class IntakeAlgaeIOTalonFXS implements IntakeAlgaeIO {
     private void setVoltage(double voltage) {
         intakeMotor.setControl(voltageControl.withOutput(voltage));
     }
-
-    @Override
-    public void runMotorTest() {
-        System.out.println("algae intake running");
-        intakeMotor.set(0.25);
-    }
 }

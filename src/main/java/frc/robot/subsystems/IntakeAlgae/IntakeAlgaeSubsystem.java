@@ -58,10 +58,4 @@ public class IntakeAlgaeSubsystem extends SubsystemBase {
             () -> io.stop()
         );
     }
-
-    public Command test() {
-        return this.run(() -> {
-          io.runMotorTest();
-        });
-    }
 }

@@ -41,12 +41,6 @@ public class IntakeAlgaePivotIOSim implements IntakeAlgaePivotIO {
     }
 
     @Override
-    public void runMotorTest() {
-        System.out.println("intake algae pivot test");
-
-    }
-
-    @Override
     public void stopMotor() {
         speed = 0;
     }
