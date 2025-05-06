@@ -21,14 +21,12 @@
 package frc.robot;
 
 import static edu.wpi.first.units.Units.*;
-
 import java.util.List;
 import java.util.Map;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.Function;
 import java.util.function.Supplier;
-
 import com.ctre.phoenix.led.Animation;
 import com.pathplanner.lib.util.FlippingUtil;
 import com.spamrobotics.util.Helpers;
@@ -80,8 +78,6 @@ import frc.robot.subsystems.elevatorArmPivot.ElevatorArmPivotSubsystem;
 
 @Logged
 public class RobotContainer {
-    // private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
-
     /**
      * Set this to false to disable MapleSim in simulation
      */
@@ -261,7 +257,6 @@ public class RobotContainer {
 
         configureBindings();
 
-        // drivetrain.singCommand("enemy").schedule();
         if (POSING_MODE) {
             SmartDashboard.putNumber("Posing/Level", 4);
         }
@@ -295,8 +290,8 @@ public class RobotContainer {
         final Trigger driverAnyReef = driverLeftReef.or(driverRightReef);
         // Algae
         final Trigger driverProcessor = driverController.povUp().and(notDemoMode);               // algaeMode.and(driverController.b());
-        final Trigger driverNet = falseTrigger;                                 // algaeMode.and(driverController.x());
-        final Trigger driverNetSlow = algaeMode.and(driverController.x());      // algaeMode.and(driverController.b());
+        final Trigger driverNet = falseTrigger;                                                  // algaeMode.and(driverController.x());
+        final Trigger driverNetSlow = algaeMode.and(driverController.x());                       // algaeMode.and(driverController.b());
         final Trigger driverSpitAlgae = algaeMode.and(driverSpit);
         // final Trigger driverIntakeAlgae = algaeMode.and(driverController.leftTrigger());
         final Trigger driverIntakeAlgae = driverController.povRight();
@@ -394,7 +389,7 @@ public class RobotContainer {
             return inputs.of(-driverController.getLeftY(), -driverController.getLeftX())
                             .deadband(DEADBAND)
                             .polarDistanceTransform(JoystickInputs.SQUARE_KEEP_SIGN)
-                            .clamp(1) // Clamp the magnitude of the inputs to 1, since polar transform can make them slightly greater than 1
+                            .clamp(1)
                             .transform(axisToLinearSpeed);
         };
 
@@ -494,7 +489,7 @@ public class RobotContainer {
         climber.hasCage.and(climber.isState(ClimberState.DEPLOYED))
                .whileTrue(new RumbleCommand(1));
 
-        // Auto climb
+        // Automatically climb
         // climber.hasCage
         //         .and(climber.isState(ClimberState.DEPLOYED))
         //         .onTrue(climber.climb().alongWith(elevator.climbStowHeight()));
@@ -598,8 +593,7 @@ public class RobotContainer {
 
         Trigger isScoringCoral = new Trigger(() -> Robot.currentlyScoringCoral);
 
-        // EXPERIMENT: This extra OR statement fixes a bug that caused us to miss L2's when descoring algae - 
-        // this fixes that, but may come at the cost of making the algae grab behave differently.
+        // This extra OR statement fixes a bug that caused us to miss L2's when descoring algae
         Trigger rightL2 = driverRightReef.and(driverL2).or(() -> {
             if (driverAlgaeDescore.getAsBoolean()) {
                 int level = Field.getAlgaeLevel(drivetrain.getTargetPoseTag());
@@ -641,8 +635,6 @@ public class RobotContainer {
                                         .and(finalReefTrigger.negate())
                                         .and(reefDeployAllowed)
                                         .and(elevatorArm.hasPartialCoral);
-
-        // Trigger l4Advance = falseTrigger;
 
         // Move elevator partially up when approaching reef targeting L4, but not yet at
         // the range where we are near the reef
@@ -688,7 +680,7 @@ public class RobotContainer {
         // Coral scoring sequence - kCancelIncoming means nothing else will be able to stop this command until it finishes
         atReef.and(elevator.inReefPosition)
               .and(elevatorArmPivot.elevatorArmInScoringPosition)
-              .and(drivetrain.almostStationary)
+              .and(drivetrain.almostStationary) // EXPERIMENT: don't check this at all
               .and(visionScoreReady).onTrue(
             Commands.sequence(
                 Commands.runOnce(() -> Robot.currentlyScoringCoral = true)

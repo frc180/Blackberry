@@ -4,7 +4,6 @@ import static edu.wpi.first.units.Units.*;
 import java.util.HashMap;
 import java.util.Optional;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;

@@ -108,6 +108,7 @@ public class CoralDetectorReal implements CoralDetector {
         for (RawDetection detection : sortedDetections) {
             double degrees = detection.txnc;
 
+            // EXPERIMENT: Disable this entirely, or come up with a different way of dodging lollip coral (looking at width/height ratio?)
             if (auto) {
                 // Skip any coral that are close to an algae on the X axis - these are likely lollipops
                 for (RawDetection algae : algaeDetections) {

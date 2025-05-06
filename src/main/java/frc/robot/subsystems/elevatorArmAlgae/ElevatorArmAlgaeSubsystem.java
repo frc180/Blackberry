@@ -58,7 +58,7 @@ public class ElevatorArmAlgaeSubsystem extends SubsystemBase {
             () -> {
                 double holdSpeed = 0.6; // was 0.4
                 // double holdAmps = 20;
-                double holdAmps = SmartDashboard.getNumber("Algae Amps", 0);
+                // double holdAmps = SmartDashboard.getNumber("Algae Amps", 0);
 
                 if (distanceFiltered < HAS_ALGAE_CLOSE_THRESHOLD) {
                     io.setSpeed(holdSpeed);

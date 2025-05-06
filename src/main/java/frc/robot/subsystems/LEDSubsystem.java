@@ -176,7 +176,6 @@ public class LEDSubsystem extends SubsystemBase {
     }
 
     public ColorFlowAnimation colorFlow(LEDColor color, double speed, Direction direction) {
-        // return new ColorFlowAnimation(color.r, color.g, color.b, color.w, speed, NUM_LEDS, direction, STRIP_OFFSET);
         return colorFlow(color, speed, direction, NUM_LEDS, STRIP_OFFSET);
     }
 

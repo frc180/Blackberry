@@ -11,12 +11,9 @@ public interface IntakeCoralPivotIO {
         double velocity;
         double voltage;
         double target;
-        //double supplyCurrent;
-        //double torqueCurrent;
         double absolutePosition;
     }
     
-    //to stow and extend
     public void setIntakePosition(double position);
 
     public default void simulationPeriodic() {}

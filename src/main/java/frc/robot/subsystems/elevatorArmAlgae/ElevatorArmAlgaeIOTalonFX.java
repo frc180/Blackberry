@@ -63,8 +63,6 @@ public class ElevatorArmAlgaeIOTalonFX implements ElevatorArmAlgaeIO {
 
         distanceSignal = trackSignal(canrange.getDistance());
         signalStengthSignal = trackSignal(canrange.getSignalStrength());
-
-        // ParentDevice.optimizeBusUtilizationForAll(10.0, motor, canrange);
         
         if (Robot.isReal()) return;
 

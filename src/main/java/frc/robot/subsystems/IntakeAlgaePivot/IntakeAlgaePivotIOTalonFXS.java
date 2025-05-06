@@ -1,7 +1,6 @@
 package frc.robot.subsystems.IntakeAlgaePivot;
 
 import static frc.robot.util.StatusSignals.trackSignal;
-import java.util.List;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
@@ -146,7 +145,6 @@ public class IntakeAlgaePivotIOTalonFXS implements IntakeAlgaePivotIO {
     @Override
     public void stopMotor() {
         pivotMotor.stopMotor();
-        // pivotMotorB.stopMotor();
     }
 
     @Override

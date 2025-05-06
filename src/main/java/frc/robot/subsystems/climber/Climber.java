@@ -101,7 +101,6 @@ public class Climber extends SubsystemBase {
         );
     }
 
-    
     public Command runGrabberSpeed(double speed) {
         return runEnd(
             () -> setGrabberSpeed(speed),

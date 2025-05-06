@@ -244,15 +244,15 @@ public class Robot extends TimedRobot {
         Pose3d[] fieldAlgae = Field.getReefAlgaePoses();
         Pose3d robotAlgae;
         if (rc.elevatorArmAlgae.hasAlgae.getAsBoolean() || rc.intakeAlgae.hasAlgae.getAsBoolean()) {
-        Pose3d robotPose = new Pose3d(rc.drivetrain.getSimPose());
-        if (rc.intakeAlgae.hasAlgae.getAsBoolean()) {
-            robotAlgae = robotPose.transformBy(robotAlgaeIntakeTransform);
+            Pose3d robotPose = new Pose3d(rc.drivetrain.getSimPose());
+            if (rc.intakeAlgae.hasAlgae.getAsBoolean()) {
+                robotAlgae = robotPose.transformBy(robotAlgaeIntakeTransform);
+            } else {
+                Transform3d algaeArmTransform = new Transform3d(0, 0.1, rc.elevator.getPositionMeters() + 0.5, Rotation3d.kZero);
+                robotAlgae = robotPose.transformBy(algaeArmTransform);
+            }
         } else {
-            Transform3d algaeArmTransform = new Transform3d(0, 0.1, rc.elevator.getPositionMeters() + 0.5, Rotation3d.kZero);
-            robotAlgae = robotPose.transformBy(algaeArmTransform);
-        }
-        } else {
-        robotAlgae = Pose3d.kZero;
+            robotAlgae = Pose3d.kZero;
         }
         Pose3d[] combinedAlgae = new Pose3d[algae.length + fieldAlgae.length + 1];
         System.arraycopy(algae, 0, combinedAlgae, 0, algae.length);

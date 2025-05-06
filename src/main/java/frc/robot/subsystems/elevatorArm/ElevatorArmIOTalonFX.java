@@ -85,8 +85,6 @@ public class ElevatorArmIOTalonFX implements ElevatorArmIO {
         backSensorSignal = trackSignal(candiB.getS1Closed());
         velocitySignal = trackSignal(rollerMotor.getVelocity());
 
-        // ParentDevice.optimizeBusUtilizationForAll(10.0, rollerMotor, candiA, candiB);
-
         candiADisconnectedAlert = new Alert("ElevatorArm CANDi A disconnected (#" + Constants.ELEVATOR_ARM_CANDI_A + ")", AlertType.kError);
         candiBDisconnectedAlert = new Alert("ElevatorArm CANDi B disconnected (#" + Constants.ELEVATOR_ARM_CANDI_B + ")", AlertType.kError);
 

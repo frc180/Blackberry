@@ -29,6 +29,7 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO {
     final double radToRotations = 1 / (2 * Math.PI);
 
     final Angle POTENTIOMETER_OFFSET = Degrees.of(0);
+    final Angle SIM_HARD_STOP_POSITION = Degrees.of(60.46875 + 3.955078125 + 2.109375 - 2.63671875);
 
      // Converts absolute encoder units to mechanism rotations
     final double ABSOLUTE_ENCODER_RATIO = (1.0 / 3.0) * (1-0.0482);
@@ -115,17 +116,14 @@ public class ElevatorArmPivotIOTalonFX implements ElevatorArmPivotIO {
         positionSignal = trackSignal(armPivotMotor.getPosition());
         voltageSignal = trackSignal(armPivotMotor.getMotorVoltage());
         targetSignal = trackSignal(armPivotMotor.getClosedLoopReference());
-        // cancoderPositionSignal = trackSignal(cancoder.getAbsolutePosition());
-
-        // armPivotMotor.optimizeBusUtilization(10, 0.1);
 
         // Everything below this line is for simulation only
         if (Robot.isReal()) return;
 
-        armPivotMotor.setPosition(ElevatorArmPivotSubsystem.HARD_STOP_OFFSET);
+        armPivotMotor.setPosition(SIM_HARD_STOP_POSITION);
         armPivotMotorSim = armPivotMotor.getSimState();
 
-        double hardStopRadians = ElevatorArmPivotSubsystem.HARD_STOP_OFFSET.in(Radians);
+        double hardStopRadians = SIM_HARD_STOP_POSITION.in(Radians);
         armSim = new SingleJointedArmSim(
             DCMotor.getKrakenX60Foc(1),
             PIVOT_GEARING,

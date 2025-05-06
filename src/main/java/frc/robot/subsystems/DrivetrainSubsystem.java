@@ -263,7 +263,6 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         // double translationKV = 0.75;
 
         double translationMaxSpeed = MAX_SPEED * 0.8;
-        // EXPERIMENT: Try kP of 1 
         double translationP = 0.15; // practiced some at 0.1, was 0 at South Florida
         double translationD = 0;
         double translationKV = 1;
@@ -506,7 +505,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         intermediatePose = endPose;
         
         if (initializing) {
-            // EXPERIMENT - only reset PIDs when not replanning
+            // only reset PIDs when not replanning
             if (!replanning) {
                 xPid.reset();
                 yPid.reset();
@@ -575,10 +574,6 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         }
         driveToPoseStart = currentPose;
 
-        // Translation2d normDirStartToEnd = endPose.getTranslation().minus(driveToPoseStart.getTranslation());
-        // double distance = normDirStartToEnd.getNorm();
-        // normDirStartToEnd = normDirStartToEnd.div(distance + 0.001);
-
         double normDirX = endPose.getX() - driveToPoseStart.getX();
         double normDirY = endPose.getY() - driveToPoseStart.getY();
         double distance = Math.hypot(normDirX, normDirY);
@@ -599,7 +594,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         }
 
         // Calculate the setpoint (i.e. current distance along the path) we should be targeting
-        State setpoint = profile.calculate(Constants.LOOP_TIME * 6, driveToPoseStartState, driveToPoseGoalState);
+        State setpoint = profile.calculate(Constants.LOOP_TIME * 6, driveToPoseStartState, driveToPoseGoalState); // experiment: try * 5
         Translation2d setpointTarget = endPose.getTranslation().interpolate(driveToPoseStart.getTranslation(), setpoint.position / distance);
         
         // For logging only

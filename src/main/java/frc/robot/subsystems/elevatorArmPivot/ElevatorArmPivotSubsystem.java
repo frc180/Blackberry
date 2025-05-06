@@ -29,7 +29,6 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
 
     protected static final Angle FORWARD_LIMIT = Degrees.of(60.7);
     protected static final Angle REVERSE_LIMIT = Degrees.of(-44.6);
-    protected static final Angle HARD_STOP_OFFSET = Degrees.of(60.46875 + 3.955078125 + 2.109375 - 2.63671875);
 
     // TODO: get this reading the next time the string pot is working
     protected static final Angle HARD_STOP_STARTING_ANGLE = Degrees.of(61.61);
@@ -38,9 +37,7 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
     public static final double L4_SCORE = Units.degreesToRotations(-16); // was -13 orlando thus, -16 sometime before
     public static final double L3_SCORE = Units.degreesToRotations(-6 - 2); // was -6,
     public static final double L2_SCORE = L3_SCORE;
-    
     public static final double L1_SCORE = Units.degreesToRotations(-16.7); // Worlds
-    // public static final double L1_SCORE = Units.degreesToRotations(14); // South Florida
     
     public static final double receiving = Units.degreesToRotations(46.4); // was 43
     public static final double receivingHP = Units.degreesToRotations(42.1);
@@ -64,8 +61,10 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
     private boolean homed = false;
     private boolean absoluteSyncAllowed = true;
 
-    private double absoluteScalar = Robot.isReal() ? ((2.29 * .967) / 2) * .965 * .975 * 1.02 * .995  * .98 : 4;
-    private double absoluteOffset = Robot.isReal() ? -.617 - .027 + .003 : 30 * 4;
+    // private double absoluteScalar = Robot.isReal() ? ((2.29 * .967) / 2) * .965 * .975 * 1.02 * .995  * .98 : 4;
+    // private double absoluteOffset = Robot.isReal() ? -.617 - .027 + .003 : 30 * 4;
+    private double absoluteScalar = Robot.isReal() ? 1.03612754169595125 : 4;
+    private double absoluteOffset = Robot.isReal() ? -0.641 : 30 * 4;
 
     private double lastPositionSyncTime = 0;
     private double absoluteRatio = 0;
@@ -320,10 +319,6 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
     public double getAbsoluteDegrees() {
         return Units.rotationsToDegrees(getAbsolutePosition());
     }
-
-    // public double getCancoderDegrees() {
-    //     return Units.rotationsToDegrees(inputs.cancoderRotations);
-    // }
 
     public void zeroAbsolute() {
         absoluteOffset = (inputs.absolutePosition * absoluteScalar);
