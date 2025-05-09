@@ -563,7 +563,6 @@ public class VisionSubsystem extends SubsystemBase {
     public Pose3d getCoralPose3D() {
         if (!coralPoseValid) return Pose3d.kZero;
 
-        // TODO: recalculating this every loop is expensive
         return new Pose3d(coralPose);
     }
 

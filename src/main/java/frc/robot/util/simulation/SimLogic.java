@@ -72,7 +72,6 @@ public abstract class SimLogic {
         SimulatedArena.getInstance().addGamePiece(new ReefscapeCoralOnField(pose));
     }
 
-    // TODO: tie coralAngle to the angle of the elevator arm
     public static void scoreCoral() {
         if (!RobotContainer.MAPLESIM) {
             return;

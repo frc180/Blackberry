@@ -196,7 +196,7 @@ public final class Auto {
     private static final Pose2d rightBlueHPStation = new Pose2d(leftBlueHPStation.getX(), FlippingUtil.fieldSizeY - leftBlueHPStation.getY(), Rotation2d.kZero);
     private static final Pose2d rightRedHPStation = new Pose2d(leftRedHPStation.getX(), FlippingUtil.fieldSizeY - leftRedHPStation.getY(), Rotation2d.kZero);
     
-    private static final double hpStationDriveFarOffset = 0; // EXPERIMENT: was 0.5
+    private static final double hpStationDriveFarOffset = 0;
     private static final Translation2d leftHpStationDriveFarOffset = new Translation2d(3, -hpStationDriveFarOffset);
     private static final Translation2d rightHpStationDriveFarOffset = new Translation2d(3, hpStationDriveFarOffset);
 

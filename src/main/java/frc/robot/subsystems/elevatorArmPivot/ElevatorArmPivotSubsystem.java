@@ -30,7 +30,7 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
     protected static final Angle FORWARD_LIMIT = Degrees.of(60.7);
     protected static final Angle REVERSE_LIMIT = Degrees.of(-44.6);
 
-    // TODO: get this reading the next time the string pot is working
+    // TODO: Update this reading before IRI work
     protected static final Angle HARD_STOP_STARTING_ANGLE = Degrees.of(61.61);
 
     public static final double L4_ADVANCE = Units.degreesToRotations(30); // 33 worked

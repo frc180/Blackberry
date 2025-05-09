@@ -52,7 +52,7 @@ public class IntakeAlgaePivotIOSim implements IntakeAlgaePivotIO {
 
     @Override
     public void setWinchSpeed(double speed) {
-        // TODO
+        // Do nothing
     }
 
     @Override
