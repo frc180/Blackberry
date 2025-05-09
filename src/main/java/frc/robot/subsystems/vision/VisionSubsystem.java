@@ -1,7 +1,6 @@
 package frc.robot.subsystems.vision;
 
 import static edu.wpi.first.units.Units.*;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -9,7 +8,6 @@ import java.util.Map;
 import java.util.Optional;
 import com.ctre.phoenix6.Utils;
 import com.pathplanner.lib.util.FlippingUtil;
-
 import java.util.Map.Entry;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
@@ -31,7 +29,6 @@ import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.Alert;
-import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -123,23 +120,15 @@ public class VisionSubsystem extends SubsystemBase {
     private final CoralDetector coralDetector;
     private final CoralDetectorReal coralDetectorReal;
 
-    private final double APRILTAG_THICKNESS = 0; // Meters. Adjust me for fields where the Apriltags are not stickers
     private final Distance reefBackDistance = Meters.of(0.55).plus(Inches.of(0.5 - 1));
     private final Distance reefSideDistance = Field.REEF_BRANCH_SEPARATION.div(2); // field measurement based
 
-    private final Transform2d leftReefTransform = new Transform2d(reefBackDistance.in(Meters) - APRILTAG_THICKNESS, -reefSideDistance.in(Meters), Rotation2d.k180deg);
-    private final Transform2d rightReefTransform = new Transform2d(reefBackDistance.in(Meters) - APRILTAG_THICKNESS, reefSideDistance.in(Meters), Rotation2d.k180deg);
+    private final Transform2d leftReefTransform = new Transform2d(reefBackDistance.in(Meters), -reefSideDistance.in(Meters), Rotation2d.k180deg);
+    private final Transform2d rightReefTransform = new Transform2d(reefBackDistance.in(Meters), reefSideDistance.in(Meters), Rotation2d.k180deg);
     private final Transform2d processorTransform = new Transform2d(0.55, 0.0, Rotation2d.fromDegrees(90));
 
-    // Apply a position transform, then a rotation transform
-    // private final Transform2d leftL1ReefTransform = new Transform2d(0.7 - APRILTAG_THICKNESS, 0, Rotation2d.k180deg);
-
     // The "front lay down"
-    private final double l1BackDistance = 0.62 - Inches.of(1.5).in(Meters)- APRILTAG_THICKNESS;
-    
-    // The perpendicular launch
-    // private final double l1BackDistance = 0.55 - APRILTAG_THICKNESS;
-
+    private final double l1BackDistance = 0.62 - Inches.of(1.5).in(Meters);
 
     private final Transform2d leftL1ReefTransform = new Transform2d(l1BackDistance, -Inches.of(12).in(Meters), Rotation2d.k180deg);
     private final Transform2d rightL1ReefTransform = new Transform2d(l1BackDistance, 0, Rotation2d.k180deg);
