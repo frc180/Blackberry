@@ -502,7 +502,7 @@ public class LimelightHelpers {
         public double corner3_X = 0;
         public double corner3_Y = 0;
 
-
+        public RawDetection() {}
         public RawDetection(int classId, double txnc, double tync, double ta, 
             double corner0_X, double corner0_Y, 
             double corner1_X, double corner1_Y, 

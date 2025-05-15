@@ -4,13 +4,15 @@ import static edu.wpi.first.units.Units.*;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import org.ironmaple.simulation.SimulatedArena;
+import com.spamrobotics.util.Helpers;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.units.measure.MutDistance;
 import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.Timer;
 import frc.robot.util.LimelightHelpers.RawDetection;
@@ -18,11 +20,13 @@ import frc.robot.util.LimelightHelpers.RawDetection;
 @Logged
 public class CoralDetectorReal implements CoralDetector {
 
-    private final InterpolatingDoubleTreeMap distanceMap;
+    private final InterpolatingDoubleTreeMap distanceMap, reverseDistanceMap;
     private final List<RawDetection> sortedDetections;
     private final List<RawDetection> algaeDetections;
     private final Comparator<RawDetection> detectionTYComparator;
     private final Comparator<RawDetection> detectionTXYComparator;
+    private final Comparator<RawDetection> detectionTXYWeightedComparator;
+    private final boolean simulation;
 
     private static final double MAX_TY = 24.85;
     private static final double MAX_TX = 29.8;
@@ -39,6 +43,7 @@ public class CoralDetectorReal implements CoralDetector {
     private double lastDetectionTime = 0;
     private double lastDetectionDistance = 0;
     private double lastDetectionTX = 0;
+    private double lastDetectionTY = 0;
     private double lastDetectionWidth = 0;
     private double lastDetectionHeight = 0;
     private double lastDetectionRatio = 0;
@@ -52,8 +57,10 @@ public class CoralDetectorReal implements CoralDetector {
     private boolean rejectionAlgae = false;
     private boolean rejectionOutsideField = false;
 
-    public CoralDetectorReal() {
+    public CoralDetectorReal(boolean simulation) {
+        this.simulation = simulation;
         distanceMap = new InterpolatingDoubleTreeMap();
+        reverseDistanceMap = new InterpolatingDoubleTreeMap();
         addDistance(-22.2, 18.5);
         addDistance(-14.79, 24);
         addDistance(-6.05, 32);
@@ -66,14 +73,18 @@ public class CoralDetectorReal implements CoralDetector {
         algaeDetections = new ArrayList<>();
         detectionTYComparator = (a, b) -> Double.compare(a.tync, b.tync);
         detectionTXYComparator = (a, b) -> Double.compare(tXYCombined(a), tXYCombined(b));
+        detectionTXYWeightedComparator = (a, b) -> Double.compare(tXYWeighted(a), tXYWeighted(b));
     }
 
     private void addDistance(double ty, double inches) {
-        distanceMap.put(ty, Inches.of(inches).in(Meters));
+        double meters = Inches.of(inches).in(Meters);
+        distanceMap.put(ty, meters);
+        if (simulation) reverseDistanceMap.put(meters, ty);
     }
 
     @Override
     public Pose2d getCoralPose(Pose2d robotPose, RawDetection[] detections) {
+        if (simulation) detections = getSimulatedRawDetections(robotPose);
         newCoralValue = false;
         returningCloseDetection = false;
         rejectionAlgae = false;
@@ -103,18 +114,19 @@ public class CoralDetectorReal implements CoralDetector {
             }
         }
         if (auto) {
-            sortedDetections.sort(detectionTYComparator);
+            // sortedDetections.sort(detectionTYComparator); // Champs
+            sortedDetections.sort(detectionTXYWeightedComparator); // Experimental
         } else {
             sortedDetections.sort(detectionTXYComparator);
         }
 
-        Pose2d basePose = robotPose.transformBy(VisionSubsystem.ROBOT_TO_INTAKE_CAMERA_2D);
+        Pose2d basePose = getCameraPose(robotPose);
 
         for (RawDetection detection : sortedDetections) {
             double degrees = detection.txnc;
 
             // EXPERIMENT: Disable this entirely, or come up with a different way of dodging lollip coral (looking at width/height ratio?)
-            if (auto) {
+            if (false && auto) {
                 // Skip any coral that are close to an algae on the X axis - these are likely lollipops
                 for (RawDetection algae : algaeDetections) {
                     if (Math.abs(degrees - algae.txnc) < ALGAE_AVOID_THRESHOLD_DEGREES) {
@@ -146,6 +158,7 @@ public class CoralDetectorReal implements CoralDetector {
             lastDetectionTime = Timer.getFPGATimestamp();
             lastDetectionDistance = robotDist;
             lastDetectionTX = detection.txnc;
+            lastDetectionTY = detection.tync;
             lastDetectionWidth = width(detection);
             lastDetectionHeight = height(detection);
             lastDetectionRatio = lastDetectionWidth / lastDetectionHeight;
@@ -191,15 +204,17 @@ public class CoralDetectorReal implements CoralDetector {
     }
 
     private double tXYWeighted(RawDetection detection) {
-        final double TX_BEGIN_CLOSE = 0.5;
+        final double TX_BEGIN_CLOSE = 0;
+        final double TX_RELATIVE_WEIGHT = 1;
+        final double TX_MAX_WEIGHT = 1;
 
         double closeness = closeness(detection);
         double txWeight = 0;
         if (closeness > TX_BEGIN_CLOSE) {
             double rescaledCloseness = (closeness - TX_BEGIN_CLOSE) / (1 - TX_BEGIN_CLOSE);
-            txWeight = 1 * rescaledCloseness;
+            txWeight = Math.max(TX_RELATIVE_WEIGHT * rescaledCloseness, TX_MAX_WEIGHT);
         }
-        return detection.tync + (detection.txnc * txWeight);
+        return detection.tync + (Math.abs(detection.txnc) * txWeight);
     }
 
     private double width(RawDetection detection) {
@@ -222,6 +237,38 @@ public class CoralDetectorReal implements CoralDetector {
             value = 1;
             System.out.println("CoralDetectorReal: Closeness value > 1! " + value);
         }
-        return value;
+        return 1 - value;
+    }
+
+    private Pose2d getCameraPose(Pose2d robotPose) {
+        return robotPose.transformBy(VisionSubsystem.ROBOT_TO_INTAKE_CAMERA_2D);
+    }
+    // ========================== Simulation Methods ==========================
+
+    final double fovDegrees = 82;
+    final double detectionDistance = 5;
+
+    private RawDetection[] getSimulatedRawDetections(Pose2d robotPose) {
+        final List<RawDetection> detections = new ArrayList<>();
+        final Pose2d cameraPose = getCameraPose(robotPose);
+        final Pose3d[] corals = SimulatedArena.getInstance().getGamePiecesArrayByType("Coral");
+
+        for (int i = 0; i < corals.length; i++) {
+            Pose2d coral = corals[i].toPose2d();
+            if (Helpers.poseWithinPOV(robotPose, coral, fovDegrees, detectionDistance)) {
+                Pose2d relative = coral.relativeTo(cameraPose); 
+                RawDetection detection = new RawDetection();
+                detection.classId = 1;
+                detection.tync = reverseDistanceMap.get(relative.getX());
+                detection.txnc = -Units.radiansToDegrees(Math.atan2(relative.getY(), relative.getX()));
+                detections.add(detection);
+            }
+        }
+
+        RawDetection[] detectionArray = new RawDetection[detections.size()];
+        for (int i = 0; i < detections.size(); i++) {
+            detectionArray[i] = detections.get(i);
+        }
+        return detectionArray;
     }
 }

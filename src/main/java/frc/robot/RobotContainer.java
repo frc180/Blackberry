@@ -840,15 +840,18 @@ public class RobotContainer {
         Auto.intakingState.and(autoCoralIntake).and(intakeCoral.hasCoral)
             .onTrue(Auto.driveToReefWithCoral());
 
-        Command coralTrackingDelay = Commands.either(
-            Commands.waitSeconds(0.5),
-            Commands.none(),
-            () -> Auto.previousCoralScoringPosition.isFrontMiddle()
-        );
+        // Champs version of coral delay
+        // Command coralTrackingDelay = Commands.either(
+        //     Commands.waitSeconds(0.5),
+        //     Commands.none(),
+        //     () -> Auto.previousCoralScoringPosition.isFrontMiddle()
+        // );
+        // Command autoHPDrive = Auto.driveToHPStation().withDeadline(
+        //     coralTrackingDelay.andThen(Commands.waitUntil(() -> vision.getCoralPose() != null))
+        // );
 
-        Command autoHPDrive = Auto.driveToHPStation().withDeadline(
-            coralTrackingDelay.andThen(Commands.waitUntil(() -> vision.getCoralPose() != null))
-        );
+        // Experimental version with no coral delay ever
+        Command autoHPDrive = Auto.driveToHPStation().withDeadline(Commands.waitUntil(() -> vision.getCoralPose() != null));
 
         Command autoIntakeCoral = Commands.sequence(
             autoHPDrive,

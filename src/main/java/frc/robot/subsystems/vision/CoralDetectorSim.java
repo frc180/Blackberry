@@ -1,6 +1,9 @@
 package frc.robot.subsystems.vision;
 
 import org.ironmaple.simulation.SimulatedArena;
+
+import com.spamrobotics.util.Helpers;
+
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -45,7 +48,7 @@ public class CoralDetectorSim implements CoralDetector {
     private Pose2d getCoralPoseBasic(Pose2d robotPose) {
         Pose2d coralPose = Robot.isBlue() ? SimLogic.blueHPCoralPose : SimLogic.redHPCoralPose;
 
-        if (useFOV && poseWithinPOV(robotPose, coralPose)) {
+        if (useFOV && Helpers.poseWithinPOV(robotPose, coralPose, fovDegrees, detectionDistance)) {
             return coralPose;
         } else if (!useFOV && robotPose.getTranslation().getDistance(coralPose.getTranslation()) <= detectionDistance) {
             return coralPose;
@@ -66,7 +69,7 @@ public class CoralDetectorSim implements CoralDetector {
             if (corals[i].getRotation().getY() > 0.2) continue;
 
             Pose2d coral = corals[i].toPose2d();
-            if (poseWithinPOV(robotPose, coral)) {
+            if (Helpers.poseWithinPOV(robotPose, coral, fovDegrees, detectionDistance)) {
                 double distance = robotPose.getTranslation().getDistance(coral.getTranslation());
                 if (distance < bestDistance) {
                     if (!CoralDetector.isValid(coral)) {
@@ -86,40 +89,5 @@ public class CoralDetectorSim implements CoralDetector {
 
     private double randomRange(double min, double max) {
         return Math.random() * (max - min) + min;
-    }
-
-    // =========== Helper methods to calculate robot POV ===========
-
-    private boolean poseWithinPOV(Pose2d robotPose, Pose2d coralPose) {
-        // Define the triangle vertices based on the robot's pose
-        Translation2d robotTranslation = robotPose.getTranslation();
-        Rotation2d robotRotation = robotPose.getRotation().rotateBy(Rotation2d.k180deg);
-
-        // Define the field of view (FOV) angle and distance
-        double fovAngle = Math.toRadians(fovDegrees);
-        double fovDistance = detectionDistance;
-
-        // Calculate the vertices of the triangle
-        Translation2d vertex1 = robotTranslation;
-        Translation2d vertex2 = robotTranslation.plus(new Translation2d(fovDistance, fovDistance * Math.tan(fovAngle / 2)).rotateBy(robotRotation));
-        Translation2d vertex3 = robotTranslation.plus(new Translation2d(fovDistance, -fovDistance * Math.tan(fovAngle / 2)).rotateBy(robotRotation));
-
-        // Check if the coralPose is within the triangle
-        return isPointInTriangle(coralPose.getTranslation(), vertex1, vertex2, vertex3);
-    }
-
-    private boolean isPointInTriangle(Translation2d pt, Translation2d v1, Translation2d v2, Translation2d v3) {
-        double d1 = sign(pt, v1, v2);
-        double d2 = sign(pt, v2, v3);
-        double d3 = sign(pt, v3, v1);
-
-        boolean hasNeg = (d1 < 0) || (d2 < 0) || (d3 < 0);
-        boolean hasPos = (d1 > 0) || (d2 > 0) || (d3 > 0);
-
-        return !(hasNeg && hasPos);
-    }
-
-    private double sign(Translation2d p1, Translation2d p2, Translation2d p3) {
-        return (p1.getX() - p3.getX()) * (p2.getY() - p3.getY()) - (p2.getX() - p3.getX()) * (p1.getY() - p3.getY());
     }
 }

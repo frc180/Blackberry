@@ -246,8 +246,9 @@ public class VisionSubsystem extends SubsystemBase {
         blueProcessorPose = calculateProcessorPose(true);
 
         reefProximity = new ReefProximity(leftReefHashMap, rightReefHashMap);
-        coralDetectorReal = new CoralDetectorReal();
-        coralDetector = Robot.isReal() ? coralDetectorReal : new CoralDetectorSim(4.0, true);
+        coralDetectorReal = new CoralDetectorReal(Robot.isSimulation());
+        coralDetector = coralDetectorReal;
+        // coralDetector = Robot.isReal() ? coralDetectorReal : new CoralDetectorSim(4.0, true);
 
         double diffMeters = Inches.of(1.5).in(Meters);
         poseEstimateDiffLow = new Trigger(() -> {

@@ -94,6 +94,39 @@ public class Helpers {
         return headingSatisfied;
     }
 
+    public static boolean poseWithinPOV(Pose2d robotPose, Pose2d targetPose, double fovDegrees, double detectionDistance) {
+        // Define the triangle vertices based on the robot's pose
+        Translation2d robotTranslation = robotPose.getTranslation();
+        Rotation2d robotRotation = robotPose.getRotation().rotateBy(Rotation2d.k180deg);
+
+        // Define the field of view (FOV) angle and distance
+        double fovAngle = Math.toRadians(fovDegrees);
+        double fovDistance = detectionDistance;
+
+        // Calculate the vertices of the triangle
+        Translation2d vertex1 = robotTranslation;
+        Translation2d vertex2 = robotTranslation.plus(new Translation2d(fovDistance, fovDistance * Math.tan(fovAngle / 2)).rotateBy(robotRotation));
+        Translation2d vertex3 = robotTranslation.plus(new Translation2d(fovDistance, -fovDistance * Math.tan(fovAngle / 2)).rotateBy(robotRotation));
+
+        // Check if the coralPose is within the triangle
+        return isPointInTriangle(targetPose.getTranslation(), vertex1, vertex2, vertex3);
+    }
+
+    private static boolean isPointInTriangle(Translation2d pt, Translation2d v1, Translation2d v2, Translation2d v3) {
+        double d1 = sign(pt, v1, v2);
+        double d2 = sign(pt, v2, v3);
+        double d3 = sign(pt, v3, v1);
+
+        boolean hasNeg = (d1 < 0) || (d2 < 0) || (d3 < 0);
+        boolean hasPos = (d1 > 0) || (d2 > 0) || (d3 > 0);
+
+        return !(hasNeg && hasPos);
+    }
+
+    private static double sign(Translation2d p1, Translation2d p2, Translation2d p3) {
+        return (p1.getX() - p3.getX()) * (p2.getY() - p3.getY()) - (p2.getX() - p3.getX()) * (p1.getY() - p3.getY());
+    }
+
     // Numbers pulled from https://store.ctr-electronics.com/products/minion-brushless-motor
     public static DCMotor getMinion(int numMotors) {
         return new DCMotor(
