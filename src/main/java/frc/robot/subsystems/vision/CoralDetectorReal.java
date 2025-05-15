@@ -24,6 +24,9 @@ public class CoralDetectorReal implements CoralDetector {
     private final Comparator<RawDetection> detectionTYComparator;
     private final Comparator<RawDetection> detectionTXYComparator;
 
+    private static final double MAX_TY = 24.85;
+    private static final double MAX_TX = 29.8;
+
     // How close to the robot a detected coral has to be to be considered "close" (i.e. intakeable)
     private final static double CLOSE_CORAL_DISTANCE = 0.6; // was 0.8 at SoFlo/Houston, 0.6 meters at Orlando
     private final static double CLOSE_CORAL_TX = 10;
@@ -39,6 +42,8 @@ public class CoralDetectorReal implements CoralDetector {
     private double lastDetectionWidth = 0;
     private double lastDetectionHeight = 0;
     private double lastDetectionRatio = 0;
+    private double lastDetectionCloseness = 0;
+    private double lastDetectionTXYWeighted = 0;
     private Pose2d lastDetection = null;
 
     // Additional flags for viewing in logs
@@ -112,7 +117,7 @@ public class CoralDetectorReal implements CoralDetector {
             if (auto) {
                 // Skip any coral that are close to an algae on the X axis - these are likely lollipops
                 for (RawDetection algae : algaeDetections) {
-                    if (Math.abs(degrees - algae.txnc) < ALGAE_AVOID_THRESHOLD_DEGREES) {// && detection.tync < algae.tync) {
+                    if (Math.abs(degrees - algae.txnc) < ALGAE_AVOID_THRESHOLD_DEGREES) {
                         rejectionAlgae = true;
                         break;
                     }
@@ -144,6 +149,8 @@ public class CoralDetectorReal implements CoralDetector {
             lastDetectionWidth = width(detection);
             lastDetectionHeight = height(detection);
             lastDetectionRatio = lastDetectionWidth / lastDetectionHeight;
+            lastDetectionCloseness = closeness(detection);
+            lastDetectionTXYWeighted = tXYWeighted(detection);
             newCoralValue = true;
             return coralPose;
         }
@@ -179,7 +186,20 @@ public class CoralDetectorReal implements CoralDetector {
     }
 
     private double tXYCombined(RawDetection detection) {
-        return detection.tync + Math.abs(detection.txnc * 0.75);
+        return detection.tync + Math.abs(detection.txnc * 0.75); // Used in teleop at champs
+        // return detection.tync + Math.abs(detection.txnc * 0.1); // was 0.33 at orlando
+    }
+
+    private double tXYWeighted(RawDetection detection) {
+        final double TX_BEGIN_CLOSE = 0.5;
+
+        double closeness = closeness(detection);
+        double txWeight = 0;
+        if (closeness > TX_BEGIN_CLOSE) {
+            double rescaledCloseness = (closeness - TX_BEGIN_CLOSE) / (1 - TX_BEGIN_CLOSE);
+            txWeight = 1 * rescaledCloseness;
+        }
+        return detection.tync + (detection.txnc * txWeight);
     }
 
     private double width(RawDetection detection) {
@@ -188,5 +208,20 @@ public class CoralDetectorReal implements CoralDetector {
 
     private double height(RawDetection detection) {
         return Math.abs(detection.corner0_Y - detection.corner2_Y);
+    }
+
+    /**
+     * Returns a value from 0 to 1, where 0 is the furthest and 1 is the closest
+     */
+    private double closeness(RawDetection detection) {
+        double value = (detection.tync + MAX_TY) / (MAX_TY * 2);
+        if (value < 0) {
+            value = 0;
+            System.out.println("CoralDetectorReal: Closeness value < 0! " + value);
+        } else if (value > 1) {
+            value = 1;
+            System.out.println("CoralDetectorReal: Closeness value > 1! " + value);
+        }
+        return value;
     }
 }
