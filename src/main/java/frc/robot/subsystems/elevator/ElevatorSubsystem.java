@@ -143,7 +143,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     }
 
     public Command brakeMode() {
-        return Commands.runOnce(() -> io.brakeMode());
+        return Commands.runOnce(this::brakeModeDirect);
     }
 
     public Command climbHeight() {
@@ -250,6 +250,10 @@ public class ElevatorSubsystem extends SubsystemBase {
         if (!softStowLogic()) {
             io.setPosition(adjustedTargetPosition);
         }
+    }
+
+    public void brakeModeDirect() {
+        io.brakeMode();
     }
 
     public Distance levelToPosition(int level) {

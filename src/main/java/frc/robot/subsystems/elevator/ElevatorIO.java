@@ -12,6 +12,7 @@ public interface ElevatorIO {
         double dutyCycle;
         double target;
         boolean bottomLimit = false;
+        boolean brakeMode = false;
     }
 
     public void update(ElevatorIOInputs inputs);

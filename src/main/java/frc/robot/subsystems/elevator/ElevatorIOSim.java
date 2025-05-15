@@ -9,6 +9,7 @@ public class ElevatorIOSim implements ElevatorIO {
     double position = 0;
     double speed = 0;
     double target = 0;
+    boolean brakeMode = false;
 
     public ElevatorIOSim() {
         pid = new PIDController(0.01, 0, 0);
@@ -55,5 +56,8 @@ public class ElevatorIOSim implements ElevatorIO {
     public void zero() {}
 
     @Override
-    public void brakeMode() {}
+    public void brakeMode() {
+        brakeMode = true;
+        System.out.println("BRAKE MODE");
+    }
 }

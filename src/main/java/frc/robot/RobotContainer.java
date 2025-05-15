@@ -522,6 +522,7 @@ public class RobotContainer {
         autonomous.or(teleop).onTrue(intakeCoral.runBottomRollerSpeed(-1).withTimeout(1));
 
         // Stop elevator from slamming into the top if auto ends while elevator is moving up
+        // Experiment: May not be needed since elevator will be in brake mode
         autonomous.and(() -> Timer.getFPGATimestamp() - Auto.startTime >= 14.9)
                   .and(() -> !elevator.isElevatorInPosition() && elevator.getTargetErrorMeters() > 0)
                     .onTrue(

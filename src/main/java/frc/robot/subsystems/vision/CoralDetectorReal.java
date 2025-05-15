@@ -182,10 +182,11 @@ public class CoralDetectorReal implements CoralDetector {
     private Pose2d getRecentLastDetection() {
         boolean lastClose = lastDetectionClose();
         boolean auto = RobotState.isAutonomous();
-        // if (RobotState.isAutonomous() && lastClose) return lastDetection;
 
-        double timeoutSeconds = lastClose ? 3 : 0.5;
-        if (auto && lastClose) timeoutSeconds = 1;
+        // Champs
+        // double timeoutSeconds = lastClose ? 3 : 0.5;
+        // if (auto && lastClose) timeoutSeconds = 1;
+        double timeoutSeconds = 0.5;
         if (Timer.getFPGATimestamp() - lastDetectionTime < timeoutSeconds) {
             return lastDetection;
         }

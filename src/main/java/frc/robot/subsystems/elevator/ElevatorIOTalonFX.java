@@ -32,6 +32,8 @@ public class ElevatorIOTalonFX implements ElevatorIO {
     final VoltageOut voltageControl;
     final Follower followerControl;
 
+    boolean brakeMode = false;
+
     // Status signals
     final StatusSignal<Angle> positionSignal;
     final StatusSignal<AngularVelocity> velocitySignal;
@@ -130,8 +132,8 @@ public class ElevatorIOTalonFX implements ElevatorIO {
         inputs.velocity = velocitySignal.getValueAsDouble();
         inputs.target = targetSignal.getValueAsDouble();
         inputs.dutyCycle = dutyCycleSignal.getValueAsDouble();
-
         inputs.bottomLimit = false;
+        inputs.brakeMode = brakeMode;
     }
 
     @Override
@@ -159,6 +161,9 @@ public class ElevatorIOTalonFX implements ElevatorIO {
 
     @Override
     public void brakeMode() {
+        if (brakeMode) return;
+
         motors.forEach(motor -> motor.setNeutralMode(NeutralModeValue.Brake));
+        brakeMode = true;
     }
 }

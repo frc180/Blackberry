@@ -1,14 +1,11 @@
 package frc.robot.subsystems.vision;
 
 import org.ironmaple.simulation.SimulatedArena;
-
 import com.spamrobotics.util.Helpers;
-
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import frc.robot.Robot;
 import frc.robot.RobotContainer;
 import frc.robot.util.LimelightHelpers.RawDetection;

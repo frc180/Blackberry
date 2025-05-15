@@ -123,7 +123,12 @@ public class Robot extends TimedRobot {
         noCoralAlert.set(!robotContainer.robotHasCoral.getAsBoolean());
 
         Command selectedAuto = robotContainer.getAutonomousCommand();
-        noAutoAlert.set(selectedAuto == null || selectedAuto == robotContainer.autoDoNothing);
+        boolean noAuto = selectedAuto == null || selectedAuto == robotContainer.autoDoNothing;
+        noAutoAlert.set(noAuto);
+
+        // Ensure the elevator is in brake mode when disabled with an auto selected, to skip having
+        // to do it at the start of auto
+        if (!noAuto) robotContainer.elevator.brakeModeDirect();
 
         Pose2d robotPose = robotContainer.drivetrain.getPose();
         boolean robotLeft = (robotPose.getY() > FlippingUtil.fieldSizeY / 2);
@@ -158,6 +163,7 @@ public class Robot extends TimedRobot {
 
         if (Robot.isDemoMode()) return;
 
+        robotContainer.elevator.brakeModeDirect();
         shouldPartnerPush = robotContainer.shouldAutoPush();
         m_autonomousCommand = robotContainer.getAutonomousCommand();
 
@@ -186,6 +192,7 @@ public class Robot extends TimedRobot {
             currentDrive.cancel();
         }
         robotContainer.vision.setAllowPoseEstimates(true);
+        robotContainer.elevator.brakeModeDirect();
         wasEverEnabled = true;
 
         // Elastic.selectTab("Teleoperated");
