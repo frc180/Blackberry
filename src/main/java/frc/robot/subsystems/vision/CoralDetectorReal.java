@@ -113,12 +113,15 @@ public class CoralDetectorReal implements CoralDetector {
                 algaeDetections.add(detection);
             }
         }
-        if (auto) {
-            // sortedDetections.sort(detectionTYComparator); // Champs
-            sortedDetections.sort(detectionTXYWeightedComparator); // Experimental
-        } else {
-            sortedDetections.sort(detectionTXYComparator);
-        }
+        // Champs sorting
+        // if (auto) {
+        //     sortedDetections.sort(detectionTYComparator);
+        // } else {
+        //     sortedDetections.sort(detectionTXYComparator);
+        // }
+
+        // Experimental sorting
+        sortedDetections.sort(detectionTXYWeightedComparator);
 
         Pose2d basePose = getCameraPose(robotPose);
 
