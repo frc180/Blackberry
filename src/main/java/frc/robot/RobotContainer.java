@@ -841,6 +841,7 @@ public class RobotContainer {
         Auto.intakingState.and(autoCoralIntake).and(intakeCoral.hasCoral)
             .onTrue(Auto.driveToReefWithCoral());
 
+
         // Champs version of coral delay
         // Command coralTrackingDelay = Commands.either(
         //     Commands.waitSeconds(0.5),
@@ -853,6 +854,7 @@ public class RobotContainer {
 
         // Experimental version with no coral delay ever
         Command autoHPDrive = Auto.driveToHPStation().withDeadline(Commands.waitUntil(() -> vision.getCoralPose() != null));
+
 
         Command autoIntakeCoral = Commands.sequence(
             autoHPDrive,
@@ -1000,6 +1002,7 @@ public class RobotContainer {
                     Auto.coralScoringPositions.remove(0);
                     Auto.firstCoralCycle = false;
                 }
+                Auto.coralScored++;
             }
             SimLogic.coralScored++;
             SmartDashboard.putNumber("Coral/" + SimLogic.coralScored, Timer.getFPGATimestamp() - Auto.startTime);

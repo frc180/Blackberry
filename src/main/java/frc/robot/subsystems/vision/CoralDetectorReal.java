@@ -15,6 +15,7 @@ import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.Timer;
+import frc.robot.RobotContainer;
 import frc.robot.util.LimelightHelpers.RawDetection;
 
 @Logged
@@ -84,7 +85,8 @@ public class CoralDetectorReal implements CoralDetector {
 
     @Override
     public Pose2d getCoralPose(Pose2d robotPose, RawDetection[] detections) {
-        if (simulation) detections = getSimulatedRawDetections(robotPose);
+        if (simulation) detections = getSimulatedRawDetections(RobotContainer.instance.drivetrain.getSimPose());
+        
         newCoralValue = false;
         returningCloseDetection = false;
         rejectionAlgae = false;
@@ -249,8 +251,8 @@ public class CoralDetectorReal implements CoralDetector {
     }
     // ========================== Simulation Methods ==========================
 
-    final double fovDegrees = 82;
-    final double detectionDistance = 5;
+    static final double fovDegrees = 82;
+    static final double detectionDistance = 5;
 
     private RawDetection[] getSimulatedRawDetections(Pose2d robotPose) {
         final List<RawDetection> detections = new ArrayList<>();
@@ -261,6 +263,10 @@ public class CoralDetectorReal implements CoralDetector {
             Pose2d coral = corals[i].toPose2d();
             if (Helpers.poseWithinPOV(robotPose, coral, fovDegrees, detectionDistance)) {
                 Pose2d relative = coral.relativeTo(cameraPose); 
+
+                // Ignore any coral that are technically behind the camera
+                if (relative.getX() < 0) continue;
+
                 RawDetection detection = new RawDetection();
                 detection.classId = 1;
                 detection.tync = reverseDistanceMap.get(relative.getX());

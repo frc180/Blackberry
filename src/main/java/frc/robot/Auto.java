@@ -43,6 +43,7 @@ public final class Auto {
     public static boolean firstCoralCycle = true;
     public static boolean seenCoralThisCycle = false;
     public static double startTime = 0;
+    public static int coralScored = 0;
 
     public static final Trigger intakingState = new Trigger(() -> state == AutoState.INTAKING);
     public static final Trigger scoringState = new Trigger(() -> state == AutoState.SCORING);
@@ -105,6 +106,7 @@ public final class Auto {
         coralIntaking = false;
         firstCoralCycle = true;
         seenCoralThisCycle = false;
+        coralScored = 0;
         startTime = Timer.getFPGATimestamp();
     }
 
@@ -143,6 +145,24 @@ public final class Auto {
                 return previous != null && previous.isFarTag();
             }
         ).alongWith(setState(AutoState.INTAKING));
+    }
+
+    // Probably unnecessary
+    private static Command driveToHPStationFarV2() {
+        var drivetrain = RobotContainer.instance.drivetrain;
+        return Commands.sequence(
+                Commands.defer(() -> {
+                    Pose2d robotPose = drivetrain.getPose();
+
+                    double sign = (leftSide ? 1 : -1) * (Robot.isBlue() ? 1 : -1);
+                    Translation2d target = new Translation2d(robotPose.getX(), robotPose.getY() + (4 * sign));
+
+                    Pose2d targetPose = new Pose2d(target, Rotation2d.fromDegrees(150));
+                    return new DriveToPose(drivetrain, targetPose);
+                }, 
+                Set.of(drivetrain)).until(drivetrain.withinTargetPoseDistance(2.5)),
+                driveToHPStationClose()
+        );
     }
 
     private static DriveToPose driveToHPStationClose() {
