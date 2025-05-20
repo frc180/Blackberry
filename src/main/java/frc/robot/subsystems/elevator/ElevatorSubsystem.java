@@ -30,8 +30,8 @@ public class ElevatorSubsystem extends SubsystemBase {
     // public static final Distance L1 = Inches.of(0.1); // South Florida L1
     public static final Distance L1 = Meters.of(0.136).plus(Inches.of(5 - 2));
 
-    public static final Distance L2 = Meters.of(0.302).plus(Inches.of(1))
-                                                                .plus(Inches.of(0.5 + 0.5)); // our field-specific offset
+    public static final Distance L2 = Meters.of(0.302).plus(Inches.of(2))
+                                                                .plus(Inches.of(1)); // our field-specific offset
     public static final Distance L3 = L2.plus(Inches.of(16));
     public static final Distance L4 = Meters.of(1.46);
     public static final Distance L4_ADVANCE = L2.plus(Inches.of(12)); // was +10

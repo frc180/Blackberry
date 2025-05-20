@@ -62,8 +62,6 @@ public class ElevatorIOTalonFX implements ElevatorIO {
             config.Slot0.kG = 0;
             config.Slot0.kV = 3;
             config.Slot0.kA = 0;
-            config.MotionMagic.MotionMagicExpo_kV = 2;
-            config.MotionMagic.MotionMagicExpo_kA = 1.3; // was 1.4, 1.35,
         } else {
             config.Slot0.kP = 0.97;
             config.Slot0.kI = 0;
@@ -71,9 +69,9 @@ public class ElevatorIOTalonFX implements ElevatorIO {
             config.Slot0.kG = 0.4031;
             config.Slot0.kV = 0.55;
             config.Slot0.kA = 0.0017552;
-            config.MotionMagic.MotionMagicExpo_kV = 2;
-            config.MotionMagic.MotionMagicExpo_kA = 1.4;
         }
+        config.MotionMagic.MotionMagicExpo_kV = 2;
+        config.MotionMagic.MotionMagicExpo_kA = 1.3; // was 1.4, 1.35,
         config.Slot0.GravityType = GravityTypeValue.Elevator_Static;
         config.MotionMagic.MotionMagicCruiseVelocity = 0; // Unlimited cruise velocity
         config.MotionMagic.MotionMagicJerk = 0;
