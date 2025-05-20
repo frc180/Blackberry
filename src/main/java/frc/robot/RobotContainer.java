@@ -337,8 +337,8 @@ public class RobotContainer {
         ));
 
         atReefXY = drivetrain.withinTargetPoseTolerance(
-                        Inches.of(1 * 0.75),
-                        Inches.of(1 * 0.75),
+                        Inches.of(1), // was 0.75 at houston
+                        Inches.of(1), // was 0.75 at houston
                         null
         );
 
@@ -681,7 +681,7 @@ public class RobotContainer {
         // Coral scoring sequence - kCancelIncoming means nothing else will be able to stop this command until it finishes
         atReef.and(elevator.inReefPosition)
               .and(elevatorArmPivot.elevatorArmInScoringPosition)
-              .and(drivetrain.almostStationary) // EXPERIMENT: don't check this at all
+              //.and(drivetrain.almostStationary) // EXPERIMENT: don't check this at all
               .and(visionScoreReady).onTrue(
             Commands.sequence(
                 Commands.runOnce(() -> Robot.currentlyScoringCoral = true)
