@@ -1,149 +1,168 @@
 package frc.robot.subsystems;
 
-import com.ctre.phoenix.ErrorCode;
-import com.ctre.phoenix.led.Animation;
-import com.ctre.phoenix.led.CANdle;
-import com.ctre.phoenix.led.CANdleConfiguration;
-import com.ctre.phoenix.led.ColorFlowAnimation;
-import com.ctre.phoenix.led.LarsonAnimation;
-import com.ctre.phoenix.led.RainbowAnimation;
-import com.ctre.phoenix.led.SingleFadeAnimation;
-import com.ctre.phoenix.led.StrobeAnimation;
-import com.ctre.phoenix.led.TwinkleAnimation;
-import com.ctre.phoenix.led.TwinkleOffAnimation;
-import com.ctre.phoenix.led.CANdle.LEDStripType;
-import com.ctre.phoenix.led.CANdle.VBatOutputMode;
-import com.ctre.phoenix.led.ColorFlowAnimation.Direction;
-import com.ctre.phoenix.led.LarsonAnimation.BounceMode;
-import com.ctre.phoenix.led.TwinkleAnimation.TwinklePercent;
-import com.ctre.phoenix.led.TwinkleOffAnimation.TwinkleOffPercent;
+import com.ctre.phoenix6.StatusCode;
+import com.ctre.phoenix6.configs.CANdleConfiguration;
+import com.ctre.phoenix6.controls.ColorFlowAnimation;
+import com.ctre.phoenix6.controls.ControlRequest;
+import com.ctre.phoenix6.controls.EmptyAnimation;
+import com.ctre.phoenix6.controls.LarsonAnimation;
+import com.ctre.phoenix6.controls.RainbowAnimation;
+import com.ctre.phoenix6.controls.SingleFadeAnimation;
+import com.ctre.phoenix6.controls.SolidColor;
+import com.ctre.phoenix6.controls.StrobeAnimation;
+import com.ctre.phoenix6.controls.TwinkleAnimation;
+import com.ctre.phoenix6.controls.TwinkleOffAnimation;
+import com.ctre.phoenix6.hardware.CANdle;
+import com.ctre.phoenix6.signals.AnimationDirectionValue;
+import com.ctre.phoenix6.signals.Enable5VRailValue;
+import com.ctre.phoenix6.signals.LarsonBounceValue;
+import com.ctre.phoenix6.signals.RGBWColor;
+import com.ctre.phoenix6.signals.StatusLedWhenActiveValue;
+import com.ctre.phoenix6.signals.StripTypeValue;
+import com.ctre.phoenix6.signals.VBatOutputModeValue;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
 public class LEDSubsystem extends SubsystemBase {
 
-    public final LEDColor RED = new LEDColor(50, 0, 0, 255);
-    public final LEDColor BLUE = new LEDColor(21, 46, 150, 255); // navy blue
-    public final LEDColor GREEN = new LEDColor(0, 255, 0, 255);
-    public final LEDColor YELLOW = new LEDColor(255, 255, 0, 255);
-    public final LEDColor WHITE = new LEDColor(255, 255, 255, 255);
-    public final LEDColor ALGAE = new LEDColor(0, 255, 30, 255);
-    public final LEDColor PURPLE = new LEDColor(163, 49, 196, 255);
+    private final int STRIP_LENGTH = 49;
+    private final int STRIP_2_LENGTH = 47;
+    private final int ALL_LEDS_INDEX = (8 + STRIP_LENGTH + STRIP_2_LENGTH) - 1;
+    private final int NO_CANDLE_INDEX = 8;
+
+    public final RGBWColor RED = new RGBWColor(50, 0, 0, 0);
+    public final RGBWColor BLUE = new RGBWColor(21, 46, 150, 0);
+    public final RGBWColor GREEN = new RGBWColor(0, 255, 0, 00);
+    public final RGBWColor YELLOW = new RGBWColor(255, 255, 0, 0);
+    public final RGBWColor WHITE = new RGBWColor(255, 255, 255, 0);
+    public final RGBWColor ALGAE = new RGBWColor(0, 255, 30, 0);
+    public final RGBWColor PURPLE = new RGBWColor(163, 49, 196, 0);
+
+    private final EmptyAnimation[] emptyAnimations = new EmptyAnimation[8];
+    private final SolidColor fullStripSolid = new SolidColor(0, ALL_LEDS_INDEX);
+
+    private final SolidColor strip1TopSolid = new SolidColor(0, 23);
+    private final SolidColor strip1BottomSolid = new SolidColor(24, STRIP_LENGTH - 1);
+
+    private final SolidColor strip2TopSolid = new SolidColor(STRIP_LENGTH, STRIP_LENGTH + 23);
+    private final SolidColor strip2BottomSolid = new SolidColor(STRIP_LENGTH + 24, STRIP_2_LENGTH - 1);
+
+    // ErrorCode code1 = candle.setLEDs(bottom.r, bottom.g, bottom.b, bottom.w, 0, 24);
+    // ErrorCode code2 = candle.setLEDs(top.r, top.g, top.b, top.w, 24, 25);
+
+    // ErrorCode code3 =  candle.setLEDs(top.r, top.g, top.b, top.w, 49, 23);
+    // ErrorCode code4 =  candle.setLEDs(bottom.r, bottom.g, bottom.b, bottom.w, 72, 24);
+
 
     public final RainbowAnimation rainbow;
     public final SingleFadeAnimation blueFade, redFade, yellowFade, whiteFade, yellowFadeFast, purpleFade;
     public final TwinkleAnimation blueTwinkle, redTwinkle;
     public final ColorFlowAnimation blueFlow, redFlow, yellowFlow;
-    public final ColorFlowAnimation blueLeftFlow, blueRightFlow;
     public final LarsonAnimation yellowLarson;
     public final StrobeAnimation greenStrobe;
 
-    private final int STRIP_LENGTH = 49;
-    private final int STRIP_2_LENGTH = 47;
-    private final int NUM_LEDS = 8 + STRIP_LENGTH + STRIP_2_LENGTH;
-    private final int STRIP_OFFSET = 0;
-    private final int NO_CANDLE_OFFSET = 8;
-
     private final CANdle candle;
 
-    private Animation currentAnimation = null;
-    private Animation currentAnimation2 = null;
-    private LEDColor currentColor = null;
-    private LEDColor currentSplitColor = null;
+    private ControlRequest currentAnimation = null;
+    private RGBWColor currentColor = null;
+    private RGBWColor currentSplitColor = null;
 
     public LEDSubsystem() {
         CANdleConfiguration config = new CANdleConfiguration();
-        config.disableWhenLOS = false;
-        config.statusLedOffWhenActive = true;
-        config.brightnessScalar = 0.2; // was 0.3
-        config.v5Enabled = true;
-        config.stripType = LEDStripType.GRB;
-        config.vBatOutputMode = VBatOutputMode.Off;
+        config.LED.BrightnessScalar = 0.2;
+        config.LED.StripType = StripTypeValue.GRB;
+        config.CANdleFeatures.Enable5VRail = Enable5VRailValue.Enabled;
+        config.CANdleFeatures.StatusLedWhenActive = StatusLedWhenActiveValue.Disabled;
+        config.CANdleFeatures.VBatOutputMode = VBatOutputModeValue.Off;
         candle = new CANdle(Constants.CANDLE, Constants.CANIVORE);
-        candle.configAllSettings(config);
+        candle.getConfigurator().apply(config);
 
-        rainbow = new RainbowAnimation(1, 1, NUM_LEDS, false, STRIP_OFFSET);
+        // Clear all previous animations
+        for (int i = 0; i < 8; ++i) {
+            emptyAnimations[i] = new EmptyAnimation(i);
+            candle.setControl(emptyAnimations[i]);
+        }
+
+        rainbow = new RainbowAnimation(0, ALL_LEDS_INDEX);
 
         blueFade = fade(BLUE, 0.5);
         redFade = fade(RED, 0.5);
         yellowFade = fade(YELLOW, 0.5);
-        purpleFade = fade(PURPLE, 1); // was 0.85
+        purpleFade = fade(PURPLE, 1);
         whiteFade = fade(WHITE, 1);
         yellowFadeFast = fade(YELLOW, 1);
 
-        blueTwinkle = twinkle(BLUE, 0.25, TwinklePercent.Percent64);
-        redTwinkle = twinkle(RED, 0.25, TwinklePercent.Percent64);
+        blueTwinkle = twinkle(BLUE, 0.25, 0.64);
+        redTwinkle = twinkle(RED, 0.25, 0.64);
 
-        blueFlow = colorFlow(BLUE, 0.7, Direction.Forward);
-        redFlow = colorFlow(RED, 0.7, Direction.Forward);
-        yellowFlow = colorFlow(YELLOW, 0.5, Direction.Forward);
-        yellowLarson = larson(YELLOW, 0.5, 5, BounceMode.Front);
-
-        blueLeftFlow = colorFlow(BLUE, 0.7, Direction.Forward, STRIP_LENGTH, NO_CANDLE_OFFSET);
-        blueRightFlow = colorFlow(BLUE, 0.7, Direction.Backward, STRIP_2_LENGTH, NO_CANDLE_OFFSET + STRIP_LENGTH);
+        blueFlow = colorFlow(BLUE, 0.7, AnimationDirectionValue.Forward);
+        redFlow = colorFlow(RED, 0.7, AnimationDirectionValue.Forward);
+        yellowFlow = colorFlow(YELLOW, 0.5, AnimationDirectionValue.Forward);
+        
+        yellowLarson = new LarsonAnimation(NO_CANDLE_INDEX, ALL_LEDS_INDEX)
+                            .withColor(YELLOW)
+                            .withFrameRate(500)
+                            .withSize(5)
+                            .withBounceMode(LarsonBounceValue.Front);
 
         greenStrobe = strobe(GREEN, 0.25);
     }
 
-    public Command animate(Animation animation) {
+    public Command animate(ControlRequest animation) {
         return run(() -> setAnimation(animation));
     }
 
-    public Command color(LEDColor color) {
+    public Command color(RGBWColor color) {
         return run(() -> setColor(color));
     }
 
-    public void setAnimation(Animation animation) {
-        setAnimation(animation, 0);
-    }
-
-    public void setAnimation(Animation animation, int slot) {
+    public void setAnimation(ControlRequest animation) {
         if (animation != currentAnimation) {
-            // clearAnimations();
-            ErrorCode code = candle.animate(animation, slot);
-            if (code == ErrorCode.OK) {
+            StatusCode code = candle.setControl(animation);
+            if (code == StatusCode.OK) {
                 clearState();
                 currentAnimation = animation;
             }
         }
     }
 
-    public void setDualAnimation(Animation animation1, Animation animation2) {
-        if (currentAnimation != animation1 || currentAnimation2 != animation2) {
-            clearAnimations();
-            ErrorCode code1 = candle.animate(animation1, 0);
-            ErrorCode code2 = candle.animate(animation2, 1);
+    // public void setDualAnimation(Animation animation1, Animation animation2) {
+    //     if (currentAnimation != animation1 || currentAnimation2 != animation2) {
+    //         clearAnimations();
+    //         ErrorCode code1 = candle.animate(animation1, 0);
+    //         ErrorCode code2 = candle.animate(animation2, 1);
 
-            if (code1 == ErrorCode.OK && code2 == ErrorCode.OK) {
-                clearState();
-                currentAnimation = animation1;
-                currentAnimation2 = animation2;
-            }
-        }
-    }
+    //         if (code1 == ErrorCode.OK && code2 == ErrorCode.OK) {
+    //             clearState();
+    //             currentAnimation = animation1;
+    //             currentAnimation2 = animation2;
+    //         }
+    //     }
+    // }
 
-    public void setColor(LEDColor color) {
+    public void setColor(RGBWColor color) {
         if (color != currentColor) {
             clearAnimations();
-            ErrorCode code = candle.setLEDs(color.r, color.g, color.b, color.w, STRIP_OFFSET, NUM_LEDS);
-            if (code == ErrorCode.OK) {
+            StatusCode code = candle.setControl(fullStripSolid.withColor(color));
+            if (code == StatusCode.OK) {
                 clearState();
                 currentColor = color;
             }
         }
     }
 
-    public void setSplitColor(LEDColor top, LEDColor bottom) {
+    public void setSplitColor(RGBWColor top, RGBWColor bottom) {
         if (top != currentColor || bottom != currentSplitColor) {
             clearAnimations();
-            ErrorCode code1 = candle.setLEDs(bottom.r, bottom.g, bottom.b, bottom.w, 0, 24);
-            ErrorCode code2 = candle.setLEDs(top.r, top.g, top.b, top.w, 24, 25);
 
-            ErrorCode code3 =  candle.setLEDs(top.r, top.g, top.b, top.w, 49, 23);
-            ErrorCode code4 =  candle.setLEDs(bottom.r, bottom.g, bottom.b, bottom.w, 72, 24);
+            StatusCode code1 = candle.setControl(strip1TopSolid.withColor(top));
+            StatusCode code2 = candle.setControl(strip1BottomSolid.withColor(bottom));
+            
+            StatusCode code3 = candle.setControl(strip2TopSolid.withColor(top));
+            StatusCode code4 = candle.setControl(strip2BottomSolid.withColor(bottom));
 
-            if (code1 == ErrorCode.OK && code2 == ErrorCode.OK && code3 == ErrorCode.OK && code4 == ErrorCode.OK) {
+            if (code1 == StatusCode.OK && code2 == StatusCode.OK && code3 == StatusCode.OK && code4 == StatusCode.OK) {
                 clearState();
                 currentColor = top;
                 currentSplitColor = bottom;
@@ -152,44 +171,45 @@ public class LEDSubsystem extends SubsystemBase {
     }
 
     private void clearAnimations() {
-        candle.clearAnimation(0);
-        // candle.clearAnimation(1);
+        candle.setControl(emptyAnimations[0]);
     }
 
     private void clearState() {
         currentAnimation = null;
-        currentAnimation2 = null;
         currentColor = null;
         currentSplitColor = null;
     }
 
-    public SingleFadeAnimation fade(LEDColor color, double speed) {
-        return new SingleFadeAnimation(color.r, color.g, color.b, color.w, speed, NUM_LEDS, STRIP_OFFSET);
+    public SingleFadeAnimation fade(RGBWColor color, double speedPercent) {
+        return new SingleFadeAnimation(0, ALL_LEDS_INDEX)
+                .withColor(color)
+                .withFrameRate(1000 * speedPercent);
     }
 
-    public TwinkleAnimation twinkle(LEDColor color, double speed, TwinklePercent percent) {
-        return new TwinkleAnimation(color.r, color.g, color.b, color.w, speed, NUM_LEDS, percent, STRIP_OFFSET);
+    public StrobeAnimation strobe(RGBWColor color, double speedPercent) {
+        return new StrobeAnimation(0, ALL_LEDS_INDEX)
+                .withColor(color)
+                .withFrameRate(1000 * speedPercent);
     }
 
-    public TwinkleOffAnimation twinkleOff(LEDColor color, double speed, TwinkleOffPercent percent) {
-        return new TwinkleOffAnimation(color.r, color.g, color.b, color.w, speed, NUM_LEDS, percent, STRIP_OFFSET);
+    public TwinkleAnimation twinkle(RGBWColor color, double speedPercent, double twinklePercent) {
+        return new TwinkleAnimation(0, ALL_LEDS_INDEX)
+                .withColor(color)
+                .withFrameRate(1000 * speedPercent)
+                .withMaxLEDsOnProportion(twinklePercent);
     }
 
-    public ColorFlowAnimation colorFlow(LEDColor color, double speed, Direction direction) {
-        return colorFlow(color, speed, direction, NUM_LEDS, STRIP_OFFSET);
+    public TwinkleOffAnimation twinkleOff(RGBWColor color, double speedPercent, double twinklePercent) {
+        return new TwinkleOffAnimation(0, ALL_LEDS_INDEX)
+                .withColor(color)
+                .withFrameRate(1000 * speedPercent)
+                .withMaxLEDsOnProportion(twinklePercent);
     }
 
-    public ColorFlowAnimation colorFlow(LEDColor color, double speed, Direction direction, int numLeds, int ledOffset) {
-        return new ColorFlowAnimation(color.r, color.g, color.b, color.w, speed, numLeds, direction, ledOffset);
+    public ColorFlowAnimation colorFlow(RGBWColor color, double speedPercent, AnimationDirectionValue direction) {
+        return new ColorFlowAnimation(0, ALL_LEDS_INDEX)
+                .withColor(color)
+                .withFrameRate(1000 * speedPercent)
+                .withDirection(direction);
     }
-
-    public LarsonAnimation larson(LEDColor color, double speed, int size, BounceMode mode) {
-        return new LarsonAnimation(color.r, color.g, color.b, color.w, speed, NUM_LEDS - NO_CANDLE_OFFSET, mode, size, NO_CANDLE_OFFSET);
-    }
-
-    public StrobeAnimation strobe(LEDColor color, double speed) {
-        return new StrobeAnimation(color.r, color.g, color.b, color.w, speed, NUM_LEDS, STRIP_OFFSET);
-    }
-
-    private record LEDColor(int r, int g, int b, int w) {}
 }

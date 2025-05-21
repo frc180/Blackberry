@@ -28,6 +28,7 @@ import java.util.function.DoubleSupplier;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import com.ctre.phoenix.led.Animation;
+import com.ctre.phoenix6.controls.ControlRequest;
 import com.pathplanner.lib.util.FlippingUtil;
 import com.spamrobotics.util.Helpers;
 import com.spamrobotics.util.JoystickInputs;
@@ -823,7 +824,7 @@ public class RobotContainer {
                 if (topColor != bottomColor) {
                     leds.setSplitColor(topColor, bottomColor);
                 } else {
-                    Animation animation;
+                    ControlRequest animation;
                     if (doClimbAnimation) {
                         animation = Robot.isBlue() ? leds.blueFlow : leds.redFlow;
                     } else {
