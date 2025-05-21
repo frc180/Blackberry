@@ -253,6 +253,7 @@ public class CoralDetectorReal implements CoralDetector {
 
     static final double fovDegrees = 82;
     static final double detectionDistance = 5;
+    static final double noise = 0.1;
 
     private RawDetection[] getSimulatedRawDetections(Pose2d robotPose) {
         final List<RawDetection> detections = new ArrayList<>();
@@ -262,6 +263,8 @@ public class CoralDetectorReal implements CoralDetector {
         for (int i = 0; i < corals.length; i++) {
             Pose2d coral = corals[i].toPose2d();
             if (Helpers.poseWithinPOV(robotPose, coral, fovDegrees, detectionDistance)) {
+                coral = coral.transformBy(new Transform2d(randomRange(-noise, noise), randomRange(-noise, noise), Rotation2d.kZero));
+
                 Pose2d relative = coral.relativeTo(cameraPose); 
 
                 // Ignore any coral that are technically behind the camera
@@ -280,5 +283,9 @@ public class CoralDetectorReal implements CoralDetector {
             detectionArray[i] = detections.get(i);
         }
         return detectionArray;
+    }
+
+    private double randomRange(double min, double max) {
+        return Math.random() * (max - min) + min;
     }
 }
