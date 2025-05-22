@@ -86,7 +86,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     }
 
     public static final double MAX_SPEED = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // Meters per second desired top speed
-    public static final double MAX_SPEED_ACCEL = Robot.isReal() ? 5.5 : 5.5; // was 5 on  real robot
+    public static final double MAX_SPEED_ACCEL = Robot.isReal() ? 5.5 : 7; // was 5 on  real robot
     public static final double MAX_ANGULAR_RATE = 3 * Math.PI; // 3/4 of a rotation per second max angular velocity (1.5 * Math.PI)
     public static final double MAX_ANGULAR_ACCEL = MAX_ANGULAR_RATE * 8; // was * 4
 
@@ -253,7 +253,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
 
         if (Robot.isSimulation()) {
             translationMaxSpeed = MAX_SPEED * 0.8;
-            translationP = 0.15;
+            translationP = 1;
             translationD = 0;
             translationKV = 1;
         }
