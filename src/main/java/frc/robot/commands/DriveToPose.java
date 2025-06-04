@@ -157,13 +157,12 @@ public class DriveToPose extends Command {
         // drivetrain.driveClosedLoop(speeds);
 
         // EXPERIMENTAL
-        drivetrain.driveToStrategy.apply(
+        drivetrain.setControl(drivetrain.driveToStrategy.apply(
             drivetrain.closedLoopRobotCentric,
             currentPose,
             iterationTarget,
             Math.min(drivetrain.driveToPoseConstraints.maxVelocity, maxSpeedMeters)
-        );     
-        drivetrain.setControl(drivetrain.closedLoopRobotCentric);
+        ));
     }
 
     @Override

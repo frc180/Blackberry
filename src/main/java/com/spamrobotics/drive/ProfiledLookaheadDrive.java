@@ -20,9 +20,9 @@ public class ProfiledLookaheadDrive extends DriveStrategy {
     final PIDController xPid, yPid;
     final SimpleMotorFeedforward xyFeedforward;
 
-    final State driveToPoseStartState = new State(0, 0);
-    final State driveToPoseGoalState = new State(0, 0);
-    Pose2d driveToPoseStart = null;
+    final State startState = new State(0, 0);
+    final State goalState = new State(0, 0);
+    Pose2d poseStart = null;
     State previousSetpoint = null;
     private Pose2d profiledIntermediatePose = Pose2d.kZero;
 
@@ -39,41 +39,41 @@ public class ProfiledLookaheadDrive extends DriveStrategy {
     public void reset() {
         xPid.reset();
         yPid.reset();
-        driveToPoseStart = null;
+        poseStart = null;
     }
 
     @Override
     protected void calculateOutputs(Pose2d currentPose, Pose2d endPose, double maxVelocity) {
-        boolean replanning = driveToPoseStart != null;
+        boolean replanning = poseStart != null;
         
         if (!replanning) {
             xPid.reset();
             yPid.reset();
         }
-        driveToPoseStart = currentPose;
+        poseStart = currentPose;
 
-        double normDirX = endPose.getX() - driveToPoseStart.getX();
-        double normDirY = endPose.getY() - driveToPoseStart.getY();
+        double normDirX = endPose.getX() - poseStart.getX();
+        double normDirY = endPose.getY() - poseStart.getY();
         double distance = Math.hypot(normDirX, normDirY);
 
         normDirX /= (distance + 0.001);
         normDirY /= (distance + 0.001);
 
         
-        driveToPoseStartState.position = distance;
+        startState.position = distance;
         if (replanning) {
-            driveToPoseStartState.velocity = -drivetrain.getVelocity();
+            startState.velocity = -drivetrain.getVelocity();
         } else {
-            driveToPoseStartState.velocity = MathUtil.clamp(
-                Helpers.velocityTowards(driveToPoseStart, drivetrain.getFieldRelativeSpeeds(), endPose.getTranslation()),
+            startState.velocity = MathUtil.clamp(
+                Helpers.velocityTowards(poseStart, drivetrain.getFieldRelativeSpeeds(), endPose.getTranslation()),
                 -maxVelocity, 
                 0
             );
         }
 
         // Calculate the setpoint (i.e. current distance along the path) we should be targeting
-        State setpoint = profile.calculate(Constants.LOOP_TIME * 6, driveToPoseStartState, driveToPoseGoalState); // experiment: try * 5
-        Translation2d setpointTarget = endPose.getTranslation().interpolate(driveToPoseStart.getTranslation(), setpoint.position / distance);
+        State setpoint = profile.calculate(Constants.LOOP_TIME * 6, startState, goalState); // experiment: try * 5
+        Translation2d setpointTarget = endPose.getTranslation().interpolate(poseStart.getTranslation(), setpoint.position / distance);
         
         // For logging only
         profiledIntermediatePose = new Pose2d(setpointTarget, endPose.getRotation());
