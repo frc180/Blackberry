@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Optional;
 import com.ctre.phoenix6.Utils;
 import com.pathplanner.lib.util.FlippingUtil;
+import com.spamrobotics.util.TimedSubsystem;
 import java.util.Map.Entry;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
@@ -44,7 +45,7 @@ import frc.robot.util.LimelightHelpers.PoseEstimate;
 import frc.robot.util.LimelightHelpers.RawFiducial;
 
 @Logged
-public class VisionSubsystem extends SubsystemBase {
+public class VisionSubsystem extends TimedSubsystem {
 
     /**
      * The source of a pose estimate, used to determine the standard deviation of the pose estimate
@@ -264,7 +265,7 @@ public class VisionSubsystem extends SubsystemBase {
     Pose2d futureRobotPose;
 
     @Override
-    public void periodic() {
+    public void timedPeriodic() {
         io.update(inputs);
 
         scoringCameraDisconnectedAlert.set(!inputs.scoringCameraConnected);
@@ -639,5 +640,9 @@ public class VisionSubsystem extends SubsystemBase {
         } else {
             alert.set(false);
         }
+    }
+
+    public double loopTimeMS() {
+        return getLoopTimeMS();
     }
 }
