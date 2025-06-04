@@ -1,7 +1,6 @@
 package com.spamrobotics.drive;
 
 import com.spamrobotics.util.Helpers;
-
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
@@ -10,8 +9,13 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import frc.robot.subsystems.DrivetrainSubsystem;
+import frc.robot.subsystems.DrivetrainSubsystem.HeadingTarget;
 
-public class OPDrive implements AutoDriveStrategy {
+/**
+ * Implements the driving strategy described in this post from 2056:
+ * https://www.chiefdelphi.com/t/team-2056-op-robotics-2025-technical-binder-release/502550/36?u=ryan_s
+ */
+public class OPDrive implements DriveStrategy {
 
     final DrivetrainSubsystem drivetrain;
     final SlewRateLimiter rateLimiter;
@@ -21,9 +25,12 @@ public class OPDrive implements AutoDriveStrategy {
     boolean shouldReset = true;
 
     public OPDrive(DrivetrainSubsystem drivetrain, double rateLimitMeters) {
-        this.drivetrain = drivetrain;
+        this(drivetrain, rateLimitMeters, 99);
+    }
 
-        rateLimiter = new SlewRateLimiter(99, -rateLimitMeters, 0.0);
+    public OPDrive(DrivetrainSubsystem drivetrain, double accelRateMPS, double decelRateMPS) {
+        this.drivetrain = drivetrain;
+        rateLimiter = new SlewRateLimiter(decelRateMPS, -accelRateMPS, 0.0);
     }
 
     @Override
@@ -33,9 +40,9 @@ public class OPDrive implements AutoDriveStrategy {
 
     @Override
     public ChassisSpeeds drive(Pose2d currentPose, Pose2d endPose, TrapezoidProfile profile, Constraints constraints) {
-
         if (shouldReset) {
             translationPID.reset();
+            drivetrain.resetHeadingPID(HeadingTarget.POSE);
             rateLimiter.reset(MathUtil.clamp(
                 Helpers.velocityTowards(currentPose, drivetrain.getFieldRelativeSpeeds(), endPose.getTranslation()),
                 -constraints.maxVelocity, 

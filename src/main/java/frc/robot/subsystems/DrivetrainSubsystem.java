@@ -5,9 +5,6 @@ import static edu.wpi.first.units.Units.*;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
-
-import javax.lang.model.type.NullType;
-
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import com.ctre.phoenix6.Orchestra;
 import com.ctre.phoenix6.SignalLogger;
@@ -26,7 +23,7 @@ import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.path.Waypoint;
 import com.pathplanner.lib.util.FlippingUtil;
-import com.spamrobotics.drive.AutoDriveStrategy;
+import com.spamrobotics.drive.DriveStrategy;
 import com.spamrobotics.drive.OPDrive;
 import com.spamrobotics.drive.ProfiledLookaheadDrive;
 import com.spamrobotics.util.Helpers;
@@ -38,13 +35,11 @@ import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.interpolation.TimeInterpolatableBuffer;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.math.trajectory.TrapezoidProfile.State;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
@@ -133,6 +128,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     public final TrapezoidProfile.Constraints driveToPoseConstraintsSlow;
     public final TrapezoidProfile driveToPoseProfile;
     public final TrapezoidProfile driveToPoseProfileSlow;
+    public final DriveStrategy driveToStrategy;
 
     private final StatusSignal<Angle> gyroAngleSignal;
     private final StatusSignal<AngularVelocity> gyroRateSignal;
@@ -256,7 +252,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
 
         if (Robot.isSimulation()) {
             translationMaxSpeed = MAX_SPEED * 0.8;
-            translationP = 1;
+            translationP = 0.15;
             translationD = 0;
             translationKV = 1;
         }
@@ -274,6 +270,12 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
                                         new TrapezoidProfile.Constraints(MAX_ANGULAR_RATE, MAX_ANGULAR_ACCEL));
         rotationProfiledPid.enableContinuousInput(-Math.PI, Math.PI);
 
+        if (Robot.isReal()) {
+            driveToStrategy = new ProfiledLookaheadDrive(this, xPid, yPid, xyFeedforward);
+        } else {
+            driveToStrategy = new OPDrive(this, 7 * 1.5);
+        }
+
         orchestra = new Orchestra();
         var mods = getModules();
         for (int i = 0; i < mods.length; i++) {
@@ -281,9 +283,6 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
             orchestra.addInstrument(module.getDriveMotor(), 1);
             orchestra.addInstrument(module.getSteerMotor(), 0);
         }
-
-        // autoDriveProvider = new ProfiledLookaheadDrive(this, xPid, yPid, xyFeedforward);
-        autoDriveProvider = new OPDrive(this, MAX_SPEED_ACCEL * 2);
 
         SmartDashboard.putData("Drivetrain X PID", xPid);
         SmartDashboard.putData("Drivetrain Y PID", yPid);
@@ -399,7 +398,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     public void resetPIDs(HeadingTarget type) {
         resetHeadingPID(type);
         // driveToPoseStart = null;
-        autoDriveProvider.reset();
+        driveToStrategy.reset();
     }
 
     public void resetHeadingPID(HeadingTarget type) {
@@ -426,15 +425,13 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         );
     }
 
-    final AutoDriveStrategy autoDriveProvider;
-
     public ChassisSpeeds driveTo(Pose2d currentPose, Pose2d endPose) {
         return driveTo(currentPose, endPose, driveToPoseProfile, driveToPoseConstraints);
     }
 
     public ChassisSpeeds driveTo(Pose2d currentPose, Pose2d endPose, TrapezoidProfile profile, TrapezoidProfile.Constraints constraints) {
         intermediatePose = endPose;
-        return autoDriveProvider.drive(currentPose, endPose, profile, constraints);
+        return driveToStrategy.drive(currentPose, endPose, profile, constraints);
     }
 
     // final State driveToPoseStartState = new State(0, 0);

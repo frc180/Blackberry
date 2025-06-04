@@ -338,8 +338,8 @@ public class RobotContainer {
         ));
 
         atReefXY = drivetrain.withinTargetPoseTolerance(
-                        Inches.of(1), // was 0.75 at houston
-                        Inches.of(1), // was 0.75 at houston
+                        Inches.of(0.75), // was 0.75 at houston
+                        Inches.of(0.75), // was 0.75 at houston
                         null
         );
 

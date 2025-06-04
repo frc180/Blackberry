@@ -70,11 +70,9 @@ public class ElevatorIOTalonFX implements ElevatorIO {
             config.Slot0.kV = 0.55;
             config.Slot0.kA = 0.0017552;
         }
-        config.MotionMagic.MotionMagicExpo_kV = 2;
-        config.MotionMagic.MotionMagicExpo_kA = 1.3; // was 1.4, 1.35,
         config.Slot0.GravityType = GravityTypeValue.Elevator_Static;
-        config.MotionMagic.MotionMagicCruiseVelocity = 0; // Unlimited cruise velocity
-        config.MotionMagic.MotionMagicJerk = 0;
+        config.MotionMagic.MotionMagicExpo_kV = 2;
+        config.MotionMagic.MotionMagicExpo_kA = 1.25; // was 1.3 on einstein
         motors.forEach(motor -> motor.getConfigurator().apply(config));
 
         motionMagicControl = new MotionMagicVoltage(0);

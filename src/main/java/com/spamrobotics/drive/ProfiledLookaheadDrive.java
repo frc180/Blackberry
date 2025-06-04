@@ -1,6 +1,7 @@
 package com.spamrobotics.drive;
 
 import com.spamrobotics.util.Helpers;
+import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
@@ -12,7 +13,8 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile.State;
 import frc.robot.Constants;
 import frc.robot.subsystems.DrivetrainSubsystem;
 
-public class ProfiledLookaheadDrive implements AutoDriveStrategy {
+@Logged
+public class ProfiledLookaheadDrive implements DriveStrategy {
 
     final DrivetrainSubsystem drivetrain;
     final PIDController xPid, yPid;

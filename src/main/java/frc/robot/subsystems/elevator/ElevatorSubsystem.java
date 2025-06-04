@@ -11,8 +11,6 @@ import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.NotLogged;
 import edu.wpi.first.epilogue.Logged.Importance;
 import edu.wpi.first.units.measure.Distance;
-import edu.wpi.first.wpilibj.Alert;
-import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -47,7 +45,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     protected static final double SOFT_UPPER_LIMIT = Meters.of(1.48).in(Meters);
     protected static final double SOFT_LOWER_LIMIT = 0;
     private static final double IN_POSITION_METERS = Inches.of(0.5).in(Meters);
-    private static final double STOW_INTERMEDIATE = Inches.of(0.25).in(Meters); // was 0.5
+    private static final double STOW_INTERMEDIATE = Inches.of(0.2).in(Meters); // EXPERIMENT: was 0.25
     private static final boolean SOFT_STOW_ENABLED = true;
 
     private ElevatorIO io;

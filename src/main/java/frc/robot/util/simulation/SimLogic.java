@@ -88,7 +88,7 @@ public abstract class SimLogic {
             xOffset = 0.6;
         } else {
             coralAngle = rc.elevatorArmPivot.getDegrees();
-            xOffset = 0.4;
+            xOffset = 0.3;
         }
         Distance coralHeight = Meters.of(rc.elevator.getPositionMeters() + heightOffset);
     
