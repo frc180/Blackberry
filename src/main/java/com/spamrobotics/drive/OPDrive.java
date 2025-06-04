@@ -1,10 +1,13 @@
 package com.spamrobotics.drive;
 
+import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
+import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.spamrobotics.util.Helpers;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
@@ -21,8 +24,9 @@ public class OPDrive implements DriveStrategy {
     final SlewRateLimiter rateLimiter;
 
     final PIDController translationPID = new PIDController(5, 0, 0);
+    final double[] outputs = new double[] { 0, 0, 0 };
 
-    boolean shouldReset = true;
+    boolean resetting = true;
 
     public OPDrive(DrivetrainSubsystem drivetrain, double rateLimitMeters) {
         this(drivetrain, rateLimitMeters, 99);
@@ -35,21 +39,35 @@ public class OPDrive implements DriveStrategy {
 
     @Override
     public void reset() {
-        shouldReset = true;
+        resetting = true;
     }
 
     @Override
     public ChassisSpeeds drive(Pose2d currentPose, Pose2d endPose, TrapezoidProfile profile, Constraints constraints) {
-        if (shouldReset) {
+        calculateOutputs(currentPose, endPose, constraints.maxVelocity);
+        return ChassisSpeeds.fromFieldRelativeSpeeds(outputs[0], outputs[1], outputs[2], currentPose.getRotation());
+    }
+
+    @Override
+    public SwerveRequest.RobotCentric apply(SwerveRequest.RobotCentric request, Pose2d currentPose, Pose2d endPose, double maxVelocity) {
+        calculateOutputs(currentPose, endPose, maxVelocity);
+        Helpers.fromFieldRelativeSpeeds(outputs, currentPose.getRotation());
+        return request.withVelocityX(outputs[0])
+                      .withVelocityY(outputs[1])
+                      .withRotationalRate(outputs[2]);
+    }
+
+    private void calculateOutputs(Pose2d currentPose, Pose2d endPose, double maxVelocity) {
+        if (resetting) {
             translationPID.reset();
             drivetrain.resetHeadingPID(HeadingTarget.POSE);
             rateLimiter.reset(MathUtil.clamp(
                 Helpers.velocityTowards(currentPose, drivetrain.getFieldRelativeSpeeds(), endPose.getTranslation()),
-                -constraints.maxVelocity, 
+                -maxVelocity, 
                 0
             ));
 
-            shouldReset = false;
+            resetting = false;
         }
 
         double normDirX = endPose.getX() - currentPose.getX();
@@ -66,12 +84,13 @@ public class OPDrive implements DriveStrategy {
         double xOutput = normDirX * -translationOutput;
         double yOutput = normDirY * -translationOutput;
 
-        xOutput = MathUtil.clamp(xOutput, -constraints.maxVelocity, constraints.maxVelocity);
-        yOutput = MathUtil.clamp(yOutput, -constraints.maxVelocity, constraints.maxVelocity);
+        xOutput = MathUtil.clamp(xOutput, -maxVelocity, maxVelocity);
+        yOutput = MathUtil.clamp(yOutput, -maxVelocity, maxVelocity);
 
         double thetaOutput = drivetrain.calculateHeadingPID(currentPose.getRotation(), endPose.getRotation().getDegrees());
 
-        return ChassisSpeeds.fromFieldRelativeSpeeds(xOutput, yOutput, thetaOutput, currentPose.getRotation());
-
+        outputs[0] = xOutput;
+        outputs[1] = yOutput;
+        outputs[2] = thetaOutput;
     }
 }

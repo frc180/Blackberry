@@ -61,6 +61,21 @@ public class Helpers {
         return value;
     }
 
+    public static void fromFieldRelativeSpeeds(double[] inputs, Rotation2d robotAngle) {
+        if (inputs.length < 2) return;
+
+        double x = inputs[0];
+        double y = inputs[1];
+
+        // Manually perform field centric -> robot centric math, without spamming objects
+        double angle = -robotAngle.getRadians();
+        double cos = Math.cos(angle);
+        double sin = Math.sin(angle);
+
+        inputs[0] = x * cos - y * sin;
+        inputs[1] = x * sin + y * cos;
+    }
+
     public static boolean withinTolerance(Pose2d pose, Pose2d targetPose, Distance xDistance, Distance yDistance, Angle angle) {
         Double xMeters = xDistance == null ? null : xDistance.in(Meters);
         Double yMeters = yDistance == null ? null : yDistance.in(Meters);

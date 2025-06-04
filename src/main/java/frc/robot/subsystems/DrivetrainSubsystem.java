@@ -95,6 +95,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     /** Swerve request to apply during robot-centric path following */
     private final SwerveRequest.ApplyRobotSpeeds m_pathApplyRobotSpeeds = new SwerveRequest.ApplyRobotSpeeds().withDriveRequestType(DriveRequestType.OpenLoopVoltage);
     private final SwerveRequest.ApplyRobotSpeeds applyClosedLoopSpeeds = new SwerveRequest.ApplyRobotSpeeds().withDriveRequestType(DriveRequestType.Velocity);
+    public final SwerveRequest.RobotCentric closedLoopRobotCentric = new SwerveRequest.RobotCentric().withDriveRequestType(DriveRequestType.Velocity);
     private final SwerveRequest.SwerveDriveBrake brakeRequest = new SwerveRequest.SwerveDriveBrake();
 
     /* Swerve requests to apply during SysId characterization */
