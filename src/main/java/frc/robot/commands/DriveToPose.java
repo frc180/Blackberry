@@ -162,9 +162,9 @@ public class DriveToPose extends Command {
 
         ChassisSpeeds speeds;
         if (profileOverride != null) {
-            speeds = drivetrain.driveProfiled(currentPose, iterationTarget, profileOverride, constraintsOverride);
+            speeds = drivetrain.driveTo(currentPose, iterationTarget, profileOverride, constraintsOverride);
         } else {
-            speeds = drivetrain.driveProfiled(currentPose, iterationTarget);
+            speeds = drivetrain.driveTo(currentPose, iterationTarget);
         }
         if (additionalSpeedsSupplier != null) {
             Helpers.addChassisSpeedsOverwrite(speeds, additionalSpeedsSupplier.get());
