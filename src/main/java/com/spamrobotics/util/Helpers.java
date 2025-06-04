@@ -62,15 +62,16 @@ public class Helpers {
     }
 
     public static void fromFieldRelativeSpeeds(double[] inputs, Rotation2d robotAngle) {
+        rotateBy(inputs, -robotAngle.getRadians());
+    }
+
+    public static void rotateBy(double[] inputs, double radians) {
         if (inputs.length < 2) return;
 
         double x = inputs[0];
         double y = inputs[1];
-
-        // Manually perform field centric -> robot centric math, without creating 4+ objects
-        double angle = -robotAngle.getRadians();
-        double cos = Math.cos(angle);
-        double sin = Math.sin(angle);
+        double cos = Math.cos(radians);
+        double sin = Math.sin(radians);
 
         inputs[0] = x * cos - y * sin;
         inputs[1] = x * sin + y * cos;
