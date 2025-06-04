@@ -78,20 +78,27 @@ public class Helpers {
     }
 
     public static boolean withinTolerance(Pose2d pose, Pose2d targetPose, Distance xDistance, Distance yDistance, Angle angle) {
-        Double xMeters = xDistance == null ? null : xDistance.in(Meters);
-        Double yMeters = yDistance == null ? null : yDistance.in(Meters);
-        Double degrees = angle == null ? null : angle.in(Degrees);
-        return withinTolerance(pose, targetPose, xMeters, yMeters, degrees);
+        return withinTolerance(
+            pose,
+            targetPose,
+            xDistance == null ? 0 : xDistance.in(Meters),
+            yDistance == null ? 0 : yDistance.in(Meters),
+            angle == null ? 0 : angle.in(Degrees),
+            xDistance == null,
+            yDistance == null,
+            angle == null
+        );
     }
 
-    public static boolean withinTolerance(Pose2d pose, Pose2d targetPose, Double xMeters, Double yMeters, Double degrees) {
+    public static boolean withinTolerance(Pose2d pose, Pose2d targetPose, double xMeters, double yMeters, double degrees,
+        boolean skipX, boolean skipY, boolean skipDegrees) {
         // If one or more of the poses don't exist, we can't be within tolerance
         if (pose == null || targetPose == null) {
             return false;
         }
         
-        boolean xSatisfied = xMeters == null || Math.abs(pose.getX() - targetPose.getX()) <= xMeters;
-        boolean ySatisfied = yMeters == null || Math.abs(pose.getY() - targetPose.getY()) <= yMeters;
+        boolean xSatisfied = skipX || Math.abs(pose.getX() - targetPose.getX()) <= xMeters;
+        boolean ySatisfied = skipY || Math.abs(pose.getY() - targetPose.getY()) <= yMeters;
 
         // If we haven't met the x and y criteria, don't bother calculating any further
         if (!xSatisfied || !ySatisfied) {
@@ -99,7 +106,7 @@ public class Helpers {
         }
 
         boolean headingSatisfied;
-        if (degrees == null) {
+        if (skipDegrees) {
             headingSatisfied = true;
         } else {
             double poseDegrees = MathUtil.inputModulus(pose.getRotation().getDegrees(), -180, 180);

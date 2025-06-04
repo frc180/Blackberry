@@ -525,12 +525,6 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         });
     }
 
-    public Trigger withinTargetPoseTolerance(Double xMeters, Double yMeters, Double degrees) {
-        return new Trigger(() -> {
-            return Helpers.withinTolerance(getPose(), targetPose, xMeters, yMeters, degrees);
-        });
-    }
-
     public Trigger withinTargetPoseDistance(Distance distance) {
         return withinTargetPoseDistance(distance.in(Meters));
     }

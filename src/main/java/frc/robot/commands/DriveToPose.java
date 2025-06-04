@@ -2,11 +2,8 @@ package frc.robot.commands;
 
 import java.util.function.Function;
 import java.util.function.Supplier;
-import com.spamrobotics.util.Helpers;
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.DrivetrainSubsystem;
 import frc.robot.subsystems.DrivetrainSubsystem.HeadingTarget;
@@ -21,12 +18,7 @@ public class DriveToPose extends Command {
     private Function<Integer, Pose2d> tagToPoseFunction = null;
     private Pose2d currentPose = null;
     private Pose2d targetPose = null;
-    private Double xEndTolerance = null;
-    private Double yEndTolerance = null;
-    private Double headingEndTolerance = null;
     private boolean dynamicTarget = false;
-    private boolean holdWithinTolerance = false;
-    private Supplier<Boolean> finishCriteria = null;
     private PoseTarget poseTargetType = PoseTarget.STANDARD;
     private double maxSpeed = 1.0;
     private Supplier<Integer> targetPoseTagSupplier = null;
@@ -52,37 +44,8 @@ public class DriveToPose extends Command {
         addRequirements(drivetrainSubsystem);
     }
 
-    public DriveToPose withXEndTolerance(double toleranceMeters) {
-        this.xEndTolerance = toleranceMeters;
-        return this;
-    }
-
-    public DriveToPose withYEndTolerance(double toleranceMeters) {
-        this.yEndTolerance = toleranceMeters;
-        return this;
-    }
-
-    public DriveToPose withXYEndTolerance(double toleranceMeters) {
-        return withXEndTolerance(toleranceMeters).withYEndTolerance(toleranceMeters);
-    }
-
-    public DriveToPose withHeadingEndTolerance(double toleranceDegrees) {
-        this.headingEndTolerance = toleranceDegrees;
-        return this;
-    }
-
     public DriveToPose withDynamicTarget(boolean dynamicTarget) {
         this.dynamicTarget = dynamicTarget;
-        return this;
-    }
-
-    public DriveToPose withFinishCriteria(Supplier<Boolean> finishCriteria) {
-        this.finishCriteria = finishCriteria;
-        return this;
-    }
- 
-    public DriveToPose withHoldWithinTolerance(boolean stopWithinTarget) {
-        this.holdWithinTolerance = stopWithinTarget;
         return this;
     }
 
@@ -139,14 +102,6 @@ public class DriveToPose extends Command {
         }
         drivetrain.setIntermediatePose(iterationTarget);
 
-        if (holdWithinTolerance) {
-            boolean inTolerances = Helpers.withinTolerance(currentPose, iterationTarget, xEndTolerance, yEndTolerance, headingEndTolerance);
-            if (inTolerances) {
-                drivetrain.drive(noneSpeeds);
-                return;
-            }
-        }
-
         final double maxSpeedMeters = DrivetrainSubsystem.MAX_SPEED * maxSpeed;
   
         // ChassisSpeeds speeds = drivetrain.driveToStrategy.drive(
@@ -167,20 +122,7 @@ public class DriveToPose extends Command {
 
     @Override
     public boolean isFinished() {
-        // If the desired behavior is to hold position within the tolerance window, instead
-        // of exiting the command, then we should not ever exist by ourselves.
-        if (holdWithinTolerance) {
-            return false;
-        }
-        // If no end tolerances are set, then the command will never finish on its own
-        if (xEndTolerance == null && yEndTolerance == null && headingEndTolerance == null && finishCriteria == null) {
-            return false;
-        }
-
-        boolean finishCriteriaSatisfied = finishCriteria == null || finishCriteria.get();
-        boolean inTolerances = Helpers.withinTolerance(currentPose, targetPose, xEndTolerance, yEndTolerance, headingEndTolerance);
-
-        return inTolerances && finishCriteriaSatisfied;
+        return false;
     }
 
     @Override
