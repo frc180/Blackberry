@@ -25,6 +25,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -98,8 +99,12 @@ public class Robot extends TimedRobot {
         // Elastic.selectTab("Autonomous");
     }
 
+    private double loopTimeMS = 0;
+
     @Override
     public void robotPeriodic() {
+        double loopStart = Timer.getFPGATimestamp();
+
         isBlueAlliance = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue;
         robotContainer.drivetrain.clearCache();
         StatusSignals.refreshAll();
@@ -111,6 +116,8 @@ public class Robot extends TimedRobot {
         // robotComponentPoses.accept(robotComponentPosesArray);
 
         batteryVoltage = RobotController.getBatteryVoltage();
+
+        loopTimeMS = (Timer.getFPGATimestamp() - loopStart) * 1000; // Convert to milliseconds
     }
 
     @Override
