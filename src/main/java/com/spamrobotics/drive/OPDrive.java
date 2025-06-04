@@ -1,16 +1,10 @@
 package com.spamrobotics.drive;
 
-import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
-import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.spamrobotics.util.Helpers;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import frc.robot.subsystems.DrivetrainSubsystem;
 import frc.robot.subsystems.DrivetrainSubsystem.HeadingTarget;
 
@@ -18,13 +12,12 @@ import frc.robot.subsystems.DrivetrainSubsystem.HeadingTarget;
  * Implements the driving strategy described in this post from 2056:
  * https://www.chiefdelphi.com/t/team-2056-op-robotics-2025-technical-binder-release/502550/36?u=ryan_s
  */
-public class OPDrive implements DriveStrategy {
+public class OPDrive extends DriveStrategy {
 
     final DrivetrainSubsystem drivetrain;
     final SlewRateLimiter rateLimiter;
 
     final PIDController translationPID = new PIDController(5, 0, 0);
-    final double[] outputs = new double[] { 0, 0, 0 };
 
     boolean resetting = true;
 
@@ -43,21 +36,7 @@ public class OPDrive implements DriveStrategy {
     }
 
     @Override
-    public ChassisSpeeds drive(Pose2d currentPose, Pose2d endPose, TrapezoidProfile profile, Constraints constraints) {
-        calculateOutputs(currentPose, endPose, constraints.maxVelocity);
-        return ChassisSpeeds.fromFieldRelativeSpeeds(outputs[0], outputs[1], outputs[2], currentPose.getRotation());
-    }
-
-    @Override
-    public SwerveRequest.RobotCentric apply(SwerveRequest.RobotCentric request, Pose2d currentPose, Pose2d endPose, double maxVelocity) {
-        calculateOutputs(currentPose, endPose, maxVelocity);
-        Helpers.fromFieldRelativeSpeeds(outputs, currentPose.getRotation());
-        return request.withVelocityX(outputs[0])
-                      .withVelocityY(outputs[1])
-                      .withRotationalRate(outputs[2]);
-    }
-
-    private void calculateOutputs(Pose2d currentPose, Pose2d endPose, double maxVelocity) {
+    protected void calculateOutputs(Pose2d currentPose, Pose2d endPose, double maxVelocity) {
         if (resetting) {
             translationPID.reset();
             drivetrain.resetHeadingPID(HeadingTarget.POSE);

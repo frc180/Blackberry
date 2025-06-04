@@ -7,16 +7,16 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.State;
 import frc.robot.Constants;
 import frc.robot.subsystems.DrivetrainSubsystem;
 
 @Logged
-public class ProfiledLookaheadDrive implements DriveStrategy {
+public class ProfiledLookaheadDrive extends DriveStrategy {
 
     final DrivetrainSubsystem drivetrain;
+    final TrapezoidProfile profile;
     final PIDController xPid, yPid;
     final SimpleMotorFeedforward xyFeedforward;
 
@@ -26,9 +26,10 @@ public class ProfiledLookaheadDrive implements DriveStrategy {
     State previousSetpoint = null;
     private Pose2d profiledIntermediatePose = Pose2d.kZero;
 
-    public ProfiledLookaheadDrive(DrivetrainSubsystem drivetrain, PIDController xPid, PIDController yPid, 
+    public ProfiledLookaheadDrive(DrivetrainSubsystem drivetrain, TrapezoidProfile profile, PIDController xPid, PIDController yPid, 
                                   SimpleMotorFeedforward xyFeedforward) {
         this.drivetrain = drivetrain;
+        this.profile = profile;
         this.xPid = xPid;
         this.yPid = yPid;
         this.xyFeedforward = xyFeedforward;
@@ -40,9 +41,9 @@ public class ProfiledLookaheadDrive implements DriveStrategy {
         yPid.reset();
         driveToPoseStart = null;
     }
-    
-    
-    public ChassisSpeeds drive(Pose2d currentPose, Pose2d endPose, TrapezoidProfile profile, TrapezoidProfile.Constraints constraints) {
+
+    @Override
+    protected void calculateOutputs(Pose2d currentPose, Pose2d endPose, double maxVelocity) {
         boolean replanning = driveToPoseStart != null;
         
         if (!replanning) {
@@ -65,7 +66,7 @@ public class ProfiledLookaheadDrive implements DriveStrategy {
         } else {
             driveToPoseStartState.velocity = MathUtil.clamp(
                 Helpers.velocityTowards(driveToPoseStart, drivetrain.getFieldRelativeSpeeds(), endPose.getTranslation()),
-                -constraints.maxVelocity, 
+                -maxVelocity, 
                 0
             );
         }
@@ -88,11 +89,13 @@ public class ProfiledLookaheadDrive implements DriveStrategy {
         yOutput += xyFeedforward.calculate(yTargetVelocity);
 
         // Ensure X and Y outputs are within the max velocity constraints (note: this stops the PID from helping catch up if we're behind)
-        xOutput = MathUtil.clamp(xOutput, -constraints.maxVelocity, constraints.maxVelocity);
-        yOutput = MathUtil.clamp(yOutput, -constraints.maxVelocity, constraints.maxVelocity);
+        xOutput = MathUtil.clamp(xOutput, -maxVelocity, maxVelocity);
+        yOutput = MathUtil.clamp(yOutput, -maxVelocity, maxVelocity);
 
         double thetaOutput = drivetrain.calculateHeadingPID(currentPose.getRotation(), endPose.getRotation().getDegrees());
 
-        return ChassisSpeeds.fromFieldRelativeSpeeds(xOutput, yOutput, thetaOutput, currentPose.getRotation());
+        outputs[0] = xOutput;
+        outputs[1] = yOutput;
+        outputs[2] = thetaOutput;
     }
 }

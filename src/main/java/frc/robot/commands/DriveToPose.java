@@ -21,7 +21,6 @@ public class DriveToPose extends Command {
     private Function<Integer, Pose2d> tagToPoseFunction = null;
     private Pose2d currentPose = null;
     private Pose2d targetPose = null;
-    private Supplier<ChassisSpeeds> additionalSpeedsSupplier = null;
     private Double xEndTolerance = null;
     private Double yEndTolerance = null;
     private Double headingEndTolerance = null;
@@ -32,8 +31,6 @@ public class DriveToPose extends Command {
     private double maxSpeed = 1.0;
     private Supplier<Integer> targetPoseTagSupplier = null;
     private Function<Pose2d, Pose2d> intermediatePoses = null;
-    private TrapezoidProfile profileOverride = null;
-    private TrapezoidProfile.Constraints constraintsOverride = null;
 
     private int targetPoseTag = -1;
 
@@ -74,11 +71,6 @@ public class DriveToPose extends Command {
         return this;
     }
 
-    public DriveToPose withAdditionalSpeeds(Supplier<ChassisSpeeds> additionalSpeedsSupplier) {
-        this.additionalSpeedsSupplier = additionalSpeedsSupplier;
-        return this;
-    }
-
     public DriveToPose withDynamicTarget(boolean dynamicTarget) {
         this.dynamicTarget = dynamicTarget;
         return this;
@@ -114,12 +106,6 @@ public class DriveToPose extends Command {
         return this;
     }
 
-    public DriveToPose withProfileOverride(TrapezoidProfile profile, TrapezoidProfile.Constraints constraints) {
-        profileOverride = profile;
-        constraintsOverride = constraints;
-        return this;
-    }
-
     @Override
     public void initialize() {
         targetPoseTag = targetPoseTagSupplier != null ? targetPoseTagSupplier.get() : -1;
@@ -151,6 +137,7 @@ public class DriveToPose extends Command {
         if (intermediatePoses != null) {
             iterationTarget = intermediatePoses.apply(targetPose);
         }
+        drivetrain.setIntermediatePose(iterationTarget);
 
         if (holdWithinTolerance) {
             boolean inTolerances = Helpers.withinTolerance(currentPose, iterationTarget, xEndTolerance, yEndTolerance, headingEndTolerance);
@@ -161,32 +148,22 @@ public class DriveToPose extends Command {
         }
 
         final double maxSpeedMeters = DrivetrainSubsystem.MAX_SPEED * maxSpeed;
-        final boolean useChassisSpeeds = false;
+  
+        // ChassisSpeeds speeds = drivetrain.driveToStrategy.drive(
+        //     currentPose,
+        //     iterationTarget,
+        //     Math.min(drivetrain.driveToPoseConstraints.maxVelocity, maxSpeedMeters)
+        // );
+        // drivetrain.driveClosedLoop(speeds);
 
-        if (useChassisSpeeds) {
-            ChassisSpeeds speeds;
-            if (profileOverride != null) {
-                speeds = drivetrain.driveTo(currentPose, iterationTarget, profileOverride, constraintsOverride);
-            } else {
-                speeds = drivetrain.driveTo(currentPose, iterationTarget);
-            }
-            if (additionalSpeedsSupplier != null) {
-                Helpers.addChassisSpeedsOverwrite(speeds, additionalSpeedsSupplier.get());
-            }
-            speeds.vxMetersPerSecond = MathUtil.clamp(speeds.vxMetersPerSecond, -maxSpeedMeters, maxSpeedMeters);
-            speeds.vyMetersPerSecond = MathUtil.clamp(speeds.vyMetersPerSecond, -maxSpeedMeters, maxSpeedMeters);
-            drivetrain.driveClosedLoop(speeds);
-        } else {
-            // EXPERIMENTAL: Not ready for primetime use yet, idea is to reduce garbage collector effort by not using ChassisSpeeds
-            drivetrain.driveToStrategy.apply(
-                drivetrain.closedLoopRobotCentric,
-                currentPose,
-                iterationTarget,
-                Math.min(drivetrain.driveToPoseConstraints.maxVelocity, maxSpeedMeters)
-            );
-            
-            drivetrain.setControl(drivetrain.closedLoopRobotCentric);
-        }
+        // EXPERIMENTAL
+        drivetrain.driveToStrategy.apply(
+            drivetrain.closedLoopRobotCentric,
+            currentPose,
+            iterationTarget,
+            Math.min(drivetrain.driveToPoseConstraints.maxVelocity, maxSpeedMeters)
+        );     
+        drivetrain.setControl(drivetrain.closedLoopRobotCentric);
     }
 
     @Override

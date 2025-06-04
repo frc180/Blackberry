@@ -84,7 +84,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     }
 
     public static final double MAX_SPEED = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // Meters per second desired top speed
-    public static final double MAX_SPEED_ACCEL = Robot.isReal() ? 5.5 : 7; // was 5 on  real robot
+    public static final double MAX_SPEED_ACCEL = 5.5; // was 5 on  real robot
     public static final double MAX_ANGULAR_RATE = 3 * Math.PI; // 3/4 of a rotation per second max angular velocity (1.5 * Math.PI)
     public static final double MAX_ANGULAR_ACCEL = MAX_ANGULAR_RATE * 8; // was * 4
 
@@ -126,9 +126,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     private final PIDController xPid, yPid;
     private final SimpleMotorFeedforward xyFeedforward;
     public final TrapezoidProfile.Constraints driveToPoseConstraints;
-    public final TrapezoidProfile.Constraints driveToPoseConstraintsSlow;
     public final TrapezoidProfile driveToPoseProfile;
-    public final TrapezoidProfile driveToPoseProfileSlow;
     public final DriveStrategy driveToStrategy;
 
     private final StatusSignal<Angle> gyroAngleSignal;
@@ -262,8 +260,6 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
 
         driveToPoseConstraints = new TrapezoidProfile.Constraints(translationMaxSpeed, MAX_SPEED_ACCEL);
         driveToPoseProfile = new TrapezoidProfile(driveToPoseConstraints);
-        driveToPoseConstraintsSlow = new TrapezoidProfile.Constraints(translationMaxSpeed, MAX_SPEED_ACCEL * 0.5);
-        driveToPoseProfileSlow = new TrapezoidProfile(driveToPoseConstraintsSlow);
         xPid = new PIDController(translationP, 0, translationD);
         yPid = new PIDController(translationP, 0, translationD);        
 
@@ -272,7 +268,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         rotationProfiledPid.enableContinuousInput(-Math.PI, Math.PI);
 
         if (Robot.isReal()) {
-            driveToStrategy = new ProfiledLookaheadDrive(this, xPid, yPid, xyFeedforward);
+            driveToStrategy = new ProfiledLookaheadDrive(this, driveToPoseProfile, xPid, yPid, xyFeedforward);
         } else {
             driveToStrategy = new OPDrive(this, 7 * 1.5);
         }
@@ -426,80 +422,9 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         );
     }
 
-    public ChassisSpeeds driveTo(Pose2d currentPose, Pose2d endPose) {
-        return driveTo(currentPose, endPose, driveToPoseProfile, driveToPoseConstraints);
+    public void setIntermediatePose(Pose2d pose) {
+        intermediatePose = pose;
     }
-
-    public ChassisSpeeds driveTo(Pose2d currentPose, Pose2d endPose, TrapezoidProfile profile, TrapezoidProfile.Constraints constraints) {
-        intermediatePose = endPose;
-        return driveToStrategy.drive(currentPose, endPose, profile, constraints);
-    }
-
-    // final State driveToPoseStartState = new State(0, 0);
-    // final State driveToPoseGoalState = new State(0, 0);
-    // // final Timer driveToPoseTimer = new Timer();
-    // Pose2d driveToPoseStart = null;
-    // State previousSetpoint = null;
-    // private Pose2d profiledIntermediatePose = Pose2d.kZero;
-
-    // public ChassisSpeeds driveProfiled(Pose2d currentPose, Pose2d endPose) {
-    //     return driveProfiled(currentPose, endPose, driveToPoseProfile, driveToPoseConstraints);
-    // }
-
-    // public ChassisSpeeds driveProfiled(Pose2d currentPose, Pose2d endPose, TrapezoidProfile profile, TrapezoidProfile.Constraints constraints) {
-    //     boolean replanning = driveToPoseStart != null;
-    //     intermediatePose = endPose;
-        
-    //     if (!replanning) {
-    //         xPid.reset();
-    //         yPid.reset();
-    //     }
-    //     driveToPoseStart = currentPose;
-
-    //     double normDirX = endPose.getX() - driveToPoseStart.getX();
-    //     double normDirY = endPose.getY() - driveToPoseStart.getY();
-    //     double distance = Math.hypot(normDirX, normDirY);
-
-    //     normDirX /= (distance + 0.001);
-    //     normDirY /= (distance + 0.001);
-
-        
-    //     driveToPoseStartState.position = distance;
-    //     if (replanning) {
-    //         driveToPoseStartState.velocity = -getVelocity();
-    //     } else {
-    //         driveToPoseStartState.velocity = MathUtil.clamp(
-    //             Helpers.velocityTowards(driveToPoseStart, getFieldRelativeSpeeds(), endPose.getTranslation()),
-    //             -constraints.maxVelocity, 
-    //             0
-    //         );
-    //     }
-
-    //     // Calculate the setpoint (i.e. current distance along the path) we should be targeting
-    //     State setpoint = profile.calculate(Constants.LOOP_TIME * 6, driveToPoseStartState, driveToPoseGoalState); // experiment: try * 5
-    //     Translation2d setpointTarget = endPose.getTranslation().interpolate(driveToPoseStart.getTranslation(), setpoint.position / distance);
-        
-    //     // For logging only
-    //     profiledIntermediatePose = new Pose2d(setpointTarget, endPose.getRotation());
-
-    //     // Use normal PIDs to calculate the feedback for the X and Y axes to reach the setpoint position
-    //     double xOutput = xPid.calculate(currentPose.getX(), setpointTarget.getX());
-    //     double yOutput = yPid.calculate(currentPose.getY(), setpointTarget.getY());
-
-    //     // Use feedforward for the X and Y axes to better reach the setpoint speed
-    //     double xTargetVelocity = normDirX * -setpoint.velocity;
-    //     double yTargetVelocity = normDirY * -setpoint.velocity;
-    //     xOutput += xyFeedforward.calculate(xTargetVelocity);
-    //     yOutput += xyFeedforward.calculate(yTargetVelocity);
-
-    //     // Ensure X and Y outputs are within the max velocity constraints (note: this stops the PID from helping catch up if we're behind)
-    //     xOutput = MathUtil.clamp(xOutput, -constraints.maxVelocity, constraints.maxVelocity);
-    //     yOutput = MathUtil.clamp(yOutput, -constraints.maxVelocity, constraints.maxVelocity);
-
-    //     double thetaOutput = calculateHeadingPID(currentPose.getRotation(), endPose.getRotation().getDegrees());
-
-    //     return ChassisSpeeds.fromFieldRelativeSpeeds(xOutput, yOutput, thetaOutput, currentPose.getRotation());
-    // }
 
     /**
      * Returns if the drivetrain is currently targeting a pose that is for Reef scoring.
