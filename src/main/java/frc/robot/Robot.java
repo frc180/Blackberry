@@ -103,7 +103,7 @@ public class Robot extends TimedRobot {
 
     @Override
     public void robotPeriodic() {
-        double loopStart = Timer.getFPGATimestamp();
+        double loopStart = Timer.getTimestamp();
 
         isBlueAlliance = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue;
         robotContainer.drivetrain.clearCache();
@@ -117,7 +117,7 @@ public class Robot extends TimedRobot {
 
         batteryVoltage = RobotController.getBatteryVoltage();
 
-        loopTimeMS = (Timer.getFPGATimestamp() - loopStart) * 1000; // Convert to milliseconds
+        loopTimeMS = (Timer.getTimestamp() - loopStart) * 1000; // Convert to milliseconds
     }
 
     @Override
