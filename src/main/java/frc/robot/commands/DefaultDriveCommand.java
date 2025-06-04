@@ -13,10 +13,12 @@ import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import com.spamrobotics.util.Helpers;
 import com.spamrobotics.util.JoystickInputs;
+import com.spamrobotics.util.RobotCentricExt;
 
 public class DefaultDriveCommand extends Command {
     private final double coralAssistKp = 4;
     private final DrivetrainSubsystem m_drivetrainSubsystem;
+    private final RobotCentricExt robotCentricControl;
 
     private final Supplier<JoystickInputs> m_joystickInputsSupplier;
     private final DoubleSupplier m_rotationSupplier;
@@ -32,6 +34,8 @@ public class DefaultDriveCommand extends Command {
         this.m_drivetrainSubsystem = drivetrainSubsystem;
         this.m_joystickInputsSupplier = joystickInputsSupplier;
         this.m_rotationSupplier = rotationSupplier;
+
+        robotCentricControl = (RobotCentricExt) new RobotCentricExt().withDesaturateWheelSpeeds(false);
 
         addRequirements(drivetrainSubsystem);
     }
@@ -73,15 +77,23 @@ public class DefaultDriveCommand extends Command {
         }
 
         JoystickInputs inputs = m_joystickInputsSupplier.get();
-        ChassisSpeeds speeds;
-        if (m_drivetrainSubsystem.isPigeonConnected()) {
-            speeds = ChassisSpeeds.fromFieldRelativeSpeeds(inputs.x, inputs.y, rotationSpeed, gyroRotation);
-        } else {
-            speeds = new ChassisSpeeds(inputs.x, inputs.y, rotationSpeed);
-        }
 
-        // applyCoralAimAssist(speeds, inputs);
-        m_drivetrainSubsystem.drive(speeds);
+        // EXPERIMENTAL: skip generating chassisspeeds objects
+        if (m_drivetrainSubsystem.isPigeonConnected()) {
+            robotCentricControl.withFieldCentricSpeeds(inputs.x, inputs.y, rotationSpeed, gyroRotation);
+        } else {
+            robotCentricControl.withRobotCentricSpeeds(inputs.x, inputs.y, rotationSpeed);
+        }
+        m_drivetrainSubsystem.setControl(robotCentricControl);
+
+        // ChassisSpeeds speeds;
+        // if (m_drivetrainSubsystem.isPigeonConnected()) {
+        //     speeds = ChassisSpeeds.fromFieldRelativeSpeeds(inputs.x, inputs.y, rotationSpeed, gyroRotation);
+        // } else {
+        //     speeds = new ChassisSpeeds(inputs.x, inputs.y, rotationSpeed);
+        // }
+        // // applyCoralAimAssist(speeds, inputs);
+        // m_drivetrainSubsystem.drive(speeds);
     }
 
     @Override

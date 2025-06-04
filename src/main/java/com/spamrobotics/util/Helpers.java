@@ -67,7 +67,7 @@ public class Helpers {
         double x = inputs[0];
         double y = inputs[1];
 
-        // Manually perform field centric -> robot centric math, without spamming objects
+        // Manually perform field centric -> robot centric math, without creating 4+ objects
         double angle = -robotAngle.getRadians();
         double cos = Math.cos(angle);
         double sin = Math.sin(angle);
