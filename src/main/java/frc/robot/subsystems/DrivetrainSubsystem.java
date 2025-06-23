@@ -267,10 +267,10 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
                                         new TrapezoidProfile.Constraints(MAX_ANGULAR_RATE, MAX_ANGULAR_ACCEL));
         rotationProfiledPid.enableContinuousInput(-Math.PI, Math.PI);
 
-        if (Robot.isReal()) {
+        if (false && Robot.isReal()) {
             driveToStrategy = new ProfiledLookaheadDrive(this, driveToPoseProfile, xPid, yPid, xyFeedforward);
         } else {
-            driveToStrategy = new OPDrive(this, 7 * 1.5);
+            driveToStrategy = new OPDrive(this, 10);//new OPDrive(this, 7 * 1.5);
         }
 
         orchestra = new Orchestra();

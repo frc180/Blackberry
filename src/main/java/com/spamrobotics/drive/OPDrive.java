@@ -5,6 +5,7 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.subsystems.DrivetrainSubsystem;
 import frc.robot.subsystems.DrivetrainSubsystem.HeadingTarget;
 
@@ -17,17 +18,18 @@ public class OPDrive extends DriveStrategy {
     final DrivetrainSubsystem drivetrain;
     final SlewRateLimiter rateLimiter;
 
-    final PIDController translationPID = new PIDController(5, 0, 0);
+    final PIDController translationPID = new PIDController(4, 0, 0.1);
 
     boolean resetting = true;
 
     public OPDrive(DrivetrainSubsystem drivetrain, double rateLimitMeters) {
-        this(drivetrain, rateLimitMeters, 99);
+        this(drivetrain, rateLimitMeters, 999999);
     }
 
     public OPDrive(DrivetrainSubsystem drivetrain, double accelRateMPS, double decelRateMPS) {
         this.drivetrain = drivetrain;
         rateLimiter = new SlewRateLimiter(decelRateMPS, -accelRateMPS, 0.0);
+        SmartDashboard.putData("AutoDrive PID", translationPID);
     }
 
     @Override
