@@ -18,7 +18,7 @@ public class OPDrive extends DriveStrategy {
     final DrivetrainSubsystem drivetrain;
     final SlewRateLimiter rateLimiter;
 
-    final PIDController translationPID = new PIDController(4, 0, 0.1);
+    final PIDController translationPID = new PIDController(4, 0, 0.08); // d 0.1
 
     boolean resetting = true;
 

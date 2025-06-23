@@ -31,7 +31,8 @@ public class ElevatorSubsystem extends SubsystemBase {
     public static final Distance L2 = Meters.of(0.302).plus(Inches.of(2))
                                                                 .plus(Inches.of(1)); // our field-specific offset
     public static final Distance L3 = L2.plus(Inches.of(16));
-    public static final Distance L4 = Meters.of(1.46);
+    public static final Distance L4 = Meters.of(1.46)
+                                        .plus(Inches.of(0.25)); // field poles work fine without this, needed for our pink
     public static final Distance L4_ADVANCE = L2.plus(Inches.of(12)); // was +10
     public static final Distance NET = Meters.of(1.47).minus(Inches.of(1));
     public static final Distance NET_THROW = NET;
