@@ -86,7 +86,7 @@ public class Climber extends SubsystemBase {
     public Command climb() {
         return runEnd(
             () -> {
-                io.setSpeed(0.3); // was 0.4
+                io.setSpeed(0.65); // was 0.3
             },
             () -> io.setSpeed(0)
         ).until(this::shouldStopClimbing)
