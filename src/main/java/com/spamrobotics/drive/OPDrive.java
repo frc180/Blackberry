@@ -11,14 +11,14 @@ import frc.robot.subsystems.DrivetrainSubsystem.HeadingTarget;
 
 /**
  * Implements the driving strategy described in this post from 2056:
- * https://www.chiefdelphi.com/t/team-2056-op-robotics-2025-technical-binder-release/502550/36?u=ryan_s
+ * https://www.chiefdelphi.com/t/team-2056-op-robotics-2025-technical-binder-release/502550/36
  */
 public class OPDrive extends DriveStrategy {
 
     final DrivetrainSubsystem drivetrain;
     final SlewRateLimiter rateLimiter;
 
-    final PIDController translationPID = new PIDController(4, 0, 0.08); // d 0.1
+    final PIDController translationPID = new PIDController(4.25, 0, 0.1); // p 4, d 0.08
 
     boolean resetting = true;
 
