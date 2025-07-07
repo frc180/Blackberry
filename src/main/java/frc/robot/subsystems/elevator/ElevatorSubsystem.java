@@ -27,6 +27,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     // Distance presets, with 0 being the bottom of the elevator
     // public static final Distance L1 = Inches.of(0.1); // South Florida L1
     public static final Distance L1 = Meters.of(0.136).plus(Inches.of(5 - 2));
+    public static final Distance L1_BOOST = L1.plus(Inches.of(4.5));
 
     public static final Distance L2 = Meters.of(0.302).plus(Inches.of(2))
                                                                 .plus(Inches.of(1)); // our field-specific offset

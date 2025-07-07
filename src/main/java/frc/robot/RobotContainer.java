@@ -320,7 +320,8 @@ public class RobotContainer {
             Degrees.of(45)
         );
 
-        Trigger l1_2_3NearReef = targetingL2_3.or(driverL1).and(generousNearReef);
+        // Trigger l1_2_3NearReef = targetingL2_3.or(driverL1).and(generousNearReef);
+        Trigger l1_2_3NearReef = targetingL2_3.and(generousNearReef);
 
         nearReef = drivetrain.targetingReef().and(
                     drivetrain.withinTargetPoseTolerance(         
@@ -570,10 +571,11 @@ public class RobotContainer {
                 return;
             }
 
-            if (driverL1.getAsBoolean()) {
-                elevator.setPositionDirect(ElevatorSubsystem.L1);
+            // if (driverL1.getAsBoolean()) {
+            //     elevator.setPositionDirect(ElevatorSubsystem.L1);
 
-            } else if (driverL2.getAsBoolean()) {
+            // } else 
+            if (driverL2.getAsBoolean()) {
                 elevator.setPositionDirect(ElevatorSubsystem.L2);
 
             } else if (driverL3.getAsBoolean()) {
@@ -608,7 +610,7 @@ public class RobotContainer {
                                             .or(almostAtReef.debounce(0.1));
 
         Trigger directReefControl = scoringCameraDisconnected.or(testMode).or(demoMode)
-                                            .and(driverL1.or(driverL2).or(driverL3).or(driverL4));
+                                            .and(driverL2).or(driverL3).or(driverL4);
         
         Trigger finalReefTrigger = nearReefModified.and(reefDeployAllowed)
                                                     .or(isScoringCoral)
@@ -715,7 +717,16 @@ public class RobotContainer {
         final Trigger manualL1Ready = elevator.elevatorInScoringPosition.and(elevatorArmPivot.elevatorArmInScoringPosition);
         final Command manualL1Score = l1CoralEject().andThen(Commands.runOnce(() -> Robot.justScoredCoral = true));
 
-        manualL1.whileTrue(elevator.setPosition(ElevatorSubsystem.L1).alongWith(elevatorArmPivot.matchElevatorPreset()))
+        Command manualL1ChosenHeight = elevator.run(() -> {
+            if (driverL1.getAsBoolean()) {
+                elevator.setPositionDirect(ElevatorSubsystem.L1_BOOST);
+            } else {
+                elevator.setPositionDirect(ElevatorSubsystem.L1);
+            }
+        });
+
+        // manualL1.whileTrue(elevator.setPosition(ElevatorSubsystem.L1).alongWith(elevatorArmPivot.matchElevatorPreset()))
+        manualL1.whileTrue(manualL1ChosenHeight.alongWith(elevatorArmPivot.matchElevatorPreset()))
                 .onFalse(Commands.either(
                     manualL1Score,
                     Commands.none(),
