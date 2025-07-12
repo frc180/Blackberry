@@ -8,12 +8,16 @@ import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.NotLogged;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+
 import org.ironmaple.simulation.SimulatedArena;
 import com.pathplanner.lib.commands.FollowPathCommand;
 import com.pathplanner.lib.util.FlippingUtil;
@@ -30,6 +34,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.commands.DriveToPose;
 import frc.robot.util.StatusSignals;
 import frc.robot.util.simulation.SimLogic;
 import frc.robot.util.simulation.SimVisuals;
@@ -63,6 +68,8 @@ public class Robot extends TimedRobot {
     private final Alert posingModeAlert = new Alert("Robot is in Posing Mode!", AlertType.kInfo);
     private final Alert demoModeAlert = new Alert("Robot is in Demo Mode!", AlertType.kInfo);
 
+    private static Robot self = null;
+
     @Logged(name = "Battery Voltage")
     double batteryVoltage = 0;
 
@@ -87,6 +94,7 @@ public class Robot extends TimedRobot {
             config.minimumImportance = Logged.Importance.DEBUG;
         });
         Epilogue.bind(this);
+        self = this;
     }
 
     @Override
@@ -221,6 +229,10 @@ public class Robot extends TimedRobot {
 
     @Override
     public void testExit() {}
+
+    public static Command staticCurrentAuto() {
+        return self.m_autonomousCommand;
+    }
 
     StructArrayPublisher<Pose2d> aiRobotPoses = NetworkTableInstance.getDefault()
             .getStructArrayTopic("AI Robot Poses", Pose2d.struct)

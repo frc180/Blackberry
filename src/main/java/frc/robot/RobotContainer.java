@@ -20,6 +20,7 @@ package frc.robot;
 import static edu.wpi.first.units.Units.*;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.Function;
@@ -34,6 +35,7 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -203,10 +205,18 @@ public class RobotContainer {
         Command rightBargeLeftNoFront = Auto.bargeCoralAuto(Auto.rightBargeAvoidFront(true), false, rightBargeSimStart);
         Command rightBargeRightNoFront = Auto.bargeCoralAuto(Auto.rightBargeAvoidFront(false), false, rightBargeSimStart);
 
+        Command rightBargeDefenseLeft = Auto.bargeCoralAuto(Auto.rightBargeDefense(true), false, rightBargeSimStart);
+        Command rightBargeDefenseRight = Auto.bargeCoralAuto(Auto.rightBargeDefense(false), false, rightBargeSimStart);
+
+
         Command middleBargeLeft = Auto.bargeCoralAuto(Auto.middleBarge(true), true, middleBargeSimStart);
         Command middleBargeRight = Auto.bargeCoralAuto(Auto.middleBarge(false), true, middleBargeSimStart);
 
         Command middleBargeAlgae = Auto.bargeCoralAuto(Auto.middleBargeWithAlgae(false), true, middleBargeSimStart);
+
+        Command middleLeftDefense = Auto.bargeCoralAuto(Auto.middleBarge(true), true, middleBargeSimStart).withName("Defense L");
+        Command middleRightDefense = Auto.bargeCoralAuto(Auto.middleBarge(false), true, middleBargeSimStart).withName("Defense R");
+
 
         autoChooser.setDefaultOption("Do Nothing", autoDoNothing);
         autoChooser.addOption("Left Barge - 1st Left", leftBargeLeft);
@@ -218,8 +228,14 @@ public class RobotContainer {
         autoChooser.addOption("Right Barge No Front - 1st Left", rightBargeLeftNoFront);
         autoChooser.addOption("Right Barge No Front - 1st Right", rightBargeRightNoFront);
 
-        autoChooser.addOption("Middle Barge - 1st Left", middleBargeLeft);
-        autoChooser.addOption("Middle Barge - 1st Right", middleBargeRight);
+        autoChooser.addOption("No Swiping - 1st Left", rightBargeDefenseLeft);
+        autoChooser.addOption("No Swiping - 1st Right", rightBargeDefenseRight);
+
+        autoChooser.addOption("Middle - 1st Left", middleBargeLeft);
+        autoChooser.addOption("Middle - 1st Right", middleBargeRight);
+
+        // autoChooser.addOption("Middle Defense - Left", middleLeftDefense);
+        // autoChooser.addOption("Middle Defense - Right", middleRightDefense);
         if (Robot.isSimulation()) {
             autoChooser.addOption("Middle Barge - 1st Right & Algae", middleBargeAlgae);
         }
@@ -740,10 +756,10 @@ public class RobotContainer {
                        .whileTrue(elevatorArmAlgae.runSpeed(-1));
 
         // // Rehome arm
-        // algaeMode.and(driverController.rightStick()).whileTrue(Commands.sequence(
-        //     Commands.runOnce(() -> elevatorArmPivot.syncAbsolute()),
-        //     new RumbleCommand(1).withTimeout(2) 
-        // ));
+        algaeMode.and(driverController.rightStick()).whileTrue(Commands.sequence(
+            Commands.runOnce(() -> elevatorArmPivot.syncAbsolute()),
+            new RumbleCommand(1).withTimeout(2) 
+        ));
 
         // Rezero elevator
         algaeMode.and(driverController.leftStick()).whileTrue(Commands.sequence(
@@ -874,6 +890,19 @@ public class RobotContainer {
                 .until(intakeCoral.hasCoral) // at this point, the command gets interrupted by the auto coral intake trigger
                 .alongWith(Commands.runOnce(() -> Auto.seenCoralThisCycle = true))
         ).alongWith(Auto.startCoralIntake());
+
+        // Command autoDefense = Commands.defer(() -> {
+        //     double sign = Robot.isBlue() ? 1 : -1;
+        //     Pose2d robotPose = drivetrain.getPose();
+        //     Translation2d target = new Translation2d(robotPose.getX(), 7);
+
+        //     Pose2d targetPose = new Pose2d(target, robotPose.getRotation());
+        //     return new DriveToPose(drivetrain, targetPose);
+        // }, Set.of(drivetrain));
+
+        // autoDefense = Commands.either(autoDefense, Commands.none(), () -> {
+        //     return Robot.staticCurrentAuto().getName().contains("Defense");
+        // });
     
         justScoredCoral.and(autonomous).and(drivetrainAvailable).onTrue(
             Commands.either(
