@@ -60,4 +60,10 @@ public class ElevatorIOSim implements ElevatorIO {
         brakeMode = true;
         System.out.println("BRAKE MODE");
     }
+
+    @Override
+    public void realBrakeMode() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'realBrakeMode'");
+    }
 }

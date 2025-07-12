@@ -245,13 +245,13 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         // double translationKV = 0.75;
 
         double translationMaxSpeed = MAX_SPEED * 0.8;
-        double translationP = 0.15; // 0.15 on Einstein
+        double translationP = 0.3; // 0.15 on Einstein
         double translationD = 0;
         double translationKV = 1;
 
         if (Robot.isSimulation()) {
             translationMaxSpeed = MAX_SPEED * 0.8;
-            translationP = 0.15;
+            translationP = 0.3;
             translationD = 0;
             translationKV = 1;
         }
@@ -267,7 +267,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
                                         new TrapezoidProfile.Constraints(MAX_ANGULAR_RATE, MAX_ANGULAR_ACCEL));
         rotationProfiledPid.enableContinuousInput(-Math.PI, Math.PI);
 
-        if (false && Robot.isReal()) {
+        if (true || Robot.isReal()) {
             driveToStrategy = new ProfiledLookaheadDrive(this, driveToPoseProfile, xPid, yPid, xyFeedforward);
         } else {
             driveToStrategy = new OPDrive(this, 10);//new OPDrive(this, 7 * 1.5);

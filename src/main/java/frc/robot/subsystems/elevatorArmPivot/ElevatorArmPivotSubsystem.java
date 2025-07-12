@@ -38,6 +38,7 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
     public static final double L3_SCORE = Units.degreesToRotations(-6 - 2); // was -6,
     public static final double L2_SCORE = L3_SCORE;
     public static final double L1_SCORE = Units.degreesToRotations(-16.7); // Worlds
+    public static final double L1_BOOST_SCORE = Units.degreesToRotations(-10); // Worlds
     
     public static final double receiving = Units.degreesToRotations(46.4); // was 43
     public static final double receivingHP = Units.degreesToRotations(42.1);
@@ -217,8 +218,10 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
                 setArmPositionDirect(L3_SCORE);
             } else if (elevatorTarget == ElevatorSubsystem.L2) {
                 setArmPositionDirect(L2_SCORE);
-            } else if (elevatorTarget == ElevatorSubsystem.L1 || elevatorTarget == ElevatorSubsystem.L1_BOOST) {
+            } else if (elevatorTarget == ElevatorSubsystem.L1) {
                 setArmPositionDirect(L1_SCORE);
+            } else if (elevatorTarget == ElevatorSubsystem.L1_BOOST) {
+                setArmPositionDirect(L1_BOOST_SCORE);
             } else {
                 setArmPositionDirect(receiving);
             }
@@ -292,7 +295,8 @@ public class ElevatorArmPivotSubsystem extends SubsystemBase {
         if (!isInPosition()) return false;
 
         return targetPosition == L1_SCORE || targetPosition == L2_SCORE || targetPosition == L3_SCORE || 
-               targetPosition == L4_SCORE || targetPosition == netScore || targetPosition == netScoreBackwards;
+               targetPosition == L4_SCORE || targetPosition == netScore || targetPosition == netScoreBackwards ||
+               targetPosition == L1_BOOST_SCORE;
     }
 
     @NotLogged

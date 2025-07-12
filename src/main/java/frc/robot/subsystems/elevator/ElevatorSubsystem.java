@@ -27,7 +27,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     // Distance presets, with 0 being the bottom of the elevator
     // public static final Distance L1 = Inches.of(0.1); // South Florida L1
     public static final Distance L1 = Meters.of(0.136).plus(Inches.of(5 - 2));
-    public static final Distance L1_BOOST = L1.plus(Inches.of(4.5));
+    public static final Distance L1_BOOST = L1.plus(Inches.of(0.5)); // was 3.5
 
     public static final Distance L2 = Meters.of(0.302).plus(Inches.of(2))
                                                                 .plus(Inches.of(1)); // our field-specific offset
@@ -47,7 +47,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     protected static final double SOFT_UPPER_LIMIT = Meters.of(1.48).in(Meters);
     protected static final double SOFT_LOWER_LIMIT = 0;
     private static final double IN_POSITION_METERS = Inches.of(0.5).in(Meters);
-    private static final double STOW_INTERMEDIATE = Inches.of(0.2).in(Meters); // EXPERIMENT: was 0.25
+    private static final double STOW_INTERMEDIATE = Inches.of(0.4).in(Meters); // EXPERIMENT: was 0.25
     private static final boolean SOFT_STOW_ENABLED = true;
 
     private ElevatorIO io;
@@ -142,8 +142,18 @@ public class ElevatorSubsystem extends SubsystemBase {
         return setPosition(ZERO).withName("zero");
     }
 
-    public Command brakeMode() {
-        return Commands.runOnce(this::brakeModeDirect);
+    public Command rezero() {
+        return Commands.runOnce(io::zero);
+    }
+
+    // public Command brakeMode() {
+    //     return Commands.runOnce(this::brakeModeDirect);
+    // }
+
+    public Command actualBrakemode() {
+        return Commands.runOnce(() -> {
+            io.realBrakeMode();
+        });
     }
 
     public Command climbHeight() {
@@ -252,6 +262,7 @@ public class ElevatorSubsystem extends SubsystemBase {
         }
     }
 
+    @NotLogged
     public void brakeModeDirect() {
         io.brakeMode();
     }

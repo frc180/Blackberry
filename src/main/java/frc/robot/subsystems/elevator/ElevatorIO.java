@@ -29,6 +29,8 @@ public interface ElevatorIO {
 
     public void brakeMode();
 
+    public void realBrakeMode();
+
     public default void simulationPeriodic() {}
 
 }

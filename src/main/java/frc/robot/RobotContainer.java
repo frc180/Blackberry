@@ -14,9 +14,6 @@
     - Isabella B.
     - Andrew C.
     - Ryan S.
-    - Placeholder
-    - Placeholder
-    - Placeholder
 */
 package frc.robot;
 
@@ -28,7 +25,6 @@ import java.util.function.DoubleSupplier;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import com.ctre.phoenix.led.Animation;
-import com.ctre.phoenix6.controls.ControlRequest;
 import com.pathplanner.lib.util.FlippingUtil;
 import com.spamrobotics.util.Helpers;
 import com.spamrobotics.util.JoystickInputs;
@@ -59,7 +55,7 @@ import frc.robot.commands.DriveToPose;
 import frc.robot.commands.RumbleCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.DrivetrainSubsystem;
-import frc.robot.subsystems.LEDSubsystem;
+import frc.robot.subsystems.LEDSubsystemV1;
 import frc.robot.subsystems.DrivetrainSubsystem.HeadingTarget;
 import frc.robot.subsystems.DrivetrainSubsystem.PoseTarget;
 import frc.robot.subsystems.IntakeAlgae.IntakeAlgaeSubsystem;
@@ -119,7 +115,7 @@ public class RobotContainer {
     public final CoralIndexerSubsystem coralIndexer;
     @Logged(name = "Climber")
     public final Climber climber;
-    public final LEDSubsystem leds;
+    public final LEDSubsystemV1 leds;
 
     @NotLogged
     private final SendableChooser<Command> autoChooser = new SendableChooser<Command>();
@@ -172,7 +168,7 @@ public class RobotContainer {
         elevatorArmAlgae = new ElevatorArmAlgaeSubsystem();
         coralIndexer = new CoralIndexerSubsystem();
         climber = new Climber();
-        leds = new LEDSubsystem();
+        leds = new LEDSubsystemV1();
 
         autoDoNothing = Commands.none().withName("Do Nothing");
 
@@ -253,8 +249,8 @@ public class RobotContainer {
             }));
         }
 
-        SmartDashboard.putData("Climber Coast", intakeAlgaePivot.coastMode());
-        SmartDashboard.putData("Climber Brake", intakeAlgaePivot.brakeMode());
+        //SmartDashboard.putData("Climber Coast", intakeAlgaePivot.coastMode());
+        //SmartDashboard.putData("Climber Brake", intakeAlgaePivot.brakeMode());
 
         configureBindings();
 
@@ -298,7 +294,7 @@ public class RobotContainer {
         final Trigger driverIntakeAlgae = driverController.povRight();
         // Climb
         final Trigger driverReadyClimb = driverController.leftStick().and(driverController.rightStick()).and(notDemoMode); // left/right stick is M1 and M2
-        final Trigger driverStartClimb = driverController.start().and(notDemoMode);
+        final Trigger driverStartClimb = teleop.and(driverController.start().and(notDemoMode));
 
         // More complex triggers
         robotHasCoral = intakeCoral.hasCoral.or(elevatorArm.hasPartialCoral);
@@ -339,8 +335,8 @@ public class RobotContainer {
         ));
 
         atReefXY = drivetrain.withinTargetPoseTolerance(
-                        Inches.of(0.75), // was 0.75 at houston
-                        Inches.of(0.75), // was 0.75 at houston
+                        Inches.of(.875), // was 0.75 at houston
+                        Inches.of(.875), // was 0.75 at houston
                         null
         );
 
@@ -486,7 +482,7 @@ public class RobotContainer {
                             );
 
         driverReadyClimb.whileTrue(readyClimb);
-        driverStartClimb.whileTrue(climber.climb().alongWith(elevator.climbStowHeight(), elevator.brakeMode()));
+        driverStartClimb.whileTrue(climber.climb().alongWith(elevator.climbStowHeight(), elevator.actualBrakemode()));
         
         climber.hasCage.and(climber.isState(ClimberState.DEPLOYED))
                .whileTrue(new RumbleCommand(1));
@@ -628,7 +624,7 @@ public class RobotContainer {
             return next != null && next.isAlgae();
         });
 
-        final double algaeGrabSpeed = 1;  // was 0.6 sometimes dropped, 1 was too extreme
+        final double algaeGrabSpeed = 0.8;  // IRI start: 1 // was 0.6 sometimes dropped, 1 was too extreme
 
         // Algae grab from reef (start intaking algae earlier when going to descore)
         finalReefTrigger.and(targetingAlgae)
@@ -681,12 +677,13 @@ public class RobotContainer {
                                                                 return blockableTarget && driverRightReef.getAsBoolean();
                                                              });
 
-        Trigger stationaryLimit = drivetrain.almostStationary.or(targetingL2_3);
+        // Trigger stationaryLimit = drivetrain.almostStationary.or(targetingL2_3);
+        Trigger stationaryLimit = drivetrain.almostStationary;
 
         // Coral scoring sequence - kCancelIncoming means nothing else will be able to stop this command until it finishes
         atReef.and(elevator.inReefPosition)
               .and(elevatorArmPivot.elevatorArmInScoringPosition)
-              .and(stationaryLimit) // EXPERIMENT: don't check this at all (or maybe for L4 only)
+              .and(stationaryLimit)
               .and(visionScoreReady).onTrue(
             Commands.sequence(
                 Commands.runOnce(() -> Robot.currentlyScoringCoral = true)
@@ -742,18 +739,18 @@ public class RobotContainer {
                         .and(elevatorArmPivot.isAt(ElevatorArmPivotSubsystem.horizontal))
                        .whileTrue(elevatorArmAlgae.runSpeed(-1));
 
-       
-        // Rehome elevator
-        // algaeMode.and(driverController.leftStick()).whileTrue(Commands.sequence(
-        //     elevator.home(),
+        // // Rehome arm
+        // algaeMode.and(driverController.rightStick()).whileTrue(Commands.sequence(
+        //     Commands.runOnce(() -> elevatorArmPivot.syncAbsolute()),
         //     new RumbleCommand(1).withTimeout(2) 
         // ));
 
-        // Rehome arm
-        algaeMode.and(driverController.rightStick()).whileTrue(Commands.sequence(
-            Commands.runOnce(() -> elevatorArmPivot.syncAbsolute()),
+        // Rezero elevator
+        algaeMode.and(driverController.leftStick()).whileTrue(Commands.sequence(
+            elevator.rezero(),
             new RumbleCommand(1).withTimeout(2) 
         ));
+
 
         algaeMode.and(notDemoMode)
                     .whileTrue(drivetrain.targetHeadingContinuous(0.0, HeadingTarget.GYRO))
@@ -837,7 +834,8 @@ public class RobotContainer {
                 if (topColor != bottomColor) {
                     leds.setSplitColor(topColor, bottomColor);
                 } else {
-                    ControlRequest animation;
+                    // ControlRequest animation;
+                    Animation animation;
                     if (doClimbAnimation) {
                         animation = Robot.isBlue() ? leds.blueFlow : leds.redFlow;
                     } else {
@@ -989,7 +987,13 @@ public class RobotContainer {
     }
 
     private Command l1CoralEject() {
-        return elevatorArm.runSpeed(0.3).until(elevatorArm.hasNoCoral) // was .3 qual 1, .28 in wed practice
+        // Make L1 and "L1 Boost" eject at different speeds
+        Command eject = Commands.either(
+            elevatorArm.runSpeed(0.2),
+            elevatorArm.runSpeed(0.35),
+            driverController.y()
+        );
+        return eject.until(elevatorArm.hasNoCoral) // was .3 qual 1, .28 in wed practice
                           .andThen(Commands.waitSeconds(0.5));
     }
 
@@ -1000,7 +1004,7 @@ public class RobotContainer {
     private Command l4CoralEjectFlip() {
         return elevatorArm.runSpeed(L4_EJECT_SPEED).until(elevatorArm.hasNoCoral)
                           .andThen(Commands.waitSeconds(0.1))
-                          .andThen(Commands.waitSeconds(0.15).deadlineFor(elevatorArmPivot.runSpeed(0.25))); // was .15 speed
+                          .andThen(Commands.waitSeconds(0.15).deadlineFor(elevatorArmPivot.runSpeed(0.2))); // was .25, .15 before
     }
 
     private Command coralScoreEnd() {

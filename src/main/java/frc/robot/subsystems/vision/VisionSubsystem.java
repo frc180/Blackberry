@@ -82,7 +82,7 @@ public class VisionSubsystem extends TimedSubsystem {
 
     public static final Transform3d ROBOT_TO_SCORING_CAMERA = new Transform3d(
         Inches.of(9.757).in(Meters), // forward
-        Inches.of(-7.2).in(Meters), // right
+        Inches.of(-6.2).in(Meters), // right
         Inches.of(31.296).in(Meters),
         new Rotation3d(0, Units.degreesToRadians(50), 0) // downward tilt
     );
@@ -192,7 +192,7 @@ public class VisionSubsystem extends TimedSubsystem {
     @SuppressWarnings("unused")
     public VisionSubsystem() {
         try {
-            aprilTagFieldLayout = AprilTagFieldLayout.loadFromResource(AprilTagFields.k2025ReefscapeWelded.m_resourceFile);
+            aprilTagFieldLayout = AprilTagFieldLayout.loadFromResource(AprilTagFields.k2025ReefscapeAndyMark.m_resourceFile);
         } catch (Exception e) {
             aprilTagFieldLayout = null;
         }
