@@ -240,20 +240,15 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         gyroAngleSignal = trackSignal(getPigeon2().getYaw());
         gyroRateSignal = trackSignal(getPigeon2().getAngularVelocityZWorld());
         
-        // double translationP = 3.5;
-        // double translationD = 0;
-        // double translationKV = 0.75;
+        final boolean EXPERIMENTAL_DRIVE = false; // set to true to use the experimental driving strategy
 
         double translationMaxSpeed = MAX_SPEED * 0.8;
-        double translationP = 0.3; // 0.15 on Einstein
+        double translationP = 0.3; // 0.3 IRI, 0.15 Einstein
         double translationD = 0;
         double translationKV = 1;
 
-        if (Robot.isSimulation()) {
-            translationMaxSpeed = MAX_SPEED * 0.8;
-            translationP = 0.3;
-            translationD = 0;
-            translationKV = 1;
+        if (EXPERIMENTAL_DRIVE) {
+            translationP = 0;
         }
 
         xyFeedforward = new SimpleMotorFeedforward(0, translationKV, 0);
@@ -267,11 +262,13 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
                                         new TrapezoidProfile.Constraints(MAX_ANGULAR_RATE, MAX_ANGULAR_ACCEL));
         rotationProfiledPid.enableContinuousInput(-Math.PI, Math.PI);
 
-        if (true || Robot.isReal()) {
-            driveToStrategy = new ProfiledLookaheadDrive(this, driveToPoseProfile, xPid, yPid, xyFeedforward);
-        } else {
-            driveToStrategy = new OPDrive(this, 10);//new OPDrive(this, 7 * 1.5);
+        var profiledDrive = new ProfiledLookaheadDrive(this, driveToPoseProfile, xPid, yPid, xyFeedforward);
+        if (EXPERIMENTAL_DRIVE) {
+            profiledDrive.withTranslationPid(10, 1, 0, 0); // EXPERIMENT
         }
+        driveToStrategy = profiledDrive;
+
+        // driveToStrategy = new OPDrive(this, 10); originally 7 * 1.5
 
         orchestra = new Orchestra();
         var mods = getModules();

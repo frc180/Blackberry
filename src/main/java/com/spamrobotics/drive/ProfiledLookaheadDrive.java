@@ -5,6 +5,7 @@ import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
+import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
@@ -19,6 +20,9 @@ public class ProfiledLookaheadDrive extends DriveStrategy {
     final TrapezoidProfile profile;
     final PIDController xPid, yPid;
     final SimpleMotorFeedforward xyFeedforward;
+
+    PIDController translationPid = null;
+    SlewRateLimiter rateLimiter = null;
 
     final State startState = new State(0, 0);
     final State goalState = new State(0, 0);
@@ -35,6 +39,12 @@ public class ProfiledLookaheadDrive extends DriveStrategy {
         this.xyFeedforward = xyFeedforward;
     }
 
+    public ProfiledLookaheadDrive withTranslationPid(double rateLimit, double p, double i, double d) {
+        translationPid = new PIDController(p, i, d);
+        rateLimiter = new SlewRateLimiter(999999, -rateLimit, 0.0);
+        return this;
+    }
+
     @Override
     public void reset() {
         xPid.reset();
@@ -49,6 +59,14 @@ public class ProfiledLookaheadDrive extends DriveStrategy {
         if (!replanning) {
             xPid.reset();
             yPid.reset();
+            if (translationPid != null) {
+                translationPid.reset();
+                rateLimiter.reset(MathUtil.clamp(
+                    Helpers.velocityTowards(currentPose, drivetrain.getFieldRelativeSpeeds(), endPose.getTranslation()),
+                    -maxVelocity, 
+                    0
+                ));
+            }
         }
         poseStart = currentPose;
 
@@ -83,8 +101,13 @@ public class ProfiledLookaheadDrive extends DriveStrategy {
         double yOutput = yPid.calculate(currentPose.getY(), setpointTarget.getY());
 
         // Use feedforward for the X and Y axes to better reach the setpoint speed
-        double xTargetVelocity = normDirX * -setpoint.velocity;
-        double yTargetVelocity = normDirY * -setpoint.velocity;
+        double velocity = setpoint.velocity;
+        if (translationPid != null) {
+            velocity += translationPid.calculate(distance, 0);
+            velocity = rateLimiter.calculate(velocity);
+        }
+        double xTargetVelocity = normDirX * -velocity;
+        double yTargetVelocity = normDirY * -velocity;
         xOutput += xyFeedforward.calculate(xTargetVelocity);
         yOutput += xyFeedforward.calculate(yTargetVelocity);
 
