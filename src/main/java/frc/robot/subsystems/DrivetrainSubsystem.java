@@ -59,13 +59,6 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         POSE
     }
 
-    public enum PoseTarget {
-        STANDARD,
-        REEF,
-        PROCESSOR,
-        BARGE
-    }
-
     public static final double MAX_SPEED = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // Meters per second desired top speed
     public static final double MAX_SPEED_ACCEL = 5.5;
     public static final double MAX_ANGULAR_RATE = 3 * Math.PI; // 3/4 of a rotation per second max angular velocity (1.5 * Math.PI)
