@@ -1,4 +1,4 @@
-package frc.robot.util.simulation;
+package com.spamrobotics.util.simulation;
 
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.MetersPerSecond;

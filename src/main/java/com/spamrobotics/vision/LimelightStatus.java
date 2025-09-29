@@ -1,7 +1,8 @@
 package com.spamrobotics.vision;
 
+import com.spamrobotics.util.LimelightHelpers;
+
 import edu.wpi.first.wpilibj.Timer;
-import frc.robot.util.LimelightHelpers;
 
 public class LimelightStatus implements CameraStatus {
 

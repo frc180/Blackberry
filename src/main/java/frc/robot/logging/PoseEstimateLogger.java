@@ -1,10 +1,11 @@
 package frc.robot.logging;
 
+import com.spamrobotics.util.LimelightHelpers.PoseEstimate;
+
 import edu.wpi.first.epilogue.CustomLoggerFor;
 import edu.wpi.first.epilogue.logging.ClassSpecificLogger;
 import edu.wpi.first.epilogue.logging.EpilogueBackend;
 import edu.wpi.first.math.geometry.Pose2d;
-import frc.robot.util.LimelightHelpers.PoseEstimate;
 
 @CustomLoggerFor(PoseEstimate.class)
 public class PoseEstimateLogger extends ClassSpecificLogger<PoseEstimate> {

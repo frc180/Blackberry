@@ -1,13 +1,9 @@
 package frc.robot.subsystems;
 
-import static frc.robot.util.StatusSignals.trackSignal;
+import static com.spamrobotics.util.StatusSignals.trackSignal;
 import static edu.wpi.first.units.Units.*;
-import java.util.List;
-import java.util.Optional;
 import java.util.function.Supplier;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
-import com.ctre.phoenix6.Orchestra;
-import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
@@ -18,24 +14,15 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
-import com.pathplanner.lib.path.GoalEndState;
 import com.pathplanner.lib.path.PathConstraints;
-import com.pathplanner.lib.path.PathPlannerPath;
-import com.pathplanner.lib.path.Waypoint;
-import com.pathplanner.lib.util.FlippingUtil;
-import com.spamrobotics.drive.DriveStrategy;
-import com.spamrobotics.drive.OPDrive;
-import com.spamrobotics.drive.ProfiledLookaheadDrive;
-import com.spamrobotics.util.Helpers;
+import com.spamrobotics.util.simulation.MapleSimSwerveDrivetrain;
+
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.NotLogged;
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
-import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.interpolation.TimeInterpolatableBuffer;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.system.plant.DCMotor;
@@ -43,11 +30,9 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.RobotState;
@@ -57,13 +42,11 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
 import frc.robot.Robot;
 import frc.robot.RobotContainer;
 import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
-import frc.robot.util.simulation.MapleSimSwerveDrivetrain;
 
 /**
  * Class that extends the Phoenix 6 SwerveDrivetrain class and implements
@@ -84,9 +67,9 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     }
 
     public static final double MAX_SPEED = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // Meters per second desired top speed
-    public static final double MAX_SPEED_ACCEL = 5.5; // was 5 on  real robot
+    public static final double MAX_SPEED_ACCEL = 5.5;
     public static final double MAX_ANGULAR_RATE = 3 * Math.PI; // 3/4 of a rotation per second max angular velocity (1.5 * Math.PI)
-    public static final double MAX_ANGULAR_ACCEL = MAX_ANGULAR_RATE * 8; // was * 4
+    public static final double MAX_ANGULAR_ACCEL = MAX_ANGULAR_RATE * 8;
 
     private static final double kSimLoopPeriod = 0.005; // 5 ms
     private Notifier m_simNotifier = null;
@@ -95,39 +78,16 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     /** Swerve request to apply during robot-centric path following */
     private final SwerveRequest.ApplyRobotSpeeds m_pathApplyRobotSpeeds = new SwerveRequest.ApplyRobotSpeeds().withDriveRequestType(DriveRequestType.OpenLoopVoltage);
     private final SwerveRequest.ApplyRobotSpeeds applyClosedLoopSpeeds = new SwerveRequest.ApplyRobotSpeeds().withDriveRequestType(DriveRequestType.Velocity);
-    public final SwerveRequest.RobotCentric closedLoopRobotCentric = new SwerveRequest.RobotCentric().withDriveRequestType(DriveRequestType.Velocity);
-    private final SwerveRequest.SwerveDriveBrake brakeRequest = new SwerveRequest.SwerveDriveBrake();
-
-    /* Swerve requests to apply during SysId characterization */
-    private final SwerveRequest.SysIdSwerveTranslation m_translationCharacterization = new SwerveRequest.SysIdSwerveTranslation();
-    private final SwerveRequest.SysIdSwerveSteerGains m_steerCharacterization = new SwerveRequest.SysIdSwerveSteerGains();
-    private final SwerveRequest.SysIdSwerveRotation m_rotationCharacterization = new SwerveRequest.SysIdSwerveRotation();
-
-    @NotLogged
-    private boolean driveWithSetpointGenerator = false;
 
     private SwerveDriveState cachedState = null;
     private Rotation2d gyroOffset = new Rotation2d();
     private Double targetHeading = null;
     private HeadingTarget targetHeadingType = HeadingTarget.POSE;
     private double headingError = 0;
-    private PoseTarget poseTargetType = PoseTarget.STANDARD;
-    private Pose2d targetPose = null;
-    private int targetPoseTag = -1;
-    private Pose2d intermediatePose = null;
-
     private Pose2d mapleSimPose = null;
-
-    private final TimeInterpolatableBuffer<Pose2d> poseBuffer = TimeInterpolatableBuffer.createBuffer(2);
 
     @NotLogged
     private final ProfiledPIDController rotationProfiledPid;
-    @NotLogged
-    private final PIDController xPid, yPid;
-    private final SimpleMotorFeedforward xyFeedforward;
-    public final TrapezoidProfile.Constraints driveToPoseConstraints;
-    public final TrapezoidProfile driveToPoseProfile;
-    public final DriveStrategy driveToStrategy;
 
     private final StatusSignal<Angle> gyroAngleSignal;
     private final StatusSignal<AngularVelocity> gyroRateSignal;
@@ -135,8 +95,6 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     // Logging
     private double xPosition = 0;
     private double yPosition = 0;
-    private double xPidTarget = 0;
-    private double yPidTarget = 0;
     private double[] moduleSpeeds = new double[] {0, 0, 0, 0};
     private double[] moduleGoalSpeeds = new double[] {0, 0, 0, 0};
     private double moduleSpeedAvg = 0;
@@ -144,74 +102,9 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     private boolean pigeonConnected = false;
     private Alert pigeonDisconnectedAlert = new Alert("Pigeon gyro disconnected!", AlertType.kError);
 
-    private final Orchestra orchestra;
     private RobotConfig config;
 
     PathConstraints constraints = new PathConstraints(MAX_SPEED * 0.8, MAX_SPEED_ACCEL, MAX_ANGULAR_RATE, MAX_ANGULAR_ACCEL); //must be in m/s and rad/s
-
-    public final Trigger almostStationary = belowSpeed(Inches.of(1.75).per(Second)); // was 1.5 atbsoflo, 2 on wed
-
-    /* SysId routine for characterizing translation. This is used to find PID gains for the drive motors. */
-    private final SysIdRoutine m_sysIdRoutineTranslation = new SysIdRoutine(
-        new SysIdRoutine.Config(
-            null,        // Use default ramp rate (1 V/s)
-            Volts.of(4), // Reduce dynamic step voltage to 4 V to prevent brownout
-            null,        // Use default timeout (10 s)
-            // Log state with SignalLogger class
-            state -> SignalLogger.writeString("SysIdTranslation_State", state.toString())
-        ),
-        new SysIdRoutine.Mechanism(
-            output -> setControl(m_translationCharacterization.withVolts(output)),
-            null,
-            this
-        )
-    );
-
-    /* SysId routine for characterizing steer. This is used to find PID gains for the steer motors. */
-    private final SysIdRoutine m_sysIdRoutineSteer = new SysIdRoutine(
-        new SysIdRoutine.Config(
-            null,        // Use default ramp rate (1 V/s)
-            Volts.of(7), // Use dynamic voltage of 7 V
-            null,        // Use default timeout (10 s)
-            // Log state with SignalLogger class
-            state -> SignalLogger.writeString("SysIdSteer_State", state.toString())
-        ),
-        new SysIdRoutine.Mechanism(
-            volts -> setControl(m_steerCharacterization.withVolts(volts)),
-            null,
-            this
-        )
-    );
-
-    /*
-     * SysId routine for characterizing rotation.
-     * This is used to find PID gains for the FieldCentricFacingAngle HeadingController.
-     * See the documentation of SwerveRequest.SysIdSwerveRotation for info on importing the log to SysId.
-     */
-    private final SysIdRoutine m_sysIdRoutineRotation = new SysIdRoutine(
-        new SysIdRoutine.Config(
-            /* This is in radians per second², but SysId only supports "volts per second" */
-            Volts.of(Math.PI / 6).per(Second),
-            /* This is in radians per second, but SysId only supports "volts" */
-            Volts.of(Math.PI),
-            null, // Use default timeout (10 s)
-            // Log state with SignalLogger class
-            state -> SignalLogger.writeString("SysIdRotation_State", state.toString())
-        ),
-        new SysIdRoutine.Mechanism(
-            output -> {
-                /* output is actually radians per second, but SysId only supports "volts" */
-                setControl(m_rotationCharacterization.withRotationalRate(output.in(Volts)));
-                /* also log the requested output for SysId */
-                SignalLogger.writeDouble("Rotational_Rate", output.in(Volts));
-            },
-            null,
-            this
-        )
-    );
-
-    /* The SysId routine to test */
-    private SysIdRoutine m_sysIdRoutineToApply = m_sysIdRoutineTranslation;
 
     /**
      * Constructs a CTRE SwerveDrivetrain using the specified constants.
@@ -239,48 +132,10 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
 
         gyroAngleSignal = trackSignal(getPigeon2().getYaw());
         gyroRateSignal = trackSignal(getPigeon2().getAngularVelocityZWorld());
-        
-        final boolean EXPERIMENTAL_DRIVE = false; // set to true to use the experimental driving strategy
-
-        double translationMaxSpeed = MAX_SPEED * 0.8;
-        double translationP = 0.3; // 0.3 IRI, 0.15 Einstein
-        double translationD = 0;
-        double translationKV = 1;
-
-        if (EXPERIMENTAL_DRIVE) {
-            translationP = 0;
-        }
-
-        xyFeedforward = new SimpleMotorFeedforward(0, translationKV, 0);
-
-        driveToPoseConstraints = new TrapezoidProfile.Constraints(translationMaxSpeed, MAX_SPEED_ACCEL);
-        driveToPoseProfile = new TrapezoidProfile(driveToPoseConstraints);
-        xPid = new PIDController(translationP, 0, translationD);
-        yPid = new PIDController(translationP, 0, translationD);        
 
         rotationProfiledPid = new ProfiledPIDController(5, 0., 0,
                                         new TrapezoidProfile.Constraints(MAX_ANGULAR_RATE, MAX_ANGULAR_ACCEL));
         rotationProfiledPid.enableContinuousInput(-Math.PI, Math.PI);
-
-        var profiledDrive = new ProfiledLookaheadDrive(this, driveToPoseProfile, xPid, yPid, xyFeedforward);
-        if (EXPERIMENTAL_DRIVE) {
-            profiledDrive.withTranslationPid(10, 1, 0, 0); // EXPERIMENT
-        }
-        driveToStrategy = profiledDrive;
-
-        // driveToStrategy = new OPDrive(this, 10); originally 7 * 1.5
-
-        orchestra = new Orchestra();
-        var mods = getModules();
-        for (int i = 0; i < mods.length; i++) {
-            var module = mods[i];
-            orchestra.addInstrument(module.getDriveMotor(), 1);
-            orchestra.addInstrument(module.getSteerMotor(), 0);
-        }
-
-        SmartDashboard.putData("Drivetrain X PID", xPid);
-        SmartDashboard.putData("Drivetrain Y PID", yPid);
-        SmartDashboard.putNumber("Drivetrain XY Feedforward", translationKV);
 
         if (Robot.isSimulation()) {
             resetPose(new Pose2d(6.77, 4.2, Rotation2d.fromDegrees(90)));
@@ -296,10 +151,6 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     public void driveClosedLoop(ChassisSpeeds speeds) {
         speeds = ChassisSpeeds.discretize(speeds, Constants.LOOP_TIME);
         setControl(applyClosedLoopSpeeds.withSpeeds(speeds));
-    }
-
-    public Command brake() {
-        return run(() -> setControl(brakeRequest));
     }
 
     @NotLogged
@@ -341,7 +192,6 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
             Timer.delay(0.5); // Wait for simulation to update
         }
         super.resetPose(pose);
-        poseBuffer.clear();
     }
 
     @NotLogged
@@ -391,8 +241,6 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
 
     public void resetPIDs(HeadingTarget type) {
         resetHeadingPID(type);
-        // driveToPoseStart = null;
-        driveToStrategy.reset();
     }
 
     public void resetHeadingPID(HeadingTarget type) {
@@ -419,66 +267,6 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         );
     }
 
-    public void setIntermediatePose(Pose2d pose) {
-        intermediatePose = pose;
-    }
-
-    /**
-     * Returns if the drivetrain is currently targeting a pose that is for Reef scoring.
-     * @return If the drivetrain is targeting a Reef pose. If the pose is not specifically for the reef,
-     * or the pose is null, this returns false.
-     */
-    public boolean isTargetingReefPose() {
-        return poseTargetType == PoseTarget.REEF && targetPose != null;
-    }
-
-    public boolean isTargetingProcessorPose() {
-        return poseTargetType == PoseTarget.PROCESSOR && targetPose != null;
-    }
-
-    public boolean isTargetingBargePose() {
-        return poseTargetType == PoseTarget.BARGE && targetPose != null;
-    }
-
-    @NotLogged
-    public int getTargetPoseTag() {
-        return targetPoseTag;
-    }
-
-    public void setTargetPoseTag(int tag) {
-        targetPoseTag = tag;
-    }
-
-    /**
-     * Returns the pose the drivetrain is currently targeting (based on the DriveToPose command)
-     * @return The pose the drivetrain is currently targeting. If no command that targets a pose is running,
-     * this will return null.
-     */
-    public Pose2d getTargetPose() {
-        return targetPose;
-    }
-
-    /**
-     * Sets the target pose for the drivetrain. This is for tracking purposes only - setting this alone will
-     * not cause the robot to move to the pose. To follow a pose, use the DriveToPose command.
-     * @param target
-     */
-    public void setTargetPose(Pose2d target) {
-        targetPose = target;
-    }
-
-    /**
-     * Returns the type of pose we're targeting.
-     * @return The type of pose the drivetrain is targeting. STANDARD by default, or REEF for reef alignment.
-     */
-    public PoseTarget getPoseTargetType() {
-        return poseTargetType;
-    }
-
-    public void setPoseTargetType(PoseTarget type) {
-        poseTargetType = type;
-    }
-
     public Pose2d getPose() {
         return getCachedState().Pose;
     }
@@ -499,40 +287,6 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
      */
     public Pose2d getSimPose() {
         return mapleSimPose != null ? mapleSimPose : getPose();
-    }
-    
-    @NotLogged
-    public Trigger targetingReef() {
-        return new Trigger(this::isTargetingReefPose);
-    }
-
-    @NotLogged
-    public Trigger targetingProcessor() {
-        return new Trigger(this::isTargetingProcessorPose);
-    }
-
-    @NotLogged
-    public Trigger targetingBarge() {
-        return new Trigger(this::isTargetingBargePose);
-    }
-
-    public Trigger withinTargetPoseTolerance(Distance xDistance, Distance yDistance, Angle angle) {
-        return new Trigger(() -> {
-            return Helpers.withinTolerance(getPose(), targetPose, xDistance, yDistance, angle);
-        });
-    }
-
-    public Trigger withinTargetPoseDistance(Distance distance) {
-        return withinTargetPoseDistance(distance.in(Meters));
-    }
-
-    public Trigger withinTargetPoseDistance(double meters) {
-        return new Trigger(() -> {
-            if (targetPose == null) {
-                return false;
-            }
-            return getPose().getTranslation().getDistance(targetPose.getTranslation()) <= meters;
-        });
     }
 
     public Trigger withinTargetHeadingTolerance(Angle angle) {
@@ -606,38 +360,6 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         return Commands.run(() -> setTargetHeading(headingSupplier.get(), type));
     }
 
-    /**
-     * Returns a command that applies the specified control request to this swerve drivetrain.
-     *
-     * @param request Function returning the request to apply
-     * @return Command to run
-     */
-    public Command applyRequest(Supplier<SwerveRequest> requestSupplier) {
-        return run(() -> this.setControl(requestSupplier.get()));
-    }
-
-    /**
-     * Runs the SysId Quasistatic test in the given direction for the routine
-     * specified by {@link #m_sysIdRoutineToApply}.
-     *
-     * @param direction Direction of the SysId Quasistatic test
-     * @return Command to run
-     */
-    public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
-        return m_sysIdRoutineToApply.quasistatic(direction);
-    }
-
-    /**
-     * Runs the SysId Dynamic test in the given direction for the routine
-     * specified by {@link #m_sysIdRoutineToApply}.
-     *
-     * @param direction Direction of the SysId Dynamic test
-     * @return Command to run
-     */
-    public Command sysIdDynamic(SysIdRoutine.Direction direction) {
-        return m_sysIdRoutineToApply.dynamic(direction);
-    }
-
     @Override
     public void periodic() {
         pigeonConnected = gyroAngleSignal.getTimestamp().getLatency() <= 0.5;
@@ -647,17 +369,10 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
             zeroGyroscopeUsingPose();
         }
 
-        double kV = SmartDashboard.getNumber("Drivetrain XY Feedforward", 0);
-        xyFeedforward.setKv(kV);
-
         SwerveDriveState state = getCachedState();
         Pose2d pose = state.Pose;
         xPosition = pose.getX();
         yPosition = pose.getY();
-        xPidTarget = xPid.getSetpoint();
-        yPidTarget = yPid.getSetpoint();
-
-        poseBuffer.addSample(Timer.getFPGATimestamp(), pose);
 
         SwerveModuleState[] moduleStates = state.ModuleStates;
         SwerveModuleState[] moduleTargets = state.ModuleTargets;
@@ -673,6 +388,8 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
             mapleSimPose = mapleSimSwerveDrivetrain.mapleSimDrive.getSimulatedDriveTrainPose();
         }
     }
+
+    // ==================== EVERYTHING BELOW THIS LINE IS SIMULATION-RELATED ====================
 
     public SwerveDriveSimulation getDriveSim() {
         if (mapleSimSwerveDrivetrain != null) {
@@ -719,60 +436,5 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         /* Run simulation at a faster rate so PID gains behave more reasonably */
         m_simNotifier = new Notifier(mapleSimSwerveDrivetrain::update);
         m_simNotifier.startPeriodic(kSimLoopPeriod);
-    }
-
-    public PathPlannerPath getPath(double endVel, Rotation2d endRotation, boolean preventFlipping, List<Waypoint> waypoints) {
-        //note that waypoints must contain at least 2 pose2ds wrapped inside PathPlannerPath.waypointsfromPoses(waypoints)
-        PathPlannerPath path = new PathPlannerPath(waypoints, constraints, null, new GoalEndState(endVel, endRotation));
-        path.preventFlipping = preventFlipping;
-        return path;
-    }
-
-    /**
-     * Follows a path defined by a list of waypoints.
-     */
-    public Command followPath(List<Waypoint> waypoints, double endVel, Pose2d endPose, boolean preventFlipping) {
-        PathPlannerPath path = getPath(endVel, endPose.getRotation(), preventFlipping, waypoints);
-        Command pathCommand = AutoBuilder.followPath(path);
-
-        return Commands.parallel(
-            Commands.runOnce(() -> {
-                Pose2d currentEndPose = endPose;
-                if (!preventFlipping && Robot.isRed()) currentEndPose = FlippingUtil.flipFieldPose(endPose);
-                setTargetPose(currentEndPose);
-            }),
-            pathCommand
-        );
-    }
-
-    /**
-     * Follows a path defined by a list of poses, with the last pose being the end pose (position & rotation)
-     */
-    public Command followPath(List<Pose2d> path, double endVel, boolean preventFlipping) {
-        int lastIndex = path.size() - 1;
-        List<Waypoint> waypoints = PathPlannerPath.waypointsFromPoses(path.subList(0, lastIndex));
-        return followPath(waypoints, endVel, path.get(lastIndex), preventFlipping);
-    }
-
-    public Pose2d getBufferPose(double timestamp) {
-        Optional<Pose2d> pose = poseBuffer.getSample(timestamp);
-        if (pose.isPresent()) {
-            return pose.get();
-        }
-        return null;
-    }
-
-    public void sing(String song) {
-        orchestra.loadMusic(song + ".chrp");
-        orchestra.play();
-    }
-
-    public Command singCommand(String song) {
-        return runEnd(
-            ()-> {
-                if (!orchestra.isPlaying()) sing(song); 
-            },
-            orchestra::stop
-        ).until(DriverStation::isEnabled).ignoringDisable(true);
     }
 }

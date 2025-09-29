@@ -1,9 +1,10 @@
 package frc.robot.logging;
 
+import com.spamrobotics.util.LimelightHelpers.RawDetection;
+
 import edu.wpi.first.epilogue.CustomLoggerFor;
 import edu.wpi.first.epilogue.logging.ClassSpecificLogger;
 import edu.wpi.first.epilogue.logging.EpilogueBackend;
-import frc.robot.util.LimelightHelpers.RawDetection;
 
 @CustomLoggerFor(RawDetection.class)
 public class RawDetectionLogger extends ClassSpecificLogger<RawDetection> {
