@@ -12,10 +12,12 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import frc.robot.commands.CoralPlacementCycle;
 import frc.robot.commands.JoystickDriveCommand;
 import frc.robot.commands.RumbleCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.DrivetrainSubsystem;
+import frc.robot.subsystems.CoralPlacerSubsystem;
 
 @Logged
 public class RobotContainer {
@@ -31,6 +33,7 @@ public class RobotContainer {
     private final JoystickInputs inputs = new JoystickInputs();
 
     private final Telemetry logger = new Telemetry(DrivetrainSubsystem.MAX_SPEED);
+      private final CoralPlacerSubsystem placerSubsystem = new CoralPlacerSubsystem();
 
     @Logged(name = "Drivetrain")
     public final DrivetrainSubsystem drivetrain;
@@ -80,6 +83,12 @@ public class RobotContainer {
 
         // Add any additional command bindings here!
         driverController.a().whileTrue(new RumbleCommand(1));
+
+            // Coral placement at the normal speed.
+            driverController.rightTrigger().whileTrue(new CoralPlacementCycle(placerSubsystem, Constants.Commands.CORAL_OUTTAKE_SPEED));
+
+            // Coral placement at the slower speed
+            driverController.leftTrigger().whileTrue(new CoralPlacementCycle(placerSubsystem, Constants.Commands.CORAL_OUTTAKE_SLOW_SPEED));
 
         // When we're all done setting up the bindings, register telemetry
         drivetrain.registerTelemetry(logger::telemeterize);
