@@ -80,7 +80,6 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
 
     /** Swerve request to apply during robot-centric path following */
     private final SwerveRequest.ApplyRobotSpeeds m_pathApplyRobotSpeeds = new SwerveRequest.ApplyRobotSpeeds().withDriveRequestType(DriveRequestType.OpenLoopVoltage);
-    private final SwerveRequest.ApplyRobotSpeeds applyClosedLoopSpeeds = new SwerveRequest.ApplyRobotSpeeds().withDriveRequestType(DriveRequestType.Velocity);
     public final SwerveRequest.RobotCentric closedLoopRobotCentric = new SwerveRequest.RobotCentric().withDriveRequestType(DriveRequestType.Velocity);
 
     private SwerveDriveState cachedState = null;
@@ -128,11 +127,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     ) {
         super(drivetrainConstants, MapleSimSwerveDrivetrain.regulateModuleConstantsForSimulation(modules));
         if (Utils.isSimulation()) {
-            if (RobotContainer.MAPLESIM) {
-                startMapleSimThread();
-            } else {
-                startCTRESimThread();
-            }
+            startMapleSimThread();
         }
         configureAutoBuilder();
 
@@ -161,11 +156,6 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     public void drive(ChassisSpeeds speeds) {        
         speeds = ChassisSpeeds.discretize(speeds, Constants.LOOP_TIME);
         setControl(m_pathApplyRobotSpeeds.withSpeeds(speeds));
-    }
-
-    public void driveClosedLoop(ChassisSpeeds speeds) {
-        speeds = ChassisSpeeds.discretize(speeds, Constants.LOOP_TIME);
-        setControl(applyClosedLoopSpeeds.withSpeeds(speeds));
     }
 
     @NotLogged
@@ -298,14 +288,6 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
 
     public void clearCache() {
         cachedState = null;
-    }
-
-    /**
-     * When running in sim, this will return the pose of the robot as simulated by MapleSim (if it is running).
-     * Otherwise, if in real life or if not using MapleSim, this returns the same as {@link #getPose()}.
-     */
-    public Pose2d getSimPose() {
-        return mapleSimPose != null ? mapleSimPose : getPose();
     }
 
     public Trigger withinTargetHeadingTolerance(Angle angle) {
@@ -464,27 +446,19 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
 
     // ==================== EVERYTHING BELOW THIS LINE IS SIMULATION-RELATED ====================
 
+    /**
+     * When running in sim, this will return the pose of the robot as simulated by MapleSim (if it is running).
+     * Otherwise, if in real life or if not using MapleSim, this returns the same as {@link #getPose()}.
+     */
+    public Pose2d getSimPose() {
+        return mapleSimPose != null ? mapleSimPose : getPose();
+    }
+
     public SwerveDriveSimulation getDriveSim() {
         if (mapleSimSwerveDrivetrain != null) {
             return mapleSimSwerveDrivetrain.mapleSimDrive;
         }
         return null;
-    }
-
-    // Original CTRE code
-    private void startCTRESimThread() {
-        m_lastSimTime = Utils.getCurrentTimeSeconds();
-
-        /* Run simulation at a faster rate so PID gains behave more reasonably */
-        m_simNotifier = new Notifier(() -> {
-            final double currentTime = Utils.getCurrentTimeSeconds();
-            double deltaTime = currentTime - m_lastSimTime;
-            m_lastSimTime = currentTime;
-
-            /* use the measured time delta, get battery voltage from WPILib */
-            updateSimState(deltaTime, RobotController.getBatteryVoltage());
-        });
-        m_simNotifier.startPeriodic(kSimLoopPeriod);
     }
 
     private MapleSimSwerveDrivetrain mapleSimSwerveDrivetrain = null;

@@ -24,26 +24,23 @@ import frc.robot.subsystems.DrivetrainSubsystem;
 
 @Logged
 public class RobotContainer {
-    /**
-     * Set this to false to disable MapleSim in simulation
-     */
-    private static final boolean USE_MAPLESIM = true;
 
-    public static final boolean MAPLESIM = USE_MAPLESIM && Robot.isSimulation();
-    public static final double DEADBAND = 0.025;
+    // Controller inputs within this range will be set to 0, to prevent
+    // accidental movement when the joystick is near the center.
+    public static final double CONTROLLER_DEADBAND = 0.025;
 
     public final CommandXboxController driverController = new CommandXboxController(0);
     private final JoystickInputs inputs = new JoystickInputs();
 
-    private final Telemetry logger = new Telemetry(DrivetrainSubsystem.MAX_SPEED);
-
     @Logged(name = "Drivetrain")
     public final DrivetrainSubsystem drivetrain;
+    @Logged(name = "Placer")
     public final CoralPlacerSubsystem placerSubsystem;
 
     @NotLogged
     private final SendableChooser<Command> autoChooser = new SendableChooser<Command>();
 
+    private final Telemetry logger = new Telemetry(DrivetrainSubsystem.MAX_SPEED);
     public static RobotContainer instance;
 
     public RobotContainer() {
@@ -77,7 +74,7 @@ public class RobotContainer {
 
         final Supplier<JoystickInputs> joystickInputsSupplier = () -> {
             return inputs.of(-driverController.getLeftY(), -driverController.getLeftX())
-                            .deadband(DEADBAND)
+                            .deadband(CONTROLLER_DEADBAND)
                             .polarDistanceTransform(JoystickInputs.SQUARE_KEEP_SIGN)
                             .clamp(1)
                             .transform(axisToLinearSpeed);
@@ -109,7 +106,7 @@ public class RobotContainer {
      * Apply a deadband and square the inputs to make driving easier at low speeds.
      */
     private static double modifyAxis(double value) {
-        value = MathUtil.applyDeadband(value, DEADBAND);
+        value = MathUtil.applyDeadband(value, CONTROLLER_DEADBAND);
         return Math.copySign(value * value, value);
     }
 }

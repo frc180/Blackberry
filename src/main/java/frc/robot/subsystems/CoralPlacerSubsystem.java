@@ -4,6 +4,8 @@ import com.ctre.phoenix6.configs.OpenLoopRampsConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.sim.TalonFXSimState;
+import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.epilogue.NotLogged;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.RobotController;
@@ -14,10 +16,13 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.commands.CoralPlacementCycle;
 
+@Logged
 public class CoralPlacerSubsystem extends SubsystemBase {
     private final TalonFX placerMotor;
 
+    // Simulation variables
     private final double kGearRatio = 1;
+    @NotLogged
     private final DCMotor motorModel = DCMotor.getNeo550(1);
     private final DCMotorSim m_motorSimModel = new DCMotorSim(
         LinearSystemId.createDCMotorSystem(
