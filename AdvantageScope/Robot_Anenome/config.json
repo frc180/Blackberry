@@ -1,0 +1,23 @@
+{
+  "name": "Anenome",
+  "sourceUrl": "",
+  "rotations": [ {"axis": "x", "degrees": 90 }, {"axis": "z", "degrees": 270 } ],
+  "position": [0, 0, -0.01],
+  "cameras": [ 
+    {
+      "name": "Scoring Camera",
+      "rotations": [],
+      "position": [0, 0, 0],
+      "resolution": [1280, 960],
+      "fov": 82
+    }
+  ],
+  "components": [
+	{
+		"zeroedRotations": [ { "axis": "x", "degrees": 90 }, 
+							{ "axis": "y", "degrees": 0 },
+							{"axis": "z", "degrees": 0 } ],
+		"zeroedPosition": [0.31, 0, -0.2]
+	}
+  ]
+}
