@@ -88,11 +88,12 @@ public class RobotContainer {
         // Set up NamedCommands used in PathPlanner
         NamedCommands.registerCommand("scoreCoral", scoreCoral);
         Command middleAuto = new PathPlannerAuto("Middle Auto");
-
+Command TopAuto = new PathPlannerAuto("Top Auto");
         autoChooser.setDefaultOption("Do Nothing", Commands.none());
         // autoChooser.addOption("Blue Left Auto", Auto.getBlueLeftAuto(drivetrain, placerSubsystem, new Pose2d(7.5, 7.1, Rotation2d.fromDegrees(130))));
         autoChooser.addOption("Middle Auto", middleAuto);
         autoChooser.addOption("Right Auto", rightAutoV2);
+        autoChooser.addOption("Top Auto", TopAuto);
         SmartDashboard.putData("Auto Mode", autoChooser);
 
         configureBindings();
