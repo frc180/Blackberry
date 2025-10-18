@@ -1,5 +1,6 @@
 package frc.robot;
 
+import java.util.function.Consumer;
 import java.util.function.DoubleSupplier;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -67,44 +68,56 @@ public class RobotContainer {
         //     placerSubsystem.setSpeed(1).withTimeout(1.5)
         // );
 
-        Trigger closeToTarget = drivetrain.withinTargetPoseDistance(0.02);
 
         Command rightAutoV2 = Commands.sequence(
             Commands.print("Right auto start!"),
             Commands.runOnce(() -> {
-                Pose2d startPose = new Pose2d(10.3, 7.1, new Rotation2d(0));
-                if (Robot.isBlue()) {
-                    startPose = FlippingUtil.flipFieldPose(startPose);
-                }
+                Pose2d startPose = alliancePose(10.3, 7.7, 0);
                 drivetrain.resetPose(startPose);
             }),
-            drivetrain.driveTo(this::getRightScoringPosition).until(closeToTarget),
-            placerSubsystem.setSpeed(1).withTimeout(1.5)
+            driveTillClose(this::getRightScoringPosition),
+            placerSubsystem.scoreCoral(),
+            driveTillClose(this::getRightLeavePosition)
         );
 
-        Command scoreCoral = placerSubsystem.setSpeed(Constants.Commands.CORAL_OUTTAKE_SPEED)
-                                            .withTimeout(1);
-
         // Set up NamedCommands used in PathPlanner
-        NamedCommands.registerCommand("scoreCoral", scoreCoral);
+        NamedCommands.registerCommand("scoreCoral", placerSubsystem.scoreCoral());
         Command middleAuto = new PathPlannerAuto("Middle Auto");
-Command TopAuto = new PathPlannerAuto("Top Auto");
+        Command TopAuto = new PathPlannerAuto("Top Auto");
+
         autoChooser.setDefaultOption("Do Nothing", Commands.none());
         // autoChooser.addOption("Blue Left Auto", Auto.getBlueLeftAuto(drivetrain, placerSubsystem, new Pose2d(7.5, 7.1, Rotation2d.fromDegrees(130))));
-        autoChooser.addOption("Middle Auto", middleAuto);
         autoChooser.addOption("Right Auto", rightAutoV2);
-        autoChooser.addOption("Top Auto", TopAuto);
+        autoChooser.addOption("Middle Auto", middleAuto);
+        autoChooser.addOption("Left Auto", TopAuto);
         SmartDashboard.putData("Auto Mode", autoChooser);
 
         configureBindings();
     }
 
     private Pose2d getRightScoringPosition() {
-        Pose2d rightScoringPose = new Pose2d(12.5, 5.25, Rotation2d.fromDegrees(-60));
+        return alliancePose(12.5, 5.25, -60);
+    }
+
+    private Pose2d getRightLeavePosition() {
+        return alliancePose(16.3, 7.1, 50);
+    }
+
+    private Pose2d alliancePose(Pose2d redPose) {
         if (Robot.isBlue()) {
-            rightScoringPose = FlippingUtil.flipFieldPose(rightScoringPose);
+            return FlippingUtil.flipFieldPose(redPose);
+        } else {
+            return redPose;
         }
-        return rightScoringPose;
+    }
+
+    private Command driveTillClose(Supplier<Pose2d> target) {
+        return drivetrain.driveTo(target).until(drivetrain.withinTargetPoseDistance(0.02));
+    }
+
+    private Pose2d alliancePose(double x, double y, double degrees) {
+        Pose2d redPose = new Pose2d(x, y, Rotation2d.fromDegrees(degrees));
+        return alliancePose(redPose);
     }
 
     private void configureBindings() {
@@ -135,7 +148,7 @@ Command TopAuto = new PathPlannerAuto("Top Auto");
         driverController.a().whileTrue(new RumbleCommand(1));
 
         // Coral placement at the normal speed.
-        driverController.rightTrigger().whileTrue(placerSubsystem.setSpeed(Constants.Commands.CORAL_OUTTAKE_SPEED));
+        driverController.rightBumper().whileTrue(placerSubsystem.setSpeed(Constants.Commands.CORAL_OUTTAKE_SPEED));
 
         // Coral placement at the slower speed
         driverController.leftTrigger().whileTrue(placerSubsystem.setSpeed(Constants.Commands.CORAL_OUTTAKE_SLOW_SPEED));

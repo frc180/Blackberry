@@ -16,7 +16,7 @@ public class Constants {
 
     // CAN IDs for TalonFX.
     public static final class CAN {
-        public static final int CORAL_PLACER_ID = 20; // CAN ID for CoralPlacer.
+        public static final int CORAL_PLACER_ID = 24; // CAN ID for CoralPlacer.
     }
 
     // Motor configurations for CoralPlacer.
