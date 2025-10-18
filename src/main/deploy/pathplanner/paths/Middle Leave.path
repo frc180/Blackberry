@@ -8,8 +8,8 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 5.7455357142857135,
-        "y": 3.430859375
+        "x": 6.371740683740241,
+        "y": 4.0
       },
       "isLocked": false,
       "linkedName": "MiddleScore"
@@ -42,13 +42,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -0.8814039965821773
+    "rotation": 180.0
   },
   "reversed": false,
   "folder": null,
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -0.8814039965821773
+    "rotation": 180.0
   },
   "useDefaultConstraints": true
 }

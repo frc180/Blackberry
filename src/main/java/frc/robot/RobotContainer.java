@@ -5,6 +5,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
+import com.pathplanner.lib.util.FlippingUtil;
 import com.spamrobotics.util.JoystickInputs;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.NotLogged;
@@ -16,6 +17,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.commands.JoystickDriveCommand;
 import frc.robot.commands.RumbleCommand;
 import frc.robot.generated.TunerConstants;
@@ -49,6 +51,37 @@ public class RobotContainer {
         drivetrain = TunerConstants.createDrivetrain();
         placerSubsystem = new CoralPlacerSubsystem();
 
+        // Command rightAuto = Commands.sequence(
+        //     Commands.print("Right auto start!"),
+        //     Commands.runOnce(() -> {
+        //         // "Pose" = x, y, rotation
+        //         Pose2d startPose = new Pose2d(10.3, 7.1, new Rotation2d(0));
+        //         if (Robot.isBlue()) {
+        //             startPose = FlippingUtil.flipFieldPose(startPose);
+        //         }
+        //         drivetrain.resetPose(startPose);
+        //     }),
+        //     drivetrain.driveDistance(1.1),
+        //     drivetrain.turnDegrees(-60),
+        //     drivetrain.driveDistance(2.2),
+        //     placerSubsystem.setSpeed(1).withTimeout(1.5)
+        // );
+
+        Trigger closeToTarget = drivetrain.withinTargetPoseDistance(0.02);
+
+        Command rightAutoV2 = Commands.sequence(
+            Commands.print("Right auto start!"),
+            Commands.runOnce(() -> {
+                Pose2d startPose = new Pose2d(10.3, 7.1, new Rotation2d(0));
+                if (Robot.isBlue()) {
+                    startPose = FlippingUtil.flipFieldPose(startPose);
+                }
+                drivetrain.resetPose(startPose);
+            }),
+            drivetrain.driveTo(this::getRightScoringPosition).until(closeToTarget),
+            placerSubsystem.setSpeed(1).withTimeout(1.5)
+        );
+
         Command scoreCoral = placerSubsystem.setSpeed(Constants.Commands.CORAL_OUTTAKE_SPEED)
                                             .withTimeout(1);
 
@@ -57,11 +90,20 @@ public class RobotContainer {
         Command middleAuto = new PathPlannerAuto("Middle Auto");
 
         autoChooser.setDefaultOption("Do Nothing", Commands.none());
-        autoChooser.addOption("Blue Left Auto", Auto.getBlueLeftAuto(drivetrain, placerSubsystem, new Pose2d(7.5, 7.1, Rotation2d.fromDegrees(130))));
-        autoChooser.addOption("Pathplanner Middle Auto", middleAuto);
+        // autoChooser.addOption("Blue Left Auto", Auto.getBlueLeftAuto(drivetrain, placerSubsystem, new Pose2d(7.5, 7.1, Rotation2d.fromDegrees(130))));
+        autoChooser.addOption("Middle Auto", middleAuto);
+        autoChooser.addOption("Right Auto", rightAutoV2);
         SmartDashboard.putData("Auto Mode", autoChooser);
 
         configureBindings();
+    }
+
+    private Pose2d getRightScoringPosition() {
+        Pose2d rightScoringPose = new Pose2d(12.5, 5.25, Rotation2d.fromDegrees(-60));
+        if (Robot.isBlue()) {
+            rightScoringPose = FlippingUtil.flipFieldPose(rightScoringPose);
+        }
+        return rightScoringPose;
     }
 
     private void configureBindings() {
