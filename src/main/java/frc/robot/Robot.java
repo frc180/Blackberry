@@ -17,7 +17,7 @@ import com.pathplanner.lib.commands.FollowPathCommand;
 import com.spamrobotics.util.StatusSignals;
 import com.spamrobotics.util.simulation.SimulatedAIRobot;
 
-import edu.wpi.first.epilogue.Epilogue;
+// import edu.wpi.first.epilogue.Epilogue;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DataLogManager;
@@ -48,11 +48,11 @@ public class Robot extends TimedRobot {
         DataLogManager.start();
         DriverStation.startDataLog(DataLogManager.getLog());
 
-        Epilogue.configure(config -> {
-            config.minimumImportance = Logged.Importance.DEBUG;
-        });
-        Epilogue.bind(this);
-        self = this;
+        // Epilogue.configure(config -> {
+        //     config.minimumImportance = Logged.Importance.DEBUG;
+        // });
+        // Epilogue.bind(this);
+        // self = this;
     }
 
     @Override

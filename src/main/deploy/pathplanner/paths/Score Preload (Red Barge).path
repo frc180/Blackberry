@@ -1,0 +1,54 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 7.302482876712329,
+        "y": 1.8462756849315065
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 8.302482876712329,
+        "y": 1.8462756849315065
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 3.5761130136986297,
+        "y": 2.943150684931507
+      },
+      "prevControl": {
+        "x": 2.163698630136986,
+        "y": 1.9063784246575342
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "AtCoralStation (Red Barge)"
+    }
+  ],
+  "rotationTargets": [],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 3.0,
+    "maxAcceleration": 3.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": 57.3807569288072
+  },
+  "reversed": false,
+  "folder": "Red Barge",
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": 0.0
+  },
+  "useDefaultConstraints": true
+}

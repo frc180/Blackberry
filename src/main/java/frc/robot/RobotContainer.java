@@ -5,7 +5,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import com.spamrobotics.util.JoystickInputs;
-
+import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.NotLogged;
 import edu.wpi.first.math.MathUtil;
@@ -22,7 +22,7 @@ import frc.robot.commands.RumbleCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CoralPlacerSubsystem;
 import frc.robot.subsystems.DrivetrainSubsystem;
-
+import com.pathplanner.lib.auto.AutoBuilder;
 
 @Logged
 public class RobotContainer {
@@ -48,7 +48,7 @@ public class RobotContainer {
     // public final ClimberSubsystem climber;
 
     @NotLogged
-    private final SendableChooser<Command> autoChooser = new SendableChooser<Command>();
+    private final SendableChooser<Command> autoChooser;
 
     public static RobotContainer instance;
 
@@ -56,12 +56,14 @@ public class RobotContainer {
         instance = this;
 
         drivetrain = TunerConstants.createDrivetrain();
+        NamedCommands.registerCommand("placeCoral", new CoralPlacementCycle(placerSubsystem, Constants.Commands.CORAL_OUTTAKE_SPEED, Constants.Commands.PLACE_CORAL_DURATION_SECONDS));
+        autoChooser = AutoBuilder.buildAutoChooser();
         // Here's where you'd create any additional subsystems, like so:
         // climber = new ClimberSubsystem();
 
-        autoChooser.setDefaultOption("Do Nothing", Commands.none());
+        // autoChooser.setDefaultOption("Do Nothing", Commands.none());
         // autoChooser.addOption("Say Hello", Commands.print("Hello, World!"));
-        autoChooser.addOption("Blue Left Auto", Auto.getBlueLeftAuto(drivetrain, placerSubsystem, new Pose2d(7.5, 7.1, Rotation2d.fromDegrees(130))));
+        // autoChooser.addOption("Blue Left Auto", Auto.getBlueLeftAuto(drivetrain, placerSubsystem, new Pose2d(7.5, 7.1, Rotation2d.fromDegrees(130))));
 
         SmartDashboard.putData("Auto Mode", autoChooser);
 

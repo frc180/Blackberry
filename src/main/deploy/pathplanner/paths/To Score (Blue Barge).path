@@ -1,0 +1,54 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 1.4124143835616438,
+        "y": 7.180393835616439
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 1.4517209576541206,
+        "y": 7.427284485972244
+      },
+      "isLocked": false,
+      "linkedName": "AtCoralStation (Blue Barge)"
+    },
+    {
+      "anchor": {
+        "x": 3.771,
+        "y": 5.212029109589041
+      },
+      "prevControl": {
+        "x": 3.4782156028103,
+        "y": 5.490740896264697
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "Scoring (Blue Barge)"
+    }
+  ],
+  "rotationTargets": [],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 3.0,
+    "maxAcceleration": 3.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": -59.74356283647083
+  },
+  "reversed": false,
+  "folder": "Blue Barge",
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": 125.53767779197437
+  },
+  "useDefaultConstraints": true
+}

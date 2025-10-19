@@ -3,45 +3,45 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 7.803995901639343,
-        "y": 6.955993852459016
+        "x": 7.2273544520547945,
+        "y": 6.188698630136986
       },
       "prevControl": null,
       "nextControl": {
-        "x": 6.221618852459016,
-        "y": 5.55343237704918
+        "x": 7.856390925577282,
+        "y": 6.1336090683631115
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 6.2336065573770485,
-        "y": 5.577407786885245
+        "x": 4.597859589041096,
+        "y": 6.188698630136986
       },
       "prevControl": {
-        "x": 6.821004098360655,
-        "y": 6.068903688524588
+        "x": 4.856670712034686,
+        "y": 6.341487472786796
       },
       "nextControl": {
-        "x": 5.854569859143371,
-        "y": 5.260254631220332
+        "x": 4.3825751482059445,
+        "y": 6.061605713204938
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 5.38247950819672,
-        "y": 5.001997950819672
+        "x": 3.771,
+        "y": 5.212029109589041
       },
       "prevControl": {
-        "x": 6.209631147540984,
-        "y": 5.457530737704917
+        "x": 3.822528720265858,
+        "y": 5.456661059644145
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "Scoring (Blue Barge)"
     }
   ],
   "rotationTargets": [],
@@ -49,22 +49,22 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 3,
-    "maxAcceleration": 3,
-    "maxAngularVelocity": 540,
-    "maxAngularAcceleration": 720,
+    "maxVelocity": 3.0,
+    "maxAcceleration": 3.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
     "unlimited": false
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -127.56859202882738
+    "rotation": -59.74356283647083
   },
   "reversed": false,
-  "folder": null,
+  "folder": "Blue Barge",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -170.13419305691576
+    "rotation": 0.0
   },
-  "useDefaultConstraints": false
+  "useDefaultConstraints": true
 }
