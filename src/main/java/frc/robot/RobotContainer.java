@@ -1,6 +1,5 @@
 package frc.robot;
 
-import java.util.function.Consumer;
 import java.util.function.DoubleSupplier;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -18,7 +17,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.commands.JoystickDriveCommand;
 import frc.robot.commands.RumbleCommand;
 import frc.robot.generated.TunerConstants;
@@ -68,7 +66,6 @@ public class RobotContainer {
         //     placerSubsystem.setSpeed(1).withTimeout(1.5)
         // );
 
-
         Command rightAutoV2 = Commands.sequence(
             Commands.print("Right auto start!"),
             Commands.runOnce(() -> {
@@ -77,7 +74,8 @@ public class RobotContainer {
             }),
             driveTillClose(this::getRightScoringPosition),
             placerSubsystem.scoreCoral(),
-            driveTillClose(this::getRightLeavePosition)
+            driveTillClose(this::getRightLeavePosition, 3),
+            driveTillClose(this::getRightHPPosition)
         );
 
         // Set up NamedCommands used in PathPlanner
@@ -100,6 +98,10 @@ public class RobotContainer {
     }
 
     private Pose2d getRightLeavePosition() {
+        return alliancePose(16.3, 7.1, -60);
+    }
+
+    private Pose2d getRightHPPosition() {
         return alliancePose(16.3, 7.1, 50);
     }
 
@@ -112,7 +114,11 @@ public class RobotContainer {
     }
 
     private Command driveTillClose(Supplier<Pose2d> target) {
-        return drivetrain.driveTo(target).until(drivetrain.withinTargetPoseDistance(0.02));
+        return driveTillClose(target, 0.02);
+    }
+
+    private Command driveTillClose(Supplier<Pose2d> target, double withinMeters) {
+        return drivetrain.driveTo(target).until(drivetrain.withinTargetPoseDistance(withinMeters));
     }
 
     private Pose2d alliancePose(double x, double y, double degrees) {
