@@ -153,8 +153,11 @@ public class RobotContainer {
 
         driverController.a().whileTrue(new RumbleCommand(1));
 
+    
+        placerSubsystem.setDefaultCommand(placerSubsystem.setSpeed(Constants.Commands.CORAL_HOLD_SPEED));
+
         // Coral placement at the normal speed.
-        driverController.rightBumper().whileTrue(placerSubsystem.setSpeed(Constants.Commands.CORAL_OUTTAKE_SPEED));
+        driverController.rightTrigger().whileTrue(placerSubsystem.setSpeed(Constants.Commands.CORAL_OUTTAKE_SPEED));
 
         // Coral placement at the slower speed
         driverController.leftTrigger().whileTrue(placerSubsystem.setSpeed(Constants.Commands.CORAL_OUTTAKE_SLOW_SPEED));
