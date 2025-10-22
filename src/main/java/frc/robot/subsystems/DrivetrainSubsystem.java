@@ -14,15 +14,10 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
-import com.pathplanner.lib.path.PathConstraints;
-import com.spamrobotics.drive.DriveStrategy;
-import com.spamrobotics.drive.ProfiledLookaheadDrive;
-import com.pathplanner.lib.util.FlippingUtil;
 import com.spamrobotics.drive.DriveStrategy;
 import com.spamrobotics.drive.ProfiledLookaheadDrive;
 import com.spamrobotics.util.Helpers;
 import com.spamrobotics.util.simulation.MapleSimSwerveDrivetrain;
-
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.NotLogged;
 import edu.wpi.first.math.MathUtil;
@@ -43,7 +38,6 @@ import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Notifier;
-import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.Alert.AlertType;
@@ -53,7 +47,6 @@ import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants;
 import frc.robot.Robot;
-import frc.robot.RobotContainer;
 import frc.robot.commands.DriveToPose;
 import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
@@ -70,7 +63,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
     }
 
     public static final double MAX_SPEED = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // Meters per second desired top speed
-    public static final double MAX_SPEED_ACCEL = 5.5;
+    public static final double MAX_SPEED_ACCEL = 3;
     public static final double MAX_ANGULAR_RATE = 3 * Math.PI; // 3/4 of a rotation per second max angular velocity (1.5 * Math.PI)
     public static final double MAX_ANGULAR_ACCEL = MAX_ANGULAR_RATE * 8;
 
@@ -109,8 +102,6 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
 
     private RobotConfig config;
 
-    PathConstraints constraints = new PathConstraints(MAX_SPEED * 0.8, MAX_SPEED_ACCEL, MAX_ANGULAR_RATE, MAX_ANGULAR_ACCEL); //must be in m/s and rad/s
-
     /**
      * Constructs a CTRE SwerveDrivetrain using the specified constants.
      * <p>
@@ -141,7 +132,7 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         double translationP = 0.3;
         driveToStrategy = new ProfiledLookaheadDrive(
             this,
-            new TrapezoidProfile(new TrapezoidProfile.Constraints(MAX_SPEED * 0.8, MAX_SPEED_ACCEL)),
+            new TrapezoidProfile(new TrapezoidProfile.Constraints(MAX_SPEED * 0.7, MAX_SPEED_ACCEL)),
             new PIDController(translationP, 0, 0),
             new PIDController(translationP, 0, 0),
             new SimpleMotorFeedforward(0, 1, 0)

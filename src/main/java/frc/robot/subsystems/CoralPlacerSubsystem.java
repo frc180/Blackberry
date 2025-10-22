@@ -82,7 +82,7 @@ public class CoralPlacerSubsystem extends SubsystemBase {
 
     public Command scoreCoral() {
         return setSpeed(Constants.Commands.CORAL_OUTTAKE_SPEED)
-                .withTimeout(1);
+                .withTimeout(Constants.Commands.PLACE_CORAL_DURATION_SECONDS);
     }
 
     @Override

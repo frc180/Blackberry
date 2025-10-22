@@ -87,6 +87,7 @@ public class Robot extends TimedRobot {
     public void autonomousInit() {
         // Start the selected autonomous command
         robotContainer.placerSubsystem.hasCoral = true;
+        // robotContainer.drivetrain.zeroGyroscope();
         autonomousCommand = robotContainer.getAutonomousCommand();
         if (autonomousCommand != null) {
             autonomousCommand.schedule();
