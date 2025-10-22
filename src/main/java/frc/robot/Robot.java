@@ -40,6 +40,7 @@ public class Robot extends TimedRobot {
     private final RobotContainer robotContainer;
 
     private final Alert controllerDisconnectedAlert = new Alert("Setup - Driver controller not connected!", AlertType.kError);
+    private final Alert noAutoAlert = new Alert("Setup - No autonomous selected!", AlertType.kError);
     private static Robot self = null;
 
     public Robot() {
@@ -74,6 +75,9 @@ public class Robot extends TimedRobot {
     @Override
     public void disabledPeriodic() {
         controllerDisconnectedAlert.set(!robotContainer.driverController.isConnected());
+        Command selectedAuto = robotContainer.getAutonomousCommand();
+        boolean noAuto = selectedAuto == null || selectedAuto.getName().equals("Do Nothing");
+        noAutoAlert.set(noAuto);
     }
 
     @Override

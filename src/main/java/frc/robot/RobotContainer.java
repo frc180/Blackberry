@@ -83,7 +83,7 @@ public class RobotContainer {
         Command middleAuto = new PathPlannerAuto("Middle Auto");
         Command TopAuto = new PathPlannerAuto("Top Auto");
 
-        autoChooser.setDefaultOption("Do Nothing", Commands.none());
+        autoChooser.setDefaultOption("Do Nothing", Commands.none().withName("Do Nothing"));
         // autoChooser.addOption("Blue Left Auto", Auto.getBlueLeftAuto(drivetrain, placerSubsystem, new Pose2d(7.5, 7.1, Rotation2d.fromDegrees(130))));
         autoChooser.addOption("Right Auto", rightAutoV2);
         autoChooser.addOption("Middle Auto", middleAuto);
