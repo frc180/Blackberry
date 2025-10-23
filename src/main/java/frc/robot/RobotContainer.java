@@ -21,6 +21,7 @@ import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CoralPlacerSubsystem;
 import frc.robot.subsystems.DrivetrainSubsystem;
 import frc.robot.subsystems.DrivetrainSubsystem.HeadingTarget;
+import frc.robot.subsystems.vision.VisionSubsystem;
 
 @Logged
 public class RobotContainer {
@@ -38,6 +39,8 @@ public class RobotContainer {
     public final DrivetrainSubsystem drivetrain;
     @Logged(name = "Placer")
     public final CoralPlacerSubsystem placerSubsystem;
+    // @Logged(name = "Vision")
+    // public final VisionSubsystem vision;
 
     @NotLogged
     private final SendableChooser<Command> autoChooser = new SendableChooser<Command>();
@@ -50,6 +53,7 @@ public class RobotContainer {
 
         drivetrain = TunerConstants.createDrivetrain();
         placerSubsystem = new CoralPlacerSubsystem();
+        //vision = new VisionSubsystem();
 
         Command rightAutoV2 = Commands.sequence(
             Commands.print("Right auto start!"),

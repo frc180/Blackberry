@@ -6,21 +6,15 @@ import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
 import org.photonvision.PhotonPoseEstimator.PoseStrategy;
-import org.photonvision.simulation.PhotonCameraSim;
-import org.photonvision.simulation.SimCameraProperties;
-import org.photonvision.simulation.VisionSystemSim;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
-
-import com.spamrobotics.util.LimelightHelpers.PoseEstimate;
-import com.spamrobotics.util.LimelightHelpers.RawFiducial;
-
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import frc.robot.Robot;
 import frc.robot.RobotContainer;
+import frc.robot.util.LimelightHelpers.PoseEstimate;
+import frc.robot.util.LimelightHelpers.RawFiducial;
 
 /**
  * Simulates a Limelight 4 using PhotonVision.
@@ -32,33 +26,22 @@ public class SimCamera {
     final PhotonCamera camera;
     final PhotonPoseEstimator photonPoseEstimator;
 
-    VisionSystemSim visionSim = null;
-    PhotonCameraSim cameraSim = null;
+    EasyPhotonvisionSimulator sim = null;
 
     public SimCamera(String name, Transform3d cameraPosition, AprilTagFieldLayout apriltagLayout) {
         camera = new PhotonCamera(name);
-        photonPoseEstimator = new PhotonPoseEstimator(apriltagLayout, PoseStrategy.LOWEST_AMBIGUITY, cameraPosition);
+        photonPoseEstimator = new PhotonPoseEstimator(apriltagLayout, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, cameraPosition);
 
         // Everything past this point is simulation only
         if (Robot.isReal()) return;
 
-        visionSim = new VisionSystemSim("main");
-        visionSim.addAprilTags(apriltagLayout);
-
-        SimCameraProperties cameraProp = new SimCameraProperties();
-        // TODO: set LL4 diagonal FOV instead of horizontal (82)
-        cameraProp.setCalibration(1280, 960, Rotation2d.fromDegrees(100));
-        cameraProp.setCalibError(0.35, 0.10);
-        cameraProp.setFPS(45);
-        cameraProp.setAvgLatencyMs(50);
-        cameraProp.setLatencyStdDevMs(15);
-        // Create a PhotonCameraSim which will update the linked PhotonCamera's values with visible
-        // targets.
-        cameraSim = new PhotonCameraSim(camera, cameraProp);
-        // Add the simulated camera to view the targets on this simulated field.
-        visionSim.addCamera(cameraSim, cameraPosition);
-
-        cameraSim.enableDrawWireframe(true);
+        sim = new EasyPhotonvisionSimulator(
+            camera,
+            cameraPosition,
+            () -> RobotContainer.instance.drivetrain.getSimPose(),
+            EasyPhotonvisionSimulator.LL3G_1280_960(),
+            apriltagLayout
+        );
     }
 
     PoseEstimate poseEstimate = null;
@@ -66,7 +49,7 @@ public class SimCamera {
     double timestamp = 0;
 
     public void update() {
-        visionSim.update(RobotContainer.instance.drivetrain.getSimPose());
+        sim.update();
 
         PhotonPipelineResult latestResult = null;
         EstimatedRobotPose latestEstimate = null;

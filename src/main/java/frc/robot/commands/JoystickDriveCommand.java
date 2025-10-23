@@ -2,6 +2,7 @@ package frc.robot.commands;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.Robot;
 import frc.robot.subsystems.DrivetrainSubsystem;
 import frc.robot.subsystems.DrivetrainSubsystem.HeadingTarget;
 import java.util.function.DoubleSupplier;
@@ -44,6 +45,9 @@ public class JoystickDriveCommand extends Command {
     public void execute() {
         gyroRotation = m_drivetrainSubsystem.getGyroscopeRotation();
         rotationSpeed = m_rotationSupplier.getAsDouble();
+        if (Robot.isSimulation()) {
+            rotationSpeed = -rotationSpeed;
+        }
     
         if (Math.abs(rotationSpeed) < 0.02) {
             // If we were manually rotating and have stopped, save this heading as our new target

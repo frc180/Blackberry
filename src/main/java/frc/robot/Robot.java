@@ -31,13 +31,6 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 @Logged
 public class Robot extends TimedRobot {
 
-    /**
-     * original Limelight 3G position (going to be invalid)
-     * 5/8in left
-     * 14 5/8 forward
-     * 11 3/8 high
-     */
-
     private static boolean isBlueAlliance = false;
 
     private Command autonomousCommand;
