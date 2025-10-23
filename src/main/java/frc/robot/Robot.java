@@ -21,6 +21,7 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -29,6 +30,13 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 @Logged
 public class Robot extends TimedRobot {
+
+    /**
+     * original Limelight 3G position (going to be invalid)
+     * 5/8in left
+     * 14 5/8 forward
+     * 11 3/8 high
+     */
 
     private static boolean isBlueAlliance = false;
 
@@ -58,6 +66,7 @@ public class Robot extends TimedRobot {
     @Override
     public void robotInit() {
         // Make sure Pathplanner is loaded and ready to go
+        RobotController.setBrownoutVoltage(6.5);
         FollowPathCommand.warmupCommand().schedule();
     }
 

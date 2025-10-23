@@ -5,6 +5,7 @@ import java.util.function.Supplier;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.Robot;
 import frc.robot.subsystems.DrivetrainSubsystem;
 import frc.robot.subsystems.DrivetrainSubsystem.HeadingTarget;
 
@@ -93,13 +94,17 @@ public class DriveToPose extends Command {
         drivetrain.setTargetPose(iterationTarget);
 
         final double maxSpeedMeters = DrivetrainSubsystem.MAX_SPEED * maxSpeed;
-  
-        drivetrain.setControl(drivetrain.driveToStrategy.apply(
+
+        drivetrain.driveToStrategy.apply(
             drivetrain.closedLoopRobotCentric,
             currentPose,
             iterationTarget,
             Math.min(DrivetrainSubsystem.MAX_SPEED * 0.8, maxSpeedMeters)
-        ));
+        );
+        if (Robot.isReal()) {
+            drivetrain.closedLoopRobotCentric.RotationalRate = -drivetrain.closedLoopRobotCentric.RotationalRate;
+        }
+        drivetrain.setControl(drivetrain.closedLoopRobotCentric);
     }
 
     @Override

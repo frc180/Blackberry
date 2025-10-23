@@ -3,6 +3,8 @@ package frc.robot.subsystems;
 import static com.spamrobotics.util.StatusSignals.trackSignal;
 import static edu.wpi.first.units.Units.*;
 import java.util.function.Supplier;
+
+import org.ironmaple.simulation.drivesims.COTS;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.Utils;
@@ -337,9 +339,10 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
                 this::resetPose,         // Consumer for seeding pose against auto
                 () -> getCachedState().Speeds, // Supplier of current robot speeds
                 (speeds, feedforwards) -> drive(speeds),
-                new PPHolonomicDriveController(
+                new CustomPPController(
                     new PIDConstants(2.5, 0, 0), //translation
-                    new PIDConstants(4, 0, 0)), //rotation, was 5
+                    new PIDConstants(2, 0, 0) // rotation, 2 sorta worked
+                ),
                 config,
                 Robot::isRed, //path flips for red/blue alliance
                 this // Subsystem for requirements
@@ -458,11 +461,11 @@ public class DrivetrainSubsystem extends TunerSwerveDrivetrain implements Subsys
         mapleSimSwerveDrivetrain = new MapleSimSwerveDrivetrain(
                 Seconds.of(kSimLoopPeriod),
                 Pounds.of(115), // robot weight
-                Inches.of(30), // bumper length
-                Inches.of(30), // bumper width
+                Inches.of(36.5), // bumper length
+                Inches.of(35.5), // bumper width
                 DCMotor.getKrakenX60Foc(1), // drive motor type
                 DCMotor.getKrakenX60Foc(1), // steer motor type
-                1.916, // wheel COF, Vex Grip V2
+                COTS.WHEELS.COLSONS.cof,
                 getModuleLocations(),
                 getPigeon2(),
                 getModules(),

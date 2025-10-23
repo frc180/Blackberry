@@ -64,7 +64,7 @@ public class RobotContainer {
         );
 
         // Set up NamedCommands used in PathPlanner
-        NamedCommands.registerCommand("scoreCoral", placerSubsystem.scoreCoral());
+        NamedCommands.registerCommand("scoreCoral", placerSubsystem.scoreCoral().asProxy());
         Command middleAuto = new PathPlannerAuto("Middle Auto");
         Command TopAuto = new PathPlannerAuto("Top Auto");
 
@@ -123,7 +123,7 @@ public class RobotContainer {
         };
 
         final DoubleSupplier rotationSupplier = () -> {
-            return modifyAxis(-driverController.getRightX()) * DrivetrainSubsystem.MAX_ANGULAR_RATE;
+            return modifyAxis(driverController.getRightX()) * DrivetrainSubsystem.MAX_ANGULAR_RATE;
         };
     
         drivetrain.setDefaultCommand(new JoystickDriveCommand(drivetrain, joystickInputsSupplier, rotationSupplier));

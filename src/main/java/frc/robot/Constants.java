@@ -27,7 +27,7 @@ public class Constants {
     // Command parameters for CoralPlacementCycle.
     public static final class Commands {
         public static final double CORAL_HOLD_SPEED = -0.025; // Speed at which the motor holds the coral in place.
-        public static final double CORAL_OUTTAKE_SPEED = 0.1; // Speed at which the motor pushes out the coral.
+        public static final double CORAL_OUTTAKE_SPEED = 0.125; // was 0.15. Speed at which the motor pushes out the coral.
         public static final double PLACE_CORAL_DURATION_SECONDS = 1.0; // Duration for running the CoralPlacer motor at full speed.
         public static final double CORAL_PLACEMENT_DECELERATION_SECONDS = 1.0; // How long it takes for the CoralPlacer motor to return to rest after spinning.
     }
