@@ -123,7 +123,8 @@ public class RobotContainer {
         };
 
         final DoubleSupplier rotationSupplier = () -> {
-            return modifyAxis(driverController.getRightX()) * DrivetrainSubsystem.MAX_ANGULAR_RATE;
+            double sign = Robot.isSimulation() ? -1 : 1;
+            return sign * modifyAxis(driverController.getRightX()) * DrivetrainSubsystem.MAX_ANGULAR_RATE;
         };
     
         drivetrain.setDefaultCommand(new JoystickDriveCommand(drivetrain, joystickInputsSupplier, rotationSupplier));
